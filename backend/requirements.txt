@@ -1,0 +1,14 @@
+Django==5.1.5
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.0
+django-cors-headers==4.6.0
+django-cleanup==8.1.0
+Pillow==11.1.0
+django-attachments==1.1.*
+easy-thumbnails==2.10.*
+setuptools==80.9.*
+Faker==25.0.*
+python-decouple==3.8.*
+google-auth==2.36.0
+google-auth-oauthlib==1.2.1
+google-auth-httplib2==0.2.0

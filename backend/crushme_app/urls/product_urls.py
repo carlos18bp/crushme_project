@@ -1,0 +1,31 @@
+"""
+Product URLs for CrushMe e-commerce application
+Handles product CRUD operations, search, and category management
+"""
+from django.urls import path
+from ..views.product_views import (
+    get_products, get_product, get_products_by_category, search_products,
+    get_categories, create_product, update_product, delete_product,
+    update_product_stock, get_featured_products, get_product_recommendations
+)
+
+urlpatterns = [
+    # Product listing and details
+    path('', get_products, name='get_products'),
+    path('<int:product_id>/', get_product, name='get_product'),
+    
+    # Product search and filtering
+    path('category/', get_products_by_category, name='get_products_by_category'),
+    path('search/', search_products, name='search_products'),
+    path('categories/', get_categories, name='get_categories'),
+    
+    # Featured and recommendations
+    path('featured/', get_featured_products, name='get_featured_products'),
+    path('<int:product_id>/recommendations/', get_product_recommendations, name='get_product_recommendations'),
+    
+    # Admin operations
+    path('create/', create_product, name='create_product'),
+    path('<int:product_id>/update/', update_product, name='update_product'),
+    path('<int:product_id>/delete/', delete_product, name='delete_product'),
+    path('<int:product_id>/stock/', update_product_stock, name='update_product_stock'),
+]
