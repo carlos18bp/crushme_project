@@ -12,7 +12,8 @@ from .forms.product import ProductForm
 
 # Import all models
 from .models import (
-    User, PasswordCode, Product, Cart, CartItem, 
+    User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser,
+    Product, Cart, CartItem, 
     Order, OrderItem, WishList, WishListItem, FavoriteWishList
 )
 
@@ -84,6 +85,121 @@ class PasswordCodeAdmin(admin.ModelAdmin):
             return format_html('<span style="color: red;">Expired</span>')
         return format_html('<span style="color: green;">Valid</span>')
     is_expired_display.short_description = 'Status'
+
+
+@admin.register(UserAddress)
+class UserAddressAdmin(admin.ModelAdmin):
+    """Admin for user addresses"""
+    list_display = (
+        'get_owner', 'address_line_1', 'city', 'state', 'country',
+        'is_default_shipping', 'is_default_billing'
+    )
+    list_filter = ('country', 'state', 'is_default_shipping', 'is_default_billing')
+    search_fields = ('user__email', 'guest_email', 'address_line_1', 'city')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Owner Information', {
+            'fields': ('user', 'guest_email', 'guest_first_name', 'guest_last_name', 'guest_phone')
+        }),
+        ('Address Information', {
+            'fields': ('address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'country')
+        }),
+        ('Preferences', {
+            'fields': ('is_default_shipping', 'is_default_billing')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def get_owner(self, obj):
+        """Get the owner of the address (user or guest)"""
+        if obj.user:
+            return f"User: {obj.user.email}"
+        elif obj.guest_email:
+            return f"Guest: {obj.guest_email}"
+        return "Unknown"
+    get_owner.short_description = 'Owner'
+    get_owner.admin_order_field = 'user__email'
+
+
+@admin.register(UserGallery)
+class UserGalleryAdmin(admin.ModelAdmin):
+    """Admin for user gallery photos"""
+    list_display = ('user_email', 'caption', 'is_profile_picture', 'image_preview', 'uploaded_at')
+    list_filter = ('is_profile_picture', 'uploaded_at')
+    search_fields = ('user__email', 'user__username', 'caption')
+    ordering = ('-uploaded_at',)
+    readonly_fields = ('uploaded_at', 'image_preview')
+    
+    def user_email(self, obj):
+        """Display user email"""
+        return obj.user.email
+    user_email.short_description = 'User Email'
+    user_email.admin_order_field = 'user__email'
+    
+    def image_preview(self, obj):
+        """Display image preview"""
+        if obj.image:
+            return format_html(
+                '<img src="{}" width="100" height="100" style="object-fit: cover;" />',
+                obj.image.url
+            )
+        return "No image"
+    image_preview.short_description = 'Preview'
+
+
+@admin.register(UserLink)
+class UserLinkAdmin(admin.ModelAdmin):
+    """Admin for user links (linktree-style)"""
+    list_display = ('user_email', 'title', 'url', 'order', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('user__email', 'user__username', 'title', 'url')
+    ordering = ('user', 'order', '-created_at')
+    
+    def user_email(self, obj):
+        """Display user email"""
+        return obj.user.email
+    user_email.short_description = 'User Email'
+    user_email.admin_order_field = 'user__email'
+
+
+@admin.register(GuestUser)
+class GuestUserAdmin(admin.ModelAdmin):
+    """Admin for guest users"""
+    list_display = (
+        'email', 'full_name', 'phone', 'total_orders', 
+        'total_spent', 'has_been_converted', 'created_at'
+    )
+    list_filter = ('has_been_converted', 'created_at')
+    search_fields = ('email', 'first_name', 'last_name', 'phone')
+    readonly_fields = ('created_at', 'updated_at', 'full_name')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Personal Information', {
+            'fields': ('email', 'first_name', 'last_name', 'full_name', 'phone')
+        }),
+        ('Purchase History', {
+            'fields': ('total_orders', 'total_spent')
+        }),
+        ('Conversion', {
+            'fields': ('has_been_converted', 'converted_user')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def full_name(self, obj):
+        """Display full name"""
+        return obj.get_full_name()
+    full_name.short_description = 'Full Name'
 
 
 # ===========================
@@ -416,7 +532,7 @@ class CrushMeAdminSite(admin.AdminSite):
                 'app_label': 'user_management',
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['User', 'PasswordCode']
+                    if model['object_name'] in ['User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser']
                 ]
             },
             {
@@ -468,6 +584,10 @@ admin_site = CrushMeAdminSite(name='crushme_admin')
 # Register all models with the custom AdminSite
 admin_site.register(User, CustomUserAdmin)
 admin_site.register(PasswordCode, PasswordCodeAdmin)
+admin_site.register(UserAddress, UserAddressAdmin)
+admin_site.register(UserGallery, UserGalleryAdmin)
+admin_site.register(UserLink, UserLinkAdmin)
+admin_site.register(GuestUser, GuestUserAdmin)
 admin_site.register(Product, ProductAdmin)
 admin_site.register(Cart, CartAdmin)
 # CartItem is managed through CartAdmin inline

@@ -4,10 +4,12 @@ Based on signin_signon_feature repository implementation
 Handles user registration, login, password management, and profile updates
 """
 import secrets
+import random
 from rest_framework import status
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import update_last_login
 from rest_framework.response import Response
@@ -17,105 +19,186 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..models import User, PasswordCode
 from ..utils import generate_auth_tokens
-from ..serializers.user_serializers import UserSerializer
+from ..serializers.user_serializers import (
+    UserSerializer, UserRegistrationSerializer, UserLoginSerializer,
+    EmailVerificationSerializer, SendPasscodeSerializer, PasswordResetSerializer, 
+    PasswordChangeSerializer, GuestCheckoutSerializer, UserProfileSerializer
+)
 
 
 @api_view(['POST'])
-def sign_on(request):
+def signup(request):
     """
-    Handle user registration by creating a new user account.
+    Handle user registration - Step 1: Create user and send verification email.
 
-    This view processes POST requests to register a new user. It checks if the
-    email is already registered, validates the user data using the UserSerializer,
-    hashes the user's password, and creates a new user. If successful, it returns
-    JWT tokens for the user.
+    This view processes POST requests to register a new user with email, username, 
+    and password. The user is created but inactive until email verification.
+    A 4-digit verification code is sent to their email.
 
     Args:
         request (Request): The HTTP request object containing user data.
 
     Returns:
-        Response: A Response object with the JWT tokens and user data if successful,
+        Response: A Response object with success message if registration is successful,
                   or an error message if the registration fails.
     """
-    # Get the email from the request data
-    email = request.data.get('email')
+    serializer = UserRegistrationSerializer(data=request.data)
     
-    # Check if the email is already registered
-    if User.objects.filter(email=email).exists():
-        return Response({'warning': 'The email is already registered.'}, status=status.HTTP_409_CONFLICT)
-    
-    # Serialize the request data
-    serializer = UserSerializer(data=request.data)
-    
-    # Validate the serialized data
     if serializer.is_valid():
-        # Hash the user's password
-        serializer.validated_data['password'] = make_password(serializer.validated_data['password'])
-        
-        # Save the new user to the database
+        # Create the new user (inactive until email verification)
         user = serializer.save()
         
-        # Generate JWT tokens for the new user
-        refresh = RefreshToken.for_user(user)
+        # Generate 4-digit verification code
+        verification_code = ''.join([str(random.randint(0, 9)) for _ in range(4)])
         
-        # Return the JWT tokens and user data
-        return Response({'refresh': str(refresh), 
-                         'access': str(refresh.access_token),
-                         'user': serializer.data}, 
-                         status=status.HTTP_201_CREATED)
+        # Save verification code to database
+        PasswordCode.objects.create(
+            user=user,
+            code=verification_code,
+            code_type='email_verification'
+        )
+        
+        # Send verification email
+        try:
+            send_mail(
+                subject='Verify your email - CrushMe',
+                message=f'Your verification code is: {verification_code}\n\nThis code will expire in 5 minutes.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            
+            return Response({
+                'message': 'Registration successful. Please check your email for verification code.',
+                'email': user.email,
+                'requires_verification': True
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            # If email fails, delete the user and return error
+            user.delete()
+            return Response({
+                'error': 'Failed to send verification email. Please try again.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    # Return validation errors
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
-def send_verification_code(request):
+def verify_email(request):
     """
-    Handle sending a sign-on passcode to the user's email.
+    Handle email verification - Step 2: Verify code and activate user account.
 
-    This view processes POST requests to generate a 6-digit passcode and send it to the 
-    user's email for sign-on purposes. The passcode is also saved in the database.
+    This view processes POST requests to verify the 4-digit code sent to user's email.
+    If valid, the user account is activated and JWT tokens are returned.
 
     Args:
-        request (Request): The HTTP request object containing the user's email.
+        request (Request): The HTTP request object containing email and verification code.
 
     Returns:
-        Response: A Response object with the passcode if sent successfully,
-                  or an error message if the email is already registered or if email is missing.
+        Response: A Response object with JWT tokens if verification is successful,
+                  or an error message if verification fails.
     """
-    # Get the email from the request data
+    serializer = EmailVerificationSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        verification_code_obj = serializer.validated_data['verification_code_obj']
+        
+        # Mark verification code as used
+        verification_code_obj.used = True
+        verification_code_obj.save()
+        
+        # Activate user account
+        user.is_active = True
+        user.email_verified = True
+        user.save()
+        
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        
+        # Return user profile data with tokens
+        user_data = UserProfileSerializer(user, context={'request': request}).data
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': user_data,
+            'message': 'Email verified successfully. Account activated.'
+        }, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def resend_verification_code(request):
+    """
+    Resend verification code to user's email.
+
+    Args:
+        request (Request): The HTTP request object containing user's email.
+
+    Returns:
+        Response: A Response object with success message if code is sent,
+                  or an error message if user not found or already verified.
+    """
     email = request.data.get('email')
     
     if not email:
         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Check if the user already exists based on the email
-    if User.objects.filter(email=email).exists():
-        return Response({'error': 'The email is already registered.'}, status=status.HTTP_409_CONFLICT)
-
-    # Generate a 6-digit passcode using secrets for better security
-    passcode = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
     
-    # Send an email with the passcode
-    send_mail(
-        'Sign-On Code',
-        f'Your sign-on code is: {passcode}',
-        'crushme@gmail.com',  # Change this in production
-        [email],
-        fail_silently=False,
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if user.email_verified:
+        return Response({'error': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Mark previous verification codes as used
+    PasswordCode.objects.filter(
+        user=user, 
+        code_type='email_verification', 
+        used=False
+    ).update(used=True)
+    
+    # Generate new 4-digit verification code
+    verification_code = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+    
+    # Save new verification code
+    PasswordCode.objects.create(
+        user=user,
+        code=verification_code,
+        code_type='email_verification'
     )
-
-    # Return the passcode in the response
-    return Response({'passcode': passcode}, status=status.HTTP_200_OK)
+    
+    # Send verification email
+    try:
+        send_mail(
+            subject='Verify your email - CrushMe',
+            message=f'Your new verification code is: {verification_code}\n\nThis code will expire in 5 minutes.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        
+        return Response({
+            'message': 'New verification code sent to your email.'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to send verification email. Please try again.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
-def sign_in(request):
+def login(request):
     """
-    Handle user sign-in by validating credentials and generating authentication tokens.
+    Handle user login with email and password.
 
-    This view processes POST requests to authenticate a user using either a password or
-    a passcode. If the credentials are valid, it generates and returns JWT tokens for the user.
+    This view processes POST requests to authenticate a user using email and password.
+    The user must have verified their email to login successfully.
 
     Args:
         request (Request): The HTTP request object containing user credentials.
@@ -124,39 +207,28 @@ def sign_in(request):
         Response: A Response object with JWT tokens if authentication is successful,
                   or an error message if authentication fails.
     """
-    # Get the email, password, and passcode from the request data
-    email = request.data.get('email')
-    password = request.data.get('password')
-    passcode = request.data.get('passcode')
-
-    # Retrieve the user based on the email
-    user = User.objects.filter(email=email).first()
-
-    # Define a common error response
-    error_response = {'error': 'Invalid credentials'}
-
-    if not user:
-        return Response(error_response, status=status.HTTP_401_UNAUTHORIZED)
-
-    if password:
-        # Authenticate using password
-        if user.check_password(password):
-            auth_user = authenticate(request, email=email, password=password)
-            if auth_user:
-                # Generate authentication tokens for the user
-                return Response(generate_auth_tokens(auth_user), status=status.HTTP_200_OK)
-        return Response(error_response, status=status.HTTP_401_UNAUTHORIZED)
+    serializer = UserLoginSerializer(data=request.data)
     
-    elif passcode:
-        # Validate the passcode
-        passcode_valid = PasswordCode.objects.filter(user=user, code=passcode, used=False).first()
-        if passcode_valid:
-            passcode_valid.used = True
-            passcode_valid.save()
-            # Generate authentication tokens for the user
-            return Response(generate_auth_tokens(user), status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        
+        # Update last login
+        update_last_login(None, user)
+        
+        # Return user profile data with tokens
+        user_data = UserProfileSerializer(user, context={'request': request}).data
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': user_data,
+            'message': 'Login successful.'
+        }, status=status.HTTP_200_OK)
     
-    return Response(error_response, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -280,93 +352,222 @@ def update_password(request):
 
 
 @api_view(['POST'])
-def send_passcode(request):
+def forgot_password(request):
     """
-    Handle sending a password reset passcode to the user's email.
+    Handle password recovery by sending a 4-digit reset code to user's email.
 
-    This view processes POST requests to generate a 6-digit passcode and send it to the 
-    user's email for password reset purposes. The passcode is also saved in the database.
+    This view processes POST requests to generate a 4-digit reset code and send it to the 
+    user's email for password reset purposes.
 
     Args:
         request (Request): The HTTP request object containing the user's email.
 
     Returns:
-        Response: A Response object with a success message if the passcode is sent successfully,
+        Response: A Response object with a success message if the code is sent successfully,
                   or an error message if the user is not found.
     """
-    # Get the email from the request data
     email = request.data.get('email')
-    subject_email = request.data.get('subject_email', 'Password Reset Code')
     
     if not email:
         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # Retrieve the user based on the email
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Generate a 6-digit passcode using secrets for better security
-    passcode = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+    # Mark previous password reset codes as used
+    PasswordCode.objects.filter(
+        user=user, 
+        code_type='password_reset', 
+        used=False
+    ).update(used=True)
+
+    # Generate a 4-digit reset code
+    reset_code = ''.join([str(random.randint(0, 9)) for _ in range(4)])
     
-    # Save the passcode to the database
-    PasswordCode.objects.create(user=user, code=passcode)
-
-    # Send an email with the passcode
-    send_mail(
-        subject_email,
-        f'Your password reset code is: {passcode}',
-        'crushme@gmail.com',  # Change this in production
-        [email],
-        fail_silently=False,
+    # Save the reset code to the database
+    PasswordCode.objects.create(
+        user=user, 
+        code=reset_code,
+        code_type='password_reset'
     )
 
-    # Return a success message
-    return Response({'message': 'Password code sent'}, status=status.HTTP_200_OK)
+    # Send email with the reset code
+    try:
+        send_mail(
+            subject='Password Reset - CrushMe',
+            message=f'Your password reset code is: {reset_code}\n\nThis code will expire in 5 minutes.\n\nIf you did not request this, please ignore this email.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        
+        return Response({
+            'message': 'Password reset code sent to your email.'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to send reset email. Please try again.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
-def verify_passcode_and_reset_password(request):
+def reset_password(request):
     """
-    Verify the passcode and reset the user's password.
+    Verify the 4-digit reset code and set new password.
 
-    This view processes POST requests to verify the provided passcode. If the passcode is valid,
+    This view processes POST requests to verify the provided reset code. If the code is valid,
     it resets the user's password to the new password provided in the request.
 
     Args:
-        request (Request): The HTTP request object containing the passcode and new password.
+        request (Request): The HTTP request object containing email, reset code and new password.
 
     Returns:
         Response: A Response object with a success message if the password reset is successful,
-                  or an error message if the passcode is invalid or expired.
+                  or an error message if the code is invalid or expired.
     """
-    # Get the passcode and new password from the request data
-    passcode = request.data.get('passcode')
-    new_password = request.data.get('new_password')
-
-    # Ensure both passcode and new password are provided
-    if not passcode or not new_password:
-        return Response({'error': 'Passcode and new password are required'}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        # Search for the passcode in the database
-        reset_code = PasswordCode.objects.filter(code=passcode, used=False).first()
-        if not reset_code:
-            return Response({'error': 'Invalid or expired code'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Get the user associated with the passcode
-        user = reset_code.user
-
-        # Change the user's password
-        user.password = make_password(new_password)
+    serializer = PasswordResetSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        password_code = serializer.validated_data['password_code']
+        new_password = serializer.validated_data['new_password']
+        
+        # Update user's password
+        user.set_password(new_password)
         user.save()
+        
+        # Mark the reset code as used
+        password_code.used = True
+        password_code.save()
+        
+        return Response({
+            'message': 'Password reset successful. You can now login with your new password.'
+        }, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Mark the passcode as used
-        reset_code.used = True
-        reset_code.save()
 
-        return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+@api_view(['POST'])
+def guest_checkout(request):
+    """
+    Handle guest checkout by creating a guest user and address.
+    
+    This allows users to make purchases without registering a full account.
+    The data is stored so they can later register and have their purchase history.
+    
+    Args:
+        request (Request): The HTTP request object containing guest data and address.
+    
+    Returns:
+        Response: A Response object with guest user data if successful,
+                  or an error message if the creation fails.
+    """
+    serializer = GuestCheckoutSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        guest_user = serializer.save()
+        
+        return Response({
+            'guest_user': {
+                'id': guest_user.id,
+                'email': guest_user.email,
+                'first_name': guest_user.first_name,
+                'last_name': guest_user.last_name,
+                'full_name': guest_user.get_full_name(),
+                'phone': guest_user.phone,
+                'total_orders': guest_user.total_orders,
+                'total_spent': str(guest_user.total_spent)
+            },
+            'message': 'Guest checkout information saved successfully.'
+        }, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    """
+    Get complete user profile including addresses, gallery, and links.
+    
+    Args:
+        request (Request): The HTTP request object.
+    
+    Returns:
+        Response: A Response object with complete user profile data.
+    """
+    user = request.user
+    serializer = UserProfileSerializer(user, context={'request': request})
+    
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def check_username_availability(request):
+    """
+    Check if a username is available for registration.
+    
+    Args:
+        request (Request): The HTTP request object containing username.
+    
+    Returns:
+        Response: A Response object indicating if username is available.
+    """
+    username = request.data.get('username', '').strip()
+    
+    if not username:
+        return Response({
+            'available': False,
+            'message': 'Username is required.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if username already exists (case-insensitive)
+    exists = User.objects.filter(username__iexact=username).exists()
+    
+    return Response({
+        'available': not exists,
+        'username': username,
+        'message': 'Username is available.' if not exists else 'Username is already taken.'
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def check_guest_user(request):
+    """
+    Check if there's a guest user with the provided email for registration conversion.
+    
+    Args:
+        request (Request): The HTTP request object containing email.
+    
+    Returns:
+        Response: A Response object with guest user data if found.
+    """
+    email = request.data.get('email', '').strip()
+    
+    if not email:
+        return Response({
+            'message': 'Email is required.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        guest_user = GuestUser.objects.get(email=email, has_been_converted=False)
+        return Response({
+            'has_guest_profile': True,
+            'guest_data': {
+                'first_name': guest_user.first_name,
+                'last_name': guest_user.last_name,
+                'phone': guest_user.phone,
+                'total_orders': guest_user.total_orders,
+                'total_spent': str(guest_user.total_spent)
+            },
+            'message': f'Found guest profile with {guest_user.total_orders} orders and ${guest_user.total_spent} spent.'
+        }, status=status.HTTP_200_OK)
+    
+    except GuestUser.DoesNotExist:
+        return Response({
+            'has_guest_profile': False,
+            'message': 'No guest profile found with this email.'
+        }, status=status.HTTP_200_OK)

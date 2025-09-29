@@ -12,6 +12,7 @@ from ..serializers.product_serializers import (
     ProductListSerializer, ProductDetailSerializer, ProductCreateUpdateSerializer,
     ProductSearchSerializer, ProductCategorySerializer, ProductStockUpdateSerializer
 )
+from ..services.woocommerce_service import woocommerce_service
 
 
 @api_view(['GET'])
@@ -280,3 +281,200 @@ def get_product_recommendations(request, product_id):
             'category': product.category
         }
     }, status=status.HTTP_200_OK)
+
+
+# ========== WOOCOMMERCE INTEGRATION ENDPOINTS ==========
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])  # Solo administradores pueden ver la estructura de WooCommerce
+def get_woocommerce_products(request):
+    """
+    Obtener productos desde WooCommerce para ver su estructura
+    Query params:
+    - category_id: ID de categoría (opcional)
+    - per_page: Productos por página (máx 100, default 10)
+    - page: Número de página (default 1)
+    """
+    category_id = request.query_params.get('category_id')
+    per_page = int(request.query_params.get('per_page', 10))
+    page = int(request.query_params.get('page', 1))
+    
+    try:
+        # Validar category_id si se proporciona
+        if category_id:
+            category_id = int(category_id)
+        
+        # Llamar al servicio de WooCommerce
+        result = woocommerce_service.get_products(
+            category_id=category_id,
+            per_page=per_page,
+            page=page
+        )
+        
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': 'Productos obtenidos exitosamente desde WooCommerce',
+                'data': result['data'],
+                'pagination_info': {
+                    'page': page,
+                    'per_page': per_page,
+                    'category_id': category_id
+                },
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'headers': result.get('headers', {})
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except ValueError as e:
+        return Response({
+            'error': 'Parámetros inválidos',
+            'details': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])  # Solo administradores pueden ver la estructura de WooCommerce
+def get_woocommerce_categories(request):
+    """
+    Obtener categorías desde WooCommerce para ver su estructura
+    Query params:
+    - per_page: Categorías por página (default 100)
+    - page: Número de página (default 1)
+    """
+    per_page = int(request.query_params.get('per_page', 100))
+    page = int(request.query_params.get('page', 1))
+    
+    try:
+        # Llamar al servicio de WooCommerce
+        result = woocommerce_service.get_categories(
+            per_page=per_page,
+            page=page
+        )
+        
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': 'Categorías obtenidas exitosamente desde WooCommerce',
+                'data': result['data'],
+                'pagination_info': {
+                    'page': page,
+                    'per_page': per_page
+                },
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'headers': result.get('headers', {})
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except ValueError as e:
+        return Response({
+            'error': 'Parámetros inválidos',
+            'details': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_woocommerce_product_detail(request, product_id):
+    """
+    Obtener un producto específico desde WooCommerce por ID
+    """
+    try:
+        product_id = int(product_id)
+        
+        # Llamar al servicio de WooCommerce
+        result = woocommerce_service.get_product_by_id(product_id)
+        
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': f'Producto {product_id} obtenido exitosamente desde WooCommerce',
+                'data': result['data'],
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'headers': result.get('headers', {})
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except ValueError:
+        return Response({
+            'error': 'ID de producto inválido'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def test_woocommerce_connection(request):
+    """
+    Endpoint para probar la conexión con WooCommerce
+    """
+    try:
+        # Intentar obtener solo 1 producto para probar la conexión
+        result = woocommerce_service.get_products(per_page=1, page=1)
+        
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': 'Conexión con WooCommerce exitosa',
+                'connection_status': 'OK',
+                'api_response_headers': result.get('headers', {}),
+                'sample_data_structure': {
+                    'products_count': len(result['data']) if result['data'] else 0,
+                    'first_product_keys': list(result['data'][0].keys()) if result['data'] and len(result['data']) > 0 else []
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'message': 'Error en conexión con WooCommerce',
+                'connection_status': 'FAILED',
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': 'Error interno en prueba de conexión',
+            'connection_status': 'ERROR',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from ..models import User, PasswordCode
+from ..models import User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,22 +19,41 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'date_joined', 'is_active']
-        read_only_fields = ['id', 'date_joined']
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name', 
+            'full_name', 'phone', 'about', 'date_joined', 'is_active',
+            'is_guest_converted'
+        ]
+        read_only_fields = ['id', 'date_joined', 'is_guest_converted']
+    
+    def validate_username(self, value):
+        """Check if username is unique (case-insensitive)"""
+        if value:
+            # Check if username exists (excluding current instance if updating)
+            queryset = User.objects.filter(username__iexact=value)
+            if self.instance:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            if queryset.exists():
+                raise serializers.ValidationError("A user with this username already exists.")
+        return value
     
     def update(self, instance, validated_data):
         """Update user profile information"""
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.email = validated_data.get('email', instance.email)
+        instance.username = validated_data.get('username', instance.username)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.about = validated_data.get('about', instance.about)
         instance.save()
         return instance
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """
-    Serializer for user registration
-    Validates email uniqueness and password requirements
+    Serializer for user registration - Step 1
+    Creates user but requires email verification to activate account.
+    Validates email uniqueness, username uniqueness, and password requirements.
     """
     password = serializers.CharField(
         write_only=True,
@@ -48,7 +67,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'password_confirm']
+        fields = [
+            'email', 'username', 'password', 'password_confirm'
+        ]
     
     def validate_email(self, value):
         """Check if email is already registered"""
@@ -56,88 +77,134 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A user with this email already exists.")
         return value
     
+    def validate_username(self, value):
+        """Check if username is unique (case-insensitive)"""
+        if value and User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+    
     def validate(self, attrs):
-        """Validate password confirmation"""
+        """Validate password confirmation and username requirement"""
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError("Passwords don't match.")
+        
+        if not attrs.get('username'):
+            raise serializers.ValidationError("Username is required for registration.")
+        
         return attrs
     
     def create(self, validated_data):
-        """Create new user with hashed password"""
+        """
+        Create new user with hashed password but inactive until email verification.
+        If a guest user exists with the same email, convert it to full user.
+        """
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        email = validated_data['email']
         
+        # Check if there's a guest user with this email
+        guest_user = None
+        try:
+            guest_user = GuestUser.objects.get(email=email, has_been_converted=False)
+        except GuestUser.DoesNotExist:
+            pass
+        
+        # Create the user (inactive until email verification)
         user = User.objects.create_user(
-            username=validated_data['email'],  # Django requirement, but we use email
-            email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            password=password
+            email=email,
+            username=validated_data['username'],
+            first_name=guest_user.first_name if guest_user else '',
+            last_name=guest_user.last_name if guest_user else '',
+            phone=guest_user.phone if guest_user else '',
+            password=password,
+            is_active=False,  # Inactive until email verification
+            email_verified=False
         )
+        
+        # If guest user exists, convert it
+        if guest_user:
+            user.is_guest_converted = True
+            user.save()
+            
+            # Mark guest as converted
+            guest_user.has_been_converted = True
+            guest_user.converted_user = user
+            guest_user.save()
+        
         return user
 
 
-class UserLoginSerializer(serializers.Serializer):
+class EmailVerificationSerializer(serializers.Serializer):
     """
-    Serializer for user login
-    Supports both email/password and email/passcode authentication
+    Serializer for email verification with 4-digit code
     """
     email = serializers.EmailField()
-    password = serializers.CharField(
-        required=False,
-        style={'input_type': 'password'}
-    )
-    passcode = serializers.CharField(
-        required=False,
-        max_length=6,
-        min_length=6
+    verification_code = serializers.CharField(
+        max_length=4,
+        min_length=4,
+        help_text="4-digit verification code sent to your email"
     )
     
     def validate(self, attrs):
-        """Validate login credentials"""
-        email = attrs.get('email')
-        password = attrs.get('password')
-        passcode = attrs.get('passcode')
-        
-        if not password and not passcode:
-            raise serializers.ValidationError("Either password or passcode is required.")
-        
-        if password and passcode:
-            raise serializers.ValidationError("Provide either password or passcode, not both.")
+        """Validate verification code"""
+        email = attrs['email']
+        code = attrs['verification_code']
         
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             raise serializers.ValidationError("User with this email does not exist.")
         
+        # Find valid verification code
+        try:
+            verification_code = PasswordCode.objects.get(
+                user=user,
+                code=code,
+                code_type='email_verification',
+                used=False
+            )
+            
+            if verification_code.is_expired():
+                raise serializers.ValidationError("Verification code has expired.")
+            
+            attrs['user'] = user
+            attrs['verification_code_obj'] = verification_code
+            
+        except PasswordCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid verification code.")
+        
+        return attrs
+
+
+class UserLoginSerializer(serializers.Serializer):
+    """
+    Serializer for user login with email and password
+    """
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
+    
+    def validate(self, attrs):
+        """Validate login credentials"""
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid email or password.")
+        
         if not user.is_active:
-            raise serializers.ValidationError("User account is disabled.")
+            raise serializers.ValidationError("Account is not activated. Please verify your email.")
         
-        if password:
-            # Authenticate with password
-            user = authenticate(username=email, password=password)
-            if not user:
-                raise serializers.ValidationError("Invalid email or password.")
+        if not user.email_verified:
+            raise serializers.ValidationError("Email not verified. Please check your email for verification code.")
         
-        elif passcode:
-            # Authenticate with passcode
-            try:
-                password_code = PasswordCode.objects.get(
-                    user=user,
-                    code=passcode,
-                    used=False
-                )
-                if password_code.is_expired():
-                    raise serializers.ValidationError("Passcode has expired.")
-                
-                # Mark passcode as used
-                password_code.used = True
-                password_code.save()
-                
-            except PasswordCode.DoesNotExist:
-                raise serializers.ValidationError("Invalid or expired passcode.")
+        # Authenticate with password
+        authenticated_user = authenticate(username=email, password=password)
+        if not authenticated_user:
+            raise serializers.ValidationError("Invalid email or password.")
         
-        attrs['user'] = user
+        attrs['user'] = authenticated_user
         return attrs
 
 
@@ -180,10 +247,14 @@ class SendPasscodeSerializer(serializers.Serializer):
 
 class PasswordResetSerializer(serializers.Serializer):
     """
-    Serializer for password reset with passcode
+    Serializer for password reset with 4-digit code
     """
     email = serializers.EmailField()
-    passcode = serializers.CharField(max_length=6, min_length=6)
+    reset_code = serializers.CharField(
+        max_length=4, 
+        min_length=4,
+        help_text="4-digit reset code sent to your email"
+    )
     new_password = serializers.CharField(
         validators=[validate_password],
         style={'input_type': 'password'}
@@ -198,7 +269,7 @@ class PasswordResetSerializer(serializers.Serializer):
             raise serializers.ValidationError("Passwords don't match.")
         
         email = attrs['email']
-        passcode = attrs['passcode']
+        reset_code = attrs['reset_code']
         
         try:
             user = User.objects.get(email=email)
@@ -208,17 +279,18 @@ class PasswordResetSerializer(serializers.Serializer):
         try:
             password_code = PasswordCode.objects.get(
                 user=user,
-                code=passcode,
+                code=reset_code,
+                code_type='password_reset',
                 used=False
             )
             if password_code.is_expired():
-                raise serializers.ValidationError("Passcode has expired.")
+                raise serializers.ValidationError("Reset code has expired.")
             
             attrs['user'] = user
             attrs['password_code'] = password_code
             
         except PasswordCode.DoesNotExist:
-            raise serializers.ValidationError("Invalid or expired passcode.")
+            raise serializers.ValidationError("Invalid or expired reset code.")
         
         return attrs
 
@@ -263,3 +335,185 @@ class GoogleLoginSerializer(serializers.Serializer):
         if not value:
             raise serializers.ValidationError("Google token is required.")
         return value
+
+
+class UserAddressSerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserAddress model
+    Used for both registered users and guest checkout addresses
+    """
+    guest_full_name = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = UserAddress
+        fields = [
+            'id', 'user', 'country', 'state', 'city', 'zip_code',
+            'address_line_1', 'address_line_2', 'is_default_shipping',
+            'is_default_billing', 'guest_email', 'guest_first_name',
+            'guest_last_name', 'guest_phone', 'guest_full_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'guest_full_name']
+    
+    def get_guest_full_name(self, obj):
+        """Get full name for guest checkout"""
+        if obj.guest_first_name or obj.guest_last_name:
+            return f"{obj.guest_first_name or ''} {obj.guest_last_name or ''}".strip()
+        return None
+
+
+class GuestCheckoutSerializer(serializers.ModelSerializer):
+    """
+    Serializer for guest checkout - creates GuestUser and UserAddress
+    """
+    # Address fields
+    country = serializers.CharField(max_length=100)
+    state = serializers.CharField(max_length=100)
+    city = serializers.CharField(max_length=100)
+    zip_code = serializers.CharField(max_length=20)
+    address_line_1 = serializers.CharField(max_length=255)
+    address_line_2 = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    
+    class Meta:
+        model = GuestUser
+        fields = [
+            'email', 'first_name', 'last_name', 'phone',
+            'country', 'state', 'city', 'zip_code', 
+            'address_line_1', 'address_line_2'
+        ]
+    
+    def create(self, validated_data):
+        """
+        Create or update guest user and create address
+        """
+        # Extract address data
+        address_data = {
+            'country': validated_data.pop('country'),
+            'state': validated_data.pop('state'),
+            'city': validated_data.pop('city'),
+            'zip_code': validated_data.pop('zip_code'),
+            'address_line_1': validated_data.pop('address_line_1'),
+            'address_line_2': validated_data.pop('address_line_2', ''),
+        }
+        
+        # Create or update guest user
+        email = validated_data['email']
+        guest_user, created = GuestUser.objects.get_or_create(
+            email=email,
+            defaults=validated_data
+        )
+        
+        if not created:
+            # Update existing guest user
+            for key, value in validated_data.items():
+                if value:  # Only update if value is provided
+                    setattr(guest_user, key, value)
+            guest_user.save()
+        
+        # Create address for guest checkout
+        UserAddress.objects.create(
+            user=None,  # No user for guest checkout
+            guest_email=guest_user.email,
+            guest_first_name=guest_user.first_name,
+            guest_last_name=guest_user.last_name,
+            guest_phone=guest_user.phone,
+            **address_data
+        )
+        
+        return guest_user
+
+
+class UserGallerySerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserGallery model
+    """
+    class Meta:
+        model = UserGallery
+        fields = [
+            'id', 'user', 'image', 'caption', 'is_profile_picture', 'uploaded_at'
+        ]
+        read_only_fields = ['id', 'uploaded_at']
+    
+    def validate(self, attrs):
+        """Ensure only one profile picture per user"""
+        if attrs.get('is_profile_picture'):
+            user = attrs.get('user') or (self.instance.user if self.instance else None)
+            if user:
+                # Check if user already has a profile picture
+                existing_profile = UserGallery.objects.filter(
+                    user=user, 
+                    is_profile_picture=True
+                )
+                if self.instance:
+                    existing_profile = existing_profile.exclude(pk=self.instance.pk)
+                
+                if existing_profile.exists():
+                    raise serializers.ValidationError(
+                        "User already has a profile picture. Please remove the current one first."
+                    )
+        return attrs
+
+
+class UserLinkSerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserLink model
+    """
+    class Meta:
+        model = UserLink
+        fields = [
+            'id', 'user', 'title', 'url', 'order', 'is_active', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+    
+    def validate_url(self, value):
+        """Validate URL format"""
+        if not value.startswith(('http://', 'https://')):
+            value = f"https://{value}"
+        return value
+
+
+class GuestUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for GuestUser model - read only for admin purposes
+    """
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    
+    class Meta:
+        model = GuestUser
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'full_name', 'phone',
+            'total_orders', 'total_spent', 'has_been_converted', 
+            'converted_user', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'full_name']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Complete user profile serializer including related data
+    """
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    addresses = UserAddressSerializer(many=True, read_only=True)
+    gallery_photos = UserGallerySerializer(many=True, read_only=True)
+    links = UserLinkSerializer(many=True, read_only=True)
+    profile_picture = serializers.SerializerMethodField(read_only=True)
+    guest_profile = GuestUserSerializer(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name', 'full_name',
+            'phone', 'about', 'date_joined', 'is_active', 'is_guest_converted',
+            'addresses', 'gallery_photos', 'links', 'profile_picture', 'guest_profile'
+        ]
+        read_only_fields = ['id', 'date_joined', 'is_guest_converted']
+    
+    def get_profile_picture(self, obj):
+        """Get user's profile picture"""
+        profile_pic = obj.gallery_photos.filter(is_profile_picture=True).first()
+        if profile_pic:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile_pic.image.url)
+            return profile_pic.image.url
+        return None

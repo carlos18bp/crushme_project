@@ -171,12 +171,19 @@ STORAGES = {
 }
 
 # Email configuration for password reset functionality
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Development only
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@gmail.com'  # Change this in production
-EMAIL_HOST_PASSWORD = 'your-app-password'  # Change this in production
+EMAIL_HOST_USER = 'misfotoscmbp@gmail.com'
+EMAIL_HOST_PASSWORD = 'ikdvsyikywczdnkk'
+DEFAULT_FROM_EMAIL = 'G&M Consultores Jurídicos <misfotoscmbp@gmail.com>'
 
 # Google OAuth2 settings
 GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production
+
+# WooCommerce API settings
+# TODO: Mover estas credenciales a variables de entorno en producción
+WOOCOMMERCE_CONSUMER_KEY = 'ck_2997c6fc6d68b3d998045a33002b2e88cce81682'
+WOOCOMMERCE_CONSUMER_SECRET = 'cs_51006180ee1f5999d5cae68d3091e3313174c9c9'
+WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'

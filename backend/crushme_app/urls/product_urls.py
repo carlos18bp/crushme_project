@@ -6,7 +6,10 @@ from django.urls import path
 from ..views.product_views import (
     get_products, get_product, get_products_by_category, search_products,
     get_categories, create_product, update_product, delete_product,
-    update_product_stock, get_featured_products, get_product_recommendations
+    update_product_stock, get_featured_products, get_product_recommendations,
+    # WooCommerce integration endpoints
+    get_woocommerce_products, get_woocommerce_categories, 
+    get_woocommerce_product_detail, test_woocommerce_connection
 )
 
 urlpatterns = [
@@ -28,4 +31,10 @@ urlpatterns = [
     path('<int:product_id>/update/', update_product, name='update_product'),
     path('<int:product_id>/delete/', delete_product, name='delete_product'),
     path('<int:product_id>/stock/', update_product_stock, name='update_product_stock'),
+    
+    # WooCommerce integration endpoints (Admin only)
+    path('woocommerce/test/', test_woocommerce_connection, name='test_woocommerce_connection'),
+    path('woocommerce/products/', get_woocommerce_products, name='get_woocommerce_products'),
+    path('woocommerce/categories/', get_woocommerce_categories, name='get_woocommerce_categories'),
+    path('woocommerce/products/<int:product_id>/', get_woocommerce_product_detail, name='get_woocommerce_product_detail'),
 ]
