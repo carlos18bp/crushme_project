@@ -1,0 +1,22 @@
+{
+  "title": "Enter verification code.",
+  "subtitle": "Enter the code we sent to your email to continue. 🔐",
+  "codePlaceholder": "0",
+  "verifyButton": "Verify code",
+  "verifyingButton": "Verifying...",
+  "didntReceive": "Didn't receive the code?",
+  "resend": "Resend",
+  "backToForgot": "Back to forgot password",
+  "validation": {
+    "codeRequired": "Please enter the verification code",
+    "codeLength": "Verification code must be 4 digits"
+  },
+  "errors": {
+    "verificationFailed": "Code verification failed: ",
+    "invalidCode": "Invalid verification code",
+    "codeExpired": "Verification code has expired",
+    "resendFailed": "Failed to resend code: "
+  },
+  "resendSuccess": "Verification code sent successfully!"
+}
+

@@ -1,0 +1,23 @@
+{
+  "title": "Recupera tu contraseña. 😊",
+  "subtitle": "Ingresa tu correo y te enviaremos instrucciones para crear una nueva contraseña.",
+  "emailPlaceholder": "Ingresa tu dirección de correo",
+  "sendButton": "Enviar instrucciones",
+  "sendingButton": "Enviando...",
+  "backToLogin": "Volver al login",
+  "validation": {
+    "emailRequired": "Por favor ingresa tu dirección de correo",
+    "validEmail": "Por favor ingresa un correo válido"
+  },
+  "success": {
+    "title": "¡Instrucciones enviadas!",
+    "message": "Hemos enviado un código de verificación a tu correo.",
+    "subtitle": "Revisa tu bandeja de entrada e ingresa el código para continuar.",
+    "actionButton": "Continuar"
+  },
+  "errors": {
+    "sendFailed": "Error al enviar instrucciones: ",
+    "emailNotFound": "No se encontró una cuenta con esta dirección de correo",
+    "tooManyRequests": "Demasiadas solicitudes. Inténtalo de nuevo más tarde."
+  }
+}

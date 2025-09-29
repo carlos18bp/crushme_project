@@ -1,11 +1,16 @@
 /**
  * Vue Router configuration for CrushMe e-commerce application
- * Simple routing configuration with basic guards
+ * Simple routing configuration with basic guards and i18n support
  */
 import { createRouter, createWebHistory } from 'vue-router';
 import { isAuthenticated } from '@/services/request_http.js';
+import { useI18nStore } from '@/stores/modules/i18nStore';
 
-const routes = [
+// Available languages
+const availableLanguages = ['en', 'es'];
+
+// Base routes without language prefix
+const baseRoutes = [
   // Public routes
   {
     path: '/',
@@ -21,10 +26,39 @@ const routes = [
     meta: { requiresGuest: true }
   },
   {
-    path: '/register',
-    name: 'Register', 
+    path: '/signup',
+    name: 'SignUp', 
     component: () => import('@/views/auth/RegisterView.vue'),
     meta: { requiresGuest: true }
+  },
+  {
+    path: '/verification',
+    name: 'Verification',
+    component: () => import('@/views/auth/VerificationView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/auth/ForgotPasswordView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/reset-code',
+    name: 'ResetCode',
+    component: () => import('@/views/auth/ResetCodeView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('@/views/auth/ResetPasswordView.vue'),
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/confirmation',
+    name: 'Confirmation',
+    component: () => import('@/views/auth/ConfirmationView.vue')
   },
   
   // Product routes
@@ -105,17 +139,73 @@ const routes = [
   }
 ];
 
+// Generate localized routes
+const routes = [
+  // Root redirect
+  {
+    path: '/',
+    redirect: to => {
+      const i18nStore = useI18nStore();
+      return `/${i18nStore.locale}`;
+    }
+  },
+  
+  // Routes for each language
+  ...baseRoutes.map(route => {
+    // Skip the catch-all route, we'll add it at the end
+    if (route.path === '/:pathMatch(.*)*') return null;
+    
+    return availableLanguages.map(lang => ({
+      ...route,
+      path: route.path === '/' ? `/${lang}` : `/${lang}${route.path}`,
+      name: `${route.name}-${lang}`
+    }));
+  }).flat().filter(Boolean),
+  
+  // Catch-all route for 404
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFoundView.vue')
+  }
+];
+
 const router = createRouter({
   history: createWebHistory(),
   routes
 });
 
-// Simple authentication guard
+// Navigation guards
 router.beforeEach((to, from, next) => {
+  const i18nStore = useI18nStore();
+  
+  // Extract language from URL
+  const urlLang = to.path.split('/')[1];
+  
+  // Handle root path
+  if (to.path === '/') {
+    next();
+    return;
+  }
+  
+  // Check if it's a valid language route
+  if (!availableLanguages.includes(urlLang)) {
+    // If no language prefix, redirect to current language
+    const currentLang = i18nStore.locale;
+    next(`/${currentLang}${to.path}`);
+    return;
+  }
+  
+  // Set language if different from current
+  if (urlLang !== i18nStore.locale) {
+    i18nStore.setLocale(urlLang);
+  }
+  
+  // Handle authentication
   if (to.meta.requiresAuth && !isAuthenticated()) {
-    next({ name: 'Login', query: { redirect: to.fullPath } });
+    next({ name: `Login-${urlLang}`, query: { redirect: to.fullPath } });
   } else if (to.meta.requiresGuest && isAuthenticated()) {
-    next({ name: 'Home' });
+    next({ name: `Home-${urlLang}` });
   } else {
     next();
   }

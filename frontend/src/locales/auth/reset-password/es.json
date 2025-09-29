@@ -1,0 +1,26 @@
+{
+  "title": "Crea tu nueva contraseña. 🔑",
+  "subtitle": "Elige una contraseña fuerte para mantener tu cuenta segura.",
+  "newPasswordPlaceholder": "Nueva contraseña",
+  "confirmPasswordPlaceholder": "Confirma la nueva contraseña",
+  "updateButton": "Actualizar contraseña",
+  "updatingButton": "Actualizando...",
+  "backToCode": "Volver a verificación",
+  "validation": {
+    "fillAllFields": "Por favor completa todos los campos de contraseña",
+    "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+    "passwordsMatch": "Las contraseñas deben coincidir",
+    "passwordStrength": "La contraseña debe contener al menos una mayúscula, una minúscula y un número"
+  },
+  "success": {
+    "title": "Tu contraseña ha sido actualizada. 💋",
+    "message": "",
+    "actionButton": "Volver al Login"
+  },
+  "errors": {
+    "updateFailed": "Error al actualizar contraseña: ",
+    "invalidToken": "La sesión de restablecimiento ha expirado. Por favor inicia de nuevo.",
+    "weakPassword": "La contraseña es muy débil. Por favor elige una contraseña más fuerte."
+  }
+}
+

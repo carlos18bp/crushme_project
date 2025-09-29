@@ -1,0 +1,30 @@
+{
+  "title": "Begin your journey with us. 👑",
+  "usernamePlaceholder": "Choose a username",
+  "emailPlaceholder": "Your email address",
+  "passwordPlaceholder": "Create a password",
+  "confirmPasswordPlaceholder": "Confirm password",
+  "createAccountButton": "Create account",
+  "creatingAccount": "Creating account...",
+  "alreadyHave": "Already have an account?",
+  "signIn": "Sign in",
+  "validation": {
+    "fillAllFields": "Please fill in all fields",
+    "passwordsMatch": "Passwords must match",
+    "usernameRequired": "Username is required",
+    "validEmail": "Please enter a valid email address",
+    "passwordLength": "Password must be at least 8 characters"
+  },
+  "success": {
+    "title": "Account created successfully!",
+    "message": "Your account has been created correctly.",
+    "subtitle": "Check your email to verify your account.",
+    "actionButton": "Go to Dashboard"
+  },
+  "errors": {
+    "signupFailed": "Sign up failed: ",
+    "emailExists": "This email is already registered",
+    "usernameExists": "This username is already taken"
+  }
+}
+

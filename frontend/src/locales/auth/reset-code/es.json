@@ -1,0 +1,22 @@
+{
+  "title": "Ingresa el código de verificación.",
+  "subtitle": "Ingresa el código que enviamos a tu correo para continuar. 🔐",
+  "codePlaceholder": "0",
+  "verifyButton": "Verificar código",
+  "verifyingButton": "Verificando...",
+  "didntReceive": "¿No recibiste el código?",
+  "resend": "Reenviar",
+  "backToForgot": "Volver a recuperar contraseña",
+  "validation": {
+    "codeRequired": "Por favor ingresa el código de verificación",
+    "codeLength": "El código de verificación debe tener 4 dígitos"
+  },
+  "errors": {
+    "verificationFailed": "Error al verificar código: ",
+    "invalidCode": "Código de verificación inválido",
+    "codeExpired": "El código de verificación ha expirado",
+    "resendFailed": "Error al reenviar código: "
+  },
+  "resendSuccess": "¡Código de verificación enviado exitosamente!"
+}
+

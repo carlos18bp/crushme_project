@@ -1,0 +1,26 @@
+{
+  "title": "Verifica tu identidad.",
+  "subtitle": "Ingresa el código que enviamos a tu correo para continuar. 💕",
+  "codePlaceholder": "0",
+  "verifyButton": "Verificar",
+  "verifyingButton": "Verificando...",
+  "resendingButton": "Enviando...",
+  "didntReceive": "¿No recibiste el código?",
+  "resend": "Reenviar",
+  "validation": {
+    "codeRequired": "Por favor ingresa el código de verificación",
+    "codeLength": "El código de verificación debe tener 4 dígitos"
+  },
+  "success": {
+    "title": "Nuestra cuenta ha sido creada exitosamente. 💖",
+    "message": "",
+    "actionButton": "Continuar al Dashboard"
+  },
+  "errors": {
+    "verificationFailed": "Error en la verificación: ",
+    "invalidCode": "Código de verificación inválido",
+    "codeExpired": "El código de verificación ha expirado",
+    "resendFailed": "Error al reenviar código: "
+  },
+  "resendSuccess": "¡Código de verificación enviado exitosamente!"
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Reset your password. 😊",
+  "subtitle": "Enter your email and we will send you instructions to create a new password.",
+  "emailPlaceholder": "Enter your email address",
+  "sendButton": "Send instructions",
+  "sendingButton": "Sending...",
+  "backToLogin": "Back to login",
+  "validation": {
+    "emailRequired": "Please enter your email address",
+    "validEmail": "Please enter a valid email address"
+  },
+  "success": {
+    "title": "Instructions sent!",
+    "message": "We've sent a verification code to your email.",
+    "subtitle": "Check your inbox and enter the code to continue.",
+    "actionButton": "Continue"
+  },
+  "errors": {
+    "sendFailed": "Failed to send instructions: ",
+    "emailNotFound": "No account found with this email address",
+    "tooManyRequests": "Too many requests. Please try again later."
+  }
+}

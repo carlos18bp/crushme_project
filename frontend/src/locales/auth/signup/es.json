@@ -1,0 +1,30 @@
+{
+  "title": "Comienza tu viaje con nosotros. 👑",
+  "usernamePlaceholder": "Elige un nombre de usuario",
+  "emailPlaceholder": "Tu dirección de correo",
+  "passwordPlaceholder": "Crea una contraseña",
+  "confirmPasswordPlaceholder": "Confirma la contraseña",
+  "createAccountButton": "Crear cuenta",
+  "creatingAccount": "Creando cuenta...",
+  "alreadyHave": "¿Ya tienes una cuenta?",
+  "signIn": "Iniciar sesión",
+  "validation": {
+    "fillAllFields": "Por favor completa todos los campos",
+    "passwordsMatch": "Las contraseñas deben coincidir",
+    "usernameRequired": "El nombre de usuario es requerido",
+    "validEmail": "Por favor ingresa un correo válido",
+    "passwordLength": "La contraseña debe tener al menos 8 caracteres"
+  },
+  "success": {
+    "title": "¡Cuenta creada exitosamente!",
+    "message": "Tu cuenta ha sido creada correctamente.",
+    "subtitle": "Revisa tu email para verificar tu cuenta.",
+    "actionButton": "Ir al Dashboard"
+  },
+  "errors": {
+    "signupFailed": "Error al registrarse: ",
+    "emailExists": "Este correo ya está registrado",
+    "usernameExists": "Este nombre de usuario ya está en uso"
+  }
+}
+

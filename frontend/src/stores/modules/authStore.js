@@ -7,6 +7,7 @@ import { ref, computed } from 'vue';
 import { 
   get_request, 
   create_request, 
+  update_request,
   setTokens, 
   clearTokens, 
   isAuthenticated 
@@ -54,11 +55,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
-      const response = await create_request('auth/signin/', credentials);
+      const response = await create_request('auth/login/', credentials);
       
-      if (response.data.tokens && response.data.user) {
+      if (response.data.access && response.data.user) {
         // Store tokens
-        setTokens(response.data.tokens.access, response.data.tokens.refresh);
+        setTokens(response.data.access, response.data.refresh);
         
         // Store user data
         user.value = response.data.user;
@@ -69,7 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('Invalid response format');
       }
     } catch (err) {
-      error.value = err.response?.data?.error || 'Login failed';
+      error.value = err.response?.data?.non_field_errors?.[0] || err.response?.data?.error || 'Login failed';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -80,8 +81,7 @@ export const useAuthStore = defineStore('auth', () => {
    * Register new user
    * @param {Object} userData - Registration data
    * @param {string} userData.email - User email
-   * @param {string} userData.first_name - User first name
-   * @param {string} userData.last_name - User last name
+   * @param {string} userData.username - Username
    * @param {string} userData.password - User password
    * @param {string} userData.password_confirm - Password confirmation
    */
@@ -92,20 +92,14 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await create_request('auth/signup/', userData);
       
-      if (response.data.tokens && response.data.user) {
-        // Store tokens
-        setTokens(response.data.tokens.access, response.data.tokens.refresh);
-        
-        // Store user data
-        user.value = response.data.user;
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
-        
-        return { success: true, data: response.data };
-      } else {
-        throw new Error('Invalid response format');
-      }
+      // Signup returns message and requires_verification, not tokens
+      return { 
+        success: true, 
+        data: response.data,
+        requiresVerification: response.data.requires_verification 
+      };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Registration failed';
+      error.value = err.response?.data || 'Registration failed';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -130,6 +124,58 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * Verify email with verification code
+   * @param {Object} verifyData - Verification data
+   * @param {string} verifyData.email - User email
+   * @param {string} verifyData.verification_code - 4-digit verification code
+   */
+  async function verifyEmail(verifyData) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/verify-email/', verifyData);
+      
+      if (response.data.access && response.data.user) {
+        // Store tokens after successful verification
+        setTokens(response.data.access, response.data.refresh);
+        
+        // Store user data
+        user.value = response.data.user;
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+        
+        return { success: true, data: response.data };
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      error.value = err.response?.data?.verification_code?.[0] || err.response?.data?.non_field_errors?.[0] || 'Email verification failed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Resend verification code
+   * @param {string} email - User email
+   */
+  async function resendVerificationCode(email) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/resend-verification/', { email });
+      return { success: true, message: response.data.message };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Failed to resend verification code';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
    * Get current user profile
    */
   async function fetchProfile() {
@@ -141,13 +187,10 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await get_request('auth/profile/');
       
-      if (response.data.user) {
-        user.value = response.data.user;
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
-        return { success: true, data: response.data.user };
-      } else {
-        throw new Error('Invalid response format');
-      }
+      // Profile endpoint returns user data directly
+      user.value = response.data;
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
+      return { success: true, data: response.data };
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch profile';
       return { success: false, error: error.value };
@@ -165,17 +208,17 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
-      const response = await create_request('auth/profile/update/', profileData);
+      const response = await update_request('auth/update_profile/', profileData);
       
       if (response.data.user) {
         user.value = response.data.user;
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
-        return { success: true, data: response.data.user };
+        return { success: true, data: response.data.user, message: response.data.message };
       } else {
         throw new Error('Invalid response format');
       }
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Profile update failed';
+      error.value = err.response?.data || 'Profile update failed';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -194,10 +237,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
-      const response = await create_request('auth/password/change/', passwordData);
+      const response = await create_request('auth/update_password/', passwordData);
       return { success: true, message: response.data.message };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Password change failed';
+      error.value = err.response?.data || 'Password change failed';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -205,18 +248,18 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Send password reset code
+   * Send password reset code (forgot password)
    * @param {string} email - User email
    */
-  async function sendPasswordResetCode(email) {
+  async function forgotPassword(email) {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await create_request('auth/password/reset/send/', { email });
+      const response = await create_request('auth/forgot-password/', { email });
       return { success: true, message: response.data.message };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Failed to send reset code';
+      error.value = err.response?.data?.error || 'Failed to send reset code';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -224,10 +267,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Reset password with code
+   * Reset password with code (single endpoint)
    * @param {Object} resetData - Password reset data
    * @param {string} resetData.email - User email
-   * @param {string} resetData.passcode - Reset code
+   * @param {string} resetData.reset_code - 4-digit reset code
    * @param {string} resetData.new_password - New password
    * @param {string} resetData.new_password_confirm - New password confirmation
    */
@@ -236,10 +279,98 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
-      const response = await create_request('auth/password/reset/verify/', resetData);
+      const response = await create_request('auth/reset-password/', resetData);
       return { success: true, message: response.data.message };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Password reset failed';
+      error.value = err.response?.data || 'Password reset failed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Guest checkout
+   * @param {Object} guestData - Guest checkout data
+   */
+  async function guestCheckout(guestData) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/guest_checkout/', guestData);
+      return { success: true, data: response.data };
+    } catch (err) {
+      error.value = err.response?.data || 'Guest checkout failed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Check username availability
+   * @param {string} username - Username to check
+   */
+  async function checkUsername(username) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/check_username/', { username });
+      return { success: true, data: response.data };
+    } catch (err) {
+      error.value = err.response?.data || 'Username check failed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Check guest profile
+   * @param {string} email - Email to check for guest profile
+   */
+  async function checkGuest(email) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/check_guest/', { email });
+      return { success: true, data: response.data };
+    } catch (err) {
+      error.value = err.response?.data || 'Guest check failed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Google OAuth login
+   * @param {string} googleToken - Google OAuth token
+   */
+  async function googleLogin(googleToken) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/google_login/', { google_token: googleToken });
+      
+      if (response.data.access && response.data.user) {
+        // Store tokens
+        setTokens(response.data.access, response.data.refresh);
+        
+        // Store user data
+        user.value = response.data.user;
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+        
+        return { success: true, data: response.data };
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      error.value = err.response?.data || 'Google login failed';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -271,12 +402,18 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     register,
+    verifyEmail,
+    resendVerificationCode,
     logout,
     fetchProfile,
     updateProfile,
     changePassword,
-    sendPasswordResetCode,
+    forgotPassword,
     resetPassword,
+    guestCheckout,
+    checkUsername,
+    checkGuest,
+    googleLogin,
     clearError,
     initializeAuth
   };

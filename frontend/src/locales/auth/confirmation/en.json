@@ -1,0 +1,7 @@
+{
+  "defaultTitle": "Success!",
+  "defaultMessage": "The operation has been completed successfully.",
+  "redirecting": "Redirecting in {seconds} seconds...",
+  "continue": "Continue"
+}
+

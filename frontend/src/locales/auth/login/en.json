@@ -1,0 +1,22 @@
+{
+  "title": "Step back into your private world.",
+  "emailPlaceholder": "Your email address",
+  "passwordPlaceholder": "Your password",
+  "rememberMe": "Remember me",
+  "forgotPassword": "Forgot your password?",
+  "signInButton": "Sign in",
+  "signingIn": "Signing in...",
+  "newHere": "New here?",
+  "createAccount": "Create an account",
+  "validation": {
+    "fillAllFields": "Please fill in all fields"
+  },
+  "success": {
+    "title": "Welcome back. 😍",
+    "message": "",
+    "actionButton": "Go to Dashboard"
+  },
+  "errors": {
+    "loginFailed": "Login failed: "
+  }
+}

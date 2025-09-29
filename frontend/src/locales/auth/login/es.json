@@ -1,0 +1,22 @@
+{
+  "title": "Regresa a tu mundo privado.",
+  "emailPlaceholder": "Tu dirección de correo",
+  "passwordPlaceholder": "Tu contraseña",
+  "rememberMe": "Recordarme",
+  "forgotPassword": "¿Olvidaste tu contraseña?",
+  "signInButton": "Iniciar sesión",
+  "signingIn": "Iniciando sesión...",
+  "newHere": "¿Nuevo aquí?",
+  "createAccount": "Crear una cuenta",
+  "validation": {
+    "fillAllFields": "Por favor completa todos los campos"
+  },
+  "success": {
+    "title": "Bienvenido de vuelta. 😍",
+    "message": "",
+    "actionButton": "Ir al Dashboard"
+  },
+  "errors": {
+    "loginFailed": "Error al iniciar sesión: "
+  }
+}

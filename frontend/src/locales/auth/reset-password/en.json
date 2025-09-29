@@ -1,0 +1,26 @@
+{
+  "title": "Create your new password. 🔑",
+  "subtitle": "Choose a strong password to keep your account secure.",
+  "newPasswordPlaceholder": "New password",
+  "confirmPasswordPlaceholder": "Confirm new password",
+  "updateButton": "Update password",
+  "updatingButton": "Updating...",
+  "backToCode": "Back to verification",
+  "validation": {
+    "fillAllFields": "Please fill in all password fields",
+    "passwordLength": "Password must be at least 8 characters",
+    "passwordsMatch": "Passwords must match",
+    "passwordStrength": "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+  },
+  "success": {
+    "title": "Your password has been updated. 💋",
+    "message": "",
+    "actionButton": "Back to Login"
+  },
+  "errors": {
+    "updateFailed": "Failed to update password: ",
+    "invalidToken": "Reset session has expired. Please start again.",
+    "weakPassword": "Password is too weak. Please choose a stronger password."
+  }
+}
+
