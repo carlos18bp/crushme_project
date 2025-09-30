@@ -11,6 +11,11 @@ from ..views.product_views import (
     get_woocommerce_products, get_woocommerce_categories, 
     get_woocommerce_product_detail, test_woocommerce_connection
 )
+from ..views.category_views import (
+    get_organized_categories, get_category_tree,
+    get_products_stats, get_category_stats,
+    clear_woocommerce_cache
+)
 
 urlpatterns = [
     # Product listing and details
@@ -32,9 +37,20 @@ urlpatterns = [
     path('<int:product_id>/delete/', delete_product, name='delete_product'),
     path('<int:product_id>/stock/', update_product_stock, name='update_product_stock'),
     
-    # WooCommerce integration endpoints (Admin only)
+    # WooCommerce integration endpoints (Public)
     path('woocommerce/test/', test_woocommerce_connection, name='test_woocommerce_connection'),
     path('woocommerce/products/', get_woocommerce_products, name='get_woocommerce_products'),
     path('woocommerce/categories/', get_woocommerce_categories, name='get_woocommerce_categories'),
     path('woocommerce/products/<int:product_id>/', get_woocommerce_product_detail, name='get_woocommerce_product_detail'),
+    
+    # Organized categories endpoints (Public) - NEW!
+    path('woocommerce/categories/organized/', get_organized_categories, name='get_organized_categories'),
+    path('woocommerce/categories/tree/', get_category_tree, name='get_category_tree'),
+    
+    # Statistics endpoints (Public) - NEW!
+    path('woocommerce/stats/', get_products_stats, name='get_products_stats'),
+    path('woocommerce/categories/<int:category_id>/stats/', get_category_stats, name='get_category_stats'),
+    
+    # Cache management (Public for now, change to Admin in production)
+    path('woocommerce/cache/clear/', clear_woocommerce_cache, name='clear_woocommerce_cache'),
 ]

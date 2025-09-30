@@ -1,0 +1,9 @@
+{
+  "navbar": {
+    "home": "Inicio",
+    "diaries": "Diarios",
+    "shop": "Tienda",
+    "aboutUs": "Sobre Nosotros",
+    "contact": "Contacto"
+  }
+}

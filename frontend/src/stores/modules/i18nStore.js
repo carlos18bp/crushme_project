@@ -18,6 +18,18 @@ import resetPasswordEs from '@/locales/auth/reset-password/es.json'
 import confirmationEn from '@/locales/auth/confirmation/en.json'
 import confirmationEs from '@/locales/auth/confirmation/es.json'
 
+// Import products translations
+import productsEn from '@/locales/products/en.json'
+import productsEs from '@/locales/products/es.json'
+
+// Import cart translations
+import cartEn from '@/locales/shared/cart/en.json'
+import cartEs from '@/locales/shared/cart/es.json'
+
+// Import navbar translations
+import navbarEn from '@/locales/shared/navbar/en.json'
+import navbarEs from '@/locales/shared/navbar/es.json'
+
 // List of countries where Spanish is the primary language
 const spanishSpeakingCountries = [
   'AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GQ',
@@ -33,7 +45,10 @@ const messages = {
     forgotPassword: forgotPasswordEn,
     resetCode: resetCodeEn,
     resetPassword: resetPasswordEn,
-    confirmation: confirmationEn
+    confirmation: confirmationEn,
+    products: productsEn,
+    cart: cartEn,
+    navbar: navbarEn.navbar
   },
   es: {
     login: loginEs,
@@ -42,7 +57,10 @@ const messages = {
     forgotPassword: forgotPasswordEs,
     resetCode: resetCodeEs,
     resetPassword: resetPasswordEs,
-    confirmation: confirmationEs
+    confirmation: confirmationEs,
+    products: productsEs,
+    cart: cartEs,
+    navbar: navbarEs.navbar
   }
 }
 

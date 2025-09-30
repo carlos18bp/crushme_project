@@ -1,0 +1,61 @@
+{
+  "title": "Products",
+  "breadcrumb": {
+    "home": "Home",
+    "casual": "Casual"
+  },
+  "filters": {
+    "title": "Filters",
+    "categories": {
+      "dressmeup": "Dress Me Up",
+      "kinky": "Kinky Little Secrets",
+      "naughty": "My Naughty Toys",
+      "romantic": "Romantic Treats",
+      "tasty": "Tasty Temptations"
+    },
+    "applyFilter": "Apply Filter",
+    "allProducts": "All Products",
+    "loading": "Loading...",
+    "loadingCategories": "Loading categories..."
+  },
+  "header": {
+    "showing": "Showing {start}-{end} of {total} Products",
+    "sortBy": "Sort by:",
+    "sortOptions": {
+      "mostPopular": "Most Popular",
+      "priceLowHigh": "Price: Low to High",
+      "priceHighLow": "Price: High to Low",
+      "newest": "Newest",
+      "bestRating": "Best Rating"
+    }
+  },
+  "product": {
+    "buyNow": "Buy now",
+    "addToCart": "Add to cart",
+    "adding": "Adding...",
+    "viewProduct": "View Product",
+    "addToWishlist": "Add to Wishlist",
+    "addToList": "Add to List"
+  },
+  "navigation": {
+    "home": "Home",
+    "products": "Products",
+    "cart": "Cart",
+    "login": "Login",
+    "register": "Register",
+    "orders": "Orders",
+    "wishlists": "Wishlists",
+    "profile": "Profile"
+  },
+  "loading": "Loading products...",
+  "retry": "Try Again",
+  "noProducts": "No products found",
+  "outOfStock": "Out of Stock",
+  "onBackorder": "On Backorder",
+  "sale": "Sale",
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page"
+  }
+}

@@ -5,7 +5,9 @@ Handles connection and data fetching from WooCommerce REST API
 import requests
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
+from django.core.cache import cache
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ class WooCommerceService:
                 'status_code': None
             }
     
-    def get_products(self, category_id=None, per_page=100, page=1):
+    def get_products(self, category_id=None, per_page=100, page=1, use_cache=True):
         """
         Get products from WooCommerce
         
@@ -89,10 +91,22 @@ class WooCommerceService:
             category_id (int, optional): Category ID to filter products
             per_page (int): Number of products per page (max 100)
             page (int): Page number for pagination
+            use_cache (bool): Whether to use cache (default True)
         
         Returns:
             dict: API response with products data
         """
+        # Generar clave de caché única
+        cache_key = f'woocommerce_products_{category_id or "all"}_{per_page}_{page}'
+        
+        # Intentar obtener del caché si está habilitado
+        if use_cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                logger.info(f"✅ Products loaded from cache: {cache_key}")
+                return cached_data
+        
+        # Si no está en caché, hacer petición a WooCommerce
         params = {
             'per_page': min(per_page, 100),  # WooCommerce max is 100
             'page': page,
@@ -102,26 +116,52 @@ class WooCommerceService:
         if category_id:
             params['category'] = category_id
         
-        return self._make_request('products', params)
+        result = self._make_request('products', params)
+        
+        # Guardar en caché por 1 hora (3600 segundos)
+        if result['success'] and use_cache:
+            cache.set(cache_key, result, timeout=3600)
+            logger.info(f"💾 Products cached: {cache_key}")
+        
+        return result
     
-    def get_categories(self, per_page=100, page=1):
+    def get_categories(self, per_page=100, page=1, use_cache=True):
         """
         Get product categories from WooCommerce
         
         Args:
             per_page (int): Number of categories per page
             page (int): Page number for pagination
+            use_cache (bool): Whether to use cache (default True)
         
         Returns:
             dict: API response with categories data
         """
+        # Generar clave de caché única
+        cache_key = f'woocommerce_categories_{per_page}_{page}'
+        
+        # Intentar obtener del caché si está habilitado
+        if use_cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                logger.info(f"✅ Categories loaded from cache: {cache_key}")
+                return cached_data
+        
+        # Si no está en caché, hacer petición a WooCommerce
         params = {
             'per_page': per_page,
             'page': page,
             'hide_empty': False  # Include categories without products
         }
         
-        return self._make_request('products/categories', params)
+        result = self._make_request('products/categories', params)
+        
+        # Guardar en caché por 1 hora (3600 segundos)
+        if result['success'] and use_cache:
+            cache.set(cache_key, result, timeout=3600)
+            logger.info(f"💾 Categories cached: {cache_key}")
+        
+        return result
     
     def get_product_by_id(self, product_id):
         """
@@ -146,8 +186,26 @@ class WooCommerceService:
             dict: API response with category data
         """
         return self._make_request(f'products/categories/{category_id}')
+    
+    def clear_cache(self):
+        """
+        Limpiar toda la caché de WooCommerce
+        """
+        # Limpiar categorías
+        for per_page in [50, 100]:
+            for page in range(1, 5):
+                cache_key = f'woocommerce_categories_{per_page}_{page}'
+                cache.delete(cache_key)
+        
+        # Limpiar datos organizados
+        cache.delete('woocommerce_organized_categories')
+        cache.delete('woocommerce_stats')
+        
+        logger.info("🗑️ WooCommerce cache cleared")
+        return True
 
 
 # Singleton instance
 woocommerce_service = WooCommerceService()
+
 

@@ -1,0 +1,11 @@
+/home/cerrotico/work/crushme_project/backend/venv/lib/python3.12/site-packages/rest_framework_simplejwt/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+/home/cerrotico/work/crushme_project/backend/venv/lib/python3.12/site-packages/rest_framework_simplejwt/__init__.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+Watching for file changes with StatReloader
+System check identified some issues:
+
+WARNINGS:
+?: (staticfiles.W004) The directory '/home/cerrotico/work/crushme_project/backend/static' in the STATICFILES_DIRS setting does not exist.
+
+System check identified 1 issue (0 silenced).

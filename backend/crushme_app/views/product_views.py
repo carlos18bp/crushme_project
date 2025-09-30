@@ -286,7 +286,7 @@ def get_product_recommendations(request, product_id):
 # ========== WOOCOMMERCE INTEGRATION ENDPOINTS ==========
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])  # Solo administradores pueden ver la estructura de WooCommerce
+@permission_classes([AllowAny])  # Endpoint público para obtener productos de WooCommerce
 def get_woocommerce_products(request):
     """
     Obtener productos desde WooCommerce para ver su estructura
@@ -347,7 +347,7 @@ def get_woocommerce_products(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])  # Solo administradores pueden ver la estructura de WooCommerce
+@permission_classes([AllowAny])  # Endpoint público para obtener categorías de WooCommerce
 def get_woocommerce_categories(request):
     """
     Obtener categorías desde WooCommerce para ver su estructura
@@ -400,7 +400,7 @@ def get_woocommerce_categories(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])  # Endpoint público para obtener detalle de producto de WooCommerce
 def get_woocommerce_product_detail(request, product_id):
     """
     Obtener un producto específico desde WooCommerce por ID
@@ -441,7 +441,7 @@ def get_woocommerce_product_detail(request, product_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])  # Endpoint público para probar conexión con WooCommerce
 def test_woocommerce_connection(request):
     """
     Endpoint para probar la conexión con WooCommerce

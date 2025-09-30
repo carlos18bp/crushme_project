@@ -77,6 +77,10 @@ export function isAuthenticated() {
  * @returns {object} - Response from endpoint
  */
 async function makeRequest(method, url, params = {}, config = {}) {
+  const startTime = performance.now();
+  const fullUrl = `/api/${url}`;
+  console.log(`🌐 → HTTP ${method} ${fullUrl}`);
+  
   const csrfToken = getCookie("csrftoken");
   const token = getJWTToken();
   
@@ -97,27 +101,34 @@ async function makeRequest(method, url, params = {}, config = {}) {
 
     switch (method) {
       case "GET":
-        response = await axios.get(`/api/${url}`, requestConfig);
+        response = await axios.get(fullUrl, requestConfig);
         break;
       case "POST":
-        response = await axios.post(`/api/${url}`, params, requestConfig);
+        response = await axios.post(fullUrl, params, requestConfig);
         break;
       case "PUT":
-        response = await axios.put(`/api/${url}`, params, requestConfig);
+        response = await axios.put(fullUrl, params, requestConfig);
         break;
       case "PATCH":
-        response = await axios.patch(`/api/${url}`, params, requestConfig);
+        response = await axios.patch(fullUrl, params, requestConfig);
         break;
       case "DELETE":
-        response = await axios.delete(`/api/${url}`, requestConfig);
+        response = await axios.delete(fullUrl, requestConfig);
         break;
       default:
         throw new Error(`Unsupported method: ${method}`);
     }
 
+    const responseTime = performance.now() - startTime;
+    const responseSize = JSON.stringify(response.data).length;
+    console.log(`🌐 ← HTTP ${method} ${fullUrl} (${responseTime.toFixed(0)}ms, ${responseSize} bytes, status: ${response.status})`);
+
     return response;
     
   } catch (error) {
+    const errorTime = performance.now() - startTime;
+    console.error(`🌐 ✗ HTTP ${method} ${fullUrl} ERROR (${errorTime.toFixed(0)}ms):`, error.message);
+    
     // Handle 401 errors (token expired) with automatic refresh
     if (error.response?.status === 401 && token) {
       try {

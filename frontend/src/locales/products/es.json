@@ -1,0 +1,61 @@
+{
+  "title": "Productos",
+  "breadcrumb": {
+    "home": "Inicio",
+    "casual": "Casual"
+  },
+  "filters": {
+    "title": "Filtros",
+    "categories": {
+      "dressmeup": "Vísteme",
+      "kinky": "Pequeños Secretos Traviesos",
+      "naughty": "Mis Juguetes Traviesos",
+      "romantic": "Delicias Románticas",
+      "tasty": "Tentaciones Sabrosas"
+    },
+    "applyFilter": "Aplicar Filtro",
+    "allProducts": "Todos los Productos",
+    "loading": "Cargando...",
+    "loadingCategories": "Cargando categorías..."
+  },
+  "header": {
+    "showing": "Mostrando {start}-{end} de {total} Productos",
+    "sortBy": "Ordenar por:",
+    "sortOptions": {
+      "mostPopular": "Más Popular",
+      "priceLowHigh": "Precio: Menor a Mayor",
+      "priceHighLow": "Precio: Mayor a Menor",
+      "newest": "Más Reciente",
+      "bestRating": "Mejor Calificación"
+    }
+  },
+  "product": {
+    "buyNow": "Comprar ahora",
+    "addToCart": "Agregar al carrito",
+    "adding": "Agregando...",
+    "viewProduct": "Ver Producto",
+    "addToWishlist": "Agregar a Favoritos",
+    "addToList": "Agregar a Lista"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "products": "Productos",
+    "cart": "Carrito",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "orders": "Pedidos",
+    "wishlists": "Lista de Deseos",
+    "profile": "Perfil"
+  },
+  "loading": "Cargando productos...",
+  "retry": "Intentar de Nuevo",
+  "noProducts": "No se encontraron productos",
+  "outOfStock": "Agotado",
+  "onBackorder": "En Espera",
+  "sale": "Oferta",
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página"
+  }
+}
