@@ -677,3 +677,4 @@ Para reportar problemas o solicitar nuevas funcionalidades, contacta al equipo d
 **Última actualización:** Enero 2024
 
 
+

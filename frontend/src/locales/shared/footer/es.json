@@ -1,0 +1,22 @@
+{
+  "footer": {
+    "tagline": "Pequeños deseos, dulces secretos, todo hecho realidad con BuyItForMe",
+    "allRightsReserved": "BuyIt4me. Todos los derechos reservados",
+    "madeWithLove": "Hecho con amor, consentido por ti",
+    "navigation": {
+      "title": "Navegación",
+      "home": "Inicio",
+      "diaries": "Diarios",
+      "shop": "Tienda",
+      "aboutUs": "Acerca de Nosotros",
+      "contact": "Contacto"
+    },
+    "account": {
+      "title": "Cuenta",
+      "termsConditions": "Términos y Condiciones",
+      "signIn": "Iniciar Sesión",
+      "signUp": "Registrarse"
+    },
+    "year": "2025"
+  }
+}

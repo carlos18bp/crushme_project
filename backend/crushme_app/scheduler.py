@@ -69,3 +69,4 @@ def stop_scheduler():
         scheduler.shutdown()
         scheduler = None
         logger.info("🛑 APScheduler stopped")
+

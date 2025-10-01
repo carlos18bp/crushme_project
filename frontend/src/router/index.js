@@ -131,6 +131,13 @@ const baseRoutes = [
     meta: { requiresAuth: true }
   },
   
+  // About Us page
+  {
+    path: '/about',
+    name: 'AboutUs',
+    component: () => import('@/views/AboutUsView.vue')
+  },
+  
   // Error handling
   {
     path: '/:pathMatch(.*)*',

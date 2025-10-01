@@ -30,6 +30,14 @@ import cartEs from '@/locales/shared/cart/es.json'
 import navbarEn from '@/locales/shared/navbar/en.json'
 import navbarEs from '@/locales/shared/navbar/es.json'
 
+// Import footer translations
+import footerEn from '@/locales/shared/footer/en.json'
+import footerEs from '@/locales/shared/footer/es.json'
+
+// Import about us translations
+import aboutUsEn from '@/locales/about_us/en.json'
+import aboutUsEs from '@/locales/about_us/es.json'
+
 // List of countries where Spanish is the primary language
 const spanishSpeakingCountries = [
   'AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GQ',
@@ -48,7 +56,9 @@ const messages = {
     confirmation: confirmationEn,
     products: productsEn,
     cart: cartEn,
-    navbar: navbarEn.navbar
+    navbar: navbarEn.navbar,
+    aboutUs: aboutUsEn,
+    footer: footerEn.footer
   },
   es: {
     login: loginEs,
@@ -60,7 +70,9 @@ const messages = {
     confirmation: confirmationEs,
     products: productsEs,
     cart: cartEs,
-    navbar: navbarEs.navbar
+    navbar: navbarEs.navbar,
+    aboutUs: aboutUsEs,
+    footer: footerEs.footer
   }
 }
 

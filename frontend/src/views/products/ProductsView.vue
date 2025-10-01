@@ -5,7 +5,7 @@
 
     <!-- Main Content -->
     <div class="main-content bg-pink-50 min-h-screen pt-0">
-      <div class="container mx-auto px-6 pt-16 pb-6">
+      <div class="container mx-auto px-6 pt-24 pb-6">
         
         <!-- Breadcrumb Dinámico -->
         <div class="breadcrumb mb-8 flex items-center relative z-10 pt-4">
@@ -45,7 +45,6 @@
                 <div v-if="isLoadingThemes" class="text-center py-4">
                   <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue-medium mx-auto"></div>
                   <p class="text-gray-600 mt-2">{{ $t('products.filters.loadingCategories') }}</p>
-                  <p class="text-gray-500 text-sm mt-1">Cargando categorías primero...</p>
                 </div>
 
                 <!-- Themes from WooCommerce (Organized) -->
@@ -173,12 +172,6 @@
               <div v-if="isLoading" class="text-center py-12">
                 <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-blue-medium mx-auto mb-4"></div>
                 <p class="text-gray-600 text-lg">{{ $t('products.loading') }}</p>
-                <div v-if="!isLoadingThemes && themes.length > 0" class="text-gray-500 text-sm mt-2">
-                  ✅ Categorías cargadas • Cargando productos...
-                </div>
-                <div v-else-if="isLoadingThemes" class="text-gray-500 text-sm mt-2">
-                  📂 Paso 1/2: Cargando categorías...
-                </div>
               </div>
 
               <!-- Error State -->
@@ -246,6 +239,9 @@
         </div>
       </div>
     </div>
+    
+    <!-- Footer -->
+    <Footer />
   </div>
 </template>
 
@@ -257,6 +253,7 @@ import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useProductStore } from '@/stores/modules/productStore'
 import ProductCard from '@/components/products/ProductCard.vue'
 import Navbar from '@/components/shared/Navbar.vue'
+import Footer from '@/components/shared/Footer.vue'
 
 // i18n setup
 const { t } = useI18n()
@@ -692,7 +689,7 @@ onMounted(async () => {
   }
   
   .container {
-    padding-top: 3rem !important; /* Más espacio en móvil para el navbar */
+    padding-top: 4rem !important; /* Más espacio en móvil para el navbar */
   }
   
   .sidebar {
@@ -740,6 +737,7 @@ onMounted(async () => {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
+    padding-top: 5rem !important; /* Más espacio en tablet para el navbar */
   }
 }
 </style>

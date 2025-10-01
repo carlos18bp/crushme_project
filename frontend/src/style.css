@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+/* Colores personalizados de la marca usando Tailwind CSS v4 */
+@theme {
+  --color-brand-pink-light: #E9C3CD;
+  --color-brand-pink-lighter: #FAF3F3;
+  --color-brand-pink-medium: #D689A2;
+  --color-brand-pink-dark: #BF5E81;
+  --color-brand-purple-light: #DA9DFF;
+  --color-brand-blue-medium: #406582;
+  --color-brand-blue-light: #A4C1D0;
+  --color-brand-dark: #11181E;
+}
+
+/* Configuración global de fuentes */
+@layer base {
+  /* Fuente por defecto para todo el cuerpo */
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  /* Títulos usan Comfortaa */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Comfortaa', cursive;
+  }
+  
+  /* Elementos específicos que deben usar Poppins */
+  p, span, a, li, td, th, button, input, textarea, select {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  /* Router links específicamente */
+  a[href] {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
 /* Fuentes Poppins */
 @font-face {
   font-family: 'Poppins';

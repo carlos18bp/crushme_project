@@ -23,7 +23,7 @@
           </router-link>
         </li>
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}/shop`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}/products`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.shop') }}
           </router-link>
         </li>
@@ -49,7 +49,7 @@
           <!-- Badge con cantidad de items -->
           <span 
             v-if="cartStore.totalItems > 0"
-            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-poppins font-medium">
+            class="absolute -top-1 -right-1 bg-brand-blue-medium text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-poppins font-medium">
             {{ cartStore.totalItems }}
           </span>
         </button>

@@ -2,11 +2,15 @@
   <div class="home-view">
     <h1>CrushMe - Home</h1>
     <p>Welcome to CrushMe e-commerce platform</p>
+    
+    <!-- Footer -->
+    <Footer />
   </div>
 </template>
 
 <script setup>
 // Home view component using Composition API
+import Footer from '@/components/shared/Footer.vue'
 </script>
 
 <style scoped>
