@@ -1,0 +1,19 @@
+{
+  "title": "New Message",
+  "for": "For",
+  "from": "From",
+  "name": "Name",
+  "number": "Number",
+  "subject": "Subject",
+  "message": "Message",
+  "emailPlaceholder": "{'your-email@example.com'}",
+  "namePlaceholder": "Your complete name",
+  "phonePlaceholder": "+506 8888-8888",
+  "subjectPlaceholder": "Tell about you",
+  "messagePlaceholder": "Describe your thoughts...",
+  "cancel": "Cancel",
+  "send": "Send",
+  "sending": "Sending...",
+  "goBack": "Go back"
+}
+

@@ -10,4 +10,6 @@ urlpatterns = [
     path('cart/', include('crushme_app.urls.cart_urls')),
     path('orders/', include('crushme_app.urls.order_urls')),
     path('wishlists/', include('crushme_app.urls.wishlist_urls')),
+    path('reviews/', include('crushme_app.urls.review_urls')),
+    path('contact/', include('crushme_app.urls.contact_urls')),
 ]

@@ -198,10 +198,10 @@ const handleVerification = async () => {
           title: t('verification.success.title'),
           message: t('verification.success.message'),
           primaryActionText: t('verification.success.actionButton'),
-          primaryActionRoute: `/${i18nStore.locale}/dashboard`,
+          primaryActionRoute: `/${i18nStore.locale}/profile`,
           autoRedirect: 'true',
           redirectDelay: '3',
-          redirectTo: `/${i18nStore.locale}/dashboard`
+          redirectTo: `/${i18nStore.locale}/profile`
         }
       })
     } else {

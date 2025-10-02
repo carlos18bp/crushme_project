@@ -1,0 +1,28 @@
+{
+  "title": "Spoil your Darling",
+  "titleSecondLine": "with sweet desires",
+  "subtitle": "Peek inside their diaries, read their secrets, and send the gifts they dream of.",
+  "buttons": {
+    "shop": "Go to the Shop",
+    "diaries": "Explore Diaries"
+  },
+  "trustBadges": {
+    "discreetShipping": {
+      "title": "Discreet Shipping",
+      "tooltip": "All packages arrive in unmarked, fully discreet packaging to protect your privacy."
+    },
+    "privateGifting": {
+      "title": "Private Gifting",
+      "tooltip": "Choose whether to reveal your identity or send your gifts anonymously."
+    },
+    "securePayments": {
+      "title": "Secure Payments",
+      "tooltip": "Your payment information is protected with bank-level encryption."
+    },
+    "trustedWorldwide": {
+      "title": "Trusted Worldwide",
+      "tooltip": "Thousands of satisfied customers around the world trust us."
+    }
+  }
+}
+

@@ -18,6 +18,10 @@ from .wishlist_serializers import (
     WishListListSerializer, WishListDetailSerializer, WishListItemSerializer, 
     FavoriteWishListSerializer
 )
+from .review_serializers import (
+    ReviewListSerializer, ReviewDetailSerializer, ReviewCreateSerializer,
+    ReviewUpdateSerializer, ProductReviewStatsSerializer
+)
 
 __all__ = [
     'UserSerializer', 'UserRegistrationSerializer', 'EmailVerificationSerializer', 'UserLoginSerializer',
@@ -29,5 +33,7 @@ __all__ = [
     'CartSerializer', 'CartItemSerializer',
     'OrderListSerializer', 'OrderDetailSerializer', 'OrderItemSerializer',
     'WishListListSerializer', 'WishListDetailSerializer', 'WishListItemSerializer', 
-    'FavoriteWishListSerializer'
+    'FavoriteWishListSerializer',
+    'ReviewListSerializer', 'ReviewDetailSerializer', 'ReviewCreateSerializer',
+    'ReviewUpdateSerializer', 'ProductReviewStatsSerializer'
 ]

@@ -1,0 +1,28 @@
+{
+  "success": {
+    "title": "Success!",
+    "confirmButton": "OK"
+  },
+  "error": {
+    "title": "Error",
+    "confirmButton": "OK"
+  },
+  "warning": {
+    "title": "Warning",
+    "confirmButton": "OK"
+  },
+  "info": {
+    "title": "Information",
+    "confirmButton": "OK"
+  },
+  "confirm": {
+    "title": "Are you sure?",
+    "confirmButton": "Yes, continue",
+    "cancelButton": "Cancel"
+  },
+  "loading": {
+    "title": "",
+    "message": "Loading..."
+  }
+}
+

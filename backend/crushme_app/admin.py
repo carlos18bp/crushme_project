@@ -14,7 +14,8 @@ from .forms.product import ProductForm
 from .models import (
     User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser,
     Product, Cart, CartItem, 
-    Order, OrderItem, WishList, WishListItem, FavoriteWishList
+    Order, OrderItem, WishList, WishListItem, FavoriteWishList,
+    Review
 )
 
 # AttachmentsAdminMixin handles the gallery management automatically
@@ -507,6 +508,65 @@ class FavoriteWishListAdmin(admin.ModelAdmin):
 
 
 # ===========================
+# REVIEW MODELS ADMIN
+# ===========================
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    """
+    Admin for Review model
+    Reviews for WooCommerce products
+    """
+    list_display = (
+        'woocommerce_product_id', 'reviewer_display', 'rating_display', 
+        'is_active', 'is_verified_purchase', 'created_at'
+    )
+    list_filter = ('rating', 'is_active', 'is_verified_purchase', 'created_at')
+    search_fields = (
+        'woocommerce_product_id', 'comment', 'title',
+        'user__email', 'anonymous_name', 'anonymous_email'
+    )
+    readonly_fields = ('created_at', 'updated_at', 'reviewer_name', 'reviewer_email')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Product Information', {
+            'fields': ('woocommerce_product_id',)
+        }),
+        ('Reviewer Information', {
+            'fields': ('user', 'reviewer_name', 'reviewer_email', 'anonymous_name', 'anonymous_email')
+        }),
+        ('Review Content', {
+            'fields': ('rating', 'title', 'comment')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'is_verified_purchase')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def reviewer_display(self, obj):
+        """Display reviewer name"""
+        if obj.user:
+            return format_html('<strong>{}</strong> (Registered)', obj.reviewer_name)
+        return format_html('{} (Guest)', obj.reviewer_name)
+    reviewer_display.short_description = 'Reviewer'
+    
+    def rating_display(self, obj):
+        """Display rating with stars"""
+        stars = '★' * obj.rating + '☆' * (5 - obj.rating)
+        color = '#ffc107' if obj.rating >= 4 else '#ff9800' if obj.rating >= 3 else '#ff5722'
+        return format_html(
+            '<span style="color: {}; font-size: 16px;">{}</span> ({})',
+            color, stars, obj.rating
+        )
+    rating_display.short_description = 'Rating'
+
+
+# ===========================
 # ADMIN SITE CUSTOMIZATION
 # ===========================
 
@@ -568,6 +628,14 @@ class CrushMeAdminSite(admin.AdminSite):
                 ]
             },
             {
+                'name': _('Review Management'),
+                'app_label': 'review_management',
+                'models': [
+                    model for model in app_dict.get('crushme_app', {}).get('models', [])
+                    if model['object_name'] in ['Review']
+                ]
+            },
+            {
                 'name': _('Media & Attachments'),
                 'app_label': 'media_management',
                 'models': [
@@ -596,3 +664,4 @@ admin_site.register(Order, OrderAdmin)
 admin_site.register(WishList, WishListAdmin)
 # WishListItem is managed through WishListAdmin inline
 admin_site.register(FavoriteWishList, FavoriteWishListAdmin)
+admin_site.register(Review, ReviewAdmin)

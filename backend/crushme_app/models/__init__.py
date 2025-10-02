@@ -4,11 +4,15 @@ from .product import Product
 from .cart import Cart, CartItem
 from .order import Order, OrderItem
 from .wishlist import WishList, WishListItem, FavoriteWishList
+from .review import Review
+from .contact import Contact
 
 __all__ = [
     'User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser',
     'Product',
     'Cart', 'CartItem',
     'Order', 'OrderItem',
-    'WishList', 'WishListItem', 'FavoriteWishList'
+    'WishList', 'WishListItem', 'FavoriteWishList',
+    'Review',
+    'Contact'
 ]

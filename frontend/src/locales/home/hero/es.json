@@ -1,0 +1,28 @@
+{
+  "title": "Mima a tu Darling",
+  "titleSecondLine": "con dulces deseos",
+  "subtitle": "Echa un vistazo a sus diarios, lee sus secretos y envía los regalos con los que sueñan.",
+  "buttons": {
+    "shop": "Ir a la Tienda",
+    "diaries": "Explorar Diarios"
+  },
+  "trustBadges": {
+    "discreetShipping": {
+      "title": "Envío Discreto",
+      "tooltip": "Todos los paquetes llegan en empaques sin marcas y totalmente discretos para proteger tu privacidad."
+    },
+    "privateGifting": {
+      "title": "Regalos Privados",
+      "tooltip": "Elige si quieres revelar tu identidad o enviar tus regalos de forma anónima."
+    },
+    "securePayments": {
+      "title": "Pagos Seguros",
+      "tooltip": "Tu información de pago está protegida con encriptación de nivel bancario."
+    },
+    "trustedWorldwide": {
+      "title": "Confianza Mundial",
+      "tooltip": "Miles de clientes satisfechos en todo el mundo confían en nosotros."
+    }
+  }
+}
+

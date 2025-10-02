@@ -478,3 +478,81 @@ def test_woocommerce_connection(request):
             'connection_status': 'ERROR',
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # Endpoint público para obtener productos en tendencia
+def get_trending_products(request):
+    """
+    Obtener 8 productos en tendencia desde WooCommerce
+    Los productos se ordenan por popularidad (más vendidos y mejor calificados)
+    """
+    try:
+        # Obtener más productos de los necesarios para poder filtrar y ordenar
+        result = woocommerce_service.get_products(
+            per_page=50,
+            page=1
+        )
+        
+        if result['success']:
+            products = result['data']
+            
+            # Filtrar solo productos con stock disponible
+            in_stock_products = []
+            for p in products:
+                stock_qty = p.get('stock_quantity')
+                stock_status = p.get('stock_status')
+                
+                # Incluir si tiene stock "instock" o si stock_quantity es None (productos variables)
+                if stock_status == 'instock':
+                    if stock_qty is None or stock_qty > 0:
+                        in_stock_products.append(p)
+            
+            # Ordenar por popularidad (combinación de ventas y rating)
+            # Prioridad: total_sales > average_rating > rating_count
+            def get_popularity_score(product):
+                try:
+                    total_sales = int(product.get('total_sales', 0) or 0)
+                    average_rating_str = product.get('average_rating', '0') or '0'
+                    average_rating = float(average_rating_str)
+                    rating_count = int(product.get('rating_count', 0) or 0)
+                    
+                    # Fórmula de popularidad: ventas * 10 + rating * 5 + número de reseñas
+                    return (total_sales * 10) + (average_rating * 5) + rating_count
+                except (ValueError, TypeError):
+                    return 0
+            
+            # Ordenar por popularidad descendente
+            sorted_products = sorted(
+                in_stock_products,
+                key=get_popularity_score,
+                reverse=True
+            )
+            
+            # Tomar solo los 8 primeros
+            trending_products = sorted_products[:8]
+            
+            return Response({
+                'success': True,
+                'message': f'{len(trending_products)} productos en tendencia obtenidos exitosamente',
+                'data': trending_products,
+                'total_products': len(trending_products),
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'source': 'woocommerce',
+                    'cached': result.get('cached', False)
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

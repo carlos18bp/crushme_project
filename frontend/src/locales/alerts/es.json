@@ -1,0 +1,28 @@
+{
+  "success": {
+    "title": "¡Éxito!",
+    "confirmButton": "Aceptar"
+  },
+  "error": {
+    "title": "Error",
+    "confirmButton": "Aceptar"
+  },
+  "warning": {
+    "title": "Advertencia",
+    "confirmButton": "Aceptar"
+  },
+  "info": {
+    "title": "Información",
+    "confirmButton": "Aceptar"
+  },
+  "confirm": {
+    "title": "¿Estás seguro?",
+    "confirmButton": "Sí, continuar",
+    "cancelButton": "Cancelar"
+  },
+  "loading": {
+    "title": "",
+    "message": "Cargando..."
+  }
+}
+

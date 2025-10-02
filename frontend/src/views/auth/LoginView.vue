@@ -172,10 +172,10 @@ const handleLogin = async () => {
           title: t('login.success.title'),
           message: t('login.success.message'),
           primaryActionText: t('login.success.actionButton'),
-          primaryActionRoute: `/${i18nStore.locale}/dashboard`,
+          primaryActionRoute: `/${i18nStore.locale}/profile`,
           autoRedirect: 'true',
           redirectDelay: '3',
-          redirectTo: `/${i18nStore.locale}/dashboard`
+          redirectTo: `/${i18nStore.locale}/profile`
         }
       })
     } else {

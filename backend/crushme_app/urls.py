@@ -21,4 +21,7 @@ urlpatterns = [
     
     # Wishlist endpoints
     path('wishlists/', include('crushme_app.urls.wishlist_urls')),
+    
+    # Contact endpoints
+    path('contact/', include('crushme_app.urls.contact_urls')),
 ]

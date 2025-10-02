@@ -29,3 +29,5 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING(f'\n⚠️  Caché pre-calentado parcialmente ({success_count}/{total_count})'))
 
+
+

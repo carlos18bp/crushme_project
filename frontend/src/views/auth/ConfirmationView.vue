@@ -1,54 +1,16 @@
 <template>
   <div class="confirmation-view">
-    <!-- Background overlay -->
-    <div class="background-overlay"></div>
-    
     <!-- Language Selector -->
-    <LanguageSelector position="absolute" theme="transparent" />
+    <LanguageSelector position="absolute" theme="light" />
     
     <!-- Content container -->
     <div class="confirmation-content">
-      <div class="confirmation-card">
-        <!-- Success icon -->
-        <div class="success-icon">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="12" fill="#10B981"/>
-            <path d="M8 12.5l2.5 2.5L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        
-        <!-- Title -->
-        <h1 class="confirmation-title">{{ title }}</h1>
-        
-        <!-- Message -->
-        <p class="confirmation-message">{{ message }}</p>
-        
-        <!-- Additional info if provided -->
-        <p v-if="subtitle" class="confirmation-subtitle">{{ subtitle }}</p>
-        
-        <!-- Action buttons -->
-        <div class="confirmation-actions">
-          <button 
-            v-if="primaryAction"
-            @click="handlePrimaryAction"
-            class="btn btn-primary"
-          >
-            {{ primaryAction.text }}
-          </button>
-          
-          <button 
-            v-if="secondaryAction"
-            @click="handleSecondaryAction"
-            class="btn btn-secondary"
-          >
-            {{ secondaryAction.text }}
-          </button>
-        </div>
-        
-        <!-- Auto redirect countdown if enabled -->
-        <div v-if="autoRedirect && countdown > 0" class="countdown">
-          {{ $t('confirmation.redirecting', { seconds: countdown }) }}
-        </div>
+      <!-- Title with emoji -->
+      <h1 class="confirmation-title">{{ title }} 😍</h1>
+      
+      <!-- Auto redirect countdown if enabled -->
+      <div v-if="autoRedirect && countdown > 0" class="countdown">
+        {{ $t('confirmation.redirecting', { seconds: countdown }) }}
       </div>
     </div>
   </div>
@@ -167,164 +129,73 @@ onUnmounted(() => {
 
 <style scoped>
 .confirmation-view {
-  position: relative;
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   overflow: hidden;
-}
-
-.background-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('@/assets/backgrounds/background_1.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 1;
-}
-
-.background-overlay::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  font-family: 'Comfortaa', cursive;
+  /* Gradiente suave de rosa a azul claro */
+  background: linear-gradient(135deg, 
+    #FFE5F0 0%, 
+    #F5E6F7 25%, 
+    #E6F2FF 50%, 
+    #D4E8F5 75%, 
+    #C7E0ED 100%
+  );
 }
 
 .confirmation-content {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 500px;
-}
-
-.confirmation-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 3rem 2rem;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: fadeInScale 0.8s ease-out;
 }
 
-.success-icon {
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: center;
-  animation: scaleIn 0.5s ease-out;
-}
-
-@keyframes scaleIn {
+@keyframes fadeInScale {
   from {
-    transform: scale(0);
+    opacity: 0;
+    transform: scale(0.9);
   }
   to {
+    opacity: 1;
     transform: scale(1);
   }
 }
 
 .confirmation-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1rem;
-  animation: slideUp 0.6s ease-out 0.2s both;
-}
-
-.confirmation-message {
-  font-size: 1.1rem;
-  color: #6b7280;
-  margin-bottom: 1rem;
-  line-height: 1.6;
-  animation: slideUp 0.6s ease-out 0.3s both;
-}
-
-.confirmation-subtitle {
-  font-size: 0.9rem;
-  color: #9ca3af;
-  margin-bottom: 2rem;
-  animation: slideUp 0.6s ease-out 0.4s both;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.confirmation-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  animation: slideUp 0.6s ease-out 0.5s both;
-}
-
-.btn {
-  padding: 0.875rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: #6b7280;
-  border: 2px solid #e5e7eb;
-}
-
-.btn-secondary:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  transform: translateY(-1px);
+  font-family: 'Comfortaa', cursive;
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
 }
 
 .countdown {
-  font-size: 0.875rem;
-  color: #9ca3af;
-  margin-top: 1rem;
-  animation: slideUp 0.6s ease-out 0.6s both;
+  font-family: 'Comfortaa', cursive;
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-top: 2rem;
+  font-weight: 300;
+  opacity: 0.8;
 }
 
 /* Responsive design */
-@media (min-width: 640px) {
-  .confirmation-actions {
-    flex-direction: row;
-    justify-content: center;
+@media (max-width: 768px) {
+  .confirmation-title {
+    font-size: 2rem;
   }
   
-  .confirmation-card {
-    padding: 4rem 3rem;
+  .countdown {
+    font-size: 0.9rem;
   }
 }
 
@@ -333,16 +204,19 @@ onUnmounted(() => {
     padding: 1rem;
   }
   
-  .confirmation-card {
-    padding: 2rem 1.5rem;
+  .confirmation-title {
+    font-size: 1.75rem;
   }
   
+  .countdown {
+    font-size: 0.875rem;
+    margin-top: 1.5rem;
+  }
+}
+
+@media (max-width: 360px) {
   .confirmation-title {
     font-size: 1.5rem;
-  }
-  
-  .confirmation-message {
-    font-size: 1rem;
   }
 }
 </style>

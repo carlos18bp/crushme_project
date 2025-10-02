@@ -199,12 +199,13 @@ STORAGES = {
 
 # Email configuration for password reset functionality
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'misfotoscmbp@gmail.com'
-EMAIL_HOST_PASSWORD = 'ikdvsyikywczdnkk'
-DEFAULT_FROM_EMAIL = 'G&M Consultores Jurídicos <misfotoscmbp@gmail.com>'
+EMAIL_HOST = 'smtpout.secureserver.net'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = 'support@chrushme.com.co'
+EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
+DEFAULT_FROM_EMAIL = 'CrushMe Support <support@chrushme.com.co>'
 
 # Google OAuth2 settings
 GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production

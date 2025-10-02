@@ -22,6 +22,10 @@ import confirmationEs from '@/locales/auth/confirmation/es.json'
 import productsEn from '@/locales/products/en.json'
 import productsEs from '@/locales/products/es.json'
 
+// Import product detail translations
+import productDetailEn from '@/locales/products/product-detail/en.json'
+import productDetailEs from '@/locales/products/product-detail/es.json'
+
 // Import cart translations
 import cartEn from '@/locales/shared/cart/en.json'
 import cartEs from '@/locales/shared/cart/es.json'
@@ -34,9 +38,27 @@ import navbarEs from '@/locales/shared/navbar/es.json'
 import footerEn from '@/locales/shared/footer/en.json'
 import footerEs from '@/locales/shared/footer/es.json'
 
+// Import FAQ translations
+import faqEn from '@/locales/shared/faq/en.json'
+import faqEs from '@/locales/shared/faq/es.json'
+
 // Import about us translations
 import aboutUsEn from '@/locales/about_us/en.json'
 import aboutUsEs from '@/locales/about_us/es.json'
+
+// Import contact translations
+import contactEn from '@/locales/contact/en.json'
+import contactEs from '@/locales/contact/es.json'
+
+// Import alerts translations
+import alertsEn from '@/locales/alerts/en.json'
+import alertsEs from '@/locales/alerts/es.json'
+
+// Import home translations
+import heroEn from '@/locales/home/hero/en.json'
+import heroEs from '@/locales/home/hero/es.json'
+import trendingEn from '@/locales/home/trending/en.json'
+import trendingEs from '@/locales/home/trending/es.json'
 
 // List of countries where Spanish is the primary language
 const spanishSpeakingCountries = [
@@ -55,10 +77,16 @@ const messages = {
     resetPassword: resetPasswordEn,
     confirmation: confirmationEn,
     products: productsEn,
+    productDetail: productDetailEn,
     cart: cartEn,
     navbar: navbarEn.navbar,
     aboutUs: aboutUsEn,
-    footer: footerEn.footer
+    contact: contactEn,
+    alerts: alertsEn,
+    footer: footerEn.footer,
+    faq: faqEn,
+    hero: heroEn,
+    trending: trendingEn
   },
   es: {
     login: loginEs,
@@ -69,10 +97,16 @@ const messages = {
     resetPassword: resetPasswordEs,
     confirmation: confirmationEs,
     products: productsEs,
+    productDetail: productDetailEs,
     cart: cartEs,
     navbar: navbarEs.navbar,
     aboutUs: aboutUsEs,
-    footer: footerEs.footer
+    contact: contactEs,
+    alerts: alertsEs,
+    footer: footerEs.footer,
+    faq: faqEs,
+    hero: heroEs,
+    trending: trendingEs
   }
 }
 

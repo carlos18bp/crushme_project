@@ -1,30 +1,68 @@
 <template>
   <div class="home-view">
-    <h1>CrushMe - Home</h1>
-    <p>Welcome to CrushMe e-commerce platform</p>
+    <!-- Background Image -->
+    <div class="home-background">
+      <img 
+        src="@/assets/backgrounds/hero_bg.png" 
+        alt="Home Background" 
+        class="background-image"
+      />
+    </div>
     
-    <!-- Footer -->
-    <Footer />
+    <!-- Content -->
+    <div class="home-content">
+      <!-- Navbar -->
+      <Navbar />
+      
+      <!-- Hero Section -->
+      <Hero />
+      
+      <!-- Trending Products Section -->
+      <TrendingProducts />
+      
+      <!-- FAQ Section -->
+      <FAQ />
+      
+      <!-- Footer -->
+      <Footer />
+    </div>
   </div>
 </template>
 
 <script setup>
-// Home view component using Composition API
+import Navbar from '@/components/shared/Navbar.vue'
+import Hero from '@/components/home/Hero.vue'
+import TrendingProducts from '@/components/products/TrendingProducts.vue'
+import FAQ from '@/components/shared/FAQ.vue'
 import Footer from '@/components/shared/Footer.vue'
 </script>
 
 <style scoped>
 .home-view {
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
 }
 
-h1 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
+/* Background Image */
+.home-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
-p {
-  color: #7f8c8d;
+.background-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Content Container */
+.home-content {
+  position: relative;
+  z-index: 1;
 }
 </style>

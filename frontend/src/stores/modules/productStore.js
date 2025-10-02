@@ -26,6 +26,7 @@ export const useProductStore = defineStore('product', () => {
   const selectedTheme = ref(''); // NUEVO: Tema seleccionado
   const selectedSubcategory = ref(''); // NUEVO: Subcategoría seleccionada
   const wooStats = ref(null); // ⭐ NUEVO: Estadísticas globales (total de productos, etc.)
+  const trendingProducts = ref([]); // ⭐ NUEVO: Productos en tendencia (8 tops)
   
   const isLoading = ref(false);
   const isLoadingProduct = ref(false);
@@ -35,6 +36,7 @@ export const useProductStore = defineStore('product', () => {
   const isLoadingWooCategories = ref(false);
   const isLoadingWooThemes = ref(false); // NUEVO: Loading para temas organizados
   const isLoadingWooCategoryTree = ref(false); // NUEVO: Loading para árbol de categorías
+  const isLoadingTrending = ref(false); // ⭐ NUEVO: Loading para productos en tendencia
   const error = ref(null);
   const wooError = ref(null);
   
@@ -96,6 +98,7 @@ export const useProductStore = defineStore('product', () => {
   const hasWooProducts = computed(() => wooProducts.value.length > 0);
   const hasWooCategories = computed(() => wooCategories.value.length > 0);
   const hasWooThemes = computed(() => wooThemes.value.length > 0); // NUEVO
+  const hasTrendingProducts = computed(() => trendingProducts.value.length > 0); // ⭐ NUEVO
   const isWooConnected = computed(() => wooConnectionStatus.value === 'OK');
 
   // NUEVO: Getters para temas organizados
@@ -578,15 +581,86 @@ export const useProductStore = defineStore('product', () => {
    * @param {number} productId - WooCommerce product ID
    */
   async function fetchWooProduct(productId) {
+    const startTime = performance.now();
+    console.log(`🛍️ → Enviando request producto ID: ${productId}...`);
+    
     isLoadingWooProduct.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request(`products/woocommerce/products/${productId}/`);
-      wooCurrentProduct.value = response.data;
-      return { success: true, data: response.data };
+      const responseTime = performance.now() - startTime;
+      
+      console.log(`🛍️ ← Producto respuesta recibida (${responseTime.toFixed(0)}ms)`);
+      console.log('📦 RESPUESTA COMPLETA DEL BACKEND:', JSON.stringify(response.data, null, 2));
+      
+      // Verificar si la respuesta del backend es exitosa
+      if (response.data.success) {
+        const productData = response.data.data; // El producto real está en data.data
+        
+        console.log('✅ RESPUESTA EXITOSA DEL BACKEND');
+        console.log('📦 DATOS COMPLETOS DEL PRODUCTO WOOCOMMERCE:', JSON.stringify(productData, null, 2));
+        console.log('📦 ESTRUCTURA PRINCIPAL DEL PRODUCTO:', {
+          id: productData.id,
+          name: productData.name,
+          slug: productData.slug,
+          price: productData.price,
+          regular_price: productData.regular_price,
+          sale_price: productData.sale_price,
+          on_sale: productData.on_sale,
+          description: productData.description ? productData.description.substring(0, 100) + '...' : 'Sin descripción',
+          short_description: productData.short_description ? productData.short_description.substring(0, 100) + '...' : 'Sin descripción corta',
+          images_count: productData.images?.length || 0,
+          images_src: productData.images?.map(img => img.src) || [],
+          categories: productData.categories?.map(cat => ({ id: cat.id, name: cat.name })) || [],
+          tags: productData.tags?.map(tag => ({ id: tag.id, name: tag.name })) || [],
+          stock_status: productData.stock_status,
+          stock_quantity: productData.stock_quantity,
+          manage_stock: productData.manage_stock,
+          sku: productData.sku,
+          type: productData.type,
+          status: productData.status,
+          featured: productData.featured,
+          average_rating: productData.average_rating,
+          rating_count: productData.rating_count,
+          total_sales: productData.total_sales,
+          attributes: productData.attributes?.map(attr => ({ 
+            id: attr.id, 
+            name: attr.name, 
+            options: attr.options 
+          })) || []
+        });
+        
+        console.log('💬 MENSAJE DEL BACKEND:', response.data.message);
+        
+        // Guardar el producto completo de WooCommerce
+        wooCurrentProduct.value = productData;
+        return { success: true, data: productData };
+        
+      } else {
+        // El backend devolvió success: false
+        console.error('❌ BACKEND RETORNÓ ERROR:', response.data.error);
+        wooError.value = response.data.error || 'Error desconocido del backend';
+        wooCurrentProduct.value = null;
+        return { success: false, error: wooError.value };
+      }
+      
     } catch (err) {
-      wooError.value = err.response?.data?.error || 'Failed to fetch WooCommerce product';
+      const errorTime = performance.now() - startTime;
+      console.error(`🛍️ ✗ Error en la petición HTTP (${errorTime.toFixed(0)}ms):`, err.message);
+      console.error('❌ ERROR COMPLETO:', err.response?.data || err);
+      
+      // Intentar extraer el error del backend si está disponible
+      let errorMessage = 'Failed to fetch WooCommerce product';
+      if (err.response?.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
+      wooError.value = errorMessage;
       wooCurrentProduct.value = null;
       return { success: false, error: wooError.value };
     } finally {
@@ -820,6 +894,48 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
+   * ⭐ NUEVO: Obtener productos en tendencia (8 tops) desde WooCommerce
+   * Retorna los 8 productos más populares ordenados por:
+   * Popularidad = (total_sales × 10) + (average_rating × 5) + rating_count
+   * Solo incluye productos con stock disponible
+   */
+  async function fetchWooTrendingProducts() {
+    const startTime = performance.now();
+    console.log('🔥 → Enviando request productos en tendencia...');
+    
+    isLoadingTrending.value = true;
+    wooError.value = null;
+
+    try {
+      const response = await get_request('products/woocommerce/products/trending/');
+      const responseTime = performance.now() - startTime;
+      const dataSize = JSON.stringify(response.data).length;
+      const products = response.data.data || [];
+      
+      console.log(`🔥 ← Productos en tendencia respuesta recibida (${responseTime.toFixed(0)}ms, ${dataSize} bytes, ${products.length} productos)`);
+      console.log(`🔥 ← Total de productos trending: ${response.data.total_products}`);
+      
+      trendingProducts.value = products;
+      
+      return { 
+        success: true, 
+        data: products,
+        total_products: response.data.total_products || 0,
+        message: response.data.message
+      };
+    } catch (err) {
+      const errorTime = performance.now() - startTime;
+      console.error(`🔥 ✗ Error cargando productos en tendencia (${errorTime.toFixed(0)}ms):`, err.message);
+      
+      wooError.value = err.response?.data?.error || 'Failed to fetch trending products';
+      trendingProducts.value = [];
+      return { success: false, error: wooError.value };
+    } finally {
+      isLoadingTrending.value = false;
+    }
+  }
+
+  /**
    * ⭐ NUEVO: Carga inicial optimizada - PRIMERO categorías, DESPUÉS productos
    * Secuencia optimizada para evitar demoras innecesarias
    */
@@ -917,11 +1033,13 @@ export const useProductStore = defineStore('product', () => {
     wooCurrentProduct,
     wooConnectionStatus,
     wooStats, // ⭐ NUEVO: Estadísticas globales
+    trendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
     isLoadingWoo,
     isLoadingWooProduct,
     isLoadingWooCategories,
     isLoadingWooThemes, // ⭐ NUEVO
     isLoadingWooCategoryTree, // ⭐ NUEVO
+    isLoadingTrending, // ⭐ NUEVO: Loading para productos en tendencia
     wooError,
     selectedWooCategory,
     selectedTheme, // ⭐ NUEVO
@@ -943,6 +1061,7 @@ export const useProductStore = defineStore('product', () => {
     hasWooProducts,
     hasWooCategories,
     hasWooThemes, // ⭐ NUEVO
+    hasTrendingProducts, // ⭐ NUEVO
     isWooConnected,
     wooProductsByTheme, // ⭐ NUEVO
     wooProductsBySubcategory, // ⭐ NUEVO
@@ -974,6 +1093,7 @@ export const useProductStore = defineStore('product', () => {
     fetchWooOrganizedCategories, // ⭐ NUEVO
     fetchWooCategoryTree, // ⭐ NUEVO
     fetchWooStats, // ⭐ NUEVO: Estadísticas globales
+    fetchWooTrendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
     fetchWooProduct,
     getWooProductById,
     filterWooByPriceRange,

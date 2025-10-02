@@ -138,6 +138,13 @@ const baseRoutes = [
     component: () => import('@/views/AboutUsView.vue')
   },
   
+  // Contact page
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: () => import('@/views/ContactView.vue')
+  },
+  
   // Error handling
   {
     path: '/:pathMatch(.*)*',
@@ -179,7 +186,22 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Si hay una posición guardada (cuando usas botones de navegador), úsala
+    if (savedPosition) {
+      return savedPosition;
+    }
+    // Si la ruta tiene un hash (#), navega a ese elemento
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      };
+    }
+    // Por defecto, vuelve al inicio de la página
+    return { top: 0, left: 0, behavior: 'smooth' };
+  }
 });
 
 // Navigation guards
