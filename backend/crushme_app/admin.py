@@ -15,7 +15,7 @@ from .models import (
     User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser,
     Product, Cart, CartItem, 
     Order, OrderItem, WishList, WishListItem, FavoriteWishList,
-    Review
+    Review, Feed, FavoriteProduct
 )
 
 # AttachmentsAdminMixin handles the gallery management automatically
@@ -507,6 +507,39 @@ class FavoriteWishListAdmin(admin.ModelAdmin):
     wishlist_owner.admin_order_field = 'wishlist__user__email'
 
 
+@admin.register(FavoriteProduct)
+class FavoriteProductAdmin(admin.ModelAdmin):
+    """Admin for favorite products"""
+    list_display = ('user_email', 'woocommerce_product_id', 'product_name_display', 'cache_status', 'created_at')
+    list_filter = ('created_at', 'cache_updated_at')
+    search_fields = ('user__email', 'woocommerce_product_id', 'product_data__name')
+    ordering = ('-created_at',)
+    readonly_fields = ('cache_updated_at', 'created_at', 'updated_at')
+    
+    def user_email(self, obj):
+        """Display user email"""
+        return obj.user.email
+    user_email.short_description = 'User Email'
+    user_email.admin_order_field = 'user__email'
+    
+    def product_name_display(self, obj):
+        """Display product name from cached data"""
+        product_name = obj.product_data.get('name', 'N/A')
+        return product_name[:50] + '...' if len(product_name) > 50 else product_name
+    product_name_display.short_description = 'Product Name'
+    
+    def cache_status(self, obj):
+        """Display cache status with color coding"""
+        if not obj.cache_updated_at:
+            return format_html('<span style="color: red;">No Cache</span>')
+        
+        if obj.needs_cache_refresh():
+            return format_html('<span style="color: orange;">Stale</span>')
+        
+        return format_html('<span style="color: green;">Fresh</span>')
+    cache_status.short_description = 'Cache Status'
+
+
 # ===========================
 # REVIEW MODELS ADMIN
 # ===========================
@@ -567,6 +600,63 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 # ===========================
+# FEED MODELS ADMIN
+# ===========================
+
+@admin.register(Feed)
+class FeedAdmin(admin.ModelAdmin):
+    """
+    Admin for Feed model (user posts)
+    """
+    list_display = ('user_email', 'text_preview', 'color_display', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('user__email', 'user__username', 'text')
+    readonly_fields = ('created_at', 'updated_at', 'color_preview')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Usuario', {
+            'fields': ('user',)
+        }),
+        ('Contenido', {
+            'fields': ('text', 'color', 'color_preview')
+        }),
+        ('Fechas', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_email(self, obj):
+        """Display user email"""
+        return obj.user.email
+    user_email.short_description = 'Usuario'
+    user_email.admin_order_field = 'user__email'
+    
+    def text_preview(self, obj):
+        """Display truncated text"""
+        preview = obj.text[:50] + "..." if len(obj.text) > 50 else obj.text
+        return preview
+    text_preview.short_description = 'Texto'
+    
+    def color_display(self, obj):
+        """Display color with visual preview"""
+        return format_html(
+            '<span style="background-color: {}; padding: 5px 15px; color: white; border-radius: 3px;">{}</span>',
+            obj.color, obj.color
+        )
+    color_display.short_description = 'Color'
+    
+    def color_preview(self, obj):
+        """Display larger color preview"""
+        return format_html(
+            '<div style="background-color: {}; width: 100px; height: 50px; border: 1px solid #ccc; border-radius: 5px;"></div>',
+            obj.color
+        )
+    color_preview.short_description = 'Vista Previa del Color'
+
+
+# ===========================
 # ADMIN SITE CUSTOMIZATION
 # ===========================
 
@@ -592,7 +682,7 @@ class CrushMeAdminSite(admin.AdminSite):
                 'app_label': 'user_management',
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser']
+                    if model['object_name'] in ['User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser', 'Feed']
                 ]
             },
             {
@@ -656,6 +746,7 @@ admin_site.register(UserAddress, UserAddressAdmin)
 admin_site.register(UserGallery, UserGalleryAdmin)
 admin_site.register(UserLink, UserLinkAdmin)
 admin_site.register(GuestUser, GuestUserAdmin)
+admin_site.register(Feed, FeedAdmin)
 admin_site.register(Product, ProductAdmin)
 admin_site.register(Cart, CartAdmin)
 # CartItem is managed through CartAdmin inline

@@ -1,0 +1,354 @@
+"""
+PayPal Payment Service
+Handles PayPal Orders API integration for payment processing
+"""
+import requests
+import base64
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Country name to ISO code mapping
+COUNTRY_CODE_MAPPING = {
+    # Colombia variations
+    'COLOMBIA': 'CO',
+    'Colombia': 'CO',
+    'colombia': 'CO',
+    'CO': 'CO',
+    
+    # Other common countries for WooCommerce
+    'UNITED STATES': 'US',
+    'United States': 'US',
+    'USA': 'US',
+    'US': 'US',
+    
+    'MEXICO': 'MX',
+    'Mexico': 'MX',
+    'MX': 'MX',
+    
+    'CANADA': 'CA',
+    'Canada': 'CA',
+    'CA': 'CA',
+    
+    'SPAIN': 'ES',
+    'Spain': 'ES',
+    'ES': 'ES',
+    
+    'PERU': 'PE',
+    'Peru': 'PE',
+    'PE': 'PE',
+    
+    'ECUADOR': 'EC',
+    'Ecuador': 'EC',
+    'EC': 'EC',
+    
+    'VENEZUELA': 'VE',
+    'Venezuela': 'VE',
+    'VE': 'VE',
+    
+    'ARGENTINA': 'AR',
+    'Argentina': 'AR',
+    'AR': 'AR',
+    
+    'CHILE': 'CL',
+    'Chile': 'CL',
+    'CL': 'CL',
+    
+    'BRAZIL': 'BR',
+    'Brazil': 'BR',
+    'BR': 'BR',
+}
+
+
+class PayPalService:
+    """
+    Service to handle PayPal payment processing
+    Uses PayPal Orders API v2
+    """
+    
+    def __init__(self):
+        self.client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
+        self.client_secret = getattr(settings, 'PAYPAL_CLIENT_SECRET', '')
+        self.mode = getattr(settings, 'PAYPAL_MODE', 'sandbox')
+        
+        # Set API URL based on mode
+        if self.mode == 'live':
+            self.base_url = 'https://api-m.paypal.com'
+        else:
+            self.base_url = 'https://api-m.sandbox.paypal.com'
+        
+        self.timeout = 30
+    
+    def _normalize_country_code(self, country):
+        """
+        Convert country name to 2-letter ISO code for PayPal
+        
+        Args:
+            country: Country name or code (e.g., "COLOMBIA", "Colombia", "CO")
+        
+        Returns:
+            str: 2-letter ISO country code (e.g., "CO")
+        """
+        if not country:
+            return 'US'  # Default fallback
+        
+        # Strip whitespace and get from mapping
+        country_clean = country.strip()
+        country_code = COUNTRY_CODE_MAPPING.get(country_clean)
+        
+        if country_code:
+            logger.debug(f"Country mapping: '{country}' -> '{country_code}'")
+            return country_code
+        
+        # If not found in mapping, assume it's already a 2-letter code
+        if len(country_clean) == 2 and country_clean.isalpha():
+            logger.debug(f"Using country code as-is: '{country_clean}'")
+            return country_clean.upper()
+        
+        # Fallback for unknown countries
+        logger.warning(f"Unknown country '{country}', using default 'US'")
+        return 'US'
+    
+    def _get_access_token(self):
+        """
+        Get OAuth 2.0 access token from PayPal
+        """
+        try:
+            url = f"{self.base_url}/v1/oauth2/token"
+            
+            # Create basic auth header
+            auth_string = f"{self.client_id}:{self.client_secret}"
+            auth_bytes = auth_string.encode('ascii')
+            auth_base64 = base64.b64encode(auth_bytes).decode('ascii')
+            
+            headers = {
+                'Authorization': f'Basic {auth_base64}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            data = {
+                'grant_type': 'client_credentials'
+            }
+            
+            response = requests.post(
+                url,
+                headers=headers,
+                data=data,
+                timeout=self.timeout
+            )
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                return {
+                    'success': True,
+                    'access_token': token_data.get('access_token')
+                }
+            else:
+                logger.error(f"PayPal auth failed: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f"Authentication failed: {response.status_code}"
+                }
+        
+        except Exception as e:
+            logger.error(f"PayPal auth error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def create_order(self, cart_items, shipping_info, total_amount):
+        """
+        Create a PayPal order
+        
+        Args:
+            cart_items: List of items from cart
+            shipping_info: Dict with shipping address
+            total_amount: Decimal total amount
+        
+        Returns:
+            dict: PayPal order response with order_id
+        """
+        try:
+            # Get access token
+            auth_result = self._get_access_token()
+            if not auth_result['success']:
+                return auth_result
+            
+            access_token = auth_result['access_token']
+            
+            # Build order payload
+            payload = self._build_order_payload(cart_items, shipping_info, total_amount)
+            
+            # Create order
+            url = f"{self.base_url}/v2/checkout/orders"
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {access_token}'
+            }
+            
+            logger.info("Creating PayPal order...")
+            logger.debug(f"Payload: {payload}")
+            
+            response = requests.post(
+                url,
+                json=payload,
+                headers=headers,
+                timeout=self.timeout
+            )
+            
+            if response.status_code == 201:
+                order_data = response.json()
+                logger.info(f"✅ PayPal order created: {order_data.get('id')}")
+                return {
+                    'success': True,
+                    'order_id': order_data.get('id'),
+                    'status': order_data.get('status'),
+                    'data': order_data
+                }
+            else:
+                logger.error(f"❌ PayPal order creation failed: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f"Order creation failed: {response.status_code}",
+                    'details': response.text
+                }
+        
+        except Exception as e:
+            logger.error(f"❌ PayPal order creation error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def capture_order(self, order_id):
+        """
+        Capture/complete a PayPal order after customer approval
+        
+        Args:
+            order_id: PayPal order ID to capture
+        
+        Returns:
+            dict: Capture response with payment details
+        """
+        try:
+            # Get access token
+            auth_result = self._get_access_token()
+            if not auth_result['success']:
+                return auth_result
+            
+            access_token = auth_result['access_token']
+            
+            # Capture order
+            url = f"{self.base_url}/v2/checkout/orders/{order_id}/capture"
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {access_token}'
+            }
+            
+            logger.info(f"Capturing PayPal order: {order_id}")
+            
+            response = requests.post(
+                url,
+                headers=headers,
+                timeout=self.timeout
+            )
+            
+            if response.status_code == 201:
+                capture_data = response.json()
+                logger.info(f"✅ PayPal payment captured: {order_id}")
+                
+                # Extract payment details
+                payment_status = capture_data.get('status')
+                payer = capture_data.get('payer', {})
+                
+                return {
+                    'success': True,
+                    'order_id': order_id,
+                    'status': payment_status,
+                    'payer_email': payer.get('email_address'),
+                    'payer_name': payer.get('name', {}).get('given_name', '') + ' ' + payer.get('name', {}).get('surname', ''),
+                    'data': capture_data
+                }
+            else:
+                logger.error(f"❌ PayPal capture failed: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f"Payment capture failed: {response.status_code}",
+                    'details': response.text
+                }
+        
+        except Exception as e:
+            logger.error(f"❌ PayPal capture error: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _build_order_payload(self, cart_items, shipping_info, total_amount):
+        """
+        Build PayPal order payload
+        """
+        # Build purchase units with items
+        items = []
+        for item in cart_items:
+            items.append({
+                'name': item['product_name'],
+                'quantity': str(item['quantity']),
+                'unit_amount': {
+                    'currency_code': 'USD',  # Cambiar según tu moneda
+                    'value': str(item['unit_price'])
+                }
+            })
+        
+        # Calculate breakdown
+        items_total = sum(float(item['unit_price']) * item['quantity'] for item in cart_items)
+        
+        # Normalize country code for PayPal API
+        country_code = self._normalize_country_code(shipping_info.get('country', 'US'))
+        
+        payload = {
+            'intent': 'CAPTURE',
+            'purchase_units': [
+                {
+                    'amount': {
+                        'currency_code': 'USD',
+                        'value': str(total_amount),
+                        'breakdown': {
+                            'item_total': {
+                                'currency_code': 'USD',
+                                'value': str(items_total)
+                            }
+                        }
+                    },
+                    'items': items,
+                    'shipping': {
+                        'name': {
+                            'full_name': shipping_info.get('name', 'Customer')
+                        },
+                        'address': {
+                            'address_line_1': shipping_info.get('address_line_1', ''),
+                            'admin_area_2': shipping_info.get('city', ''),
+                            'admin_area_1': shipping_info.get('state', ''),
+                            'postal_code': shipping_info.get('zipcode', ''),
+                            'country_code': country_code  # Now using normalized 2-letter code
+                        }
+                    }
+                }
+            ],
+            'application_context': {
+                'brand_name': 'CrushMe Store',
+                'landing_page': 'NO_PREFERENCE',
+                'user_action': 'PAY_NOW',
+                'return_url': f'{settings.FRONTEND_URL}/checkout/success',
+                'cancel_url': f'{settings.FRONTEND_URL}/checkout/cancel'
+            }
+        }
+        
+        return payload
+
+
+# Singleton instance
+paypal_service = PayPalService()
+

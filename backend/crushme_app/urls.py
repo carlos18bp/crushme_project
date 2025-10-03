@@ -22,6 +22,12 @@ urlpatterns = [
     # Wishlist endpoints
     path('wishlists/', include('crushme_app.urls.wishlist_urls')),
     
+    # Favorite products endpoints
+    path('favorites/products/', include('crushme_app.urls.favorite_product_urls')),
+    
     # Contact endpoints
     path('contact/', include('crushme_app.urls.contact_urls')),
+    
+    # Feed endpoints
+    path('feeds/', include('crushme_app.urls.feed_urls')),
 ]

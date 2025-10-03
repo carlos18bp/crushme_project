@@ -115,6 +115,22 @@ class User(AbstractUser):
         help_text="Tell others about yourself (max 500 characters)"
     )
     
+    # Public status and notes
+    current_status = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Current Status",
+        help_text="User's current status (e.g., Available, Busy, etc.)"
+    )
+    
+    note = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Personal Note",
+        help_text="Personal notes or additional information"
+    )
+    
     # Track if user was converted from guest checkout
     is_guest_converted = models.BooleanField(
         default=False,
@@ -264,6 +280,13 @@ class UserAddress(models.Model):
         blank=True, 
         null=True,
         verbose_name="Address Line 2"
+    )
+    
+    additional_details = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Additional Details",
+        help_text="Additional address details or delivery instructions"
     )
     
     # Address type and default flags

@@ -10,19 +10,37 @@ from .product_serializers import ProductListSerializer
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """
-    Serializer for order items
+    Serializer for order items with WooCommerce products
     Includes product information and historical data
     """
-    product = ProductListSerializer(read_only=True)
     subtotal = serializers.ReadOnlyField()
+    # Product info from WooCommerce (stored at purchase time)
+    product = serializers.SerializerMethodField()
     
     class Meta:
         model = OrderItem
         fields = [
-            'id', 'product', 'quantity', 'unit_price', 'subtotal',
-            'product_name', 'product_description', 'created_at'
+            'id', 'product', 'woocommerce_product_id', 'quantity', 
+            'unit_price', 'subtotal', 'product_name', 'product_description', 
+            'created_at'
         ]
-        read_only_fields = ['id', 'product_name', 'product_description', 'created_at']
+        read_only_fields = [
+            'id', 'woocommerce_product_id', 'product_name', 
+            'product_description', 'created_at'
+        ]
+    
+    def get_product(self, obj):
+        """
+        Return product information from WooCommerce
+        Uses cached data from order item
+        """
+        return {
+            'id': obj.woocommerce_product_id,
+            'woocommerce_product_id': obj.woocommerce_product_id,
+            'name': obj.product_name,
+            'price': str(obj.unit_price),
+            'image_url': None  # Could be enriched with WooCommerce API call if needed
+        }
 
 
 class OrderListSerializer(serializers.ModelSerializer):
@@ -43,6 +61,7 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer for individual order views
+    Maps database fields to API names
     """
     items = OrderItemSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -50,11 +69,19 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     full_shipping_address = serializers.ReadOnlyField()
     user = serializers.StringRelatedField(read_only=True)
     
+    # Map database fields to API names
+    shipping_address = serializers.CharField(source='address_line_1', read_only=True)
+    shipping_city = serializers.CharField(source='city', read_only=True)
+    shipping_state = serializers.CharField(source='state', read_only=True)
+    shipping_postal_code = serializers.CharField(source='zipcode', read_only=True)
+    shipping_country = serializers.CharField(source='country', read_only=True)
+    phone_number = serializers.CharField(source='phone', read_only=True)
+    
     class Meta:
         model = Order
         fields = [
             'id', 'order_number', 'user', 'status', 'status_display',
-            'total', 'total_items', 'items',
+            'total', 'total_items', 'items', 'email', 'name',
             'shipping_address', 'shipping_city', 'shipping_state',
             'shipping_postal_code', 'shipping_country', 'phone_number',
             'full_shipping_address', 'notes',

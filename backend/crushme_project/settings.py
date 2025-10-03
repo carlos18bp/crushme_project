@@ -198,13 +198,22 @@ STORAGES = {
 }
 
 # Email configuration for password reset functionality
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtpout.secureserver.net'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = 'support@chrushme.com.co'
-EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
+# NOTA: La configuración SMTP está fallando. Opciones:
+# 1. Para desarrollo: usa 'console' backend (muestra emails en consola)
+# 2. Para producción: verifica credenciales SMTP con tu proveedor
+if DEBUG:
+    # En desarrollo, muestra los emails en la consola
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # En producción, usa SMTP (verifica estas credenciales)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtpout.secureserver.net'
+    EMAIL_PORT = 465
+    EMAIL_USE_SSL = True
+    EMAIL_USE_TLS = False
+    EMAIL_HOST_USER = 'support@chrushme.com.co'
+    EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
+
 DEFAULT_FROM_EMAIL = 'CrushMe Support <support@chrushme.com.co>'
 
 # Google OAuth2 settings
@@ -215,3 +224,19 @@ GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production
 WOOCOMMERCE_CONSUMER_KEY = 'ck_2997c6fc6d68b3d998045a33002b2e88cce81682'
 WOOCOMMERCE_CONSUMER_SECRET = 'cs_51006180ee1f5999d5cae68d3091e3313174c9c9'
 WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'
+
+# PayPal API settings
+# TODO: Mover estas credenciales a variables de entorno en producción
+PAYPAL_CLIENT_ID = 'AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'
+PAYPAL_CLIENT_SECRET = 'ELvYzKUvkuEGopUV0XLg3RGIf9irlT5qWgks7ddZXkbjIBj7z0icmM3aH9YQjspAu9TaovpR54RsOTgb'
+PAYPAL_MODE = 'sandbox'  # Cambiar a 'live' en producción
+
+# Production/Development environment flag
+# Set to True in production, False in development
+PRODUCTION = False
+
+# Frontend URLs based on environment
+if PRODUCTION:
+    FRONTEND_URL = 'https://crushme.com.co'
+else:
+    FRONTEND_URL = 'http://localhost:5173'

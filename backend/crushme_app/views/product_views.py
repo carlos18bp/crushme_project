@@ -440,6 +440,75 @@ def get_woocommerce_product_detail(request, product_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_woocommerce_products_batch(request):
+    """
+    Obtener múltiples productos de WooCommerce por sus IDs
+    Útil para mostrar wishlists con información actualizada de productos
+    
+    POST Body:
+    {
+        "product_ids": [123, 456, 789]
+    }
+    """
+    try:
+        product_ids = request.data.get('product_ids', [])
+        
+        if not isinstance(product_ids, list):
+            return Response({
+                'error': 'product_ids debe ser una lista'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not product_ids:
+            return Response({
+                'error': 'product_ids no puede estar vacía'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(product_ids) > 100:
+            return Response({
+                'error': 'Máximo 100 productos por consulta'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obtener productos de WooCommerce
+        products = []
+        errors = []
+        
+        for product_id in product_ids:
+            try:
+                product_id_int = int(product_id)
+                result = woocommerce_service.get_product_by_id(product_id_int)
+                
+                if result['success']:
+                    products.append(result['data'])
+                else:
+                    errors.append({
+                        'product_id': product_id_int,
+                        'error': result.get('error', 'Unknown error')
+                    })
+            except (ValueError, TypeError):
+                errors.append({
+                    'product_id': product_id,
+                    'error': 'ID inválido'
+                })
+        
+        return Response({
+            'success': True,
+            'message': f'Obtenidos {len(products)} productos ({len(errors)} errores)',
+            'products': products,
+            'total_requested': len(product_ids),
+            'total_found': len(products),
+            'total_errors': len(errors),
+            'errors': errors if errors else None
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])  # Endpoint público para probar conexión con WooCommerce
 def test_woocommerce_connection(request):

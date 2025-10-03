@@ -6,6 +6,8 @@ from .order import Order, OrderItem
 from .wishlist import WishList, WishListItem, FavoriteWishList
 from .review import Review
 from .contact import Contact
+from .feed import Feed
+from .favorite_product import FavoriteProduct
 
 __all__ = [
     'User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser',
@@ -14,5 +16,7 @@ __all__ = [
     'Order', 'OrderItem',
     'WishList', 'WishListItem', 'FavoriteWishList',
     'Review',
-    'Contact'
+    'Contact',
+    'Feed',
+    'FavoriteProduct'
 ]

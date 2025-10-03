@@ -1,0 +1,22 @@
+{
+  "welcome": "Hola {'@'}{username} 💖 ¿listo para consentir a una Darling hoy?",
+  "banner": {
+    "title": "¿Lista para consentir a una Darling hoy?",
+    "button": "Ir a la tienda"
+  },
+  "gifts": {
+    "number": "20",
+    "title": "Regalos",
+    "subtitle": "enviados"
+  },
+  "quickActions": {
+    "browseDiaries": "Explorar Diarios",
+    "shopProducts": "Productos en Tendencia",
+    "createWishlist": "Crear Mi Lista de Deseos",
+    "history": "Historial"
+  },
+  "feed": {
+    "title": "Feed"
+  }
+}
+

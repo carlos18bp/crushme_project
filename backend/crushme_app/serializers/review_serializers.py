@@ -156,3 +156,4 @@ class ProductReviewStatsSerializer(serializers.Serializer):
         fields = ['total_reviews', 'average_rating', 'rating_distribution']
 
 
+

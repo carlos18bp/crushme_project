@@ -14,6 +14,7 @@ from ..serializers.cart_serializers import (
     CartSerializer, CartSummarySerializer, AddToCartSerializer,
     UpdateCartItemSerializer, CartCheckoutSerializer
 )
+from ..services.woocommerce_service import woocommerce_service
 
 
 @api_view(['GET'])
@@ -62,53 +63,62 @@ def get_cart_summary(request):
 @permission_classes([IsAuthenticated])
 def add_to_cart(request):
     """
-    Add a product to user's cart
+    Add a WooCommerce product to user's cart
     If item already exists, increase quantity
+    FAST: Minimal validation, trusts frontend product data
     """
     serializer = AddToCartSerializer(data=request.data, context={'request': request})
     
-    if serializer.is_valid():
-        product_id = serializer.validated_data['product_id']
-        quantity = serializer.validated_data['quantity']
-        
-        try:
-            with transaction.atomic():
-                # Get or create cart
-                cart, created = Cart.objects.get_or_create(user=request.user)
-                
-                # Get product
-                product = Product.objects.get(id=product_id)
-                
-                # Add product to cart
-                cart_item = cart.add_product(product, quantity)
-                
-                # Return updated cart
-                cart_serializer = CartSerializer(cart, context={'request': request})
-                
-                return Response({
-                    'message': f'Added {quantity} x {product.name} to cart',
-                    'cart': cart_serializer.data,
-                    'added_item': {
-                        'product_name': product.name,
-                        'quantity': quantity,
-                        'unit_price': str(cart_item.unit_price)
-                    }
-                }, status=status.HTTP_200_OK)
-                
-        except Product.DoesNotExist:
-            return Response({
-                'error': 'Product not found'
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                'error': 'Failed to add item to cart',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    if not serializer.is_valid():
+        return Response({
+            'error': 'Invalid data',
+            'details': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
     
-    return Response({
-        'error': 'Invalid data',
-        'details': serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+    product_id = serializer.validated_data['product_id']
+    quantity = serializer.validated_data['quantity']
+    
+    # Get additional product info from request (optional for speed)
+    product_name = request.data.get('product_name', f'Product #{product_id}')
+    product_price = request.data.get('product_price', 0)
+    product_image = request.data.get('product_image', None)
+    
+    try:
+        with transaction.atomic():
+            # Get or create cart
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            
+            # Add WooCommerce product to cart
+            cart_item = cart.add_woocommerce_product(
+                wc_product_id=product_id,
+                product_name=product_name,
+                unit_price=product_price,
+                quantity=quantity,
+                product_image=product_image
+            )
+            
+            # Return lightweight response
+            return Response({
+                'message': f'Added {quantity} x {product_name} to cart',
+                'item': {
+                    'id': cart_item.id,
+                    'product_id': product_id,
+                    'product_name': product_name,
+                    'quantity': cart_item.quantity,
+                    'unit_price': str(cart_item.unit_price),
+                    'subtotal': str(cart_item.subtotal)
+                },
+                'cart_summary': {
+                    'total_items': cart.total_items,
+                    'total_price': str(cart.total_price)
+                }
+            }, status=status.HTTP_200_OK)
+            
+    except Exception as e:
+        return Response({
+            'error': 'Failed to add item to cart',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])

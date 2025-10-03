@@ -10,7 +10,7 @@ from ..views.product_views import (
     # WooCommerce integration endpoints
     get_woocommerce_products, get_woocommerce_categories, 
     get_woocommerce_product_detail, test_woocommerce_connection,
-    get_trending_products
+    get_trending_products, get_woocommerce_products_batch
 )
 from ..views.category_views import (
     get_organized_categories, get_category_tree,
@@ -41,6 +41,7 @@ urlpatterns = [
     # WooCommerce integration endpoints (Public)
     path('woocommerce/test/', test_woocommerce_connection, name='test_woocommerce_connection'),
     path('woocommerce/products/', get_woocommerce_products, name='get_woocommerce_products'),
+    path('woocommerce/products/batch/', get_woocommerce_products_batch, name='get_woocommerce_products_batch'),
     path('woocommerce/products/trending/', get_trending_products, name='get_trending_products'),
     path('woocommerce/categories/', get_woocommerce_categories, name='get_woocommerce_categories'),
     path('woocommerce/products/<int:product_id>/', get_woocommerce_product_detail, name='get_woocommerce_product_detail'),

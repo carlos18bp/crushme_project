@@ -1,0 +1,72 @@
+{
+  "title": "My Profile",
+  "subtitle": "Manage your personal information and preferences",
+  "basicInfo": {
+    "title": "Basic Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "username": "Username",
+    "about": "About",
+    "note": "Personal Note",
+    "currentStatus": "Current Status"
+  },
+  "shippingDetails": {
+    "title": "Shipping Details",
+    "country": "Country",
+    "state": "State / Province",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "addressLine1": "Address Line 1",
+    "addressLine2": "Address Line 2 (optional)",
+    "additionalDetails": "Additional Details (optional)"
+  },
+  "publicProfile": {
+    "title": "Public Profile"
+  },
+  "gallery": {
+    "title": "Photo Gallery",
+    "currentPhotos": "Current photos in your gallery",
+    "noPhotos": "No photos in your gallery yet",
+    "newPhotos": "New photos to upload",
+    "selectFiles": "Select files",
+    "dropzone": "Drag and drop images here or click to select",
+    "requirements": "Only JPG, JPEG, PNG or GIF images. Maximum 800KB per image.",
+    "delete": "Delete",
+    "remove": "Remove"
+  },
+  "linktree": {
+    "title": "Linktree",
+    "subtitle": "Add links to your social media and websites",
+    "url": "URL",
+    "urlPlaceholder": "https://example.com",
+    "title_field": "Title",
+    "titlePlaceholder": "My Website",
+    "addLink": "Add Link",
+    "removeLink": "Remove Link"
+  },
+  "buttons": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "loading": "Saving..."
+  },
+  "placeholders": {
+    "selectCountry": "Select a country",
+    "selectState": "Select a state/province",
+    "firstName": "Enter your first name",
+    "lastName": "Enter your last name",
+    "email": "you{'@'}email.com",
+    "phone": "1234567890",
+    "username": "username",
+    "about": "Tell us about yourself...",
+    "note": "Personal notes...",
+    "currentStatus": "What are you doing now?",
+    "city": "City",
+    "postalCode": "12345",
+    "addressLine1": "123 Main Street",
+    "addressLine2": "Apartment 4B",
+    "additionalDetails": "Additional references..."
+  }
+}
+

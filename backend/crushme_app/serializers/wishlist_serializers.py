@@ -1,6 +1,7 @@
 """
 Wishlist serializers for CrushMe e-commerce application
 Handles wishlist functionality with sharing and favorites
+Now supports WooCommerce products
 """
 from rest_framework import serializers
 from ..models import WishList, WishListItem, FavoriteWishList, Product
@@ -10,44 +11,43 @@ from .user_serializers import UserSerializer
 
 class WishListItemSerializer(serializers.ModelSerializer):
     """
-    Serializer for wishlist items
+    Serializer for wishlist items (WooCommerce products)
     """
-    product = ProductListSerializer(read_only=True)
-    product_id = serializers.IntegerField(write_only=True)
+    # WooCommerce product fields
+    woocommerce_product_id = serializers.IntegerField()
+    product_name = serializers.SerializerMethodField()
+    product_price = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
+    product_info = serializers.SerializerMethodField()
     is_available = serializers.ReadOnlyField()
+    
+    # Legacy support
+    product = ProductListSerializer(read_only=True)
     
     class Meta:
         model = WishListItem
         fields = [
-            'id', 'product', 'product_id', 'notes', 'priority',
-            'is_available', 'created_at', 'updated_at'
+            'id', 'woocommerce_product_id', 'product_name', 'product_price', 
+            'product_image', 'product_info', 'notes', 'priority',
+            'is_available', 'product', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def validate_product_id(self, value):
-        """Validate product exists and is active"""
-        try:
-            product = Product.objects.get(id=value)
-        except Product.DoesNotExist:
-            raise serializers.ValidationError("Product does not exist.")
-        
-        if not product.is_active:
-            raise serializers.ValidationError("Product is not available.")
-        
-        return value
+    def get_product_name(self, obj):
+        """Get product name from cache"""
+        return obj.get_product_name()
     
-    def validate(self, attrs):
-        """Validate wishlist item doesn't already exist"""
-        product_id = attrs.get('product_id')
-        wishlist = self.context.get('wishlist')
-        
-        if product_id and wishlist:
-            if wishlist.items.filter(product_id=product_id).exists():
-                raise serializers.ValidationError(
-                    "Product is already in this wishlist."
-                )
-        
-        return attrs
+    def get_product_price(self, obj):
+        """Get product price from cache"""
+        return obj.get_product_price()
+    
+    def get_product_image(self, obj):
+        """Get product image URL from cache"""
+        return obj.get_product_image()
+    
+    def get_product_info(self, obj):
+        """Get full cached product data"""
+        return obj.product_data if obj.product_data else None
 
 
 class WishListItemCreateSerializer(serializers.ModelSerializer):
@@ -106,9 +106,11 @@ class WishListDetailSerializer(serializers.ModelSerializer):
     """
     items = WishListItemSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
+    user_username = serializers.SerializerMethodField()
     total_items = serializers.ReadOnlyField()
     total_value = serializers.ReadOnlyField()
     public_url = serializers.ReadOnlyField()
+    shareable_path = serializers.ReadOnlyField()
     is_favorited = serializers.SerializerMethodField()
     favorites_count = serializers.SerializerMethodField()
     shipping_name = serializers.ReadOnlyField()
@@ -119,13 +121,17 @@ class WishListDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
         fields = [
-            'id', 'name', 'description', 'user', 'is_active', 'is_public',
-            'unique_link', 'public_url', 'items', 'total_items', 'total_value',
+            'id', 'name', 'description', 'user', 'user_username', 'is_active', 'is_public',
+            'unique_link', 'public_url', 'shareable_path', 'items', 'total_items', 'total_value',
             'is_favorited', 'favorites_count', 'shipping_data',
             'shipping_name', 'shipping_address', 'shipping_phone', 'shipping_email',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'unique_link', 'created_at', 'updated_at']
+    
+    def get_user_username(self, obj):
+        """Get username or fallback to email"""
+        return obj.user.username or obj.user.email.split('@')[0]
     
     def get_is_favorited(self, obj):
         """Check if current user has favorited this wishlist"""
@@ -327,9 +333,41 @@ class WishListSearchSerializer(serializers.Serializer):
     )
 
 
+class AddWooCommerceProductToWishListSerializer(serializers.Serializer):
+    """
+    Serializer for adding WooCommerce products to wishlist
+    """
+    woocommerce_product_id = serializers.IntegerField()
+    notes = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    priority = serializers.ChoiceField(
+        choices=WishListItem.PRIORITY_CHOICES,
+        default='medium',
+        required=False
+    )
+    
+    def validate_woocommerce_product_id(self, value):
+        """Validate WooCommerce product ID is positive integer"""
+        if value <= 0:
+            raise serializers.ValidationError("Invalid WooCommerce product ID.")
+        return value
+    
+    def validate(self, attrs):
+        """Validate product is not already in wishlist"""
+        wc_product_id = attrs.get('woocommerce_product_id')
+        wishlist = self.context.get('wishlist')
+        
+        if wishlist and wishlist.items.filter(woocommerce_product_id=wc_product_id).exists():
+            raise serializers.ValidationError({
+                'woocommerce_product_id': "Product is already in this wishlist."
+            })
+        
+        return attrs
+
+
 class AddProductToWishListSerializer(serializers.Serializer):
     """
-    Serializer for adding products to wishlist
+    Legacy serializer for adding local products to wishlist
+    Kept for backwards compatibility
     """
     product_id = serializers.IntegerField()
     notes = serializers.CharField(max_length=500, required=False)

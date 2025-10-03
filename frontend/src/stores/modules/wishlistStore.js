@@ -192,19 +192,19 @@ export const useWishlistStore = defineStore('wishlist', () => {
   }
 
   /**
-   * Add product to wishlist
+   * Add WooCommerce product to wishlist
    * @param {number} wishlistId - Wishlist ID
-   * @param {number} productId - Product ID
+   * @param {number} woocommerceProductId - WooCommerce Product ID
    * @param {string} notes - Optional notes
    * @param {string} priority - Priority level
    */
-  async function addProductToWishlist(wishlistId, productId, notes = '', priority = 'medium') {
+  async function addWooCommerceProductToWishlist(wishlistId, woocommerceProductId, notes = '', priority = 'medium') {
     isUpdating.value = true;
     error.value = null;
 
     try {
-      const response = await create_request(`wishlists/${wishlistId}/add-product/`, {
-        product_id: productId,
+      const response = await create_request(`wishlists/${wishlistId}/add-woocommerce-product/`, {
+        woocommerce_product_id: woocommerceProductId,
         notes,
         priority
       });
@@ -236,16 +236,16 @@ export const useWishlistStore = defineStore('wishlist', () => {
   }
 
   /**
-   * Remove product from wishlist
+   * Remove WooCommerce product from wishlist
    * @param {number} wishlistId - Wishlist ID
-   * @param {number} productId - Product ID
+   * @param {number} woocommerceProductId - WooCommerce Product ID
    */
-  async function removeProductFromWishlist(wishlistId, productId) {
+  async function removeWooCommerceProductFromWishlist(wishlistId, woocommerceProductId) {
     isUpdating.value = true;
     error.value = null;
 
     try {
-      const response = await delete_request(`wishlists/${wishlistId}/remove-product/${productId}/`);
+      const response = await delete_request(`wishlists/${wishlistId}/remove-woocommerce-product/${woocommerceProductId}/`);
       
       const updatedWishlist = response.data.wishlist;
       
@@ -274,25 +274,38 @@ export const useWishlistStore = defineStore('wishlist', () => {
   }
 
   /**
-   * Update wishlist item
+   * Refresh all products in wishlist from WooCommerce
    * @param {number} wishlistId - Wishlist ID
-   * @param {number} itemId - Item ID
-   * @param {Object} updateData - Update data
    */
-  async function updateWishlistItem(wishlistId, itemId, updateData) {
+  async function refreshWishlistProducts(wishlistId) {
     isUpdating.value = true;
     error.value = null;
 
     try {
-      const response = await update_request(`wishlists/${wishlistId}/items/${itemId}/update/`, updateData);
+      const response = await create_request(`wishlists/${wishlistId}/refresh-products/`, {});
+      
+      const updatedWishlist = response.data.wishlist;
+      
+      // Update in list
+      const index = wishlists.value.findIndex(w => w.id === wishlistId);
+      if (index !== -1) {
+        wishlists.value[index] = updatedWishlist;
+      }
+      
+      // Update current if it's the same
+      if (currentWishlist.value?.id === wishlistId) {
+        currentWishlist.value = updatedWishlist;
+      }
       
       return { 
         success: true, 
         message: response.data.message,
-        data: response.data.item 
+        updated_count: response.data.updated_count,
+        failed_count: response.data.failed_count,
+        data: updatedWishlist 
       };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Failed to update wishlist item';
+      error.value = err.response?.data?.error || 'Failed to refresh products';
       return { success: false, error: error.value };
     } finally {
       isUpdating.value = false;
@@ -303,7 +316,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
    * Fetch public wishlist by UUID
    * @param {string} uuid - Wishlist UUID
    */
-  async function fetchPublicWishlist(uuid) {
+  async function fetchPublicWishlistByUUID(uuid) {
     isLoadingWishlist.value = true;
     error.value = null;
 
@@ -315,6 +328,62 @@ export const useWishlistStore = defineStore('wishlist', () => {
       return { success: false, error: error.value };
     } finally {
       isLoadingWishlist.value = false;
+    }
+  }
+
+  /**
+   * Fetch public wishlist by username and ID
+   * @param {string} username - User's username
+   * @param {number} wishlistId - Wishlist ID
+   */
+  async function fetchPublicWishlistByUsername(username, wishlistId) {
+    isLoadingWishlist.value = true;
+    error.value = null;
+
+    try {
+      const response = await get_request(`wishlists/@${username}/${wishlistId}/`);
+      return { success: true, data: response.data.wishlist };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Failed to fetch public wishlist';
+      return { success: false, error: error.value };
+    } finally {
+      isLoadingWishlist.value = false;
+    }
+  }
+
+  /**
+   * Fetch all public wishlists by username
+   * @param {string} username - User's username
+   */
+  async function fetchWishlistsByUsername(username) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await get_request(`wishlists/user/${username}/`);
+      
+      if (response.data.success) {
+        return { 
+          success: true, 
+          data: response.data.wishlists || [],
+          user: {
+            username: response.data.username,
+            fullName: response.data.user_full_name,
+            totalWishlists: response.data.total_wishlists
+          },
+          message: response.data.message
+        };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.message || 'User has no public wishlists'
+        };
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.response?.data?.error || 'Failed to fetch user wishlists';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -453,12 +522,22 @@ export const useWishlistStore = defineStore('wishlist', () => {
   }
 
   /**
-   * Check if product is in any wishlist
-   * @param {number} productId - Product ID
+   * Check if WooCommerce product is in any wishlist
+   * @param {number} woocommerceProductId - WooCommerce Product ID
    */
-  function isProductInWishlist(productId) {
+  function isWooCommerceProductInWishlist(woocommerceProductId) {
     return wishlists.value.some(wishlist => 
-      wishlist.items?.some(item => item.product.id === productId)
+      wishlist.items?.some(item => item.woocommerce_product_id === woocommerceProductId)
+    );
+  }
+
+  /**
+   * Get wishlists containing a specific WooCommerce product
+   * @param {number} woocommerceProductId - WooCommerce Product ID
+   */
+  function getWishlistsWithProduct(woocommerceProductId) {
+    return wishlists.value.filter(wishlist => 
+      wishlist.items?.some(item => item.woocommerce_product_id === woocommerceProductId)
     );
   }
 
@@ -535,17 +614,20 @@ export const useWishlistStore = defineStore('wishlist', () => {
     createWishlist,
     updateWishlist,
     deleteWishlist,
-    addProductToWishlist,
-    removeProductFromWishlist,
-    updateWishlistItem,
-    fetchPublicWishlist,
+    addWooCommerceProductToWishlist,
+    removeWooCommerceProductFromWishlist,
+    refreshWishlistProducts,
+    fetchPublicWishlistByUUID,
+    fetchPublicWishlistByUsername,
+    fetchWishlistsByUsername,
     searchPublicWishlists,
     favoriteWishlist,
     unfavoriteWishlist,
     fetchFavoriteWishlists,
     updateWishlistShipping,
     getWishlistById,
-    isProductInWishlist,
+    isWooCommerceProductInWishlist,
+    getWishlistsWithProduct,
     getPriorityLabel,
     getPriorityColor,
     clearCurrentWishlist,

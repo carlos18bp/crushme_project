@@ -5,59 +5,30 @@ Handles shopping cart functionality with items and calculations
 from rest_framework import serializers
 from ..models import Cart, CartItem, Product
 from .product_serializers import ProductListSerializer
+from ..services.woocommerce_service import woocommerce_service
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     """
-    Serializer for cart items
+    Serializer for cart items with WooCommerce products
     Includes product information and calculated subtotal
     """
-    product = ProductListSerializer(read_only=True)
-    product_id = serializers.IntegerField(write_only=True)
     subtotal = serializers.ReadOnlyField()
     
     class Meta:
         model = CartItem
         fields = [
-            'id', 'product', 'product_id', 'quantity', 'unit_price',
-            'subtotal', 'created_at', 'updated_at'
+            'id', 'woocommerce_product_id', 'product_name', 'product_image',
+            'quantity', 'unit_price', 'subtotal', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'unit_price', 'created_at', 'updated_at']
-    
-    def validate_product_id(self, value):
-        """Validate product exists and is available"""
-        try:
-            product = Product.objects.get(id=value)
-        except Product.DoesNotExist:
-            raise serializers.ValidationError("Product does not exist.")
-        
-        if not product.is_active:
-            raise serializers.ValidationError("Product is not available.")
-        
-        return value
+        read_only_fields = ['id', 'woocommerce_product_id', 'product_name', 'product_image', 
+                           'unit_price', 'created_at', 'updated_at']
     
     def validate_quantity(self, value):
         """Validate quantity is positive"""
         if value <= 0:
             raise serializers.ValidationError("Quantity must be greater than zero.")
         return value
-    
-    def validate(self, attrs):
-        """Validate cart item data"""
-        product_id = attrs.get('product_id')
-        quantity = attrs.get('quantity')
-        
-        if product_id and quantity:
-            try:
-                product = Product.objects.get(id=product_id)
-                if product.stock_quantity < quantity:
-                    raise serializers.ValidationError(
-                        f"Only {product.stock_quantity} items available in stock."
-                    )
-            except Product.DoesNotExist:
-                pass  # Will be caught by product_id validation
-        
-        return attrs
 
 
 class CartItemCreateSerializer(serializers.ModelSerializer):
@@ -175,63 +146,11 @@ class CartSummarySerializer(serializers.ModelSerializer):
 
 class AddToCartSerializer(serializers.Serializer):
     """
-    Serializer for adding products to cart
+    Serializer for adding WooCommerce products to cart
+    Simple validation - the view handles WooCommerce API calls
     """
-    product_id = serializers.IntegerField()
+    product_id = serializers.IntegerField(min_value=1)
     quantity = serializers.IntegerField(default=1, min_value=1)
-    
-    def validate_product_id(self, value):
-        """Validate product exists and is available"""
-        try:
-            product = Product.objects.get(id=value)
-        except Product.DoesNotExist:
-            raise serializers.ValidationError("Product does not exist.")
-        
-        if not product.is_active:
-            raise serializers.ValidationError("Product is not available.")
-        
-        if not product.is_in_stock:
-            raise serializers.ValidationError("Product is out of stock.")
-        
-        return value
-    
-    def validate(self, attrs):
-        """Validate stock availability"""
-        product_id = attrs.get('product_id')
-        quantity = attrs.get('quantity')
-        user = self.context['request'].user
-        
-        try:
-            product = Product.objects.get(id=product_id)
-            
-            # Check if item already exists in cart
-            try:
-                cart = Cart.objects.get(user=user)
-                existing_item = cart.items.filter(product=product).first()
-                
-                if existing_item:
-                    total_quantity = existing_item.quantity + quantity
-                    if product.stock_quantity < total_quantity:
-                        raise serializers.ValidationError(
-                            f"Only {product.stock_quantity} items available in stock. "
-                            f"You already have {existing_item.quantity} in your cart."
-                        )
-                else:
-                    if product.stock_quantity < quantity:
-                        raise serializers.ValidationError(
-                            f"Only {product.stock_quantity} items available in stock."
-                        )
-            except Cart.DoesNotExist:
-                # No cart exists, just check stock
-                if product.stock_quantity < quantity:
-                    raise serializers.ValidationError(
-                        f"Only {product.stock_quantity} items available in stock."
-                    )
-        
-        except Product.DoesNotExist:
-            pass  # Will be caught by product_id validation
-        
-        return attrs
 
 
 class UpdateCartItemSerializer(serializers.Serializer):

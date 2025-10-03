@@ -1,0 +1,15 @@
+{
+  "title": "Mis Favoritos",
+  "products": "producto favorito",
+  "productsPlural": "productos favoritos",
+  "refresh": "Actualizar",
+  "goToShop": "Ir a la tienda",
+  "removeFromFavorites": "Eliminar de favoritos",
+  "addToFavorites": "Agregar a favoritos",
+  "noFavoritesYet": "No tienes productos favoritos",
+  "addFavoritesMessage": "Empieza a agregar productos que te gusten a tus favoritos",
+  "browseProducts": "Explorar productos",
+  "confirmRemove": "¿Estás seguro de que deseas eliminar este producto de favoritos?"
+}
+
+

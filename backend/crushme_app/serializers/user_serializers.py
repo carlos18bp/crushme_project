@@ -21,8 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 
-            'full_name', 'phone', 'about', 'date_joined', 'is_active',
-            'is_guest_converted'
+            'full_name', 'phone', 'about', 'current_status', 'note',
+            'date_joined', 'is_active', 'is_guest_converted'
         ]
         read_only_fields = ['id', 'date_joined', 'is_guest_converted']
     
@@ -45,6 +45,8 @@ class UserSerializer(serializers.ModelSerializer):
         instance.username = validated_data.get('username', instance.username)
         instance.phone = validated_data.get('phone', instance.phone)
         instance.about = validated_data.get('about', instance.about)
+        instance.current_status = validated_data.get('current_status', instance.current_status)
+        instance.note = validated_data.get('note', instance.note)
         instance.save()
         return instance
 
@@ -348,10 +350,10 @@ class UserAddressSerializer(serializers.ModelSerializer):
         model = UserAddress
         fields = [
             'id', 'user', 'country', 'state', 'city', 'zip_code',
-            'address_line_1', 'address_line_2', 'is_default_shipping',
-            'is_default_billing', 'guest_email', 'guest_first_name',
-            'guest_last_name', 'guest_phone', 'guest_full_name',
-            'created_at', 'updated_at'
+            'address_line_1', 'address_line_2', 'additional_details',
+            'is_default_shipping', 'is_default_billing', 'guest_email', 
+            'guest_first_name', 'guest_last_name', 'guest_phone', 
+            'guest_full_name', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'guest_full_name']
     
@@ -426,7 +428,10 @@ class GuestCheckoutSerializer(serializers.ModelSerializer):
 class UserGallerySerializer(serializers.ModelSerializer):
     """
     Serializer for UserGallery model
+    Supports both file uploads and URL references
     """
+    image = serializers.ImageField(required=False)
+    
     class Meta:
         model = UserGallery
         fields = [
@@ -491,11 +496,12 @@ class GuestUserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """
     Complete user profile serializer including related data
+    Supports both read and write operations for nested relationships
     """
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    addresses = UserAddressSerializer(many=True, read_only=True)
-    gallery_photos = UserGallerySerializer(many=True, read_only=True)
-    links = UserLinkSerializer(many=True, read_only=True)
+    addresses = UserAddressSerializer(many=True, required=False, allow_null=True)
+    # gallery_photos is handled manually in update() to support file uploads
+    links = UserLinkSerializer(many=True, required=False, allow_null=True)
     profile_picture = serializers.SerializerMethodField(read_only=True)
     guest_profile = GuestUserSerializer(read_only=True)
     
@@ -503,10 +509,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 'full_name',
-            'phone', 'about', 'date_joined', 'is_active', 'is_guest_converted',
-            'addresses', 'gallery_photos', 'links', 'profile_picture', 'guest_profile'
+            'phone', 'about', 'current_status', 'note', 'date_joined', 'is_active', 
+            'is_guest_converted', 'addresses', 'gallery_photos', 'links', 
+            'profile_picture', 'guest_profile'
         ]
-        read_only_fields = ['id', 'date_joined', 'is_guest_converted']
+        read_only_fields = ['id', 'date_joined', 'is_guest_converted', 'full_name', 'profile_picture', 'guest_profile']
     
     def get_profile_picture(self, obj):
         """Get user's profile picture"""
@@ -517,3 +524,83 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile_pic.image.url)
             return profile_pic.image.url
         return None
+    
+    def to_representation(self, instance):
+        """Override to properly serialize gallery_photos when reading"""
+        representation = super().to_representation(instance)
+        # Use UserGallerySerializer for reading gallery_photos
+        representation['gallery_photos'] = UserGallerySerializer(
+            instance.gallery_photos.all(), 
+            many=True, 
+            context=self.context
+        ).data
+        return representation
+    
+    def update(self, instance, validated_data):
+        """Update user profile including nested relationships"""
+        # Extract nested data
+        addresses_data = validated_data.pop('addresses', None)
+        links_data = validated_data.pop('links', None)
+        # gallery_photos is handled in the view, not here
+        
+        # Update basic user fields
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.username = validated_data.get('username', instance.username)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.about = validated_data.get('about', instance.about)
+        instance.current_status = validated_data.get('current_status', instance.current_status)
+        instance.note = validated_data.get('note', instance.note)
+        instance.save()
+        
+        # Update addresses if provided
+        if addresses_data is not None:
+            self._update_addresses(instance, addresses_data)
+        
+        # Update links if provided
+        if links_data is not None:
+            self._update_links(instance, links_data)
+        
+        return instance
+    
+    def _update_addresses(self, user, addresses_data):
+        """Update or create user addresses"""
+        # Get existing address IDs from the request
+        incoming_ids = [addr.get('id') for addr in addresses_data if addr.get('id')]
+        
+        # Delete addresses not in the incoming data
+        UserAddress.objects.filter(user=user).exclude(id__in=incoming_ids).delete()
+        
+        # Update or create addresses
+        for address_data in addresses_data:
+            address_id = address_data.get('id')
+            address_data.pop('user', None)  # Remove user field if present
+            
+            if address_id:
+                # Update existing address
+                UserAddress.objects.filter(id=address_id, user=user).update(**address_data)
+            else:
+                # Create new address
+                UserAddress.objects.create(user=user, **address_data)
+    
+    def _update_links(self, user, links_data):
+        """Update or create user links"""
+        # Get existing link IDs from the request
+        incoming_ids = [link.get('id') for link in links_data if link.get('id')]
+        
+        # Delete links not in the incoming data
+        UserLink.objects.filter(user=user).exclude(id__in=incoming_ids).delete()
+        
+        # Update or create links
+        for link_data in links_data:
+            link_id = link_data.get('id')
+            link_data.pop('user', None)  # Remove user field if present
+            
+            if link_id:
+                # Update existing link
+                UserLink.objects.filter(id=link_id, user=user).update(**link_data)
+            else:
+                # Create new link
+                UserLink.objects.create(user=user, **link_data)
+    

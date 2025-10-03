@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+import logging
 
 from ..models import Order, Cart
 from ..serializers.order_serializers import (
@@ -14,6 +15,9 @@ from ..serializers.order_serializers import (
     OrderStatusUpdateSerializer, OrderTrackingSerializer, OrderSearchSerializer,
     OrderCancelSerializer
 )
+from ..services.woocommerce_order_service import woocommerce_order_service
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -54,21 +58,43 @@ def get_order(request, order_id):
 @permission_classes([IsAuthenticated])
 def create_order(request):
     """
-    Create a new order from user's cart
+    Create a new order from user's cart and send to WooCommerce
     """
     serializer = OrderCreateSerializer(data=request.data, context={'request': request})
     
     if serializer.is_valid():
         try:
+            # Create order locally
             order = serializer.save()
-            detail_serializer = OrderDetailSerializer(order)
+            logger.info(f"✅ Order {order.order_number} created locally")
             
-            return Response({
+            # Send order to WooCommerce
+            wc_result = woocommerce_order_service.send_order(order)
+            
+            # Prepare response
+            detail_serializer = OrderDetailSerializer(order)
+            response_data = {
                 'message': 'Order created successfully',
-                'order': detail_serializer.data
-            }, status=status.HTTP_201_CREATED)
+                'order': detail_serializer.data,
+                'woocommerce_integration': {
+                    'sent': wc_result['success'],
+                }
+            }
+            
+            if wc_result['success']:
+                response_data['woocommerce_integration'].update({
+                    'woocommerce_order_id': wc_result.get('woocommerce_order_id'),
+                    'woocommerce_order_number': wc_result.get('woocommerce_order_number'),
+                })
+                logger.info(f"✅ Order {order.order_number} sent to WooCommerce successfully")
+            else:
+                response_data['woocommerce_integration']['error'] = wc_result.get('error')
+                logger.warning(f"⚠️ Order {order.order_number} created locally but failed to send to WooCommerce: {wc_result.get('error')}")
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
             
         except Exception as e:
+            logger.error(f"❌ Failed to create order: {str(e)}")
             return Response({
                 'error': 'Failed to create order',
                 'details': str(e)

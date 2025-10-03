@@ -59,6 +59,7 @@ def create_wishlist(request):
 def get_wishlist(request, wishlist_id):
     """
     Get detailed information about a specific wishlist
+    Automatically loads fresh product data from WooCommerce
     """
     try:
         wishlist = WishList.objects.get(id=wishlist_id, user=request.user)
@@ -66,6 +67,24 @@ def get_wishlist(request, wishlist_id):
         return Response({
             'error': 'Wishlist not found'
         }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Enriquecer con datos frescos de WooCommerce
+    from ..services.woocommerce_service import woocommerce_service
+    
+    items = wishlist.items.all()
+    if items:
+        # Extraer IDs de productos WooCommerce
+        wc_product_ids = [item.woocommerce_product_id for item in items if item.woocommerce_product_id]
+        
+        if wc_product_ids:
+            # Consultar productos desde WooCommerce y actualizar caché
+            for product_id in wc_product_ids:
+                result = woocommerce_service.get_product_by_id(product_id)
+                if result['success']:
+                    # Actualizar el item correspondiente
+                    item = items.filter(woocommerce_product_id=product_id).first()
+                    if item:
+                        item.update_product_data(result['data'])
     
     serializer = WishListDetailSerializer(wishlist, context={'request': request})
     
@@ -218,6 +237,7 @@ def remove_product_from_wishlist(request, wishlist_id, product_id):
 def get_public_wishlist(request, unique_link):
     """
     Get public wishlist by UUID link
+    Automatically loads fresh product data from WooCommerce
     """
     try:
         wishlist = WishList.objects.get(unique_link=unique_link, is_public=True, is_active=True)
@@ -225,6 +245,21 @@ def get_public_wishlist(request, unique_link):
         return Response({
             'error': 'Wishlist not found or is not public'
         }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Enriquecer con datos frescos de WooCommerce
+    from ..services.woocommerce_service import woocommerce_service
+    
+    items = wishlist.items.all()
+    if items:
+        wc_product_ids = [item.woocommerce_product_id for item in items if item.woocommerce_product_id]
+        
+        if wc_product_ids:
+            for product_id in wc_product_ids:
+                result = woocommerce_service.get_product_by_id(product_id)
+                if result['success']:
+                    item = items.filter(woocommerce_product_id=product_id).first()
+                    if item:
+                        item.update_product_data(result['data'])
     
     serializer = WishListPublicSerializer(wishlist, context={'request': request})
     

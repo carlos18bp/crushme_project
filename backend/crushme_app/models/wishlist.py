@@ -1,6 +1,7 @@
 """
 Wishlist models for the e-commerce system
 Handles wishlist functionality with sharing capabilities and favorites
+Now uses WooCommerce product IDs instead of local Product model
 """
 from django.db import models
 from django.utils import timezone
@@ -91,13 +92,28 @@ class WishList(models.Model):
         """Calculate total value of all items in wishlist"""
         total = 0
         for item in self.items.all():
-            total += item.product.price
+            # Try WooCommerce product data first
+            price = item.get_product_price()
+            if price > 0:
+                total += price
+            # Fallback to legacy product if exists
+            elif item.product and hasattr(item.product, 'price'):
+                total += float(item.product.price)
         return total
     
     @property
     def public_url(self):
         """Get the public sharing URL"""
-        return f"/wishlists/public/{self.unique_link}/"
+        from django.conf import settings
+        frontend_url = settings.FRONTEND_URL
+        username = self.user.username or self.user.email.split('@')[0]
+        return f"{frontend_url}/@{username}/{self.id}"
+    
+    @property
+    def shareable_path(self):
+        """Get just the path portion for frontend routing"""
+        username = self.user.username or self.user.email.split('@')[0]
+        return f"/@{username}/{self.id}"
     
     @property
     def shipping_name(self):
@@ -135,11 +151,43 @@ class WishList(models.Model):
         
         self.save(update_fields=['shipping_data'])
     
-    def add_product(self, product):
+    def add_woocommerce_product(self, woocommerce_product_id, product_data=None, **item_data):
         """
-        Add a product to wishlist if not already present
+        Add a WooCommerce product to wishlist if not already present
         Returns tuple (wishlist_item, created)
+        
+        Args:
+            woocommerce_product_id: ID of the product in WooCommerce
+            product_data: Optional dict with product information from WooCommerce
+            **item_data: Additional item data (notes, priority, etc.)
         """
+        defaults = {'wishlist': self}
+        if product_data:
+            defaults['product_data'] = product_data
+        defaults.update(item_data)
+        
+        wishlist_item, created = self.items.get_or_create(
+            woocommerce_product_id=woocommerce_product_id,
+            defaults=defaults
+        )
+        return wishlist_item, created
+    
+    def remove_woocommerce_product(self, woocommerce_product_id):
+        """Remove a WooCommerce product from wishlist"""
+        try:
+            wishlist_item = self.items.get(woocommerce_product_id=woocommerce_product_id)
+            wishlist_item.delete()
+            return True
+        except WishListItem.DoesNotExist:
+            return False
+    
+    def has_woocommerce_product(self, woocommerce_product_id):
+        """Check if WooCommerce product is in wishlist"""
+        return self.items.filter(woocommerce_product_id=woocommerce_product_id).exists()
+    
+    # Legacy methods for backwards compatibility
+    def add_product(self, product):
+        """Legacy method - use add_woocommerce_product instead"""
         wishlist_item, created = self.items.get_or_create(
             product=product,
             defaults={'wishlist': self}
@@ -147,7 +195,7 @@ class WishList(models.Model):
         return wishlist_item, created
     
     def remove_product(self, product):
-        """Remove a product from wishlist"""
+        """Legacy method - use remove_woocommerce_product instead"""
         try:
             wishlist_item = self.items.get(product=product)
             wishlist_item.delete()
@@ -156,7 +204,7 @@ class WishList(models.Model):
             return False
     
     def has_product(self, product):
-        """Check if product is in wishlist"""
+        """Legacy method - use has_woocommerce_product instead"""
         return self.items.filter(product=product).exists()
     
     def clear(self):
@@ -184,7 +232,7 @@ class WishList(models.Model):
 class WishListItem(models.Model):
     """
     Individual items in a wishlist
-    Links wishlist with products
+    Now uses WooCommerce product IDs instead of local Product FK
     """
     wishlist = models.ForeignKey(
         WishList,
@@ -192,11 +240,33 @@ class WishListItem(models.Model):
         related_name='items',
         verbose_name="Wishlist"
     )
+    
+    # WooCommerce product ID (external reference)
+    woocommerce_product_id = models.IntegerField(
+        verbose_name="WooCommerce Product ID",
+        help_text="ID del producto en WooCommerce",
+        null=True,
+        blank=True,
+        default=None
+    )
+    
+    # Cache product data from WooCommerce (optional, for performance)
+    product_data = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Product Data Cache",
+        help_text="Cached product information from WooCommerce"
+    )
+    
+    # Legacy support - keep for backwards compatibility but make optional
     product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='wishlist_items',
-        verbose_name="Product"
+        verbose_name="Product (Legacy)",
+        null=True,
+        blank=True,
+        help_text="Legacy field for local products"
     )
     
     # Optional notes about the item
@@ -231,20 +301,56 @@ class WishListItem(models.Model):
     class Meta:
         verbose_name = "Wishlist Item"
         verbose_name_plural = "Wishlist Items"
-        unique_together = ['wishlist', 'product']
+        unique_together = ['wishlist', 'woocommerce_product_id']
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['wishlist', 'product']),
+            models.Index(fields=['wishlist', 'woocommerce_product_id']),
+            models.Index(fields=['woocommerce_product_id']),
             models.Index(fields=['priority']),
         ]
     
     def __str__(self):
-        return f"{self.product.name} in {self.wishlist.name}"
+        product_name = self.get_product_name()
+        return f"{product_name} in {self.wishlist.name}"
+    
+    def get_product_name(self):
+        """Get product name from cache or return ID"""
+        if self.product_data and 'name' in self.product_data:
+            return self.product_data['name']
+        return f"Product #{self.woocommerce_product_id}"
+    
+    def get_product_price(self):
+        """Get product price from cache"""
+        if self.product_data and 'price' in self.product_data:
+            return float(self.product_data['price'])
+        return 0.0
+    
+    def get_product_image(self):
+        """Get product image URL from cache"""
+        if self.product_data and 'images' in self.product_data and len(self.product_data['images']) > 0:
+            return self.product_data['images'][0].get('src', '')
+        return None
+    
+    def update_product_data(self, product_info):
+        """Update cached product data from WooCommerce"""
+        self.product_data = {
+            'name': product_info.get('name'),
+            'price': product_info.get('price'),
+            'regular_price': product_info.get('regular_price'),
+            'sale_price': product_info.get('sale_price'),
+            'images': product_info.get('images', [])[:1],  # Just keep first image
+            'stock_status': product_info.get('stock_status'),
+            'stock_quantity': product_info.get('stock_quantity'),
+        }
+        self.save(update_fields=['product_data'])
     
     @property
     def is_available(self):
         """Check if the product is available for purchase"""
-        return self.product.is_in_stock
+        if self.product_data and 'stock_status' in self.product_data:
+            return self.product_data['stock_status'] == 'instock'
+        # If no cache, assume available
+        return True
 
 
 class FavoriteWishList(models.Model):

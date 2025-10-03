@@ -1,12 +1,10 @@
 """
 Order models for the e-commerce system
-Handles order processing and purchase history
+Handles order processing and purchase history with WooCommerce products
 """
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
-from .product import Product
-import uuid
 
 
 class Order(models.Model):
@@ -50,42 +48,58 @@ class Order(models.Model):
         verbose_name="Order Status"
     )
     
-    # Shipping information
-    shipping_address = models.TextField(
-        verbose_name="Shipping Address",
-        help_text="Complete shipping address"
+    # Customer information
+    email = models.EmailField(
+        verbose_name="Email",
+        help_text="Customer email address"
     )
-    shipping_city = models.CharField(
-        max_length=100,
-        verbose_name="Shipping City",
-        blank=True
-    )
-    shipping_state = models.CharField(
-        max_length=100,
-        verbose_name="Shipping State/Province",
-        blank=True
-    )
-    shipping_postal_code = models.CharField(
-        max_length=20,
-        verbose_name="Postal Code",
-        blank=True
-    )
-    shipping_country = models.CharField(
-        max_length=100,
-        verbose_name="Country",
-        default="United States"
+    name = models.CharField(
+        max_length=200,
+        verbose_name="Full Name",
+        help_text="Customer full name"
     )
     
-    # Contact information
-    phone_number = models.CharField(
+    # Shipping information
+    country = models.CharField(
+        max_length=100,
+        verbose_name="Country",
+        help_text="Shipping country"
+    )
+    state = models.CharField(
+        max_length=100,
+        verbose_name="State/Province",
+        help_text="Shipping state or province"
+    )
+    city = models.CharField(
+        max_length=100,
+        verbose_name="City",
+        help_text="Shipping city"
+    )
+    zipcode = models.CharField(
+        max_length=20,
+        verbose_name="Zip Code",
+        help_text="Postal/Zip code"
+    )
+    address_line_1 = models.CharField(
+        max_length=255,
+        verbose_name="Address Line 1",
+        help_text="Primary address line"
+    )
+    address_line_2 = models.CharField(
+        max_length=255,
+        verbose_name="Address Line 2",
+        blank=True,
+        help_text="Secondary address line (optional)"
+    )
+    phone = models.CharField(
         max_length=20,
         verbose_name="Phone Number",
-        blank=True
+        help_text="Contact phone number"
     )
     
     # Order notes
     notes = models.TextField(
-        verbose_name="Order Notes",
+        verbose_name="Additional Notes",
         blank=True,
         help_text="Additional notes or instructions"
     )
@@ -153,16 +167,20 @@ class Order(models.Model):
     @property
     def full_shipping_address(self):
         """Get formatted full shipping address"""
-        address_parts = [self.shipping_address]
+        address_parts = []
         
-        if self.shipping_city:
-            address_parts.append(self.shipping_city)
-        if self.shipping_state:
-            address_parts.append(self.shipping_state)
-        if self.shipping_postal_code:
-            address_parts.append(self.shipping_postal_code)
-        if self.shipping_country:
-            address_parts.append(self.shipping_country)
+        if self.address_line_1:
+            address_parts.append(self.address_line_1)
+        if self.address_line_2:
+            address_parts.append(self.address_line_2)
+        if self.city:
+            address_parts.append(self.city)
+        if self.state:
+            address_parts.append(self.state)
+        if self.zipcode:
+            address_parts.append(self.zipcode)
+        if self.country:
+            address_parts.append(self.country)
             
         return ', '.join(filter(None, address_parts))
     
@@ -197,11 +215,6 @@ class Order(models.Model):
         if self.can_be_cancelled():
             self.status = 'cancelled'
             self.save()
-            
-            # Return items to stock
-            for item in self.items.all():
-                item.product.increase_stock(item.quantity)
-            
             return True
         return False
 
@@ -209,7 +222,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     """
     Individual items within an order
-    Stores product information at the time of purchase
+    Stores WooCommerce product information at the time of purchase
     """
     order = models.ForeignKey(
         Order,
@@ -217,11 +230,9 @@ class OrderItem(models.Model):
         related_name='items',
         verbose_name="Order"
     )
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='order_items',
-        verbose_name="Product"
+    woocommerce_product_id = models.IntegerField(
+        verbose_name="WooCommerce Product ID",
+        help_text="ID of the product in WooCommerce"
     )
     quantity = models.PositiveIntegerField(
         verbose_name="Quantity"
@@ -241,7 +252,8 @@ class OrderItem(models.Model):
     )
     product_description = models.TextField(
         verbose_name="Product Description (at purchase)",
-        help_text="Product description at the time of purchase"
+        help_text="Product description at the time of purchase",
+        blank=True
     )
     
     created_at = models.DateTimeField(
@@ -256,10 +268,10 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = "Order Item"
         verbose_name_plural = "Order Items"
-        unique_together = ['order', 'product']
+        unique_together = ['order', 'woocommerce_product_id']
         ordering = ['created_at']
         indexes = [
-            models.Index(fields=['order', 'product']),
+            models.Index(fields=['order', 'woocommerce_product_id']),
         ]
     
     def __str__(self):
@@ -269,14 +281,3 @@ class OrderItem(models.Model):
     def subtotal(self):
         """Calculate subtotal for this order item"""
         return self.quantity * self.unit_price
-    
-    def save(self, *args, **kwargs):
-        """Store product information at time of purchase"""
-        if not self.product_name:
-            self.product_name = self.product.name
-        if not self.product_description:
-            self.product_description = self.product.description
-        if not self.unit_price:
-            self.unit_price = self.product.price
-            
-        super().save(*args, **kwargs)

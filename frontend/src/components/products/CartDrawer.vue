@@ -3,7 +3,7 @@
 
     <!-- Drawer del carrito -->
     <TransitionRoot as="template" :show="open">
-      <Dialog class="relative z-50" @close="open = false">
+      <Dialog class="relative z-[1100]" @close="open = false">
         <TransitionChild 
           as="template" 
           enter="ease-in-out duration-500" 
@@ -47,13 +47,8 @@
                         </div>
                       </div>
 
-                      <!-- Loading state -->
-                      <div v-if="cartStore.isLoading" class="mt-8 flex justify-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                      </div>
-
                       <!-- Empty cart -->
-                      <div v-else-if="cartStore.isEmpty" class="mt-12 text-center py-8">
+                      <div v-if="cartStore.isEmpty" class="mt-12 text-center py-8">
                         <div class="text-gray-400 mb-6">
                           <svg class="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z" />
@@ -71,8 +66,8 @@
                               <!-- Product image -->
                               <div class="size-20 shrink-0 overflow-hidden rounded-lg border border-gray-200">
                                 <img 
-                                  :src="item.product?.image || 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=300&fit=crop&crop=center'" 
-                                  :alt="item.product?.name || 'Product image'" 
+                                  :src="item.image || 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=300&fit=crop&crop=center'" 
+                                  :alt="item.name || 'Product image'" 
                                   class="size-full object-cover" />
                               </div>
 
@@ -81,12 +76,12 @@
                                 <div>
                                   <div class="flex justify-between">
                                     <h3 class="font-comfortaa font-medium text-gray-900 text-sm leading-tight">
-                                      {{ item.product?.name || 'Product' }}
+                                      {{ item.name || 'Product' }}
                                     </h3>
-                                    <p class="ml-4 font-poppins font-semibold text-gray-900">${{ (item.unit_price * item.quantity).toFixed(2) }}</p>
+                                    <p class="ml-4 font-poppins font-semibold text-gray-900">${{ (item.price * item.quantity).toFixed(2) }}</p>
                                   </div>
                                   <p class="mt-1 text-xs font-poppins text-gray-500">
-                                    ${{ item.unit_price?.toFixed(2) || '0.00' }}
+                                    ${{ item.price?.toFixed(2) || '0.00' }}
                                   </p>
                                 </div>
                                 
@@ -150,9 +145,9 @@
                       <div class="mb-4">
                         <button
                           @click="handleCheckout"
-                          :disabled="!cartStore.canCheckout || cartStore.isValidating"
+                          :disabled="cartStore.isEmpty || cartStore.isUpdating"
                           class="flex w-full items-center justify-center rounded-full bg-gray-900 px-6 py-4 font-poppins text-base font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                          {{ cartStore.isValidating ? ($t('cart.validating') || 'Validating...') : ($t('cart.checkout') || 'Checkout') }}
+                          {{ $t('cart.checkout') || 'Checkout' }}
                         </button>
                       </div>
 
@@ -183,10 +178,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useCartStore } from '@/stores/modules/cartStore.js'
+import { useI18nStore } from '@/stores/modules/i18nStore'
 
 // Props
 const props = defineProps({
@@ -200,58 +197,68 @@ const props = defineProps({
 const emit = defineEmits(['close', 'checkout'])
 
 // Composables
+const router = useRouter()
 const { t } = useI18n()
 const cartStore = useCartStore()
+const i18nStore = useI18nStore()
 
 // State
 const open = ref(props.isOpen)
 
 // Methods
-const updateQuantity = async (itemId, newQuantity) => {
+const updateQuantity = (itemId, newQuantity) => {
   if (newQuantity <= 0) {
-    await removeItem(itemId)
+    removeItem(itemId)
     return
   }
   
   try {
-    await cartStore.updateCartItem(itemId, newQuantity)
+    cartStore.updateCartItem(itemId, newQuantity)
   } catch (error) {
     console.error('Error updating cart item:', error)
   }
 }
 
-const removeItem = async (itemId) => {
+const removeItem = (itemId) => {
   try {
-    await cartStore.removeFromCart(itemId)
+    cartStore.removeFromCart(itemId)
   } catch (error) {
     console.error('Error removing cart item:', error)
   }
 }
 
-const clearCart = async () => {
+const clearCart = () => {
   if (confirm(t('cart.confirmClear') || 'Are you sure you want to clear your cart?')) {
     try {
-      await cartStore.clearCart()
+      cartStore.clearCart()
     } catch (error) {
       console.error('Error clearing cart:', error)
     }
   }
 }
 
-const handleCheckout = async () => {
+const handleCheckout = () => {
   try {
-    // Validar carrito antes del checkout
-    const validation = await cartStore.validateCart()
+    console.log('🛒 [CART DRAWER] Iniciando checkout...')
+    console.log('🛒 [CART DRAWER] Carrito vacío?', cartStore.isEmpty)
+    console.log('🛒 [CART DRAWER] Items en carrito:', cartStore.items)
+    console.log('🛒 [CART DRAWER] Locale actual:', i18nStore.locale)
     
-    if (validation.success) {
-      emit('checkout')
-      // Aquí podrías redirigir a la página de checkout
-      // this.$router.push('/checkout')
+    if (!cartStore.isEmpty) {
+      console.log('🛒 [CART DRAWER] Redirigiendo a checkout...')
+      
+      // Cerrar el drawer
+      open.value = false
+      
+      // Redirigir al checkout
+      router.push({ name: `Checkout-${i18nStore.locale}` })
+      
+      console.log('✅ [CART DRAWER] Redirección completada')
     } else {
-      alert(validation.error || 'Cart validation failed')
+      console.log('❌ [CART DRAWER] Carrito vacío, no se puede proceder')
     }
   } catch (error) {
-    console.error('Error during checkout:', error)
+    console.error('❌ [CART DRAWER] Error durante checkout:', error)
     alert('Error during checkout. Please try again.')
   }
 }
@@ -262,12 +269,8 @@ const updateOpen = (newValue) => {
 }
 
 // Initialize cart on mount
-onMounted(async () => {
-  try {
-    await cartStore.initializeCart()
-  } catch (error) {
-    console.error('Error initializing cart:', error)
-  }
+onMounted(() => {
+  cartStore.initializeCart()
 })
 
 // Expose methods for parent components

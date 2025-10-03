@@ -56,16 +56,25 @@ class Cart(models.Model):
         """Check if cart is empty"""
         return self.items.count() == 0
     
-    def add_product(self, product, quantity=1):
+    def add_woocommerce_product(self, wc_product_id, product_name, unit_price, quantity=1, product_image=None):
         """
-        Add a product to cart or update quantity if already exists
+        Add a WooCommerce product to cart or update quantity if already exists
         Returns the cart item
+        
+        Args:
+            wc_product_id: WooCommerce product ID
+            product_name: Name of the product
+            unit_price: Price per unit
+            quantity: Quantity to add (default 1)
+            product_image: URL of the product image (optional)
         """
         cart_item, created = self.items.get_or_create(
-            product=product,
+            woocommerce_product_id=wc_product_id,
             defaults={
+                'product_name': product_name,
                 'quantity': quantity,
-                'unit_price': product.price
+                'unit_price': unit_price,
+                'product_image': product_image
             }
         )
         
@@ -76,19 +85,19 @@ class Cart(models.Model):
         
         return cart_item
     
-    def remove_product(self, product):
-        """Remove a product completely from cart"""
+    def remove_woocommerce_product(self, wc_product_id):
+        """Remove a WooCommerce product completely from cart"""
         try:
-            cart_item = self.items.get(product=product)
+            cart_item = self.items.get(woocommerce_product_id=wc_product_id)
             cart_item.delete()
             return True
         except CartItem.DoesNotExist:
             return False
     
-    def update_product_quantity(self, product, quantity):
-        """Update quantity of a specific product in cart"""
+    def update_woocommerce_product_quantity(self, wc_product_id, quantity):
+        """Update quantity of a specific WooCommerce product in cart"""
         try:
-            cart_item = self.items.get(product=product)
+            cart_item = self.items.get(woocommerce_product_id=wc_product_id)
             if quantity <= 0:
                 cart_item.delete()
             else:
@@ -102,10 +111,10 @@ class Cart(models.Model):
         """Remove all items from cart"""
         self.items.all().delete()
     
-    def get_item_count_for_product(self, product):
-        """Get quantity of specific product in cart"""
+    def get_item_count_for_woocommerce_product(self, wc_product_id):
+        """Get quantity of specific WooCommerce product in cart"""
         try:
-            cart_item = self.items.get(product=product)
+            cart_item = self.items.get(woocommerce_product_id=wc_product_id)
             return cart_item.quantity
         except CartItem.DoesNotExist:
             return 0
@@ -115,6 +124,7 @@ class CartItem(models.Model):
     """
     Individual items in a shopping cart
     Links cart with products and quantities
+    Works with WooCommerce products
     """
     cart = models.ForeignKey(
         Cart,
@@ -122,11 +132,35 @@ class CartItem(models.Model):
         related_name='items',
         verbose_name="Cart"
     )
+    # WooCommerce product ID instead of ForeignKey
+    woocommerce_product_id = models.IntegerField(
+        verbose_name="WooCommerce Product ID",
+        help_text="ID of the product in WooCommerce",
+        default=0
+    )
+    # Store product details at time of adding to cart
+    product_name = models.CharField(
+        max_length=500,
+        verbose_name="Product Name",
+        help_text="Name of the product from WooCommerce",
+        default="Unknown Product"
+    )
+    product_image = models.URLField(
+        max_length=1000,
+        verbose_name="Product Image",
+        help_text="Main image URL from WooCommerce",
+        blank=True,
+        null=True
+    )
+    # Legacy field for backward compatibility (optional)
     product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='cart_items',
-        verbose_name="Product"
+        verbose_name="Product (Legacy)",
+        null=True,
+        blank=True,
+        help_text="Legacy field for local products"
     )
     quantity = models.PositiveIntegerField(
         default=1,
@@ -150,14 +184,14 @@ class CartItem(models.Model):
     class Meta:
         verbose_name = "Cart Item"
         verbose_name_plural = "Cart Items"
-        unique_together = ['cart', 'product']
+        unique_together = ['cart', 'woocommerce_product_id']
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['cart', 'product']),
+            models.Index(fields=['cart', 'woocommerce_product_id']),
         ]
     
     def __str__(self):
-        return f"{self.quantity}x {self.product.name} in {self.cart.user.get_full_name()}'s cart"
+        return f"{self.quantity}x {self.product_name} in {self.cart.user.get_full_name()}'s cart"
     
     @property
     def subtotal(self):
@@ -165,9 +199,7 @@ class CartItem(models.Model):
         return self.quantity * self.unit_price
     
     def save(self, *args, **kwargs):
-        """Override save to set unit_price from product if not provided"""
-        if not self.unit_price:
-            self.unit_price = self.product.price
+        """Override save method"""
         super().save(*args, **kwargs)
     
     def increase_quantity(self, amount=1):
@@ -183,8 +215,3 @@ class CartItem(models.Model):
         else:
             # If quantity would be 0 or negative, delete the item
             self.delete()
-    
-    def update_price(self):
-        """Update unit price to current product price"""
-        self.unit_price = self.product.price
-        self.save()

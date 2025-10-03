@@ -102,3 +102,4 @@ class Contact(models.Model):
         self.save(update_fields=['is_responded', 'updated_at'])
 
 
+

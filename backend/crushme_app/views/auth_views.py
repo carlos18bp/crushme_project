@@ -278,35 +278,103 @@ def google_login(request):
         return JsonResponse({'status': 'error', 'error_message': 'Invalid request method'}, status=405)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     """
     Handle updating the authenticated user's profile.
 
-    This view processes POST requests to update the profile of the authenticated user.
-    It uses the UserSerializer to validate and save the updated user data.
+    This view processes POST, PUT, and PATCH requests to update the profile of the authenticated user.
+    It uses the UserProfileSerializer to validate and save the updated user data including nested
+    relationships (addresses, links, gallery_photos).
+    
+    Supports both application/json and multipart/form-data for image uploads.
 
     Args:
         request (Request): The HTTP request object containing user data.
 
     Returns:
-        Response: A Response object with a success message if the update is successful,
+        Response: A Response object with the updated profile data if the update is successful,
                   or an error message if the update fails.
     """
+    # Process multipart/form-data if present (for image uploads)
+    data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+    
+    # Extract gallery images from multipart/form-data
+    # Format: gallery_image_1, gallery_caption_1, gallery_is_profile_1, etc.
+    gallery_photos = []
+    i = 1
+    while f'gallery_image_{i}' in request.FILES or f'gallery_caption_{i}' in data or f'gallery_is_profile_{i}' in data:
+        photo_data = {}
+        
+        # Get image file
+        if f'gallery_image_{i}' in request.FILES:
+            photo_data['image'] = request.FILES[f'gallery_image_{i}']
+        
+        # Get caption (handle both string and list)
+        if f'gallery_caption_{i}' in data:
+            caption = data.pop(f'gallery_caption_{i}')
+            # If caption is a list, get the first element
+            photo_data['caption'] = caption[0] if isinstance(caption, list) else caption
+        
+        # Get is_profile_picture (handle both string and list)
+        if f'gallery_is_profile_{i}' in data:
+            is_profile = data.pop(f'gallery_is_profile_{i}')
+            # If is_profile is a list, get the first element
+            if isinstance(is_profile, list):
+                is_profile = is_profile[0]
+            photo_data['is_profile_picture'] = is_profile in ['true', 'True', '1', True]
+        
+        if photo_data:
+            gallery_photos.append(photo_data)
+        
+        i += 1
+    
+    # Store gallery_photos separately (handled after serializer validation)
+    gallery_photos_to_process = None
+    if gallery_photos:
+        gallery_photos_to_process = gallery_photos
+    
+    # Remove gallery_photos from data if present (will be handled manually)
+    data.pop('gallery_photos', None)
+    
     # Serialize the request data with the current user instance
-    serializer = UserSerializer(instance=request.user, data=request.data, partial=True)
+    serializer = UserProfileSerializer(instance=request.user, data=data, partial=True, context={'request': request})
     
     # Validate the serialized data
     if serializer.is_valid():
         # Save the updated user data
-        serializer.save()
+        user = serializer.save()
+        
+        # Handle gallery_photos manually after successful validation
+        if gallery_photos_to_process:
+            from ..models import UserGallery
+            
+            for photo_data in gallery_photos_to_process:
+                try:
+                    # If setting as profile picture, unset others first
+                    if photo_data.get('is_profile_picture'):
+                        UserGallery.objects.filter(user=user, is_profile_picture=True).update(is_profile_picture=False)
+                    
+                    # Create new photo
+                    UserGallery.objects.create(
+                        user=user,
+                        image=photo_data.get('image'),
+                        caption=photo_data.get('caption', ''),
+                        is_profile_picture=photo_data.get('is_profile_picture', False)
+                    )
+                except Exception:
+                    # Silent fail - could add proper error logging here if needed
+                    pass
         
         # Update the last login timestamp for the user
-        update_last_login(None, request.user)
+        update_last_login(None, user)
         
-        # Return a success message
-        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+        # Get fresh serializer with updated gallery_photos
+        result_serializer = UserProfileSerializer(user, context={'request': request})
+        
+        # Return the updated profile data
+        return Response(result_serializer.data, status=status.HTTP_200_OK)
     
     # Return validation errors
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

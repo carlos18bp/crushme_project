@@ -35,7 +35,9 @@
     "adding": "Adding...",
     "viewProduct": "View Product",
     "addToWishlist": "Add to Wishlist",
-    "addToList": "Add to List"
+    "addToList": "Add to List",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
   },
   "navigation": {
     "home": "Home",

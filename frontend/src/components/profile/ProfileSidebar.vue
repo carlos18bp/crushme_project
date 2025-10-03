@@ -46,7 +46,7 @@
               </TransitionChild>
 
               <!-- Sidebar component for mobile -->
-              <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-[#FAF5F5] px-6 pb-4">
+              <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                 <!-- User Profile Section -->
                 <div class="flex items-center gap-3 pt-6 pb-4">
                   <img 
@@ -54,34 +54,53 @@
                     src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
                     alt="User avatar" 
                   />
-                  <span class="text-lg font-medium text-gray-900 font-comfortaa">Diana Mary</span>
+                  <span class="text-lg font-medium text-gray-900 font-comfortaa">@{{ authStore.username }}</span>
                 </div>
 
                 <!-- Main Actions -->
                 <nav class="flex flex-1 flex-col">
-                  <div class="text-xs font-medium text-gray-500 mb-3 font-comfortaa">Main actions</div>
+                  <div class="text-xs font-medium text-gray-500 mb-3 font-comfortaa">{{ $t('profileSidebar.mainActions') }}</div>
                   <ul role="list" class="flex flex-1 flex-col gap-y-2">
-                    <li v-for="item in navigation" :key="item.name">
-                      <a 
-                        :href="item.href" 
-                        :class="[
-                          item.current 
-                            ? 'bg-white text-gray-900' 
-                            : 'text-gray-700 hover:bg-white hover:text-gray-900',
-                          'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200'
-                        ]"
-                      >
-                        <component 
-                          :is="item.icon" 
-                          :class="[
-                            item.current ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900',
-                            'h-6 w-6 shrink-0'
-                          ]" 
-                          aria-hidden="true" 
-                        />
-                        {{ item.name }}
-                      </a>
-                    </li>
+                        <li v-for="item in navigation" :key="item.name">
+                          <button 
+                            v-if="item.name === $t('profileSidebar.logout')"
+                            @click="handleLogout"
+                            :class="[
+                              'text-gray-700 hover:bg-white hover:text-gray-900',
+                              'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200 w-full text-left'
+                            ]"
+                          >
+                            <component 
+                              :is="item.icon" 
+                              :class="[
+                                'text-gray-600 group-hover:text-gray-900',
+                                'h-6 w-6 shrink-0'
+                              ]" 
+                              aria-hidden="true" 
+                            />
+                            {{ item.name }}
+                          </button>
+                          <router-link 
+                            v-else
+                            :to="item.to" 
+                            :class="[
+                              item.current 
+                                ? 'bg-white text-brand-pink-dark' 
+                                : 'text-gray-700 hover:bg-white hover:text-gray-900',
+                              'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200'
+                            ]"
+                          >
+                            <component 
+                              :is="item.icon" 
+                              :class="[
+                                item.current ? 'text-brand-pink-dark' : 'text-gray-600 group-hover:text-gray-900',
+                                'h-6 w-6 shrink-0'
+                              ]" 
+                              aria-hidden="true" 
+                            />
+                            {{ item.name }}
+                          </router-link>
+                        </li>
                   </ul>
                 </nav>
               </div>
@@ -92,9 +111,9 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-80 lg:flex-col">
+    <div class="hidden lg:flex lg:w-80 lg:flex-col border-r border-gray-200/50">
       <!-- Sidebar component for desktop -->
-      <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-[#FAF5F5] px-6 py-8">
+      <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-8">
         <!-- User Profile Section -->
         <div class="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm">
           <img 
@@ -102,44 +121,63 @@
             src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
             alt="User avatar" 
           />
-          <span class="text-lg font-medium text-gray-900 font-comfortaa">Diana Mary</span>
+          <span class="text-lg font-medium text-gray-900 font-comfortaa">@{{ authStore.username }}</span>
         </div>
 
         <!-- Main Actions -->
         <nav class="flex flex-1 flex-col">
-          <div class="text-xs font-medium text-gray-500 mb-3 font-comfortaa">Main actions</div>
+          <div class="text-xs font-medium text-gray-500 mb-3 font-comfortaa">{{ $t('profileSidebar.mainActions') }}</div>
           <ul role="list" class="flex flex-1 flex-col gap-y-2">
-            <li v-for="item in navigation" :key="item.name">
-              <a 
-                :href="item.href" 
-                :class="[
-                  item.current 
-                    ? 'bg-white text-gray-900' 
-                    : 'text-gray-700 hover:bg-white hover:text-gray-900',
-                  'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200'
-                ]"
-              >
-                <component 
-                  :is="item.icon" 
-                  :class="[
-                    item.current ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900',
-                    'h-6 w-6 shrink-0'
-                  ]" 
-                  aria-hidden="true" 
-                />
-                {{ item.name }}
-              </a>
-            </li>
+                        <li v-for="item in navigation" :key="item.name">
+                          <button 
+                            v-if="item.name === $t('profileSidebar.logout')"
+                            @click="handleLogout"
+                            :class="[
+                              'text-gray-700 hover:bg-white hover:text-gray-900',
+                              'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200 w-full text-left'
+                            ]"
+                          >
+                            <component 
+                              :is="item.icon" 
+                              :class="[
+                                'text-gray-600 group-hover:text-gray-900',
+                                'h-6 w-6 shrink-0'
+                              ]" 
+                              aria-hidden="true" 
+                            />
+                            {{ item.name }}
+                          </button>
+                          <router-link 
+                            v-else
+                            :to="item.to" 
+                            :class="[
+                              item.current 
+                                ? 'bg-white text-brand-pink-dark' 
+                                : 'text-gray-700 hover:bg-white hover:text-gray-900',
+                              'group flex gap-x-3 rounded-lg p-3 text-sm font-medium font-comfortaa transition-all duration-200'
+                            ]"
+                          >
+                            <component 
+                              :is="item.icon" 
+                              :class="[
+                                item.current ? 'text-brand-pink-dark' : 'text-gray-600 group-hover:text-gray-900',
+                                'h-6 w-6 shrink-0'
+                              ]" 
+                              aria-hidden="true" 
+                            />
+                            {{ item.name }}
+                          </router-link>
+                        </li>
           </ul>
         </nav>
       </div>
     </div>
 
-    <!-- Mobile header -->
-    <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+    <!-- Mobile header (visible inside panel on mobile) -->
+    <div class="lg:hidden flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm border-b border-gray-200">
       <button 
         type="button" 
-        class="-m-2.5 p-2.5 text-gray-700 hover:text-gray-900 lg:hidden" 
+        class="-m-2.5 p-2.5 text-gray-700 hover:text-gray-900" 
         @click="sidebarOpen = true"
       >
         <span class="sr-only">Open sidebar</span>
@@ -161,77 +199,79 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useAuthStore } from '@/stores/modules/authStore'
+import {
+  HomeIcon,
+  UserIcon,
+  ClipboardDocumentListIcon,
+  GiftIcon,
+  HeartIcon,
+  ClockIcon,
+  ArrowLeftOnRectangleIcon
+} from '@heroicons/vue/24/outline'
 
-// Iconos SVG como componentes
-const HomeIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-    </svg>
-  `
-}
-
-const UserIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-    </svg>
-  `
-}
-
-const ClipboardIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-    </svg>
-  `
-}
-
-const GiftIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-    </svg>
-  `
-}
-
-const HeartIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-    </svg>
-  `
-}
-
-const ClockIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  `
-}
-
-const LogoutIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
-    </svg>
-  `
-}
-
-const navigation = [
-  { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
-  { name: 'My Profile', href: '#', icon: UserIcon, current: false },
-  { name: 'Wishlist', href: '#', icon: ClipboardIcon, current: false },
-  { name: 'My Gifts', href: '#', icon: GiftIcon, current: false },
-  { name: 'Favorites', href: '#', icon: HeartIcon, current: false },
-  { name: 'Purchase History', href: '#', icon: ClockIcon, current: false },
-  { name: 'Logout', href: '#', icon: LogoutIcon, current: false },
-]
-
+const route = useRoute()
+const router = useRouter()
+const i18nStore = useI18nStore()
+const authStore = useAuthStore()
+const { t } = useI18n()
 const sidebarOpen = ref(false)
+
+const handleLogout = async () => {
+  sidebarOpen.value = false
+  await authStore.logout()
+  router.push({ name: `Home-${i18nStore.locale}` })
+}
+
+const navigation = computed(() => [
+  { 
+    name: t('profileSidebar.dashboard'),
+    to: { name: `Profile-${i18nStore.locale}` },
+    icon: HomeIcon, 
+    current: route.name === `Profile-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.myProfile'),
+    to: { name: `MyProfile-${i18nStore.locale}` }, 
+    icon: UserIcon, 
+    current: route.name === `MyProfile-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.wishlist'),
+    to: { name: `ProfileWishlist-${i18nStore.locale}` }, 
+    icon: ClipboardDocumentListIcon, 
+    current: route.name === `ProfileWishlist-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.myGifts'),
+    to: `/${i18nStore.locale}/profile/my-gifts`, 
+    icon: GiftIcon, 
+    current: route.path.includes('/profile/my-gifts')
+  },
+  { 
+    name: t('profileSidebar.favorites'),
+    to: { name: `ProfileFavorites-${i18nStore.locale}` }, 
+    icon: HeartIcon, 
+    current: route.name === `ProfileFavorites-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.purchaseHistory'),
+    to: { name: `ProfileHistory-${i18nStore.locale}` }, 
+    icon: ClockIcon, 
+    current: route.name === `ProfileHistory-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.logout'),
+    to: '#', 
+    icon: ArrowLeftOnRectangleIcon, 
+    current: false
+  },
+])
 </script>
 
 <style scoped>

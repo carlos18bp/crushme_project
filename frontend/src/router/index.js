@@ -83,8 +83,7 @@ const baseRoutes = [
   {
     path: '/checkout',
     name: 'Checkout',
-    component: () => import('@/views/cart/CheckoutView.vue'),
-    meta: { requiresAuth: true }
+    component: () => import('@/views/cart/CheckoutView.vue')
   },
   
   // Order routes (protected)
@@ -123,12 +122,43 @@ const baseRoutes = [
     props: true
   },
   
-  // User profile routes (protected)
+  // User profile routes (protected) - with layout and children
   {
     path: '/profile',
-    name: 'Profile',
-    component: () => import('@/views/profile/ProfileView.vue'),
-    meta: { requiresAuth: true }
+    component: () => import('@/layouts/ProfileLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'Profile',
+        component: () => import('@/views/profile/ProfileDashboard.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'my-profile',
+        name: 'MyProfile',
+        component: () => import('@/views/profile/MyProfile.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'wishlist',
+        name: 'ProfileWishlist',
+        component: () => import('@/views/profile/ProfileWishlist.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'favorites',
+        name: 'ProfileFavorites',
+        component: () => import('@/views/profile/ProfileFavorites.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'history',
+        name: 'ProfileHistory',
+        component: () => import('@/views/profile/ProfileHistory.vue'),
+        meta: { requiresAuth: true }
+      }
+    ]
   },
   
   // About Us page
@@ -169,11 +199,23 @@ const routes = [
     // Skip the catch-all route, we'll add it at the end
     if (route.path === '/:pathMatch(.*)*') return null;
     
-    return availableLanguages.map(lang => ({
-      ...route,
-      path: route.path === '/' ? `/${lang}` : `/${lang}${route.path}`,
-      name: `${route.name}-${lang}`
-    }));
+    return availableLanguages.map(lang => {
+      const localizedRoute = {
+        ...route,
+        path: route.path === '/' ? `/${lang}` : `/${lang}${route.path}`,
+        name: route.name ? `${route.name}-${lang}` : undefined
+      };
+      
+      // If route has children, update their names to include language
+      if (route.children) {
+        localizedRoute.children = route.children.map(child => ({
+          ...child,
+          name: child.name ? `${child.name}-${lang}` : undefined
+        }));
+      }
+      
+      return localizedRoute;
+    });
   }).flat().filter(Boolean),
   
   // Catch-all route for 404
@@ -201,6 +243,19 @@ const router = createRouter({
     }
     // Por defecto, vuelve al inicio de la página
     return { top: 0, left: 0, behavior: 'smooth' };
+  }
+});
+
+// Debug: Log profile routes
+console.log('🔍 Profile routes registered:');
+routes.forEach(route => {
+  if (route.path && route.path.includes('profile')) {
+    console.log('  -', route.path, route.name, route.children ? `(${route.children.length} children)` : '');
+    if (route.children) {
+      route.children.forEach(child => {
+        console.log('    └─', child.path, child.name);
+      });
+    }
   }
 });
 

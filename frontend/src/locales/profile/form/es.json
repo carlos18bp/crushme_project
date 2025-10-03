@@ -1,0 +1,72 @@
+{
+  "title": "Mi Perfil",
+  "subtitle": "Gestiona tu información personal y preferencias",
+  "basicInfo": {
+    "title": "Información Básica",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "username": "Nombre de Usuario",
+    "about": "Acerca de",
+    "note": "Nota Personal",
+    "currentStatus": "Estado Actual"
+  },
+  "shippingDetails": {
+    "title": "Detalles de Envío",
+    "country": "País",
+    "state": "Estado / Provincia",
+    "city": "Ciudad",
+    "postalCode": "Código Postal",
+    "addressLine1": "Dirección Línea 1",
+    "addressLine2": "Dirección Línea 2 (opcional)",
+    "additionalDetails": "Detalles Adicionales (opcional)"
+  },
+  "publicProfile": {
+    "title": "Perfil Público"
+  },
+  "gallery": {
+    "title": "Galería de Fotos",
+    "currentPhotos": "Fotos actuales en tu galería",
+    "noPhotos": "No hay fotos en tu galería todavía",
+    "newPhotos": "Nuevas fotos a subir",
+    "selectFiles": "Seleccionar archivos",
+    "dropzone": "Arrastra y suelta imágenes aquí o haz clic para seleccionar",
+    "requirements": "Solo imágenes JPG, JPEG, PNG o GIF. Máximo 800KB por imagen.",
+    "delete": "Eliminar",
+    "remove": "Quitar"
+  },
+  "linktree": {
+    "title": "Linktree",
+    "subtitle": "Añade enlaces a tus redes sociales y sitios web",
+    "url": "URL",
+    "urlPlaceholder": "https://ejemplo.com",
+    "title_field": "Título",
+    "titlePlaceholder": "Mi Sitio Web",
+    "addLink": "Añadir Enlace",
+    "removeLink": "Eliminar Enlace"
+  },
+  "buttons": {
+    "save": "Guardar Cambios",
+    "cancel": "Cancelar",
+    "loading": "Guardando..."
+  },
+  "placeholders": {
+    "selectCountry": "Selecciona un país",
+    "selectState": "Selecciona un estado/provincia",
+    "firstName": "Ingresa tu nombre",
+    "lastName": "Ingresa tu apellido",
+    "email": "tu{'@'}email.com",
+    "phone": "1234567890",
+    "username": "nombre_usuario",
+    "about": "Cuéntanos sobre ti...",
+    "note": "Notas personales...",
+    "currentStatus": "¿Qué estás haciendo ahora?",
+    "city": "Ciudad",
+    "postalCode": "12345",
+    "addressLine1": "Calle Principal 123",
+    "addressLine2": "Apartamento 4B",
+    "additionalDetails": "Referencias adicionales..."
+  }
+}
+

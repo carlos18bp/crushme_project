@@ -11,9 +11,9 @@
       
       <!-- Action Icons - Esquina superior derecha -->
       <div class="product-actions absolute top-6 right-6 flex space-x-3">
-        <!-- Icono de Lista -->
+        <!-- Icono de Lista (Wishlist) -->
         <button 
-          @click.stop="handleToggleList"
+          @click.stop="handleAddToWishlist"
           class="action-btn bg-white p-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110"
           :title="$t('products.product.addToList')">
           <img 
@@ -22,13 +22,14 @@
             class="w-6 h-6">
         </button>
         
-        <!-- Icono de Corazón -->
+        <!-- Icono de Corazón (Favoritos) -->
         <button 
           @click.stop="handleToggleWishlist"
-          class="action-btn bg-white p-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110"
-          :title="$t('products.product.addToWishlist')">
+          :disabled="isTogglingFavorite"
+          class="action-btn bg-white p-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="isFavorited ? $t('products.product.removeFromFavorites') : $t('products.product.addToFavorites')">
           <img 
-            :src="isInWishlist ? HeartCheckIcon : HeartNoCheckIcon" 
+            :src="isFavorited ? HeartCheckIcon : HeartNoCheckIcon" 
             alt="Heart icon"
             class="w-6 h-6">
         </button>
@@ -54,10 +55,11 @@
         <!-- Botones de acción -->
         <div class="product-buttons flex gap-2 flex-shrink-0">
           <button 
-            @click.stop="$emit('navigate-to-product', product.id)"
-            class="btn-buy text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 font-poppins hover:opacity-90"
+            @click.stop="handleBuyNow"
+            :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+            class="btn-buy text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90"
             style="background-color: #DA9DFF;">
-            {{ $t('products.product.buyNow') || 'Buy now' }}
+            {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyNow') || 'Buy now') }}
           </button>
           <button 
             @click.stop="handleAddToCart"
@@ -69,13 +71,27 @@
         </div>
       </div>
     </div>
+
+    <!-- Wishlist Selector Modal -->
+    <WishlistSelector
+      :show="showWishlistSelector"
+      :product-id="product.id"
+      @close="showWishlistSelector = false"
+      @added="handleWishlistAdded"
+      @create-wishlist="handleCreateWishlist"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useCartStore } from '@/stores/modules/cartStore.js'
+import { useAuthStore } from '@/stores/modules/authStore'
+import { useProfileStore } from '@/stores/modules/profileStore'
+import { useI18nStore } from '@/stores/modules/i18nStore'
+import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
 
 // Importar iconos SVG como URLs
 import HeartCheckIcon from '@/assets/icons/heart/check.svg?url'
@@ -96,6 +112,10 @@ const props = defineProps({
   isInList: {
     type: Boolean,
     default: false
+  },
+  isInFavorites: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -104,32 +124,118 @@ const emit = defineEmits([
   'navigate-to-product',
   'add-to-cart',
   'toggle-wishlist',
-  'toggle-list'
+  'toggle-list',
+  'favorite-updated'
 ])
 
-// i18n setup
+// Router, i18n and stores
+const router = useRouter()
 const { t } = useI18n()
-
-// Cart store
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const profileStore = useProfileStore()
+const i18nStore = useI18nStore()
+
+// Local state
+const showWishlistSelector = ref(false)
+const isFavorited = ref(props.isInFavorites)
+const isTogglingFavorite = ref(false)
+
+// Watch for changes in isInFavorites prop
+watch(() => props.isInFavorites, (newValue) => {
+  isFavorited.value = newValue
+})
 
 // Methods
-const handleToggleWishlist = () => {
-  emit('toggle-wishlist', props.product.id)
-}
-
-const handleToggleList = () => {
-  emit('toggle-list', props.product.id)
-}
-
-const handleAddToCart = async () => {
+const handleToggleWishlist = async () => {
+  // Check if user is authenticated
+  if (!authStore.isLoggedIn) {
+    // Redirect to login
+    router.push({ name: `Login-${i18nStore.locale}` })
+    return
+  }
+  
+  // Toggle favorite
+  isTogglingFavorite.value = true
+  
   try {
-    const result = await cartStore.addToCart(props.product.id, 1, {
+    if (isFavorited.value) {
+      // Remove from favorites
+      const result = await profileStore.removeProductFromFavorites(props.product.id)
+      if (result.success) {
+        isFavorited.value = false
+        emit('favorite-updated', { productId: props.product.id, isFavorited: false })
+      }
+    } else {
+      // Add to favorites
+      const result = await profileStore.addProductToFavorites(props.product.id)
+      if (result.success) {
+        isFavorited.value = true
+        emit('favorite-updated', { productId: props.product.id, isFavorited: true })
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling favorite:', error)
+  } finally {
+    isTogglingFavorite.value = false
+  }
+}
+
+const handleAddToWishlist = () => {
+  // Check if user is authenticated
+  if (!authStore.isLoggedIn) {
+    // Redirect to login
+    router.push({ name: `Login-${i18nStore.locale}` })
+    return
+  }
+  
+  // Show wishlist selector
+  showWishlistSelector.value = true
+}
+
+const handleWishlistAdded = (wishlistId) => {
+  console.log(`Product ${props.product.id} added to wishlist ${wishlistId}`)
+  // Optionally show a success message
+}
+
+const handleCreateWishlist = () => {
+  showWishlistSelector.value = false
+  router.push({ name: `ProfileWishlist-${i18nStore.locale}` })
+}
+
+const handleBuyNow = () => {
+  console.log('🔵 [ProductCard] handleBuyNow clicked for product:', props.product.id)
+  try {
+    // Agregar el producto al carrito (siempre 1 unidad)
+    const result = cartStore.addToCart(props.product.id, {
       name: props.product.name,
       price: parseFloat(props.product.price),
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
       stock_status: props.product.stock_status
     })
+    
+    console.log('🔵 [ProductCard] handleBuyNow result:', result)
+    
+    if (result.success) {
+      // Redirigir al checkout
+      router.push({ name: `Checkout-${i18nStore.locale}` })
+    }
+  } catch (error) {
+    console.error('Error al comprar el producto:', error)
+  }
+}
+
+const handleAddToCart = () => {
+  console.log('🟢 [ProductCard] handleAddToCart clicked for product:', props.product.id)
+  try {
+    const result = cartStore.addToCart(props.product.id, {
+      name: props.product.name,
+      price: parseFloat(props.product.price),
+      image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
+      stock_status: props.product.stock_status
+    })
+    
+    console.log('🟢 [ProductCard] handleAddToCart result:', result)
     
     if (result.success) {
       // Emitir evento para notificar al componente padre si es necesario

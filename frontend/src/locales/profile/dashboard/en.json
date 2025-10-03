@@ -1,0 +1,22 @@
+{
+  "welcome": "Hi {'@'}{username} 💖 ready to spoil a Darling today?",
+  "banner": {
+    "title": "Ready to spoil a Darling today?",
+    "button": "Go to shop"
+  },
+  "gifts": {
+    "number": "20",
+    "title": "Gifts",
+    "subtitle": "sended"
+  },
+  "quickActions": {
+    "browseDiaries": "Browse Diaries",
+    "shopProducts": "Shop Trending Products",
+    "createWishlist": "Create My Wishlist",
+    "history": "History"
+  },
+  "feed": {
+    "title": "Feed"
+  }
+}
+

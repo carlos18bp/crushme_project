@@ -60,6 +60,18 @@ import heroEs from '@/locales/home/hero/es.json'
 import trendingEn from '@/locales/home/trending/en.json'
 import trendingEs from '@/locales/home/trending/es.json'
 
+// Import profile translations
+import profileSidebarEn from '@/locales/profile/sidebar/en.json'
+import profileSidebarEs from '@/locales/profile/sidebar/es.json'
+import profileDashboardEn from '@/locales/profile/dashboard/en.json'
+import profileDashboardEs from '@/locales/profile/dashboard/es.json'
+import profileFormEn from '@/locales/profile/form/en.json'
+import profileFormEs from '@/locales/profile/form/es.json'
+import profileWishlistEn from '@/locales/profile/wishlist/en.json'
+import profileWishlistEs from '@/locales/profile/wishlist/es.json'
+import profileFavoritesEn from '@/locales/profile/favorites/en.json'
+import profileFavoritesEs from '@/locales/profile/favorites/es.json'
+
 // List of countries where Spanish is the primary language
 const spanishSpeakingCountries = [
   'AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GQ',
@@ -86,7 +98,14 @@ const messages = {
     footer: footerEn.footer,
     faq: faqEn,
     hero: heroEn,
-    trending: trendingEn
+    trending: trendingEn,
+    profileSidebar: profileSidebarEn,
+    profileDashboard: profileDashboardEn,
+    profile: {
+      form: profileFormEn,
+      wishlist: profileWishlistEn,
+      favorites: profileFavoritesEn
+    }
   },
   es: {
     login: loginEs,
@@ -106,7 +125,14 @@ const messages = {
     footer: footerEs.footer,
     faq: faqEs,
     hero: heroEs,
-    trending: trendingEs
+    trending: trendingEs,
+    profileSidebar: profileSidebarEs,
+    profileDashboard: profileDashboardEs,
+    profile: {
+      form: profileFormEs,
+      wishlist: profileWishlistEs,
+      favorites: profileFavoritesEs
+    }
   }
 }
 

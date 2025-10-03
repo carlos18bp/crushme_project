@@ -11,6 +11,9 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  define: {
+    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify(process.env.VITE_PAYPAL_CLIENT_ID),
+  },
   server: {
     port: 5173,
     proxy: {

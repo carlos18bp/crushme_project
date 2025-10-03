@@ -205,10 +205,12 @@
                   :product="product"
                   :is-in-wishlist="isProductInWishlist(product.id)"
                   :is-in-list="isProductInList(product.id)"
+                  :is-in-favorites="isProductInFavorites(product.id)"
                   @navigate-to-product="navigateToProduct"
                   @add-to-cart="addToCart"
                   @toggle-wishlist="toggleWishlist"
                   @toggle-list="toggleProductList"
+                  @favorite-updated="handleFavoriteUpdated"
                 />
               </div>
 
@@ -251,6 +253,9 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useProductStore } from '@/stores/modules/productStore'
+import { useProfileStore } from '@/stores/modules/profileStore'
+import { useAuthStore } from '@/stores/modules/authStore'
+import { useCartStore } from '@/stores/modules/cartStore'
 import ProductCard from '@/components/products/ProductCard.vue'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -262,6 +267,9 @@ const i18nStore = useI18nStore()
 
 // Store setup
 const productStore = useProductStore()
+const profileStore = useProfileStore()
+const authStore = useAuthStore()
+const cartStore = useCartStore()
 
 // Reactive data
 const selectedTheme = ref('') // Tema seleccionado (juguetes, lenceria, etc.)
@@ -523,9 +531,37 @@ const navigateToProduct = (productId) => {
   router.push({ name: `ProductDetail-${currentLang}`, params: { id: productId } })
 }
 
-const addToCart = (product) => {
-  // TODO: Implement add to cart functionality
-  console.log('Adding to cart:', product.name)
+const addToCart = async (product) => {
+  console.log('🛒 Agregando al carrito desde ProductsView:', product.name)
+  
+  try {
+    // Preparar opciones del producto
+    const options = {
+      name: product.name,
+      price: parseFloat(product.price),
+      image: product.images?.[0]?.src || null,
+      stock_status: product.stock_status
+    }
+    
+    // Llamar al cartStore para agregar el producto
+    const result = await cartStore.addToCart(
+      product.id,
+      1, // cantidad por defecto
+      options
+    )
+    
+    if (result.success) {
+      console.log('✅ Producto agregado al carrito exitosamente:', product.name)
+      console.log('📦 Items en carrito ahora:', cartStore.items.length)
+      // Aquí podrías mostrar una notificación de éxito si tienes un sistema de notificaciones
+    } else {
+      console.error('❌ Error al agregar al carrito:', result.error)
+      alert(`Error al agregar ${product.name} al carrito: ${result.error}`)
+    }
+  } catch (err) {
+    console.error('❌ Error inesperado al agregar al carrito:', err)
+    alert(`Error inesperado al agregar ${product.name} al carrito`)
+  }
 }
 
 const toggleWishlist = (productId) => {
@@ -556,6 +592,15 @@ const isProductInList = (productId) => {
   return listProducts.value.has(productId)
 }
 
+const isProductInFavorites = (productId) => {
+  return profileStore.isProductInFavorites(productId)
+}
+
+const handleFavoriteUpdated = async ({ productId, isFavorited }) => {
+  console.log(`Producto ${productId} ${isFavorited ? 'agregado a' : 'eliminado de'} favoritos`)
+  // La actualización ya se maneja en el store, no necesitamos hacer nada más aquí
+}
+
 const loadMoreProducts = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
@@ -577,7 +622,17 @@ watch(selectedCategory, (newCategory) => {
 
 // Lifecycle
 onMounted(async () => {
+  // Inicializar catálogo de productos
   await initializeCatalog()
+  
+  // Cargar IDs de favoritos si el usuario está autenticado
+  if (authStore.isLoggedIn) {
+    console.log('🔄 Cargando IDs de favoritos...')
+    const result = await profileStore.fetchFavoriteProductIds()
+    if (result.success) {
+      console.log('✅ IDs de favoritos cargados:', result.data.length)
+    }
+  }
 })
 </script>
 

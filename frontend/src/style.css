@@ -2,6 +2,7 @@
 
 /* Colores personalizados de la marca usando Tailwind CSS v4 */
 @theme {
+  --color-brand-pink: #FF3FD5;
   --color-brand-pink-light: #E9C3CD;
   --color-brand-pink-lighter: #FAF3F3;
   --color-brand-pink-medium: #D689A2;

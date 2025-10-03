@@ -176,13 +176,22 @@
                   <span v-else>{{ $t('productDetail.addToCart') }}</span>
                 </button>
                 <button 
-                  @click="addToWishlist" 
+                  @click="handleAddToWishlist" 
                   :disabled="product.stock_status === 'outofstock'"
                   class="add-to-wishlist-btn"
                 >
                   {{ $t('productDetail.addToWishlist') }}
                 </button>
               </div>
+              
+              <!-- Wishlist Selector Modal -->
+              <WishlistSelector
+                :show="showWishlistSelector"
+                :product-id="product.id"
+                @close="showWishlistSelector = false"
+                @added="handleWishlistAdded"
+                @create-wishlist="handleCreateWishlist"
+              />
               
               <!-- Error Message -->
               <div v-if="addToCartError" class="cart-error-message">
@@ -220,13 +229,16 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProductStore } from '@/stores/modules/productStore'
 import { useCartStore } from '@/stores/modules/cartStore'
+import { useAuthStore } from '@/stores/modules/authStore'
+import { useI18nStore } from '@/stores/modules/i18nStore'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
 import FAQ from '@/components/shared/FAQ.vue'
+import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
 
 // Props
 defineProps({
@@ -238,9 +250,12 @@ defineProps({
 
 // Router and Store
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const productStore = useProductStore()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
+const i18nStore = useI18nStore()
 
 // Reactive data
 const selectedImageIndex = ref(0)
@@ -254,6 +269,7 @@ const addToCartError = ref(null)
 const thumbnailScrollPosition = ref(0)
 const maxVisibleThumbnails = ref(5)
 const thumbnailList = ref(null)
+const showWishlistSelector = ref(false)
 
 // Computed properties
 const productId = computed(() => route.params.id)
@@ -510,12 +526,26 @@ const addToCart = async () => {
   }
 }
 
-const addToWishlist = () => {
-  console.log('Adding to wishlist:', {
-    product: product.value.name,
-    productId: product.value.id
-  })
-  // TODO: Implement wishlist functionality
+const handleAddToWishlist = () => {
+  // Check if user is authenticated
+  if (!authStore.isLoggedIn) {
+    // Redirect to login
+    router.push({ name: `Login-${i18nStore.locale}` })
+    return
+  }
+  
+  // Show wishlist selector
+  showWishlistSelector.value = true
+}
+
+const handleWishlistAdded = (wishlistId) => {
+  console.log(`Product ${product.value.id} added to wishlist ${wishlistId}`)
+  // Optionally show a success message
+}
+
+const handleCreateWishlist = () => {
+  showWishlistSelector.value = false
+  router.push({ name: `ProfileWishlist-${i18nStore.locale}` })
 }
 
 // Initialize
