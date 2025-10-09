@@ -23,7 +23,24 @@
     "additionalDetails": "Additional Details (optional)"
   },
   "publicProfile": {
-    "title": "Public Profile"
+    "title": "Public Profile",
+    "photos": "Profile Photos",
+    "coverPhoto": "Cover Photo",
+    "profilePhoto": "Profile Photo"
+  },
+  "crush": {
+    "title": "Become a Verified Crush",
+    "description": "Verified Crushes get a special badge and increased visibility on the platform.",
+    "verified": "VERIFIED CRUSH",
+    "requestButton": "Request Verification",
+    "cancelRequest": "Cancel Request",
+    "pendingTitle": "Pending Request",
+    "pendingMessage": "Your request is being reviewed by an administrator.",
+    "requestedAt": "Requested on",
+    "rejectedTitle": "Request Rejected",
+    "rejectedMessage": "Your request was reviewed but was not approved.",
+    "rejectionReason": "Reason",
+    "canReapply": "You can request verification again."
   },
   "gallery": {
     "title": "Photo Gallery",

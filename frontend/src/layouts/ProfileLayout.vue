@@ -14,6 +14,9 @@
     <!-- Gradient Overlay -->
     <div class="absolute inset-0 z-0 bg-gradient-to-br from-brand-pink-lighter/30 via-brand-purple-light/20 to-brand-blue-light/30"></div>
 
+    <!-- Language Selector -->
+    <LanguageSelector position="fixed" size="normal" theme="light" />
+
     <!-- Content Panel -->
     <div class="relative z-10 h-screen overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div class="w-full h-full max-w-[1400px] max-h-[700px]">
@@ -35,6 +38,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import ProfileSidebar from '@/components/profile/ProfileSidebar.vue'
+import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 import backgroundImage from '@/assets/backgrounds/background_1.png'
 
 onMounted(() => {

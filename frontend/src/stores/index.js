@@ -9,6 +9,7 @@ export { useProductStore } from './modules/productStore.js';
 export { useCartStore } from './modules/cartStore.js';
 export { useOrderStore } from './modules/orderStore.js';
 export { useWishlistStore } from './modules/wishlistStore.js';
+export { useReviewStore } from './modules/reviewStore.js';
 
 /**
  * Convenience function to initialize all stores

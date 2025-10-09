@@ -8,7 +8,8 @@ from ..views.auth_views import (
     signup, verify_email, resend_verification_code, login, 
     forgot_password, reset_password, google_login,
     update_profile, update_password, guest_checkout,
-    get_user_profile, check_username_availability, check_guest_user
+    get_user_profile, check_username_availability, check_guest_user,
+    request_crush_verification, cancel_crush_request
 )
 
 urlpatterns = [
@@ -33,6 +34,10 @@ urlpatterns = [
     path('guest_checkout/', guest_checkout, name='guest_checkout'),
     path('check_username/', check_username_availability, name='check_username_availability'),
     path('check_guest/', check_guest_user, name='check_guest_user'),
+    
+    # Crush (Webcammer) verification
+    path('crush/request-verification/', request_crush_verification, name='request_crush_verification'),
+    path('crush/cancel-request/', cancel_crush_request, name='cancel_crush_request'),
     
     # OAuth2 login
     path('google_login/', google_login, name='google_login'),

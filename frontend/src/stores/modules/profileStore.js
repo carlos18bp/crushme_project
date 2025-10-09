@@ -8,9 +8,9 @@ import {
   get_request, 
   update_request,
   create_request,
+  delete_request,
   isAuthenticated 
 } from '@/services/request_http.js';
-import axios from 'axios';
 
 export const useProfileStore = defineStore('profile', () => {
   // State
@@ -54,8 +54,21 @@ export const useProfileStore = defineStore('profile', () => {
   const profilePicture = computed(() => 
     galleryPhotos.value.find(photo => photo.is_profile_picture) || null
   );
-  const profilePictureUrl = computed(() => profile.value?.profile_picture || null);
+  const profilePictureUrl = computed(() => profile.value?.profile_picture_url || null);
+  const coverImageUrl = computed(() => profile.value?.cover_image_url || null);
   const hasGalleryPhotos = computed(() => galleryPhotos.value.length > 0);
+
+  // Crush verification
+  const isCrush = computed(() => profile.value?.is_crush || false);
+  const crushVerificationStatus = computed(() => profile.value?.crush_verification_status || 'none');
+  const crushRequestedAt = computed(() => profile.value?.crush_requested_at || null);
+  const crushVerifiedAt = computed(() => profile.value?.crush_verified_at || null);
+  const crushRejectionReason = computed(() => profile.value?.crush_rejection_reason || null);
+  const isCrushVerified = computed(() => isCrush.value && crushVerificationStatus.value === 'approved');
+  const canRequestCrushVerification = computed(() => 
+    crushVerificationStatus.value === 'none' || crushVerificationStatus.value === 'rejected'
+  );
+  const hasPendingCrushRequest = computed(() => crushVerificationStatus.value === 'pending');
 
   // Links
   const links = computed(() => profile.value?.links || []);
@@ -92,7 +105,6 @@ export const useProfileStore = defineStore('profile', () => {
       return { success: true, data: response.data };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al obtener el perfil';
-      console.error('Error fetching profile:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -134,7 +146,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data || 'Error al actualizar el perfil';
-      console.error('Error updating profile:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -180,7 +191,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data || 'Error al actualizar el perfil completo';
-      console.error('Error updating profile:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -233,22 +243,8 @@ export const useProfileStore = defineStore('profile', () => {
         }
       });
 
-      // Get token from localStorage
-      const accessToken = localStorage.getItem('access_token');
-      
-      // Make request with axios for better FormData support
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      
-      const response = await axios.put(
-        `${apiUrl}/auth/update_profile/`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      // NO establecer Content-Type - el navegador lo maneja con boundary
+      const response = await update_request('auth/update_profile/', formData);
 
       // Update profile with response data
       profile.value = response.data;
@@ -260,7 +256,339 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data || 'Error al subir imágenes';
-      console.error('Error uploading images:', err);
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Upload profile picture
+   * @param {File} file - Profile picture file
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function uploadProfilePicture(file) {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    // Validate file is a File instance
+    if (!(file instanceof File)) {
+      error.value = 'El archivo no es válido';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const formData = new FormData();
+      formData.append('profile_picture', file); // File directo, NO array
+
+      // NO establecer Content-Type - el navegador lo maneja con boundary
+      const response = await update_request('auth/update_profile/', formData);
+
+      // Update profile with response data
+      profile.value = response.data;
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: 'Foto de perfil actualizada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data || 'Error al subir la foto de perfil';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Upload cover image
+   * @param {File} file - Cover image file
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function uploadCoverImage(file) {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    // Validate file is a File instance
+    if (!(file instanceof File)) {
+      error.value = 'El archivo no es válido';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const formData = new FormData();
+      formData.append('cover_image', file); // File directo, NO array
+
+      // NO establecer Content-Type - el navegador lo maneja con boundary
+      const response = await update_request('auth/update_profile/', formData);
+
+      // Update profile with response data
+      profile.value = response.data;
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: 'Foto de portada actualizada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data || 'Error al subir la foto de portada';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Upload both profile picture and cover image
+   * @param {Object} images - Images object
+   * @param {File} [images.profilePicture] - Profile picture file
+   * @param {File} [images.coverImage] - Cover image file
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function uploadProfileImages(images) {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    if (!images.profilePicture && !images.coverImage) {
+      error.value = 'No se proporcionó ninguna imagen';
+      return { success: false, error: error.value };
+    }
+
+    // Validate files are File instances
+    if (images.profilePicture && !(images.profilePicture instanceof File)) {
+      error.value = 'El archivo de foto de perfil no es válido';
+      return { success: false, error: error.value };
+    }
+
+    if (images.coverImage && !(images.coverImage instanceof File)) {
+      error.value = 'El archivo de portada no es válido';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const formData = new FormData();
+      
+      // Añadir solo si existen - Files directos, NO arrays
+      if (images.profilePicture) {
+        formData.append('profile_picture', images.profilePicture);
+      }
+      
+      if (images.coverImage) {
+        formData.append('cover_image', images.coverImage);
+      }
+
+      // NO establecer Content-Type - el navegador lo maneja con boundary
+      const response = await update_request('auth/update_profile/', formData);
+
+      // Update profile with response data
+      profile.value = response.data;
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: 'Imágenes actualizadas correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data || 'Error al subir las imágenes';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Remove profile picture
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function removeProfilePicture() {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await update_request('auth/profile/update/', {
+        profile_picture: null
+      });
+
+      // Update profile with response data
+      profile.value = response.data;
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: 'Foto de perfil eliminada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data || 'Error al eliminar la foto de perfil';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Remove cover image
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function removeCoverImage() {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await update_request('auth/profile/update/', {
+        cover_image: null
+      });
+
+      // Update profile with response data
+      profile.value = response.data;
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: 'Foto de portada eliminada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data || 'Error al eliminar la foto de portada';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Validate image file before upload
+   * @param {File} file - Image file
+   * @param {number} maxSize - Maximum file size in bytes (default 5MB)
+   * @returns {Object} Validation result
+   */
+  function validateImageFile(file, maxSize = 5 * 1024 * 1024) {
+    const errors = [];
+    
+    if (!file) {
+      errors.push('No se ha seleccionado ningún archivo');
+      return { valid: false, errors };
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      errors.push('Formato de imagen no válido. Usa JPG, PNG, GIF o WEBP');
+    }
+    
+    // Validate file size
+    if (file.size > maxSize) {
+      errors.push(`El archivo excede el tamaño máximo de ${maxSize / 1024 / 1024}MB`);
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Get image URL with cache busting
+   * @param {string} url - Image URL
+   * @returns {string|null} URL with timestamp parameter
+   */
+  function getImageUrlWithCacheBusting(url) {
+    if (!url) return null;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
+  }
+
+  // ============================================
+  // CRUSH VERIFICATION SECTION
+  // ============================================
+
+  /**
+   * Request Crush verification
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function requestCrushVerification() {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/crush/request-verification/', {});
+      
+      // Update profile with new verification status
+      if (profile.value) {
+        profile.value.crush_verification_status = response.data.crush_verification_status;
+        profile.value.crush_requested_at = response.data.crush_requested_at;
+      }
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: response.data.message || 'Solicitud de verificación enviada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Error al solicitar verificación de Crush';
+      return { success: false, error: error.value };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Cancel Crush verification request
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function cancelCrushRequest() {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await create_request('auth/crush/cancel-request/', {});
+      
+      // Update profile with new verification status
+      if (profile.value) {
+        profile.value.crush_verification_status = response.data.crush_verification_status;
+        profile.value.crush_requested_at = null;
+      }
+      
+      return { 
+        success: true, 
+        data: response.data,
+        message: response.data.message || 'Solicitud de verificación cancelada correctamente'
+      };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Error al cancelar solicitud de verificación';
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -354,7 +682,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al obtener productos favoritos';
-      console.error('Error fetching favorite products:', err);
       return { success: false, error: error.value };
     } finally {
       isLoadingFavorites.value = false;
@@ -380,7 +707,6 @@ export const useProfileStore = defineStore('profile', () => {
         count: response.data.count
       };
     } catch (err) {
-      console.error('Error fetching favorite product IDs:', err);
       return { success: false, error: err.response?.data?.error };
     }
   }
@@ -427,7 +753,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al agregar producto a favoritos';
-      console.error('Error adding product to favorites:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -465,7 +790,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al eliminar producto de favoritos';
-      console.error('Error removing product from favorites:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -489,7 +813,6 @@ export const useProfileStore = defineStore('profile', () => {
         is_favorited: response.data.is_favorited
       };
     } catch (err) {
-      console.error('Error checking favorite status:', err);
       return { success: false, is_favorited: false };
     }
   }
@@ -527,7 +850,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al actualizar productos favoritos';
-      console.error('Error refreshing favorite products:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -560,7 +882,6 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al limpiar favoritos';
-      console.error('Error clearing favorites:', err);
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -591,12 +912,23 @@ export const useProfileStore = defineStore('profile', () => {
     galleryPhotos,
     profilePicture,
     profilePictureUrl,
+    coverImageUrl,
     hasGalleryPhotos,
     links,
     sortedLinks,
     hasLinks,
     guestProfile,
     isGuestConverted,
+    
+    // Crush verification getters
+    isCrush,
+    crushVerificationStatus,
+    crushRequestedAt,
+    crushVerifiedAt,
+    crushRejectionReason,
+    isCrushVerified,
+    canRequestCrushVerification,
+    hasPendingCrushRequest,
     
     // Favorites getters
     hasFavorites,
@@ -607,6 +939,15 @@ export const useProfileStore = defineStore('profile', () => {
     updateProfile,
     updateProfileComplete,
     uploadGalleryImages,
+    uploadProfilePicture,
+    uploadCoverImage,
+    uploadProfileImages,
+    removeProfilePicture,
+    removeCoverImage,
+    validateImageFile,
+    getImageUrlWithCacheBusting,
+    requestCrushVerification,
+    cancelCrushRequest,
     getAddressById,
     getPhotoById,
     getLinkById,

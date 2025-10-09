@@ -6,7 +6,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.cache import cache
 import logging
 
 from ..services.woocommerce_service import woocommerce_service
@@ -28,22 +27,11 @@ def get_organized_categories(request):
     - Bienestar
     - Marcas
     - Ofertas
-    
-    ⚡ OPTIMIZADO CON CACHÉ: Los datos se mantienen por 1 hora
     """
     try:
-        # Intentar obtener del caché primero
-        cache_key = 'woocommerce_organized_categories'
-        cached_result = cache.get(cache_key)
+        logger.info("🔄 Organizing categories from WooCommerce...")
         
-        if cached_result:
-            logger.info("✅ Organized categories loaded from cache")
-            return Response(cached_result, status=status.HTTP_200_OK)
-        
-        # Si no está en caché, procesar
-        logger.info("🔄 Organizing categories (not in cache)...")
-        
-        # Obtener todas las categorías de WooCommerce (esto ya usa caché internamente)
+        # Obtener todas las categorías de WooCommerce
         result = woocommerce_service.get_categories(per_page=100)
         
         if not result['success']:
@@ -63,13 +51,8 @@ def get_organized_categories(request):
             'success': True,
             'message': 'Categorías organizadas exitosamente',
             'data': organized,
-            'total_categories': len(all_categories),
-            'cached': False  # Indica que es nueva data
+            'total_categories': len(all_categories)
         }
-        
-        # Guardar en caché por 1 hora (3600 segundos)
-        cache.set(cache_key, response_data, timeout=3600)
-        logger.info(f"💾 Organized categories cached for 1 hour")
         
         return Response(response_data, status=status.HTTP_200_OK)
         
@@ -233,35 +216,6 @@ def get_category_tree(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])  # En producción cambiar a IsAdminUser
-def clear_woocommerce_cache(request):
-    """
-    Limpiar toda la caché de WooCommerce
-    
-    Útil cuando se actualizan productos/categorías en WooCommerce
-    y se necesita refrescar los datos inmediatamente
-    """
-    try:
-        # Limpiar caché del servicio
-        woocommerce_service.clear_cache()
-        
-        logger.info("🗑️ WooCommerce cache cleared successfully")
-        
-        return Response({
-            'success': True,
-            'message': 'Caché de WooCommerce limpiado exitosamente',
-            'note': 'La próxima petición obtendrá datos frescos de WooCommerce'
-        }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        logger.error(f"Error clearing cache: {str(e)}")
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 def build_category_tree(categories):
     """
     Construye un árbol jerárquico de categorías
@@ -304,22 +258,11 @@ def get_products_stats(request):
     - Total por categoría
     - Total por tema
     - Categorías más populares
-    
-    ⚡ OPTIMIZADO CON CACHÉ: Los datos se mantienen por 1 hora
     """
     try:
-        # Intentar obtener del caché primero
-        cache_key = 'woocommerce_stats'
-        cached_result = cache.get(cache_key)
+        logger.info("🔄 Calculating stats from WooCommerce...")
         
-        if cached_result:
-            logger.info("✅ Stats loaded from cache")
-            return Response(cached_result, status=status.HTTP_200_OK)
-        
-        # Si no está en caché, calcular
-        logger.info("🔄 Calculating stats (not in cache)...")
-        
-        # Obtener categorías (ya usa caché internamente)
+        # Obtener categorías
         result = woocommerce_service.get_categories(per_page=100)
         
         if not result['success']:
@@ -370,13 +313,8 @@ def get_products_stats(request):
                 },
                 'by_theme': theme_stats,
                 'top_categories': top_categories_list
-            },
-            'cached': False
+            }
         }
-        
-        # Guardar en caché por 1 hora
-        cache.set(cache_key, response_data, timeout=3600)
-        logger.info("💾 Stats cached for 1 hour")
         
         return Response(response_data, status=status.HTTP_200_OK)
         
@@ -454,35 +392,6 @@ def get_category_stats(request, category_id):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])  # En producción cambiar a IsAdminUser
-def clear_woocommerce_cache(request):
-    """
-    Limpiar toda la caché de WooCommerce
-    
-    Útil cuando se actualizan productos/categorías en WooCommerce
-    y se necesita refrescar los datos inmediatamente
-    """
-    try:
-        # Limpiar caché del servicio
-        woocommerce_service.clear_cache()
-        
-        logger.info("🗑️ WooCommerce cache cleared successfully")
-        
-        return Response({
-            'success': True,
-            'message': 'Caché de WooCommerce limpiado exitosamente',
-            'note': 'La próxima petición obtendrá datos frescos de WooCommerce'
-        }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        logger.error(f"Error clearing cache: {str(e)}")
         return Response({
             'success': False,
             'error': str(e)

@@ -38,7 +38,6 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         user.value = JSON.parse(storedUser);
       } catch (error) {
-        console.error('Error parsing stored user:', error);
         clearTokens();
         localStorage.removeItem(STORAGE_KEYS.USER);
       }
@@ -115,7 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Call logout endpoint (optional, since JWT is stateless)
       await create_request('auth/logout/', {});
     } catch (err) {
-      console.warn('Logout request failed:', err);
+      // Silent error handling
     } finally {
       // Clear local state regardless of API call result
       user.value = null;

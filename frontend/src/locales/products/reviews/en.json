@@ -1,0 +1,35 @@
+{
+  "title": "All Reviews",
+  "loading": "Loading reviews...",
+  "error": "Error loading reviews",
+  "retry": "Retry",
+  "noReviews": "No reviews yet for this product. Be the first to leave one!",
+  "writeReview": "Write a Review",
+  "latest": "Latest",
+  "loadMore": "Load More Reviews",
+  "postedOn": "Posted on",
+  "verifiedPurchase": "Verified Purchase",
+  "yourReview": "Your Review",
+  "reviews": "reviews",
+  "review": "review",
+  "rating": "Rating",
+  "stars": {
+    "1": "1 star",
+    "2": "2 stars",
+    "3": "3 stars",
+    "4": "4 stars",
+    "5": "5 stars"
+  },
+  "sort": {
+    "latest": "Latest",
+    "oldest": "Oldest",
+    "highestRated": "Highest Rated",
+    "lowestRated": "Lowest Rated"
+  },
+  "reviewCount": {
+    "none": "No reviews yet",
+    "one": "1 review",
+    "other": "{count} reviews"
+  }
+}
+

@@ -60,6 +60,16 @@ const baseRoutes = [
     name: 'Confirmation',
     component: () => import('@/views/auth/ConfirmationView.vue')
   },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('@/views/auth/TermsView.vue')
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: () => import('@/views/auth/PrivacyPolicyView.vue')
+  },
   
   // Product routes
   {
@@ -173,6 +183,13 @@ const baseRoutes = [
     path: '/contact',
     name: 'Contact',
     component: () => import('@/views/ContactView.vue')
+  },
+  
+  // Diaries page
+  {
+    path: '/diaries',
+    name: 'Diaries',
+    component: () => import('@/views/diaries/DiariesView.vue')
   },
   
   // Error handling

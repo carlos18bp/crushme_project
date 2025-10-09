@@ -30,16 +30,25 @@ class CustomUserAdmin(UserAdmin):
     """
     Custom admin for User model extending Django's UserAdmin
     Optimized for email-based authentication
+    Includes Crush verification management
     """
-    list_display = ('email', 'first_name', 'last_name', 'is_active', 'is_staff', 'date_joined')
-    list_filter = ('is_active', 'is_staff', 'is_superuser', 'date_joined')
-    search_fields = ('email', 'first_name', 'last_name')
+    list_display = ('email', 'username', 'first_name', 'last_name', 'is_crush_display', 'crush_status_display', 'is_active', 'is_staff', 'date_joined')
+    list_filter = ('is_active', 'is_staff', 'is_superuser', 'is_crush', 'crush_verification_status', 'date_joined')
+    search_fields = ('email', 'username', 'first_name', 'last_name')
     ordering = ('email',)
+    actions = ['approve_crush_verification', 'reject_crush_verification']
     
     # Define fieldsets for user detail view
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Personal info', {'fields': ('username', 'first_name', 'last_name', 'phone', 'about')}),
+        ('Profile Images', {'fields': ('profile_picture', 'cover_image')}),
+        ('Public Status', {'fields': ('current_status', 'note')}),
+        ('Verification', {'fields': ('email_verified', 'is_guest_converted')}),
+        ('Crush Verification', {
+            'fields': ('is_crush', 'crush_verification_status', 'crush_requested_at', 'crush_verified_at', 'crush_rejection_reason'),
+            'classes': ('collapse',)
+        }),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser'),
         }),
@@ -63,6 +72,81 @@ class CustomUserAdmin(UserAdmin):
     def get_queryset(self, request):
         """Optimize queryset to reduce database hits"""
         return super().get_queryset(request).select_related()
+    
+    def is_crush_display(self, obj):
+        """Display Crush verification status with badge"""
+        if obj.is_crush:
+            return format_html('<span style="background-color: #ff69b4; color: white; padding: 3px 10px; border-radius: 10px; font-weight: bold;">✓ CRUSH</span>')
+        return format_html('<span style="color: #999;">-</span>')
+    is_crush_display.short_description = 'Crush Status'
+    is_crush_display.admin_order_field = 'is_crush'
+    
+    def crush_status_display(self, obj):
+        """Display Crush verification request status with color coding"""
+        status_colors = {
+            'none': '#999',
+            'pending': '#ffc107',
+            'approved': '#28a745',
+            'rejected': '#dc3545',
+        }
+        status_labels = {
+            'none': '—',
+            'pending': '⏳ Pending',
+            'approved': '✓ Approved',
+            'rejected': '✗ Rejected',
+        }
+        color = status_colors.get(obj.crush_verification_status, '#999')
+        label = status_labels.get(obj.crush_verification_status, obj.crush_verification_status)
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color, label
+        )
+    crush_status_display.short_description = 'Request Status'
+    crush_status_display.admin_order_field = 'crush_verification_status'
+    
+    def approve_crush_verification(self, request, queryset):
+        """Admin action to approve Crush verification requests"""
+        from django.utils import timezone
+        
+        # Filter only pending requests
+        pending_users = queryset.filter(crush_verification_status='pending')
+        count = pending_users.count()
+        
+        # Update users
+        pending_users.update(
+            is_crush=True,
+            crush_verification_status='approved',
+            crush_verified_at=timezone.now(),
+            crush_rejection_reason=None
+        )
+        
+        self.message_user(
+            request,
+            f'{count} Crush verification request(s) approved successfully.',
+            level='success'
+        )
+    approve_crush_verification.short_description = '✓ Approve selected Crush verification requests'
+    
+    def reject_crush_verification(self, request, queryset):
+        """Admin action to reject Crush verification requests"""
+        # Filter only pending requests
+        pending_users = queryset.filter(crush_verification_status='pending')
+        count = pending_users.count()
+        
+        # Update users
+        pending_users.update(
+            is_crush=False,
+            crush_verification_status='rejected',
+            crush_verified_at=None,
+            crush_rejection_reason='Rejected by administrator'
+        )
+        
+        self.message_user(
+            request,
+            f'{count} Crush verification request(s) rejected.',
+            level='warning'
+        )
+    reject_crush_verification.short_description = '✗ Reject selected Crush verification requests'
 
 
 @admin.register(PasswordCode)

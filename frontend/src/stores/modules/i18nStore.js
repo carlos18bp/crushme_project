@@ -17,6 +17,10 @@ import resetPasswordEn from '@/locales/auth/reset-password/en.json'
 import resetPasswordEs from '@/locales/auth/reset-password/es.json'
 import confirmationEn from '@/locales/auth/confirmation/en.json'
 import confirmationEs from '@/locales/auth/confirmation/es.json'
+import termsEn from '@/locales/auth/terms/en.json'
+import termsEs from '@/locales/auth/terms/es.json'
+import privacyEn from '@/locales/auth/privacy/en.json'
+import privacyEs from '@/locales/auth/privacy/es.json'
 
 // Import products translations
 import productsEn from '@/locales/products/en.json'
@@ -25,6 +29,10 @@ import productsEs from '@/locales/products/es.json'
 // Import product detail translations
 import productDetailEn from '@/locales/products/product-detail/en.json'
 import productDetailEs from '@/locales/products/product-detail/es.json'
+
+// Import product reviews translations
+import productReviewsEn from '@/locales/products/reviews/en.json'
+import productReviewsEs from '@/locales/products/reviews/es.json'
 
 // Import cart translations
 import cartEn from '@/locales/shared/cart/en.json'
@@ -49,6 +57,10 @@ import aboutUsEs from '@/locales/about_us/es.json'
 // Import contact translations
 import contactEn from '@/locales/contact/en.json'
 import contactEs from '@/locales/contact/es.json'
+
+// Import diaries translations
+import diariesEn from '@/locales/diaries/en.json'
+import diariesEs from '@/locales/diaries/es.json'
 
 // Import alerts translations
 import alertsEn from '@/locales/alerts/en.json'
@@ -88,12 +100,16 @@ const messages = {
     resetCode: resetCodeEn,
     resetPassword: resetPasswordEn,
     confirmation: confirmationEn,
+    terms: termsEn,
+    privacy: privacyEn,
     products: productsEn,
     productDetail: productDetailEn,
+    productReviews: productReviewsEn,
     cart: cartEn,
     navbar: navbarEn.navbar,
     aboutUs: aboutUsEn,
     contact: contactEn,
+    diaries: diariesEn,
     alerts: alertsEn,
     footer: footerEn.footer,
     faq: faqEn,
@@ -115,12 +131,16 @@ const messages = {
     resetCode: resetCodeEs,
     resetPassword: resetPasswordEs,
     confirmation: confirmationEs,
+    terms: termsEs,
+    privacy: privacyEs,
     products: productsEs,
     productDetail: productDetailEs,
+    productReviews: productReviewsEs,
     cart: cartEs,
     navbar: navbarEs.navbar,
     aboutUs: aboutUsEs,
     contact: contactEs,
+    diaries: diariesEs,
     alerts: alertsEs,
     footer: footerEs.footer,
     faq: faqEs,
@@ -158,7 +178,6 @@ export const useI18nStore = defineStore('i18n', {
         
         return detectedLocale
       } catch (error) {
-        console.error('Error detecting user language:', error)
         // Fallback to English on error
         this.setLocale('en')
         return 'en'

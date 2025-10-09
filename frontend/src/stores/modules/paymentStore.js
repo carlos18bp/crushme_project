@@ -34,7 +34,6 @@ export const usePaymentStore = defineStore('payment', () => {
     error.value = null;
 
     try {
-      console.log('💳 [PAYMENT STORE] Obteniendo configuración de PayPal...');
       const response = await get_request('orders/paypal/config/');
       
       paypalConfig.value = {
@@ -43,18 +42,11 @@ export const usePaymentStore = defineStore('payment', () => {
         mode: response.data.mode
       };
 
-      console.log('✅ [PAYMENT STORE] Configuración de PayPal obtenida:', {
-        currency: paypalConfig.value.currency,
-        mode: paypalConfig.value.mode,
-        hasClientId: !!paypalConfig.value.client_id
-      });
-
       return { 
         success: true, 
         data: paypalConfig.value 
       };
     } catch (err) {
-      console.error('❌ [PAYMENT STORE] Error al obtener configuración de PayPal:', err);
       error.value = err.response?.data?.error || 'Failed to fetch PayPal configuration';
       return { 
         success: false, 
@@ -75,9 +67,6 @@ export const usePaymentStore = defineStore('payment', () => {
     error.value = null;
 
     try {
-      console.log('💳 [PAYMENT STORE] Creando orden PayPal...');
-      console.log('📦 [PAYMENT STORE] Datos de envío:', shippingData);
-
       const response = await create_request('orders/paypal/create/', shippingData);
       
       const orderData = {
@@ -88,25 +77,13 @@ export const usePaymentStore = defineStore('payment', () => {
 
       currentOrder.value = orderData;
 
-      console.log('✅ [PAYMENT STORE] Orden PayPal creada exitosamente:', {
-        paypal_order_id: orderData.paypal_order_id,
-        total: orderData.total,
-        items_count: orderData.items_count
-      });
-
       return { 
         success: true, 
         data: orderData,
         paypal_order_id: orderData.paypal_order_id
       };
     } catch (err) {
-      console.error('❌ [PAYMENT STORE] Error al crear orden PayPal:', err);
       error.value = err.response?.data?.error || 'Failed to create PayPal order';
-      
-      // Detalles adicionales del error
-      if (err.response?.data?.details) {
-        console.error('📋 [PAYMENT STORE] Detalles del error:', err.response.data.details);
-      }
 
       return { 
         success: false, 
@@ -129,10 +106,6 @@ export const usePaymentStore = defineStore('payment', () => {
     error.value = null;
 
     try {
-      console.log('💳 [PAYMENT STORE] Capturando pago PayPal...');
-      console.log('📋 [PAYMENT STORE] PayPal Order ID:', paypalOrderId);
-      console.log('📦 [PAYMENT STORE] Datos completos:', captureData);
-
       // Los datos ya vienen completos con paypal_order_id, items, shipping, etc.
       const response = await create_request('orders/paypal/capture/', captureData);
       
@@ -145,19 +118,6 @@ export const usePaymentStore = defineStore('payment', () => {
       currentOrder.value = captureResult.order;
       paymentStatus.value = captureResult.payment.status;
 
-      console.log('✅ [PAYMENT STORE] Pago capturado exitosamente');
-      console.log('📋 [PAYMENT STORE] Orden creada:', {
-        order_number: captureResult.order.order_number,
-        order_id: captureResult.order.id,
-        total: captureResult.order.total,
-        status: captureResult.order.status
-      });
-      console.log('💰 [PAYMENT STORE] Estado del pago:', captureResult.payment.status);
-      console.log('🛒 [PAYMENT STORE] WooCommerce:', {
-        sent: captureResult.woocommerce_integration.sent,
-        woocommerce_order_id: captureResult.woocommerce_integration.woocommerce_order_id
-      });
-
       return { 
         success: true, 
         data: captureResult,
@@ -165,16 +125,7 @@ export const usePaymentStore = defineStore('payment', () => {
         payment: captureResult.payment
       };
     } catch (err) {
-      console.error('❌ [PAYMENT STORE] Error al capturar pago PayPal:', err);
       error.value = err.response?.data?.error || 'Failed to capture PayPal payment';
-      
-      // Detalles adicionales del error
-      if (err.response?.data?.details) {
-        console.error('📋 [PAYMENT STORE] Detalles del error:', err.response.data.details);
-      }
-      if (err.response?.data?.paypal_status) {
-        console.error('💳 [PAYMENT STORE] Estado de PayPal:', err.response.data.paypal_status);
-      }
 
       return { 
         success: false, 
@@ -191,7 +142,6 @@ export const usePaymentStore = defineStore('payment', () => {
    * Limpiar estado de pago
    */
   function clearPaymentState() {
-    console.log('🧹 [PAYMENT STORE] Limpiando estado de pago');
     currentOrder.value = null;
     paymentStatus.value = null;
     error.value = null;

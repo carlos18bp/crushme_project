@@ -39,7 +39,6 @@ export const useCartStore = defineStore('cart', () => {
         items.value = JSON.parse(savedCart);
       }
     } catch (err) {
-      console.error('Error al cargar el carrito:', err);
       items.value = [];
     }
   }
@@ -51,7 +50,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items.value));
     } catch (err) {
-      console.error('Error al guardar el carrito:', err);
+      // Silent error handling
     }
   }
 
@@ -75,18 +74,6 @@ export const useCartStore = defineStore('cart', () => {
     isUpdating.value = true;
 
     try {
-      console.log('🛒 [ADD TO CART] Llamada recibida para producto:', productId);
-      console.log('📦 [ADD TO CART] Cantidad solicitada:', quantity);
-      console.log('📦 [ADD TO CART] Datos del producto:', {
-        name: productData.name,
-        price: productData.price,
-        image: productData.image,
-        stock_status: productData.stock_status,
-        color: productData.color,
-        size: productData.size,
-        attributes: productData.attributes
-      });
-
       // Crear una clave única para el producto basada en sus atributos
       const attributesKey = JSON.stringify({
         color: productData.color || null,
@@ -105,22 +92,14 @@ export const useCartStore = defineStore('cart', () => {
       
       if (existingItem) {
         // Si el producto ya existe con los mismos atributos, aumentar la cantidad
-        const oldQuantity = existingItem.quantity;
-        existingItem.quantity = oldQuantity + quantity;
+        existingItem.quantity = existingItem.quantity + quantity;
         // Actualizar la información del producto por si cambió
         existingItem.name = productData.name || existingItem.name;
         existingItem.price = parseFloat(productData.price) || existingItem.price;
         existingItem.image = productData.image || existingItem.image;
         existingItem.stock_status = productData.stock_status || existingItem.stock_status;
-        console.log(`✅ [ADD TO CART] Producto actualizado - Cantidad: ${oldQuantity} → ${existingItem.quantity}`, existingItem);
       } else {
         // Agregar nuevo producto con la cantidad especificada
-        console.log('🔍 [DEBUG] productData recibido:', productData);
-        console.log('🔍 [DEBUG] productData.name:', productData.name);
-        console.log('🔍 [DEBUG] productData.price:', productData.price);
-        console.log('🔍 [DEBUG] productData.image:', productData.image);
-        console.log('🔍 [DEBUG] productData.stock_status:', productData.stock_status);
-        
         const newItem = {
           id: Date.now(), // ID temporal único
           product_id: productId,
@@ -135,18 +114,12 @@ export const useCartStore = defineStore('cart', () => {
           added_at: new Date().toISOString()
         };
         
-        console.log('🔍 [DEBUG] newItem creado:', JSON.stringify(newItem, null, 2));
-        
         items.value.push(newItem);
-        console.log(`✅ [ADD TO CART] Nuevo producto agregado con cantidad: ${quantity}`, newItem);
       }
       
       saveCart();
-      console.log('📦 [ADD TO CART] Carrito completo:', items.value);
-      console.log('📊 [ADD TO CART] Total items:', items.value.reduce((sum, item) => sum + item.quantity, 0));
       return { success: true, data: { items: items.value } };
     } catch (err) {
-      console.error('❌ [ADD TO CART] Error:', err);
       return { success: false, error: 'Error al agregar al carrito' };
     } finally {
       isUpdating.value = false;
@@ -176,7 +149,6 @@ export const useCartStore = defineStore('cart', () => {
       
       return { success: true, data: { items: items.value } };
     } catch (err) {
-      console.error('Error al actualizar item:', err);
       return { success: false, error: 'Error al actualizar item' };
     } finally {
       isUpdating.value = false;
@@ -200,7 +172,6 @@ export const useCartStore = defineStore('cart', () => {
       
       return { success: true, data: { items: items.value } };
     } catch (err) {
-      console.error('Error al eliminar del carrito:', err);
       return { success: false, error: 'Error al eliminar del carrito' };
     } finally {
       isUpdating.value = false;
@@ -219,7 +190,6 @@ export const useCartStore = defineStore('cart', () => {
       
       return { success: true, data: { items: [] } };
     } catch (err) {
-      console.error('Error al vaciar el carrito:', err);
       return { success: false, error: 'Error al vaciar el carrito' };
     } finally {
       isUpdating.value = false;

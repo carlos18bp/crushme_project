@@ -14,8 +14,7 @@ from ..views.product_views import (
 )
 from ..views.category_views import (
     get_organized_categories, get_category_tree,
-    get_products_stats, get_category_stats,
-    clear_woocommerce_cache
+    get_products_stats, get_category_stats
 )
 
 urlpatterns = [
@@ -53,7 +52,4 @@ urlpatterns = [
     # Statistics endpoints (Public) - NEW!
     path('woocommerce/stats/', get_products_stats, name='get_products_stats'),
     path('woocommerce/categories/<int:category_id>/stats/', get_category_stats, name='get_category_stats'),
-    
-    # Cache management (Public for now, change to Admin in production)
-    path('woocommerce/cache/clear/', clear_woocommerce_cache, name='clear_woocommerce_cache'),
 ]

@@ -21,10 +21,14 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 
-            'full_name', 'phone', 'about', 'current_status', 'note',
-            'date_joined', 'is_active', 'is_guest_converted'
+            'full_name', 'phone', 'about', 'profile_picture', 'cover_image', 'current_status', 'note',
+            'date_joined', 'is_active', 'is_guest_converted',
+            'is_crush', 'crush_verification_status', 'crush_requested_at', 'crush_verified_at'
         ]
-        read_only_fields = ['id', 'date_joined', 'is_guest_converted']
+        read_only_fields = [
+            'id', 'date_joined', 'is_guest_converted', 
+            'is_crush', 'crush_verification_status', 'crush_requested_at', 'crush_verified_at'
+        ]
     
     def validate_username(self, value):
         """Check if username is unique (case-insensitive)"""
@@ -45,6 +49,8 @@ class UserSerializer(serializers.ModelSerializer):
         instance.username = validated_data.get('username', instance.username)
         instance.phone = validated_data.get('phone', instance.phone)
         instance.about = validated_data.get('about', instance.about)
+        instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
+        instance.cover_image = validated_data.get('cover_image', instance.cover_image)
         instance.current_status = validated_data.get('current_status', instance.current_status)
         instance.note = validated_data.get('note', instance.note)
         instance.save()
@@ -502,27 +508,47 @@ class UserProfileSerializer(serializers.ModelSerializer):
     addresses = UserAddressSerializer(many=True, required=False, allow_null=True)
     # gallery_photos is handled manually in update() to support file uploads
     links = UserLinkSerializer(many=True, required=False, allow_null=True)
-    profile_picture = serializers.SerializerMethodField(read_only=True)
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    cover_image_url = serializers.SerializerMethodField(read_only=True)
     guest_profile = GuestUserSerializer(read_only=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 'full_name',
-            'phone', 'about', 'current_status', 'note', 'date_joined', 'is_active', 
-            'is_guest_converted', 'addresses', 'gallery_photos', 'links', 
-            'profile_picture', 'guest_profile'
+            'phone', 'about', 'profile_picture', 'profile_picture_url', 'cover_image', 'cover_image_url',
+            'current_status', 'note', 'date_joined', 'is_active', 'is_guest_converted', 
+            'is_crush', 'crush_verification_status', 'crush_requested_at', 'crush_verified_at',
+            'addresses', 'gallery_photos', 'links', 'guest_profile'
         ]
-        read_only_fields = ['id', 'date_joined', 'is_guest_converted', 'full_name', 'profile_picture', 'guest_profile']
+        read_only_fields = [
+            'id', 'date_joined', 'is_guest_converted', 'full_name', 'profile_picture_url', 'cover_image_url', 
+            'guest_profile', 'is_crush', 'crush_verification_status', 'crush_requested_at', 'crush_verified_at'
+        ]
     
-    def get_profile_picture(self, obj):
-        """Get user's profile picture"""
+    def get_profile_picture_url(self, obj):
+        """Get user's profile picture URL"""
+        if obj.profile_picture:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_picture.url)
+            return obj.profile_picture.url
+        # Fallback to gallery profile picture if direct profile_picture is not set
         profile_pic = obj.gallery_photos.filter(is_profile_picture=True).first()
         if profile_pic:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(profile_pic.image.url)
             return profile_pic.image.url
+        return None
+    
+    def get_cover_image_url(self, obj):
+        """Get user's cover image URL"""
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
         return None
     
     def to_representation(self, instance):
@@ -550,6 +576,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.username = validated_data.get('username', instance.username)
         instance.phone = validated_data.get('phone', instance.phone)
         instance.about = validated_data.get('about', instance.about)
+        instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
+        instance.cover_image = validated_data.get('cover_image', instance.cover_image)
         instance.current_status = validated_data.get('current_status', instance.current_status)
         instance.note = validated_data.get('note', instance.note)
         instance.save()

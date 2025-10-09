@@ -30,14 +30,11 @@ export const useContactStore = defineStore('contact', {
       this.successMessage = null;
 
       try {
-        console.log('📧 Sending contact form:', contactData);
-
         const response = await create_request('contact/', contactData);
 
         if (response.data.success) {
           this.lastSubmittedContact = response.data.contact;
           this.successMessage = response.data.message;
-          console.log('✅ Contact form sent successfully:', response.data);
           return {
             success: true,
             message: response.data.message,
@@ -47,7 +44,6 @@ export const useContactStore = defineStore('contact', {
           throw new Error('Unexpected response format');
         }
       } catch (error) {
-        console.error('❌ Error sending contact form:', error);
         
         // Handle 404 - Backend not available
         if (error.response?.status === 404) {

@@ -14,6 +14,7 @@
     "account": {
       "title": "Cuenta",
       "termsConditions": "Términos y Condiciones",
+      "privacyPolicy": "Política de Privacidad",
       "signIn": "Iniciar Sesión",
       "signUp": "Registrarse"
     },

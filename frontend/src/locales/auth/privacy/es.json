@@ -1,0 +1,125 @@
+{
+  "title": "Política de Privacidad",
+  "subtitle": "Última actualización: Octubre 2025",
+  "introduction": {
+    "title": "Tu Privacidad es Importante",
+    "content": "En CrushMe, tomamos tu privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información cuando usas nuestra plataforma. Entendemos la naturaleza sensible de nuestros productos y estamos comprometidos a mantener los más altos estándares de confidencialidad y discreción."
+  },
+  "sections": {
+    "informationCollection": {
+      "title": "1. Información que Recopilamos",
+      "subtitle": "Recopilamos información que nos proporcionas directamente:",
+      "items": [
+        "Información Personal: Nombre, dirección de correo electrónico, número de teléfono, dirección de envío",
+        "Información de Cuenta: Nombre de usuario, contraseña, preferencias",
+        "Información de Pago: Datos de tarjeta de crédito, dirección de facturación (procesados de forma segura)",
+        "Historial de Compras: Productos ordenados, transacciones de regalos",
+        "Datos de Comunicación: Mensajes enviados a través de nuestra plataforma, interacciones con servicio al cliente"
+      ]
+    },
+    "automaticCollection": {
+      "title": "2. Información Recopilada Automáticamente",
+      "content": "Cuando usas nuestra plataforma, recopilamos automáticamente cierta información:",
+      "items": [
+        "Información del Dispositivo: Dirección IP, tipo de navegador, sistema operativo",
+        "Datos de Uso: Páginas visitadas, tiempo en páginas, enlaces clicados",
+        "Cookies: Usamos cookies para mejorar tu experiencia y recordar tus preferencias"
+      ]
+    },
+    "useOfInformation": {
+      "title": "3. Cómo Usamos tu Información",
+      "content": "Usamos tu información para los siguientes propósitos:",
+      "items": [
+        "Procesar y cumplir tus pedidos",
+        "Gestionar tu cuenta y proporcionar atención al cliente",
+        "Enviarte confirmaciones de pedido y actualizaciones de envío",
+        "Facilitar el envío de regalos entre usuarios",
+        "Mejorar nuestros productos y servicios",
+        "Prevenir fraude y garantizar la seguridad de la plataforma",
+        "Cumplir con obligaciones legales"
+      ]
+    },
+    "informationSharing": {
+      "title": "4. Compartir y Divulgación de Información",
+      "content": "NO vendemos tu información personal. Podemos compartir tu información solo en las siguientes circunstancias:",
+      "items": [
+        "Proveedores de Servicios: Empresas terceras que nos ayudan a operar nuestra plataforma (procesadores de pago, empresas de envío) bajo estrictos acuerdos de confidencialidad",
+        "Requisitos Legales: Cuando lo requiera la ley, orden judicial o solicitud gubernamental",
+        "Transferencias Comerciales: En caso de fusión, adquisición o venta de activos",
+        "Con tu Consentimiento: Cuando aceptes explícitamente compartir información"
+      ]
+    },
+    "discreteShipping": {
+      "title": "5. Envío y Empaque Discreto",
+      "content": "Entendemos la naturaleza privada de nuestros productos. Todos los pedidos son:",
+      "items": [
+        "Enviados en empaques simples y sin marcas",
+        "Listados en etiquetas de envío con un nombre de empresa genérico",
+        "Entregados sin ninguna indicación del contenido",
+        "Protegidos con sellos de privacidad y empaque seguro"
+      ]
+    },
+    "giftPrivacy": {
+      "title": "6. Privacidad en el Envío de Regalos",
+      "content": "Cuando envías un regalo a otro usuario:",
+      "items": [
+        "El destinatario solo verá tu nombre de usuario (no tu nombre real ni dirección)",
+        "Tu información de pago nunca se comparte con el destinatario",
+        "Los mensajes de regalo se transmiten de forma segura y privada",
+        "Los destinatarios pueden rechazar regalos, y respetamos sus preferencias de privacidad"
+      ]
+    },
+    "dataSecurity": {
+      "title": "7. Seguridad de Datos",
+      "content": "Implementamos medidas de seguridad estándar de la industria para proteger tu información:",
+      "items": [
+        "Cifrado SSL/TLS para toda transmisión de datos",
+        "Procesamiento de pagos seguro a través de proveedores compatibles con PCI",
+        "Auditorías de seguridad y actualizaciones regulares",
+        "Acceso restringido a información personal",
+        "Protección con contraseña y funciones de seguridad de cuenta"
+      ]
+    },
+    "dataRetention": {
+      "title": "8. Retención de Datos",
+      "content": "Retenemos tu información solo el tiempo necesario para proporcionar nuestros servicios y cumplir con obligaciones legales. Puedes solicitar la eliminación de tu cuenta y datos personales en cualquier momento, sujeto a requisitos legales de retención."
+    },
+    "yourRights": {
+      "title": "9. Tus Derechos de Privacidad",
+      "content": "Tienes derecho a:",
+      "items": [
+        "Acceder a tu información personal",
+        "Solicitar corrección de datos inexactos",
+        "Solicitar eliminación de tu cuenta y datos",
+        "Optar por no recibir comunicaciones de marketing",
+        "Deshabilitar cookies a través de la configuración de tu navegador",
+        "Solicitar una copia de tus datos en formato portable"
+      ]
+    },
+    "ageVerification": {
+      "title": "10. Verificación de Edad",
+      "content": "Nuestros servicios son estrictamente para adultos mayores de 18 años. No recopilamos intencionalmente información de menores. Si nos enteramos de que un menor nos ha proporcionado información personal, tomaremos medidas para eliminar dicha información inmediatamente."
+    },
+    "thirdPartyLinks": {
+      "title": "11. Enlaces de Terceros",
+      "content": "Nuestra plataforma puede contener enlaces a sitios web de terceros. No somos responsables de las prácticas de privacidad de estos sitios externos. Te animamos a leer sus políticas de privacidad antes de proporcionar cualquier información."
+    },
+    "international": {
+      "title": "12. Usuarios Internacionales",
+      "content": "Si accedes a nuestra plataforma desde fuera de Estados Unidos, ten en cuenta que tu información puede ser transferida, almacenada y procesada en Estados Unidos. Al usar nuestros servicios, consientes esta transferencia."
+    },
+    "changes": {
+      "title": "13. Cambios a Esta Política de Privacidad",
+      "content": "Podemos actualizar esta Política de Privacidad de vez en cuando. Te notificaremos de cualquier cambio material publicando la nueva política en nuestra plataforma y actualizando la fecha de 'Última Actualización'. Tu uso continuo de nuestros servicios después de los cambios constituye la aceptación de la política actualizada."
+    },
+    "contact": {
+      "title": "14. Contáctanos",
+      "content": "Si tienes alguna pregunta o inquietud sobre esta Política de Privacidad o nuestras prácticas de datos, contáctanos:",
+      "email": "Email: privacy@crushme.com",
+      "support": "O a través de nuestra página de Contacto"
+    }
+  },
+  "commitment": "Estamos comprometidos a proteger tu privacidad y mantener tu confianza. Gracias por elegir CrushMe.",
+  "backButton": "Volver al Inicio"
+}
+

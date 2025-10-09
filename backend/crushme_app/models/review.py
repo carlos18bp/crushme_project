@@ -110,9 +110,9 @@ class Review(models.Model):
     
     @property
     def reviewer_name(self):
-        """Get the name of the reviewer (user or anonymous)"""
+        """Get the username of the reviewer (user or anonymous)"""
         if self.user:
-            return self.user.get_full_name() or self.user.email
+            return self.user.username
         return self.anonymous_name or "Usuario Anónimo"
     
     @property

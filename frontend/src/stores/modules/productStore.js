@@ -256,7 +256,6 @@ export const useProductStore = defineStore('product', () => {
       categories.value = response.data.categories || [];
       return { success: true, data: categories.value };
     } catch (err) {
-      console.warn('Failed to fetch categories from API, using local constants');
       categories.value = PRODUCT_CATEGORIES;
       return { success: true, data: categories.value };
     }
@@ -390,23 +389,14 @@ export const useProductStore = defineStore('product', () => {
    * Test WooCommerce connection
    */
   async function testWooConnection() {
-    const startTime = performance.now();
-    console.log('🔗 → Enviando request de test de conexión...');
-    
     isLoadingWoo.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request('products/woocommerce/test/');
-      const responseTime = performance.now() - startTime;
-      console.log(`🔗 ← Test conexión respuesta recibida (${responseTime.toFixed(0)}ms)`);
-      
       wooConnectionStatus.value = response.data.connection_status;
       return { success: true, data: response.data };
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`🔗 ✗ Error en test conexión (${errorTime.toFixed(0)}ms):`, err.message);
-      
       wooError.value = err.response?.data?.error || 'Failed to test WooCommerce connection';
       wooConnectionStatus.value = 'ERROR';
       return { success: false, error: wooError.value };
@@ -423,9 +413,6 @@ export const useProductStore = defineStore('product', () => {
    * @param {number} options.page - Page number
    */
   async function fetchWooProducts({ categoryId = null, perPage = 10, page = 1 } = {}) {
-    const startTime = performance.now();
-    console.log(`🛍️ → PAGINATION DEBUG - Enviando request productos (perPage: ${perPage}, page: ${page}, categoryId: ${categoryId || 'all'})...`);
-    
     isLoadingWoo.value = true;
     wooError.value = null;
 
@@ -434,16 +421,9 @@ export const useProductStore = defineStore('product', () => {
       if (categoryId) {
         url += `&category_id=${categoryId}`;
       }
-      console.log(`🛍️ → PAGINATION DEBUG - URL: ${url}`);
 
       const response = await get_request(url);
-      const responseTime = performance.now() - startTime;
-      const dataSize = JSON.stringify(response.data).length;
       const products = response.data.data || [];
-      
-      console.log(`🛍️ ← PAGINATION DEBUG - Respuesta recibida (${responseTime.toFixed(0)}ms, ${dataSize} bytes, ${products.length} productos)`);
-      console.log(`🛍️ ← PAGINATION DEBUG - Paginación info:`, response.data.pagination_info);
-      console.log(`🛍️ ← PAGINATION DEBUG - Primeros 3 productos IDs:`, products.slice(0, 3).map(p => `${p.id}-${p.name?.substring(0, 20)}`));
       
       // ⭐ SIEMPRE reemplazar productos al cambiar de página (no apilar)
       wooProducts.value = products;
@@ -454,9 +434,6 @@ export const useProductStore = defineStore('product', () => {
         pagination: response.data.pagination_info
       };
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`🛍️ ✗ Error cargando productos (${errorTime.toFixed(0)}ms):`, err.message);
-      
       wooError.value = err.response?.data?.error || 'Failed to fetch WooCommerce products';
       return { success: false, error: wooError.value };
     } finally {
@@ -520,18 +497,11 @@ export const useProductStore = defineStore('product', () => {
    * - ofertas (💰)
    */
   async function fetchWooOrganizedCategories() {
-    const startTime = performance.now();
-    console.log('📂 → Enviando request categorías organizadas...');
-    
     isLoadingWooThemes.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request('products/woocommerce/categories/organized/');
-      const responseTime = performance.now() - startTime;
-      const dataSize = JSON.stringify(response.data).length;
-      console.log(`📂 ← Categorías organizadas respuesta recibida (${responseTime.toFixed(0)}ms, ${dataSize} bytes, ${response.data.data?.length || 0} temas)`);
-      
       wooThemes.value = response.data.data || [];
       
       return { 
@@ -540,9 +510,6 @@ export const useProductStore = defineStore('product', () => {
         total_categories: response.data.total_categories || 0
       };
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`📂 ✗ Error cargando categorías organizadas (${errorTime.toFixed(0)}ms):`, err.message);
-      
       wooError.value = err.response?.data?.error || 'Failed to fetch organized WooCommerce categories';
       return { success: false, error: wooError.value };
     } finally {
@@ -581,75 +548,24 @@ export const useProductStore = defineStore('product', () => {
    * @param {number} productId - WooCommerce product ID
    */
   async function fetchWooProduct(productId) {
-    const startTime = performance.now();
-    console.log(`🛍️ → Enviando request producto ID: ${productId}...`);
-    
     isLoadingWooProduct.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request(`products/woocommerce/products/${productId}/`);
-      const responseTime = performance.now() - startTime;
-      
-      console.log(`🛍️ ← Producto respuesta recibida (${responseTime.toFixed(0)}ms)`);
-      console.log('📦 RESPUESTA COMPLETA DEL BACKEND:', JSON.stringify(response.data, null, 2));
       
       // Verificar si la respuesta del backend es exitosa
       if (response.data.success) {
-        const productData = response.data.data; // El producto real está en data.data
-        
-        console.log('✅ RESPUESTA EXITOSA DEL BACKEND');
-        console.log('📦 DATOS COMPLETOS DEL PRODUCTO WOOCOMMERCE:', JSON.stringify(productData, null, 2));
-        console.log('📦 ESTRUCTURA PRINCIPAL DEL PRODUCTO:', {
-          id: productData.id,
-          name: productData.name,
-          slug: productData.slug,
-          price: productData.price,
-          regular_price: productData.regular_price,
-          sale_price: productData.sale_price,
-          on_sale: productData.on_sale,
-          description: productData.description ? productData.description.substring(0, 100) + '...' : 'Sin descripción',
-          short_description: productData.short_description ? productData.short_description.substring(0, 100) + '...' : 'Sin descripción corta',
-          images_count: productData.images?.length || 0,
-          images_src: productData.images?.map(img => img.src) || [],
-          categories: productData.categories?.map(cat => ({ id: cat.id, name: cat.name })) || [],
-          tags: productData.tags?.map(tag => ({ id: tag.id, name: tag.name })) || [],
-          stock_status: productData.stock_status,
-          stock_quantity: productData.stock_quantity,
-          manage_stock: productData.manage_stock,
-          sku: productData.sku,
-          type: productData.type,
-          status: productData.status,
-          featured: productData.featured,
-          average_rating: productData.average_rating,
-          rating_count: productData.rating_count,
-          total_sales: productData.total_sales,
-          attributes: productData.attributes?.map(attr => ({ 
-            id: attr.id, 
-            name: attr.name, 
-            options: attr.options 
-          })) || []
-        });
-        
-        console.log('💬 MENSAJE DEL BACKEND:', response.data.message);
-        
-        // Guardar el producto completo de WooCommerce
+        const productData = response.data.data;
         wooCurrentProduct.value = productData;
         return { success: true, data: productData };
-        
       } else {
-        // El backend devolvió success: false
-        console.error('❌ BACKEND RETORNÓ ERROR:', response.data.error);
         wooError.value = response.data.error || 'Error desconocido del backend';
         wooCurrentProduct.value = null;
         return { success: false, error: wooError.value };
       }
       
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`🛍️ ✗ Error en la petición HTTP (${errorTime.toFixed(0)}ms):`, err.message);
-      console.error('❌ ERROR COMPLETO:', err.response?.data || err);
-      
       // Intentar extraer el error del backend si está disponible
       let errorMessage = 'Failed to fetch WooCommerce product';
       if (err.response?.data) {
@@ -864,18 +780,11 @@ export const useProductStore = defineStore('product', () => {
    * Total de productos, categorías, top categorías, etc.
    */
   async function fetchWooStats() {
-    const startTime = performance.now();
-    console.log('📊 → Enviando request estadísticas...');
-    
     isLoadingWoo.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request('products/woocommerce/stats/');
-      const responseTime = performance.now() - startTime;
-      const dataSize = JSON.stringify(response.data).length;
-      console.log(`📊 ← Estadísticas respuesta recibida (${responseTime.toFixed(0)}ms, ${dataSize} bytes)`);
-      
       wooStats.value = response.data.data || null;
       
       return { 
@@ -883,9 +792,6 @@ export const useProductStore = defineStore('product', () => {
         data: response.data.data || null
       };
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`📊 ✗ Error cargando estadísticas (${errorTime.toFixed(0)}ms):`, err.message);
-      
       wooError.value = err.response?.data?.error || 'Failed to fetch WooCommerce stats';
       return { success: false, error: wooError.value };
     } finally {
@@ -900,20 +806,12 @@ export const useProductStore = defineStore('product', () => {
    * Solo incluye productos con stock disponible
    */
   async function fetchWooTrendingProducts() {
-    const startTime = performance.now();
-    console.log('🔥 → Enviando request productos en tendencia...');
-    
     isLoadingTrending.value = true;
     wooError.value = null;
 
     try {
       const response = await get_request('products/woocommerce/products/trending/');
-      const responseTime = performance.now() - startTime;
-      const dataSize = JSON.stringify(response.data).length;
       const products = response.data.data || [];
-      
-      console.log(`🔥 ← Productos en tendencia respuesta recibida (${responseTime.toFixed(0)}ms, ${dataSize} bytes, ${products.length} productos)`);
-      console.log(`🔥 ← Total de productos trending: ${response.data.total_products}`);
       
       trendingProducts.value = products;
       
@@ -924,9 +822,6 @@ export const useProductStore = defineStore('product', () => {
         message: response.data.message
       };
     } catch (err) {
-      const errorTime = performance.now() - startTime;
-      console.error(`🔥 ✗ Error cargando productos en tendencia (${errorTime.toFixed(0)}ms):`, err.message);
-      
       wooError.value = err.response?.data?.error || 'Failed to fetch trending products';
       trendingProducts.value = [];
       return { success: false, error: wooError.value };
@@ -940,60 +835,25 @@ export const useProductStore = defineStore('product', () => {
    * Secuencia optimizada para evitar demoras innecesarias
    */
   async function initializeWooCommerce() {
-    const startTime = performance.now();
-    
     try {
-      console.log('🚀 === INICIANDO CARGA WOOCOMMERCE (SIN TEST) ===');
-      console.log(`⏰ Inicio: ${new Date().toISOString()}`);
-      
       // ⚡ SKIPEADO: Test de conexión (demora ~2.5s innecesarios)
       // TODO: Reactivar en futuro si es necesario para debugging
-      /*
-      console.log('🔗 1. Probando conexión WooCommerce...');
-      const connectionStart = performance.now();
-      const connectionResult = await testWooConnection();
-      const connectionTime = performance.now() - connectionStart;
-      console.log(`✅ Conexión WooCommerce OK (${connectionTime.toFixed(0)}ms)`);
-      
-      if (!connectionResult.success) {
-        return { success: false, error: 'Conexión WooCommerce fallida' };
-      }
-      */
-      console.log('⚡ 1. SKIPEANDO test de conexión (servidor confiable)');
 
       // 2. ⭐ ESPERAR a que las categorías se carguen completamente ANTES de productos
-      console.log('📂 2. Cargando categorías organizadas...');
-      const categoriesStart = performance.now();
       const themesResult = await fetchWooOrganizedCategories();
-      const categoriesTime = performance.now() - categoriesStart;
-      console.log(`✅ Categorías cargadas: ${themesResult.data?.length || 0} temas (${categoriesTime.toFixed(0)}ms)`);
       
       if (!themesResult.success) {
         return { success: false, error: 'Error cargando categorías - No se pueden cargar productos sin categorías' };
       }
 
       // 3. ⭐ Solo DESPUÉS de tener categorías, cargar productos (reducido a 9)
-      console.log('🛍️ 3. Cargando productos iniciales (solo 9)...');
-      const productsStart = performance.now();
       const productsResult = await fetchWooProducts({ 
         perPage: 9, 
         page: 1 
       });
-      const productsTime = performance.now() - productsStart;
-      console.log(`✅ Productos iniciales cargados: ${productsResult.data?.length || 0} (${productsTime.toFixed(0)}ms)`);
-
-      const totalTime = performance.now() - startTime;
-      console.log(`🏁 === CARGA COMPLETADA EN ${totalTime.toFixed(0)}ms (${(totalTime/1000).toFixed(1)}s) ===`);
 
       // 4. ⭐ Cargar estadísticas EN BACKGROUND después de mostrar productos
-      console.log('📊 4. Cargando estadísticas en background...');
-      fetchWooStats().then(statsResult => {
-        if (statsResult.success) {
-          console.log('✅ Estadísticas cargadas en background');
-        }
-      }).catch(err => {
-        console.warn('⚠️ Error cargando estadísticas en background:', err.message);
-      });
+      fetchWooStats();
 
       return { 
         success: true, 
@@ -1003,8 +863,6 @@ export const useProductStore = defineStore('product', () => {
         stats: null // Se cargarán después
       };
     } catch (err) {
-      const totalTime = performance.now() - startTime;
-      console.error(`❌ Error inicializando WooCommerce después de ${totalTime.toFixed(0)}ms:`, err);
       wooError.value = err.message || 'Error inicializando WooCommerce';
       return { success: false, error: wooError.value };
     }

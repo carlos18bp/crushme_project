@@ -23,7 +23,24 @@
     "additionalDetails": "Detalles Adicionales (opcional)"
   },
   "publicProfile": {
-    "title": "Perfil Público"
+    "title": "Perfil Público",
+    "photos": "Fotos de Perfil",
+    "coverPhoto": "Foto de Portada",
+    "profilePhoto": "Foto de Perfil"
+  },
+  "crush": {
+    "title": "Conviértete en Crush Verificado",
+    "description": "Los Crushes verificados obtienen un badge especial y mayor visibilidad en la plataforma.",
+    "verified": "CRUSH VERIFICADO",
+    "requestButton": "Solicitar Verificación",
+    "cancelRequest": "Cancelar Solicitud",
+    "pendingTitle": "Solicitud Pendiente",
+    "pendingMessage": "Tu solicitud está siendo revisada por un administrador.",
+    "requestedAt": "Solicitado el",
+    "rejectedTitle": "Solicitud Rechazada",
+    "rejectedMessage": "Tu solicitud fue revisada pero no fue aprobada.",
+    "rejectionReason": "Motivo",
+    "canReapply": "Puedes volver a solicitar verificación."
   },
   "gallery": {
     "title": "Galería de Fotos",

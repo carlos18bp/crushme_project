@@ -214,6 +214,221 @@
         </h2>
 
         <div class="space-y-6">
+          <!-- Crush Verification Badge -->
+          <div v-if="profileStore.isCrushVerified" class="mb-6">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-pink-dark to-pink-600 text-white rounded-full shadow-lg">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span class="font-bold text-sm">{{ $t('profile.form.crush.verified') || 'CRUSH VERIFICADO' }}</span>
+            </div>
+          </div>
+
+          <!-- Crush Verification Section -->
+          <div v-if="!profileStore.isCrushVerified" class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 border border-pink-200">
+            <!-- Pending Status -->
+            <div v-if="profileStore.hasPendingCrushRequest" class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+                <svg class="w-8 h-8 text-yellow-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2 font-comfortaa">
+                {{ $t('profile.form.crush.pendingTitle') || 'Solicitud Pendiente' }}
+              </h3>
+              <p class="text-sm text-gray-600 mb-4">
+                {{ $t('profile.form.crush.pendingMessage') || 'Tu solicitud está siendo revisada por un administrador.' }}
+              </p>
+              <p v-if="profileStore.crushRequestedAt" class="text-xs text-gray-500 mb-4">
+                {{ $t('profile.form.crush.requestedAt') || 'Solicitado el' }}: 
+                {{ new Date(profileStore.crushRequestedAt).toLocaleDateString() }}
+              </p>
+              <button
+                type="button"
+                @click="handleCancelCrushRequest"
+                :disabled="isLoading"
+                class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ $t('profile.form.crush.cancelRequest') || 'Cancelar Solicitud' }}
+              </button>
+            </div>
+
+            <!-- Rejected Status -->
+            <div v-else-if="profileStore.crushVerificationStatus === 'rejected'" class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <svg class="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2 font-comfortaa">
+                {{ $t('profile.form.crush.rejectedTitle') || 'Solicitud Rechazada' }}
+              </h3>
+              <p class="text-sm text-gray-600 mb-4">
+                {{ $t('profile.form.crush.rejectedMessage') || 'Tu solicitud fue revisada pero no fue aprobada.' }}
+              </p>
+              <div v-if="profileStore.crushRejectionReason" class="bg-white rounded-lg p-4 mb-4">
+                <p class="text-xs text-gray-500 mb-1 font-semibold">
+                  {{ $t('profile.form.crush.rejectionReason') || 'Motivo' }}:
+                </p>
+                <p class="text-sm text-gray-700">{{ profileStore.crushRejectionReason }}</p>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">
+                {{ $t('profile.form.crush.canReapply') || 'Puedes volver a solicitar verificación.' }}
+              </p>
+              <button
+                type="button"
+                @click="handleRequestCrushVerification"
+                :disabled="isLoading"
+                class="px-6 py-3 bg-gradient-to-r from-brand-pink-dark to-pink-600 text-white font-medium rounded-full hover:from-brand-pink-medium hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md font-comfortaa"
+              >
+                <span v-if="isLoading">{{ $t('profile.form.buttons.loading') }}...</span>
+                <span v-else>🌟 {{ $t('profile.form.crush.requestButton') || 'Solicitar de Nuevo' }}</span>
+              </button>
+            </div>
+
+            <!-- Can Request -->
+            <div v-else-if="profileStore.canRequestCrushVerification" class="text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-brand-pink-lighter to-purple-200 rounded-full mb-4">
+                <svg class="w-8 h-8 text-brand-pink-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2 font-comfortaa">
+                {{ $t('profile.form.crush.title') || 'Conviértete en Crush Verificado' }}
+              </h3>
+              <p class="text-sm text-gray-600 mb-4 max-w-md mx-auto">
+                {{ $t('profile.form.crush.description') || 'Los Crushes verificados obtienen un badge especial y mayor visibilidad en la plataforma.' }}
+              </p>
+              <button
+                type="button"
+                @click="handleRequestCrushVerification"
+                :disabled="isLoading"
+                class="px-6 py-3 bg-gradient-to-r from-brand-pink-dark to-pink-600 text-white font-medium rounded-full hover:from-brand-pink-medium hover:to-pink-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md font-comfortaa"
+              >
+                <span v-if="isLoading">{{ $t('profile.form.buttons.loading') }}...</span>
+                <span v-else>🌟 {{ $t('profile.form.crush.requestButton') || 'Solicitar Verificación' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Profile & Cover Photos -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-3">
+              {{ $t('profile.form.publicProfile.photos') || 'Fotos de perfil' }}
+            </label>
+            
+            <!-- Cover Photo -->
+            <div class="relative mb-6">
+              <div 
+                @click="$refs.coverImageInput.click()"
+                class="w-full h-48 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden hover:border-brand-pink-dark transition-colors cursor-pointer group relative"
+                :class="{ 'bg-gradient-to-r from-brand-pink-lighter via-purple-200 to-blue-200': !coverImagePreview && !profileStore.coverImageUrl }"
+              >
+                <!-- Cover Image Preview or Existing -->
+                <img 
+                  v-if="coverImagePreview || profileStore.coverImageUrl"
+                  :src="coverImagePreview || getImageUrlWithCacheBusting(profileStore.coverImageUrl)"
+                  alt="Cover"
+                  class="w-full h-full object-cover"
+                />
+                
+                <!-- Placeholder -->
+                <div v-else class="text-center">
+                  <svg class="w-12 h-12 text-gray-400 mx-auto mb-2 group-hover:text-brand-pink-dark transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p class="text-sm font-medium text-gray-600 group-hover:text-brand-pink-dark transition-colors">
+                    {{ $t('profile.form.publicProfile.coverPhoto') || 'Foto de portada' }}
+                  </p>
+                  <p class="text-xs text-gray-400 mt-1">1500 x 500 px</p>
+                </div>
+                
+                <!-- Delete button for existing cover -->
+                <button
+                  v-if="profileStore.coverImageUrl && !coverImagePreview"
+                  type="button"
+                  @click.stop="handleRemoveCoverImage"
+                  class="absolute top-3 right-3 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- Hidden file input for cover image -->
+              <input
+                ref="coverImageInput"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                class="hidden"
+                @change="handleCoverImageSelect"
+              />
+              
+              <!-- Profile Picture - Overlapping cover -->
+              <div class="absolute -bottom-16 left-8">
+                <div class="relative">
+                  <div 
+                    @click="$refs.profilePictureInput.click()"
+                    class="w-32 h-32 rounded-full border-4 border-white shadow-lg flex items-center justify-center cursor-pointer hover:shadow-xl transition-shadow group relative overflow-hidden"
+                    :class="{ 'bg-gradient-to-br from-brand-pink-lighter to-purple-200': !profilePicturePreview && !profileStore.profilePictureUrl }"
+                  >
+                    <!-- Profile Picture Preview or Existing -->
+                    <img 
+                      v-if="profilePicturePreview || profileStore.profilePictureUrl"
+                      :src="profilePicturePreview || getImageUrlWithCacheBusting(profileStore.profilePictureUrl)"
+                      alt="Profile"
+                      class="w-full h-full object-cover"
+                    />
+                    
+                    <!-- Placeholder -->
+                    <div v-else class="text-center">
+                      <svg class="w-10 h-10 text-gray-400 mx-auto group-hover:text-brand-pink-dark transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <!-- Camera button -->
+                  <div class="absolute bottom-1 right-1 w-8 h-8 bg-brand-pink-dark rounded-full flex items-center justify-center shadow-md hover:bg-brand-pink-medium transition-colors cursor-pointer">
+                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  
+                  <!-- Delete button for existing profile picture -->
+                  <button
+                    v-if="profileStore.profilePictureUrl && !profilePicturePreview"
+                    type="button"
+                    @click.stop="handleRemoveProfilePicture"
+                    class="absolute top-0 right-0 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                  >
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Hidden file input for profile picture -->
+                <input
+                  ref="profilePictureInput"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  class="hidden"
+                  @change="handleProfilePictureSelect"
+                />
+                
+                <p class="text-xs text-gray-500 mt-2 ml-2">
+                  {{ $t('profile.form.publicProfile.profilePhoto') || 'Foto de perfil' }}
+                </p>
+              </div>
+            </div>
+            
+            <!-- Spacer for overlapping profile picture -->
+            <div class="h-20"></div>
+          </div>
+
           <!-- Username -->
           <div class="max-w-md">
             <label for="username" class="block text-sm font-medium text-gray-900 mb-2">
@@ -446,16 +661,24 @@
 import { ref, computed, onMounted } from 'vue'
 import { useProfileStore } from '@/stores/modules/profileStore'
 import { useAuthStore } from '@/stores/modules/authStore'
+import { useAlert } from '@/composables/useAlert'
 import { Country, State } from 'country-state-city'
 
 const profileStore = useProfileStore()
 const authStore = useAuthStore()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const isLoading = ref(false)
 const uploadedFiles = ref([])
 const existingPhotos = ref([])
 const photosToDelete = ref([])
 const fileInputKey = ref(0)
+
+// Profile and cover images
+const profilePictureFile = ref(null)
+const coverImageFile = ref(null)
+const profilePicturePreview = ref(null)
+const coverImagePreview = ref(null)
 
 // Get all countries with flags
 const countries = Country.getAllCountries().map(country => ({
@@ -682,10 +905,171 @@ function onCountryChange() {
   formData.value.state = ''
 }
 
+// ============================================
+// PROFILE & COVER IMAGE HANDLERS
+// ============================================
+
+function handleProfilePictureSelect(event) {
+  const file = event.target.files[0]
+  
+  if (!file) return
+  
+  // Validate the file
+  const validation = profileStore.validateImageFile(file)
+  
+  if (!validation.valid) {
+    showError(validation.errors.join('\n'), 'Archivo no válido')
+    return
+  }
+  
+  // Store file and create preview
+  profilePictureFile.value = file
+  profilePicturePreview.value = URL.createObjectURL(file)
+}
+
+function handleCoverImageSelect(event) {
+  const file = event.target.files[0]
+  
+  if (!file) return
+  
+  // Validate the file
+  const validation = profileStore.validateImageFile(file)
+  
+  if (!validation.valid) {
+    showError(validation.errors.join('\n'), 'Archivo no válido')
+    return
+  }
+  
+  // Store file and create preview
+  coverImageFile.value = file
+  coverImagePreview.value = URL.createObjectURL(file)
+}
+
+async function handleRemoveProfilePicture() {
+  const confirm = await showConfirm('¿Estás seguro de que quieres eliminar tu foto de perfil?')
+  
+  if (!confirm.isConfirmed) {
+    return
+  }
+  
+  const result = await profileStore.removeProfilePicture()
+  
+  if (result.success) {
+    profilePictureFile.value = null
+    profilePicturePreview.value = null
+    showSuccess(result.message)
+  } else {
+    showError(result.error, 'Error')
+  }
+}
+
+async function handleRemoveCoverImage() {
+  const confirm = await showConfirm('¿Estás seguro de que quieres eliminar tu foto de portada?')
+  
+  if (!confirm.isConfirmed) {
+    return
+  }
+  
+  const result = await profileStore.removeCoverImage()
+  
+  if (result.success) {
+    coverImageFile.value = null
+    coverImagePreview.value = null
+    showSuccess(result.message)
+  } else {
+    showError(result.error, 'Error')
+  }
+}
+
+function getImageUrlWithCacheBusting(url) {
+  return profileStore.getImageUrlWithCacheBusting(url)
+}
+
+// ============================================
+// CRUSH VERIFICATION HANDLERS
+// ============================================
+
+async function handleRequestCrushVerification() {
+  const confirm = await showConfirm(
+    '¿Estás seguro de que quieres solicitar verificación como Crush?',
+    'Solicitar Verificación'
+  )
+  
+  if (!confirm.isConfirmed) {
+    return
+  }
+  
+  const result = await profileStore.requestCrushVerification()
+  
+  if (result.success) {
+    showSuccess(result.message, '¡Solicitud Enviada!')
+    // Reload profile to get updated status
+    await profileStore.fetchProfile()
+  } else {
+    showError(result.error, 'Error al Solicitar')
+  }
+}
+
+async function handleCancelCrushRequest() {
+  const confirm = await showConfirm(
+    '¿Estás seguro de que quieres cancelar tu solicitud de verificación?',
+    'Cancelar Solicitud'
+  )
+  
+  if (!confirm.isConfirmed) {
+    return
+  }
+  
+  const result = await profileStore.cancelCrushRequest()
+  
+  if (result.success) {
+    showSuccess(result.message, 'Solicitud Cancelada')
+    // Reload profile to get updated status
+    await profileStore.fetchProfile()
+  } else {
+    showError(result.error, 'Error al Cancelar')
+  }
+}
+
 async function handleSubmit() {
   isLoading.value = true
   
   try {
+    // ============================================
+    // STEP 1: Upload profile/cover images if they exist
+    // ============================================
+    if (profilePictureFile.value || coverImageFile.value) {
+      const imageResult = await profileStore.uploadProfileImages({
+        profilePicture: profilePictureFile.value,
+        coverImage: coverImageFile.value
+      })
+      
+      if (imageResult.success) {
+        // Clear preview and files after successful upload
+        profilePictureFile.value = null
+        coverImageFile.value = null
+        
+        if (profilePicturePreview.value) {
+          URL.revokeObjectURL(profilePicturePreview.value)
+          profilePicturePreview.value = null
+        }
+        
+        if (coverImagePreview.value) {
+          URL.revokeObjectURL(coverImagePreview.value)
+          coverImagePreview.value = null
+        }
+        
+        showSuccess(imageResult.message, '¡Imágenes Actualizadas!')
+      } else {
+        showError(imageResult.error, 'Error al subir imágenes')
+        // Continue with the rest of the form submission even if image upload fails
+      }
+    }
+    
+    // ============================================
+    // STEP 2: Continue with the rest of the profile update
+    // ============================================
+    
     // Get country name from isoCode
     const selectedCountry = countries.find(c => c.isoCode === formData.value.country)
     const countryName = selectedCountry ? selectedCountry.name : formData.value.country
@@ -795,10 +1179,9 @@ async function handleSubmit() {
         // Clear deleted photos list
         photosToDelete.value = []
         
-        // TODO: Mostrar notificación de éxito
+        showSuccess('Perfil y galería actualizados correctamente', '¡Éxito!')
       } else {
-        console.error('Error al actualizar perfil:', result.error)
-        // TODO: Mostrar notificación de error
+        showError(result.error, 'Error al actualizar perfil')
       }
     } else {
       // Prepare gallery_photos (keep existing photos not marked for deletion)
@@ -828,15 +1211,14 @@ async function handleSubmit() {
         // Clear deleted photos list
         photosToDelete.value = []
         
-        // TODO: Mostrar notificación de éxito
+        showSuccess('Perfil actualizado correctamente', '¡Éxito!')
       } else {
-        console.error('Error al actualizar perfil:', result.error)
-        // TODO: Mostrar notificación de error
+        showError(result.error, 'Error al actualizar perfil')
       }
     }
   } catch (error) {
     console.error('Error:', error)
-    // TODO: Mostrar notificación de error
+    showError('Ocurrió un error inesperado', 'Error')
   } finally {
     isLoading.value = false
   }

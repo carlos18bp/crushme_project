@@ -1,0 +1,125 @@
+{
+  "title": "Privacy Policy",
+  "subtitle": "Last updated: October 2025",
+  "introduction": {
+    "title": "Your Privacy Matters",
+    "content": "At CrushMe, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. We understand the sensitive nature of our products and are committed to maintaining the highest standards of confidentiality and discretion."
+  },
+  "sections": {
+    "informationCollection": {
+      "title": "1. Information We Collect",
+      "subtitle": "We collect information that you provide directly to us:",
+      "items": [
+        "Personal Information: Name, email address, phone number, shipping address",
+        "Account Information: Username, password, preferences",
+        "Payment Information: Credit card details, billing address (processed securely)",
+        "Purchase History: Products ordered, gift transactions",
+        "Communication Data: Messages sent through our platform, customer service interactions"
+      ]
+    },
+    "automaticCollection": {
+      "title": "2. Automatically Collected Information",
+      "content": "When you use our platform, we automatically collect certain information:",
+      "items": [
+        "Device Information: IP address, browser type, operating system",
+        "Usage Data: Pages visited, time spent on pages, links clicked",
+        "Cookies: We use cookies to enhance your experience and remember your preferences"
+      ]
+    },
+    "useOfInformation": {
+      "title": "3. How We Use Your Information",
+      "content": "We use your information for the following purposes:",
+      "items": [
+        "Process and fulfill your orders",
+        "Manage your account and provide customer support",
+        "Send you order confirmations and shipping updates",
+        "Facilitate gift sending between users",
+        "Improve our products and services",
+        "Prevent fraud and ensure platform security",
+        "Comply with legal obligations"
+      ]
+    },
+    "informationSharing": {
+      "title": "4. Information Sharing and Disclosure",
+      "content": "We do NOT sell your personal information. We may share your information only in the following circumstances:",
+      "items": [
+        "Service Providers: Third-party companies that help us operate our platform (payment processors, shipping companies) under strict confidentiality agreements",
+        "Legal Requirements: When required by law, court order, or government request",
+        "Business Transfers: In the event of a merger, acquisition, or sale of assets",
+        "With Your Consent: When you explicitly agree to share information"
+      ]
+    },
+    "discreteShipping": {
+      "title": "5. Discreet Shipping and Packaging",
+      "content": "We understand the private nature of our products. All orders are:",
+      "items": [
+        "Shipped in plain, unmarked packaging",
+        "Listed on shipping labels with a generic company name",
+        "Delivered without any indication of contents",
+        "Protected with privacy seals and secure packaging"
+      ]
+    },
+    "giftPrivacy": {
+      "title": "6. Gift Sending Privacy",
+      "content": "When you send a gift to another user:",
+      "items": [
+        "The recipient will only see your username (not your real name or address)",
+        "Your payment information is never shared with the recipient",
+        "Gift messages are transmitted securely and privately",
+        "Recipients can decline gifts, and we respect their privacy preferences"
+      ]
+    },
+    "dataSecurity": {
+      "title": "7. Data Security",
+      "content": "We implement industry-standard security measures to protect your information:",
+      "items": [
+        "SSL/TLS encryption for all data transmission",
+        "Secure payment processing through PCI-compliant providers",
+        "Regular security audits and updates",
+        "Restricted access to personal information",
+        "Password protection and account security features"
+      ]
+    },
+    "dataRetention": {
+      "title": "8. Data Retention",
+      "content": "We retain your information only as long as necessary to provide our services and comply with legal obligations. You can request deletion of your account and personal data at any time, subject to legal retention requirements."
+    },
+    "yourRights": {
+      "title": "9. Your Privacy Rights",
+      "content": "You have the right to:",
+      "items": [
+        "Access your personal information",
+        "Request correction of inaccurate data",
+        "Request deletion of your account and data",
+        "Opt-out of marketing communications",
+        "Disable cookies through your browser settings",
+        "Request a copy of your data in a portable format"
+      ]
+    },
+    "ageVerification": {
+      "title": "10. Age Verification",
+      "content": "Our services are strictly for adults 18 years and older. We do not knowingly collect information from minors. If we become aware that a minor has provided us with personal information, we will take steps to delete such information immediately."
+    },
+    "thirdPartyLinks": {
+      "title": "11. Third-Party Links",
+      "content": "Our platform may contain links to third-party websites. We are not responsible for the privacy practices of these external sites. We encourage you to read their privacy policies before providing any information."
+    },
+    "international": {
+      "title": "12. International Users",
+      "content": "If you are accessing our platform from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States. By using our services, you consent to this transfer."
+    },
+    "changes": {
+      "title": "13. Changes to This Privacy Policy",
+      "content": "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on our platform and updating the 'Last Updated' date. Your continued use of our services after changes constitutes acceptance of the updated policy."
+    },
+    "contact": {
+      "title": "14. Contact Us",
+      "content": "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us:",
+      "email": "Email: privacy@crushme.com",
+      "support": "Or through our Contact page"
+    }
+  },
+  "commitment": "We are committed to protecting your privacy and maintaining your trust. Thank you for choosing CrushMe.",
+  "backButton": "Back to Home"
+}
+

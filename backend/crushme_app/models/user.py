@@ -77,7 +77,14 @@ class User(AbstractUser):
         last_name (CharField): The last name of the user.
         phone (CharField): Phone number of the user.
         about (TextField): About yourself section.
+        profile_picture (ImageField): User's profile picture.
+        cover_image (ImageField): User's cover/banner image for profile.
         is_guest_converted (BooleanField): Flag to track if user was converted from guest checkout.
+        is_crush (BooleanField): Flag indicating if user is a verified Crush/Webcammer.
+        crush_verification_status (CharField): Status of Crush verification request.
+        crush_requested_at (DateTimeField): When Crush verification was requested.
+        crush_verified_at (DateTimeField): When Crush was verified/approved.
+        crush_rejection_reason (TextField): Reason for rejection if applicable.
     """
     # Override the default username to make it unique but not for authentication
     username = models.CharField(
@@ -115,6 +122,24 @@ class User(AbstractUser):
         help_text="Tell others about yourself (max 500 characters)"
     )
     
+    # Profile picture
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/%Y/%m/%d/',
+        blank=True,
+        null=True,
+        verbose_name="Profile Picture",
+        help_text="User's profile picture"
+    )
+    
+    # Cover image
+    cover_image = models.ImageField(
+        upload_to='cover_images/%Y/%m/%d/',
+        blank=True,
+        null=True,
+        verbose_name="Cover Image",
+        help_text="User's cover/banner image for profile"
+    )
+    
     # Public status and notes
     current_status = models.CharField(
         max_length=100,
@@ -143,6 +168,49 @@ class User(AbstractUser):
         default=False,
         verbose_name="Email Verified",
         help_text="True if user has verified their email address"
+    )
+    
+    # Crush (Webcammer) verification system
+    CRUSH_STATUS_CHOICES = [
+        ('none', 'No Requested'),
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    is_crush = models.BooleanField(
+        default=False,
+        verbose_name="Is Crush (Verified)",
+        help_text="True if user is a verified Crush/Webcammer"
+    )
+    
+    crush_verification_status = models.CharField(
+        max_length=20,
+        choices=CRUSH_STATUS_CHOICES,
+        default='none',
+        verbose_name="Crush Verification Status",
+        help_text="Status of Crush verification request"
+    )
+    
+    crush_requested_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Crush Requested At",
+        help_text="Date and time when Crush verification was requested"
+    )
+    
+    crush_verified_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Crush Verified At",
+        help_text="Date and time when Crush was verified/approved"
+    )
+    
+    crush_rejection_reason = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Crush Rejection Reason",
+        help_text="Reason for Crush verification rejection"
     )
 
     # Set email as the username field for authentication

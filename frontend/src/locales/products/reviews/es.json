@@ -1,0 +1,35 @@
+{
+  "title": "Todas las Reseñas",
+  "loading": "Cargando reseñas...",
+  "error": "Error al cargar reseñas",
+  "retry": "Reintentar",
+  "noReviews": "Aún no hay reseñas para este producto. ¡Sé el primero en dejar una!",
+  "writeReview": "Escribir una Reseña",
+  "latest": "Recientes",
+  "loadMore": "Cargar Más Reseñas",
+  "postedOn": "Publicado el",
+  "verifiedPurchase": "Compra Verificada",
+  "yourReview": "Tu Reseña",
+  "reviews": "reseñas",
+  "review": "reseña",
+  "rating": "Calificación",
+  "stars": {
+    "1": "1 estrella",
+    "2": "2 estrellas",
+    "3": "3 estrellas",
+    "4": "4 estrellas",
+    "5": "5 estrellas"
+  },
+  "sort": {
+    "latest": "Recientes",
+    "oldest": "Antiguas",
+    "highestRated": "Mejor Valoradas",
+    "lowestRated": "Peor Valoradas"
+  },
+  "reviewCount": {
+    "none": "Sin reseñas aún",
+    "one": "1 reseña",
+    "other": "{count} reseñas"
+  }
+}
+

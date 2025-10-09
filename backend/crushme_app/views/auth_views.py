@@ -289,6 +289,7 @@ def update_profile(request):
     relationships (addresses, links, gallery_photos).
     
     Supports both application/json and multipart/form-data for image uploads.
+    Handles profile_picture, cover_image, and gallery_photos.
 
     Args:
         request (Request): The HTTP request object containing user data.
@@ -639,3 +640,86 @@ def check_guest_user(request):
             'has_guest_profile': False,
             'message': 'No guest profile found with this email.'
         }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_crush_verification(request):
+    """
+    Request Crush (Webcammer) verification for authenticated user.
+    
+    This endpoint allows users to request verification as a Crush/Webcammer.
+    The request will be pending until an admin approves or rejects it.
+    
+    Args:
+        request (Request): The HTTP request object.
+    
+    Returns:
+        Response: Success message if request is created, or error if already exists.
+    """
+    user = request.user
+    
+    # Check if user already has a verified Crush status
+    if user.is_crush:
+        return Response({
+            'success': False,
+            'error': 'You are already a verified Crush.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if user already has a pending request
+    if user.crush_verification_status == 'pending':
+        return Response({
+            'success': False,
+            'error': 'You already have a pending Crush verification request.',
+            'requested_at': user.crush_requested_at
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Create the verification request
+    user.crush_verification_status = 'pending'
+    user.crush_requested_at = timezone.now()
+    user.crush_verified_at = None
+    user.crush_rejection_reason = None
+    user.save()
+    
+    return Response({
+        'success': True,
+        'message': 'Crush verification request submitted successfully. An admin will review your request.',
+        'crush_verification_status': user.crush_verification_status,
+        'crush_requested_at': user.crush_requested_at
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_crush_request(request):
+    """
+    Cancel a pending Crush verification request.
+    
+    This endpoint allows users to cancel their pending Crush verification request.
+    Only works if the request is in 'pending' status.
+    
+    Args:
+        request (Request): The HTTP request object.
+    
+    Returns:
+        Response: Success message if request is cancelled, or error if not possible.
+    """
+    user = request.user
+    
+    # Check if user has a pending request
+    if user.crush_verification_status != 'pending':
+        return Response({
+            'success': False,
+            'error': 'You do not have a pending Crush verification request to cancel.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Cancel the request
+    user.crush_verification_status = 'none'
+    user.crush_requested_at = None
+    user.save()
+    
+    return Response({
+        'success': True,
+        'message': 'Crush verification request cancelled successfully.',
+        'crush_verification_status': user.crush_verification_status
+    }, status=status.HTTP_200_OK)

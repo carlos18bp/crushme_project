@@ -84,8 +84,11 @@ async function makeRequest(method, url, params = {}, config = {}) {
   const csrfToken = getCookie("csrftoken");
   const token = getJWTToken();
   
+  // Si params es FormData, NO establecer Content-Type (el navegador lo hace con boundary)
+  const isFormData = params instanceof FormData;
+  
   const headers = {
-    "Content-Type": "application/json",
+    ...(!isFormData && { "Content-Type": "application/json" }), // Solo para JSON
     "X-CSRFToken": csrfToken,
     ...(token && { "Authorization": `Bearer ${token}` }),
     ...config.headers
@@ -246,7 +249,9 @@ export async function upload_request(url, formData) {
 }
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:8000';
+// NOTE: No configurar baseURL para que use el proxy de Vite (vite.config.js)
+// El proxy redirige /api/* a http://localhost:8000/api/*
+// axios.defaults.baseURL = 'http://localhost:8000';
 axios.defaults.timeout = 10000;
 
 // Add response interceptor for global error handling

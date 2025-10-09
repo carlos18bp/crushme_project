@@ -104,6 +104,14 @@
                   </li>
                   <li>
                     <router-link 
+                      :to="`/${i18nStore.locale}/privacy`" 
+                      class="footer-nav-link text-white text-xl font-light hover:text-pink-300 transition-colors duration-300"
+                    >
+                      {{ $t('footer.account.privacyPolicy') }}
+                    </router-link>
+                  </li>
+                  <li>
+                    <router-link 
                       :to="`/${i18nStore.locale}/signin`" 
                       class="footer-nav-link text-white text-xl font-light hover:text-pink-300 transition-colors duration-300"
                     >

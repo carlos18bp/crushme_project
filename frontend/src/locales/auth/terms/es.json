@@ -1,0 +1,69 @@
+{
+  "title": "Términos y Condiciones",
+  "subtitle": "Última actualización: Octubre 2025",
+  "introduction": {
+    "title": "Bienvenido a CrushMe",
+    "content": "Al acceder y utilizar nuestra plataforma, aceptas y te comprometes a cumplir los términos y condiciones de este acuerdo. Por favor, lee estos términos cuidadosamente antes de usar nuestros servicios."
+  },
+  "sections": {
+    "acceptance": {
+      "title": "1. Aceptación de los Términos",
+      "content": "Al crear una cuenta o utilizar cualquiera de nuestros servicios, aceptas cumplir y estar legalmente vinculado por estos Términos y Condiciones. Si no estás de acuerdo con alguna parte de estos términos, no debes usar nuestra plataforma."
+    },
+    "ageRequirement": {
+      "title": "2. Requisito de Edad",
+      "content": "Debes tener al menos 18 años para usar nuestros servicios. Al usar CrushMe, declaras y garantizas que tienes la edad legal para formar un contrato vinculante y cumples con todos los requisitos de elegibilidad anteriores. La plataforma está destinada solo para adultos e involucra productos de naturaleza íntima."
+    },
+    "accountSecurity": {
+      "title": "3. Seguridad de la Cuenta",
+      "content": "Eres responsable de mantener la confidencialidad de las credenciales de tu cuenta. Aceptas la responsabilidad de todas las actividades que ocurran bajo tu cuenta. Si sospechas de algún uso no autorizado de tu cuenta, debes notificarnos inmediatamente."
+    },
+    "products": {
+      "title": "4. Productos y Servicios",
+      "content": "CrushMe ofrece una selección curada de productos de bienestar íntimo. Todas las descripciones, imágenes y precios de productos están sujetos a cambios sin previo aviso. Nos reservamos el derecho de limitar cantidades y rechazar el servicio a cualquier persona por cualquier motivo en cualquier momento."
+    },
+    "gifting": {
+      "title": "5. Función de Envío de Regalos",
+      "content": "Nuestra plataforma permite a los usuarios enviar regalos a otros usuarios registrados. Al enviar un regalo, aceptas que: (a) Has obtenido el consentimiento del destinatario para recibir dichos regalos; (b) No utilizarás esta función para acoso o comunicaciones no deseadas; (c) Todos los regalos deben cumplir con las leyes y regulaciones locales."
+    },
+    "privacy": {
+      "title": "6. Privacidad y Discreción",
+      "content": "Estamos comprometidos con la protección de tu privacidad. Todos los pedidos se envían en paquetes discretos sin indicación del contenido. Nunca compartiremos tu información personal con terceros sin tu consentimiento, excepto cuando lo requiera la ley."
+    },
+    "payments": {
+      "title": "7. Pagos y Reembolsos",
+      "content": "Todos los precios se muestran en USD. El pago es requerido al momento de la compra. Aceptamos las principales tarjetas de crédito y métodos de pago seguros. Los reembolsos están sujetos a nuestra política de devoluciones y pueden emitirse dentro de los 30 días posteriores a la compra para productos sin abrir."
+    },
+    "prohibitedUse": {
+      "title": "8. Usos Prohibidos",
+      "content": "Aceptas no: (a) Usar nuestra plataforma para ningún propósito ilegal; (b) Acosar, abusar o dañar a otros usuarios; (c) Intentar eludir medidas de seguridad; (d) Revender productos comprados en nuestra plataforma; (e) Usar nuestros servicios para distribuir contenido malicioso o spam."
+    },
+    "intellectualProperty": {
+      "title": "9. Propiedad Intelectual",
+      "content": "Todo el contenido en CrushMe, incluidos textos, gráficos, logotipos, imágenes y software, es propiedad de CrushMe o sus proveedores de contenido y está protegido por leyes internacionales de derechos de autor. No puedes reproducir, distribuir o crear obras derivadas sin nuestro permiso expreso por escrito."
+    },
+    "disclaimer": {
+      "title": "10. Descargo de Garantías",
+      "content": "Nuestros servicios se proporcionan 'tal cual' sin garantías de ningún tipo, ya sean expresas o implícitas. No garantizamos que nuestros servicios sean ininterrumpidos, libres de errores o seguros. El uso de nuestra plataforma es bajo tu propio riesgo."
+    },
+    "limitation": {
+      "title": "11. Limitación de Responsabilidad",
+      "content": "CrushMe no será responsable de ningún daño indirecto, incidental, especial, consecuente o punitivo que resulte de tu uso o incapacidad para usar nuestros servicios. Nuestra responsabilidad total no excederá el monto pagado por ti por el producto o servicio específico que dio lugar al reclamo."
+    },
+    "termination": {
+      "title": "12. Terminación",
+      "content": "Nos reservamos el derecho de terminar o suspender tu cuenta en cualquier momento sin previo aviso si violas estos Términos y Condiciones. Al terminar, tu derecho a usar nuestros servicios cesará inmediatamente."
+    },
+    "changes": {
+      "title": "13. Cambios en los Términos",
+      "content": "Nos reservamos el derecho de modificar estos Términos y Condiciones en cualquier momento. Los cambios serán efectivos inmediatamente después de su publicación. Tu uso continuo de nuestra plataforma después de los cambios constituye la aceptación de los términos modificados."
+    },
+    "contact": {
+      "title": "14. Información de Contacto",
+      "content": "Si tienes alguna pregunta sobre estos Términos y Condiciones, contáctanos a través de nuestra página de contacto o envía un correo a nuestro equipo de soporte."
+    }
+  },
+  "agreement": "Al usar CrushMe, reconoces que has leído, entendido y aceptas estar sujeto a estos Términos y Condiciones.",
+  "backButton": "Volver al Inicio"
+}
+

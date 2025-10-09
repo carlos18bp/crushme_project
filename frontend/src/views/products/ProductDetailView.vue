@@ -88,8 +88,9 @@
               <div class="product-reviews">
                 <div class="stars">
                   <span v-for="i in 5" :key="i" class="star" :class="{ filled: i <= Math.floor(currentRating) }">★</span>
-                  <span class="rating-text">{{ currentRating }}/5</span>
-                  <span v-if="product.rating_count > 0" class="rating-count">({{ product.rating_count }} {{ $t('productDetail.reviews') }})</span>
+                  <span v-if="currentRating > 0" class="rating-text">{{ currentRating.toFixed(1) }}/5</span>
+                  <span v-if="totalReviews > 0" class="rating-count">({{ totalReviews }} {{ totalReviews === 1 ? $t('productReviews.review') : $t('productReviews.reviews') }})</span>
+                  <span v-else class="rating-count">({{ $t('productReviews.reviewCount.none') }})</span>
                 </div>
               </div>
               
@@ -218,6 +219,12 @@
         
       </div>
       
+      <!-- Product Reviews Section -->
+      <ProductReviews :product-id="productId" />
+      
+      <!-- Trending Products Section -->
+      <TrendingProducts />
+      
       <!-- FAQ Section -->
       <FAQ />
     </main>
@@ -235,10 +242,13 @@ import { useProductStore } from '@/stores/modules/productStore'
 import { useCartStore } from '@/stores/modules/cartStore'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useReviewStore } from '@/stores/modules/reviewStore'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
 import FAQ from '@/components/shared/FAQ.vue'
 import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
+import TrendingProducts from '@/components/products/TrendingProducts.vue'
+import ProductReviews from '@/components/products/ProductReviews.vue'
 
 // Props
 defineProps({
@@ -256,6 +266,7 @@ const productStore = useProductStore()
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
+const reviewStore = useReviewStore()
 
 // Reactive data
 const selectedImageIndex = ref(0)
@@ -279,10 +290,29 @@ const error = computed(() => productStore.wooError)
 
 // Reviews handling (real data with fallback)
 const currentRating = computed(() => {
+  // Primero intentar obtener del reviewStore (datos más actualizados)
+  if (reviewStore.getAverageRating > 0) {
+    return parseFloat(reviewStore.getAverageRating)
+  }
+  // Luego intentar del producto de WooCommerce
   if (product.value?.average_rating) {
     return parseFloat(product.value.average_rating)
   }
-  return 4.5 // Fallback hardcoded rating
+  // Fallback si no hay datos
+  return 0
+})
+
+// Total de reviews
+const totalReviews = computed(() => {
+  // Priorizar datos del reviewStore
+  if (reviewStore.getTotalReviews > 0) {
+    return reviewStore.getTotalReviews
+  }
+  // Fallback a datos de WooCommerce
+  if (product.value?.rating_count) {
+    return product.value.rating_count
+  }
+  return 0
 })
 
 // Images handling
