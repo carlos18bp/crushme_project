@@ -9,7 +9,9 @@ from ..views.auth_views import (
     forgot_password, reset_password, google_login,
     update_profile, update_password, guest_checkout,
     get_user_profile, check_username_availability, check_guest_user,
-    request_crush_verification, cancel_crush_request
+    request_crush_verification, cancel_crush_request,
+    get_crush_public_profile, get_random_crush, search_users, list_crushes,
+    get_random_crushes
 )
 
 urlpatterns = [
@@ -38,6 +40,13 @@ urlpatterns = [
     # Crush (Webcammer) verification
     path('crush/request-verification/', request_crush_verification, name='request_crush_verification'),
     path('crush/cancel-request/', cancel_crush_request, name='cancel_crush_request'),
+    
+    # Public profiles (no authentication required)
+    path('public/@<str:username>/', get_crush_public_profile, name='get_public_profile'),
+    path('crush/random/', get_random_crush, name='get_random_crush'),
+    path('crush/random-7/', get_random_crushes, name='get_random_crushes'),
+    path('crush/list/', list_crushes, name='list_crushes'),
+    path('search/', search_users, name='search_users'),
     
     # OAuth2 login
     path('google_login/', google_login, name='google_login'),

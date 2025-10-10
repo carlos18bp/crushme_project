@@ -1,0 +1,21 @@
+{
+  "biography": "Biografía",
+  "myLinks": "Mis Enlaces",
+  "myState": "Mi estado",
+  "notes": "Notas",
+  "gallery": "Galería",
+  "wishlists": "Listas de Deseos Públicas",
+  "wishlistItems": "artículos",
+  "wishlistValue": "Valor total",
+  "wishlistCreated": "Creada",
+  "viewWishlist": "Ver Lista",
+  "noWishlists": "Aún no hay listas de deseos públicas",
+  "noDescription": "Sin descripción",
+  "noProductsYet": "Aún no hay productos",
+  "defaultBiography": "Este crush aún no ha agregado una biografía.",
+  "galleryImageAlt": "Imagen de galería",
+  "loading": "Cargando perfil...",
+  "error": "Error al cargar el perfil",
+  "retry": "Intentar de nuevo"
+}
+

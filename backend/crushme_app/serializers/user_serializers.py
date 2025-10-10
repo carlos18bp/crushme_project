@@ -631,4 +631,115 @@ class UserProfileSerializer(serializers.ModelSerializer):
             else:
                 # Create new link
                 UserLink.objects.create(user=user, **link_data)
+
+
+class CrushPublicProfileSerializer(serializers.ModelSerializer):
+    """
+    Public profile serializer for verified Crush users
+    Only shows public information (no private data like email, phone, addresses)
+    Includes gallery photos and public wishlists
+    """
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    cover_image_url = serializers.SerializerMethodField(read_only=True)
+    gallery_photos = UserGallerySerializer(many=True, read_only=True)
+    links = UserLinkSerializer(many=True, read_only=True)
+    public_wishlists = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'about',
+            'profile_picture_url', 'cover_image_url',
+            'current_status', 'note',
+            'gallery_photos', 'links', 'public_wishlists',
+            'is_crush', 'crush_verified_at'
+        ]
+    
+    def get_profile_picture_url(self, obj):
+        """Get user's profile picture URL"""
+        if obj.profile_picture:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_picture.url)
+            return obj.profile_picture.url
+        # Fallback to gallery profile picture
+        profile_pic = obj.gallery_photos.filter(is_profile_picture=True).first()
+        if profile_pic:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile_pic.image.url)
+            return profile_pic.image.url
+        return None
+    
+    def get_cover_image_url(self, obj):
+        """Get user's cover image URL"""
+        if obj.cover_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.cover_image.url)
+            return obj.cover_image.url
+        return None
+    
+    def get_public_wishlists(self, obj):
+        """Get only public wishlists for this user with full details including items"""
+        from .wishlist_serializers import WishListDetailSerializer
+        public_wishlists = obj.wishlists.filter(is_public=True, is_active=True)
+        return WishListDetailSerializer(public_wishlists, many=True, context=self.context).data
+
+
+class UserSearchSerializer(serializers.ModelSerializer):
+    """
+    Simplified serializer for user search results
+    Returns only essential information: username, profile picture, and crush status
+    """
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'profile_picture_url', 'is_crush']
+    
+    def get_profile_picture_url(self, obj):
+        """Get user's profile picture URL"""
+        if obj.profile_picture:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_picture.url)
+            return obj.profile_picture.url
+        # Fallback to gallery profile picture
+        profile_pic = obj.gallery_photos.filter(is_profile_picture=True).first()
+        if profile_pic:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile_pic.image.url)
+            return profile_pic.image.url
+        return None
+
+
+class CrushCardSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Crush card display
+    Returns username, profile picture, status, and note
+    Perfect for displaying Crush cards in grids or carousels
+    """
+    profile_picture_url = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'profile_picture_url', 'current_status', 'note', 'is_crush']
+    
+    def get_profile_picture_url(self, obj):
+        """Get user's profile picture URL"""
+        if obj.profile_picture:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_picture.url)
+            return obj.profile_picture.url
+        # Fallback to gallery profile picture
+        profile_pic = obj.gallery_photos.filter(is_profile_picture=True).first()
+        if profile_pic:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile_pic.image.url)
+            return profile_pic.image.url
+        return None
     

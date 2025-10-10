@@ -12,6 +12,7 @@ from django.contrib.auth import authenticate
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import update_last_login
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -22,7 +23,8 @@ from ..utils import generate_auth_tokens
 from ..serializers.user_serializers import (
     UserSerializer, UserRegistrationSerializer, UserLoginSerializer,
     EmailVerificationSerializer, SendPasscodeSerializer, PasswordResetSerializer, 
-    PasswordChangeSerializer, GuestCheckoutSerializer, UserProfileSerializer
+    PasswordChangeSerializer, GuestCheckoutSerializer, UserProfileSerializer,
+    CrushPublicProfileSerializer, UserSearchSerializer, CrushCardSerializer
 )
 
 
@@ -722,4 +724,259 @@ def cancel_crush_request(request):
         'success': True,
         'message': 'Crush verification request cancelled successfully.',
         'crush_verification_status': user.crush_verification_status
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_crush_public_profile(request, username):
+    """
+    Get public profile information for any user by username.
+    
+    This is a public endpoint (no authentication required) that returns
+    public information about a user.
+    
+    Returns:
+        - username
+        - profile_picture_url and cover_image_url
+        - about (biography)
+        - links (social media, etc.)
+        - current_status
+        - note
+        - gallery_photos
+        - public_wishlists (only wishlists marked as public)
+        - is_crush (whether they are a verified Crush/webcammer)
+    
+    Args:
+        request (Request): The HTTP request object
+        username (str): The username of the user to retrieve
+    
+    Returns:
+        Response: Public profile data or error if user not found
+    """
+    try:
+        # Get user by username (no is_crush filter)
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'User not found.'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Serialize and return the public profile
+    serializer = CrushPublicProfileSerializer(user, context={'request': request})
+    
+    return Response({
+        'success': True,
+        'data': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_random_crush(request):
+    """
+    Get a random verified Crush user profile.
+    
+    This is a public endpoint (no authentication required) that returns
+    a random Crush (webcammer) from all verified Crushes.
+    
+    Perfect for discovery features like "Random Crush" or "Surprise Me".
+    
+    Returns:
+        - Random Crush's public profile information
+        - Same fields as get_crush_public_profile
+    
+    Args:
+        request (Request): The HTTP request object
+    
+    Returns:
+        Response: Random Crush profile data or error if no Crushes exist
+    """
+    # Get a random verified Crush
+    random_crush = User.objects.filter(is_crush=True).order_by('?').first()
+    
+    if not random_crush:
+        return Response({
+            'success': False,
+            'error': 'No verified Crushes found.'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Serialize and return the public profile
+    serializer = CrushPublicProfileSerializer(random_crush, context={'request': request})
+    
+    return Response({
+        'success': True,
+        'data': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def search_users(request):
+    """
+    Search for users by username.
+    
+    This is a public endpoint (no authentication required) that allows
+    searching for users by partial username match.
+    
+    Query Parameters:
+        q (str): Search query for username (case-insensitive)
+        limit (int, optional): Maximum number of results to return (default: 20, max: 50)
+    
+    Returns:
+        List of users with:
+        - id
+        - username
+        - profile_picture_url
+        - is_crush
+    
+    Example:
+        GET /api/auth/search/?q=cerro
+        GET /api/auth/search/?q=john&limit=10
+    
+    Args:
+        request (Request): The HTTP request object
+    
+    Returns:
+        Response: List of matching users or empty list if no matches
+    """
+    # Get search query
+    search_query = request.GET.get('q', '').strip()
+    
+    if not search_query:
+        return Response({
+            'success': False,
+            'error': 'Search query parameter "q" is required.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Get limit parameter (default 20, max 50)
+    try:
+        limit = int(request.GET.get('limit', 20))
+        limit = min(limit, 50)  # Cap at 50 results
+    except ValueError:
+        limit = 20
+    
+    # Search for users by username (case-insensitive partial match)
+    users = User.objects.filter(
+        username__icontains=search_query
+    ).order_by('-is_crush', 'username')[:limit]
+    
+    # Serialize results
+    serializer = UserSearchSerializer(users, many=True, context={'request': request})
+    
+    return Response({
+        'success': True,
+        'count': len(serializer.data),
+        'results': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def list_crushes(request):
+    """
+    Get list of all verified Crushes.
+    
+    This is a public endpoint (no authentication required) that returns
+    a list of all verified Crush (webcammer) users.
+    
+    Perfect for displaying a directory or catalog of available Crushes.
+    
+    Query Parameters:
+        limit (int, optional): Maximum number of results to return (default: 50, max: 100)
+        offset (int, optional): Number of results to skip for pagination (default: 0)
+    
+    Returns:
+        List of verified Crushes with:
+        - id
+        - username
+        - profile_picture_url
+        - is_crush (always true)
+    
+    Example:
+        GET /api/auth/crush/list/
+        GET /api/auth/crush/list/?limit=20&offset=0
+        GET /api/auth/crush/list/?limit=20&offset=20
+    
+    Args:
+        request (Request): The HTTP request object
+    
+    Returns:
+        Response: List of verified Crushes with pagination info
+    """
+    # Get pagination parameters
+    try:
+        limit = int(request.GET.get('limit', 50))
+        limit = min(limit, 100)  # Cap at 100 results
+    except ValueError:
+        limit = 50
+    
+    try:
+        offset = int(request.GET.get('offset', 0))
+        offset = max(offset, 0)  # Ensure non-negative
+    except ValueError:
+        offset = 0
+    
+    # Get total count of Crushes
+    total_count = User.objects.filter(is_crush=True).count()
+    
+    # Get paginated Crushes
+    crushes = User.objects.filter(
+        is_crush=True
+    ).order_by('username')[offset:offset + limit]
+    
+    # Serialize results
+    serializer = UserSearchSerializer(crushes, many=True, context={'request': request})
+    
+    return Response({
+        'success': True,
+        'count': len(serializer.data),
+        'total': total_count,
+        'offset': offset,
+        'limit': limit,
+        'results': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_random_crushes(request):
+    """
+    Get 7 random verified Crushes for discovery/carousel display.
+    
+    This is a public endpoint (no authentication required) that returns
+    exactly 7 random Crushes with card information.
+    
+    Perfect for homepage carousels, discovery sections, or "Explore Crushes".
+    
+    Returns:
+        List of 7 random Crushes with:
+        - id
+        - username
+        - profile_picture_url
+        - current_status
+        - note
+        - is_crush (always true)
+    
+    Example:
+        GET /api/auth/crush/random-7/
+    
+    Args:
+        request (Request): The HTTP request object
+    
+    Returns:
+        Response: List of 7 random Crushes or fewer if not enough Crushes exist
+    """
+    # Get 7 random verified Crushes
+    random_crushes = User.objects.filter(is_crush=True).order_by('?')[:7]
+    
+    if not random_crushes:
+        return Response({
+            'success': False,
+            'error': 'No verified Crushes found.'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Serialize results
+    serializer = CrushCardSerializer(random_crushes, many=True, context={'request': request})
+    
+    return Response({
+        'success': True,
+        'count': len(serializer.data),
+        'results': serializer.data
     }, status=status.HTTP_200_OK)

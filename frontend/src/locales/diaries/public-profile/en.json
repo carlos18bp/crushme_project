@@ -1,0 +1,21 @@
+{
+  "biography": "Biography",
+  "myLinks": "My Links",
+  "myState": "My state",
+  "notes": "Notes",
+  "gallery": "Gallery",
+  "wishlists": "Public Wishlists",
+  "wishlistItems": "items",
+  "wishlistValue": "Total value",
+  "wishlistCreated": "Created",
+  "viewWishlist": "View Wishlist",
+  "noWishlists": "No public wishlists yet",
+  "noDescription": "No description",
+  "noProductsYet": "No products yet",
+  "defaultBiography": "This crush hasn't added a biography yet.",
+  "galleryImageAlt": "Gallery image",
+  "loading": "Loading profile...",
+  "error": "Error loading profile",
+  "retry": "Try again"
+}
+

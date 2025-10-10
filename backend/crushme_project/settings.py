@@ -197,23 +197,14 @@ STORAGES = {
     },
 }
 
-# Email configuration for password reset functionality
-# NOTA: La configuración SMTP está fallando. Opciones:
-# 1. Para desarrollo: usa 'console' backend (muestra emails en consola)
-# 2. Para producción: verifica credenciales SMTP con tu proveedor
-if DEBUG:
-    # En desarrollo, muestra los emails en la consola
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    # En producción, usa SMTP (verifica estas credenciales)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtpout.secureserver.net'
-    EMAIL_PORT = 465
-    EMAIL_USE_SSL = True
-    EMAIL_USE_TLS = False
-    EMAIL_HOST_USER = 'support@chrushme.com.co'
-    EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
-
+# Email configuration - Siempre usa SMTP para envíos reales
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtpout.secureserver.net'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = 'support@chrushme.com.co'
+EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
 DEFAULT_FROM_EMAIL = 'CrushMe Support <support@chrushme.com.co>'
 
 # Google OAuth2 settings

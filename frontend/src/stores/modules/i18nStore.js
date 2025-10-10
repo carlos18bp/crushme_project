@@ -61,6 +61,8 @@ import contactEs from '@/locales/contact/es.json'
 // Import diaries translations
 import diariesEn from '@/locales/diaries/en.json'
 import diariesEs from '@/locales/diaries/es.json'
+import publicProfileEn from '@/locales/diaries/public-profile/en.json'
+import publicProfileEs from '@/locales/diaries/public-profile/es.json'
 
 // Import alerts translations
 import alertsEn from '@/locales/alerts/en.json'
@@ -109,7 +111,10 @@ const messages = {
     navbar: navbarEn.navbar,
     aboutUs: aboutUsEn,
     contact: contactEn,
-    diaries: diariesEn,
+    diaries: {
+      ...diariesEn,
+      publicProfile: publicProfileEn
+    },
     alerts: alertsEn,
     footer: footerEn.footer,
     faq: faqEn,
@@ -140,7 +145,10 @@ const messages = {
     navbar: navbarEs.navbar,
     aboutUs: aboutUsEs,
     contact: contactEs,
-    diaries: diariesEs,
+    diaries: {
+      ...diariesEs,
+      publicProfile: publicProfileEs
+    },
     alerts: alertsEs,
     footer: footerEs.footer,
     faq: faqEs,

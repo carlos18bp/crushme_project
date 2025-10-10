@@ -10,6 +10,7 @@ export { useCartStore } from './modules/cartStore.js';
 export { useOrderStore } from './modules/orderStore.js';
 export { useWishlistStore } from './modules/wishlistStore.js';
 export { useReviewStore } from './modules/reviewStore.js';
+export { useCrushStore } from './modules/crushStore.js';
 
 /**
  * Convenience function to initialize all stores
@@ -39,6 +40,7 @@ export function resetAllStores() {
   const cartStore = useCartStore();
   const orderStore = useOrderStore();
   const wishlistStore = useWishlistStore();
+  const crushStore = useCrushStore();
   
   // Reset auth
   authStore.logout();
@@ -57,6 +59,9 @@ export function resetAllStores() {
   
   // Clear wishlists
   wishlistStore.clearCurrentWishlist();
+  
+  // Clear crushes
+  crushStore.clearAll();
   
   console.log('🧹 All stores reset successfully');
 }
