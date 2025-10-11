@@ -7,6 +7,7 @@ from rest_framework import serializers
 from ..models import WishList, WishListItem, FavoriteWishList, Product
 from .product_serializers import ProductListSerializer
 from .user_serializers import UserSerializer
+from ..services.translation_service import create_translator_from_request
 
 
 class WishListItemSerializer(serializers.ModelSerializer):
@@ -48,6 +49,36 @@ class WishListItemSerializer(serializers.ModelSerializer):
     def get_product_info(self, obj):
         """Get full cached product data"""
         return obj.product_data if obj.product_data else None
+    
+    def to_representation(self, instance):
+        """Translate WooCommerce product fields and user notes"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            
+            # Translate WooCommerce product name (known to be in Spanish)
+            if representation.get('product_name'):
+                representation['product_name'] = translator.translate_if_needed(
+                    representation['product_name'], 
+                    content_language='es'
+                )
+            
+            # Translate product_info.name if exists
+            if representation.get('product_info') and isinstance(representation['product_info'], dict):
+                product_info = representation['product_info']
+                if product_info.get('name'):
+                    product_info['name'] = translator.translate_if_needed(
+                        product_info['name'], 
+                        content_language='es'
+                    )
+            
+            # Translate user-generated notes (auto-detect source language)
+            if representation.get('notes'):
+                representation['notes'] = translator.translate_user_content(representation['notes'])
+        
+        return representation
 
 
 class WishListItemCreateSerializer(serializers.ModelSerializer):
@@ -146,6 +177,21 @@ class WishListDetailSerializer(serializers.ModelSerializer):
     def get_favorites_count(self, obj):
         """Get number of users who favorited this wishlist"""
         return FavoriteWishList.get_wishlist_favorites_count(obj)
+    
+    def to_representation(self, instance):
+        """Translate wishlist name and description"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Translate wishlist name and description (auto-detect source language)
+            if representation.get('name'):
+                representation['name'] = translator.translate_user_content(representation['name'])
+            if representation.get('description'):
+                representation['description'] = translator.translate_user_content(representation['description'])
+        
+        return representation
 
 
 class WishListCreateUpdateSerializer(serializers.ModelSerializer):

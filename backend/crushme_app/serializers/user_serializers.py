@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from ..models import User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser
+from ..services.translation_service import create_translator_from_request
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -463,6 +464,19 @@ class UserGallerySerializer(serializers.ModelSerializer):
                         "User already has a profile picture. Please remove the current one first."
                     )
         return attrs
+    
+    def to_representation(self, instance):
+        """Translate caption field for public endpoints"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Translate user-generated caption (auto-detect source language)
+            if representation.get('caption'):
+                representation['caption'] = translator.translate_user_content(representation['caption'])
+        
+        return representation
 
 
 class UserLinkSerializer(serializers.ModelSerializer):
@@ -685,6 +699,21 @@ class CrushPublicProfileSerializer(serializers.ModelSerializer):
         from .wishlist_serializers import WishListDetailSerializer
         public_wishlists = obj.wishlists.filter(is_public=True, is_active=True)
         return WishListDetailSerializer(public_wishlists, many=True, context=self.context).data
+    
+    def to_representation(self, instance):
+        """Translate user-generated content fields"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Translate user-generated fields (auto-detect source language)
+            if representation.get('about'):
+                representation['about'] = translator.translate_user_content(representation['about'])
+            if representation.get('note'):
+                representation['note'] = translator.translate_user_content(representation['note'])
+        
+        return representation
 
 
 class UserSearchSerializer(serializers.ModelSerializer):
@@ -742,4 +771,17 @@ class CrushCardSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(profile_pic.image.url)
             return profile_pic.image.url
         return None
+    
+    def to_representation(self, instance):
+        """Translate user-generated content fields"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Translate user-generated note (auto-detect source language)
+            if representation.get('note'):
+                representation['note'] = translator.translate_user_content(representation['note'])
+        
+        return representation
     

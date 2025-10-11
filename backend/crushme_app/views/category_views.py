@@ -9,8 +9,25 @@ from rest_framework import status
 import logging
 
 from ..services.woocommerce_service import woocommerce_service
+from ..services.translation_service import create_translator_from_request
 
 logger = logging.getLogger(__name__)
+
+
+def translate_category_names(data, translator):
+    """Traduce nombres de categorías recursivamente"""
+    if not data:
+        return data
+    
+    if isinstance(data, dict):
+        if 'name' in data:
+            data['name'] = translator.translate_if_needed(data['name'], content_language='es')
+        for key, value in data.items():
+            data[key] = translate_category_names(value, translator)
+    elif isinstance(data, list):
+        return [translate_category_names(item, translator) for item in data]
+    
+    return data
 
 
 @api_view(['GET'])
@@ -45,6 +62,11 @@ def get_organized_categories(request):
         
         # Organizar por temas
         organized = organize_categories_by_theme(all_categories)
+        
+        # Traducir nombres de categorías y temas
+        translator = create_translator_from_request(request)
+        if translator.target_language != 'es':
+            organized = translate_category_names(organized, translator)
         
         # Preparar respuesta
         response_data = {
@@ -203,6 +225,11 @@ def get_category_tree(request):
         # Construir árbol
         tree = build_category_tree(categories)
         
+        # Traducir nombres de categorías
+        translator = create_translator_from_request(request)
+        if translator.target_language != 'es':
+            tree = translate_category_names(tree, translator)
+        
         return Response({
             'success': True,
             'data': tree,
@@ -303,6 +330,12 @@ def get_products_stats(request):
             for cat in top_categories
         ]
         
+        # Traducir nombres de categorías
+        translator = create_translator_from_request(request)
+        if translator.target_language != 'es':
+            theme_stats = translate_category_names(theme_stats, translator)
+            top_categories_list = translate_category_names(top_categories_list, translator)
+        
         response_data = {
             'success': True,
             'data': {
@@ -365,29 +398,38 @@ def get_category_stats(request, category_id):
         if subcategories:
             total_with_subcategories += sum(sub['count'] for sub in subcategories)
         
+        # Traducir nombres
+        translator = create_translator_from_request(request)
+        category_data = {
+            'id': category['id'],
+            'name': category['name'],
+            'slug': category['slug'],
+            'count': category['count'],
+            'parent': category['parent']
+        }
+        subcategories_data = [
+            {
+                'id': sub['id'],
+                'name': sub['name'],
+                'slug': sub['slug'],
+                'count': sub['count']
+            }
+            for sub in subcategories
+        ]
+        
+        if translator.target_language != 'es':
+            category_data = translate_category_names(category_data, translator)
+            subcategories_data = translate_category_names(subcategories_data, translator)
+        
         return Response({
             'success': True,
             'data': {
-                'category': {
-                    'id': category['id'],
-                    'name': category['name'],
-                    'slug': category['slug'],
-                    'count': category['count'],
-                    'parent': category['parent']
-                },
+                'category': category_data,
                 'products_count': category['count'],
                 'has_subcategories': len(subcategories) > 0,
                 'subcategories_count': len(subcategories),
                 'total_with_subcategories': total_with_subcategories,
-                'subcategories': [
-                    {
-                        'id': sub['id'],
-                        'name': sub['name'],
-                        'slug': sub['slug'],
-                        'count': sub['count']
-                    }
-                    for sub in subcategories
-                ]
+                'subcategories': subcategories_data
             }
         }, status=status.HTTP_200_OK)
         

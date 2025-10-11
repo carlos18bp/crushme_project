@@ -742,3 +742,7 @@ Para preguntas o problemas con el sistema de verificación de Crush, contacta al
 **Última actualización:** 9 de octubre, 2025
 **Versión:** 1.0.0
 
+
+
+
+

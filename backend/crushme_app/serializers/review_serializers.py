@@ -5,6 +5,7 @@ Handles WooCommerce product reviews
 from rest_framework import serializers
 from ..models.review import Review
 from ..models.user import User
+from ..services.translation_service import create_translator_from_request
 
 
 class ReviewListSerializer(serializers.ModelSerializer):
@@ -30,6 +31,21 @@ class ReviewListSerializer(serializers.ModelSerializer):
         if request and request.user and request.user.is_authenticated:
             return obj.user == request.user
         return False
+    
+    def to_representation(self, instance):
+        """Translate user-generated review content"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Traducir título y comentario de la reseña (auto-detectar idioma)
+            if representation.get('title'):
+                representation['title'] = translator.translate_user_content(representation['title'])
+            if representation.get('comment'):
+                representation['comment'] = translator.translate_user_content(representation['comment'])
+        
+        return representation
 
 
 class ReviewDetailSerializer(serializers.ModelSerializer):
@@ -56,6 +72,21 @@ class ReviewDetailSerializer(serializers.ModelSerializer):
         if request and request.user and request.user.is_authenticated:
             return obj.user == request.user
         return False
+    
+    def to_representation(self, instance):
+        """Translate user-generated review content"""
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        if request:
+            translator = create_translator_from_request(request)
+            # Traducir título y comentario de la reseña (auto-detectar idioma)
+            if representation.get('title'):
+                representation['title'] = translator.translate_user_content(representation['title'])
+            if representation.get('comment'):
+                representation['comment'] = translator.translate_user_content(representation['comment'])
+        
+        return representation
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):

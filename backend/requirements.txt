@@ -14,3 +14,4 @@ google-auth-oauthlib==1.2.1
 google-auth-httplib2==0.2.0
 requests==2.31.0
 django-apscheduler==0.7.0
+argostranslate==1.9.6

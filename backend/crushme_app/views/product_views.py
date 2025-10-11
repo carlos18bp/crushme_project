@@ -13,6 +13,124 @@ from ..serializers.product_serializers import (
     ProductSearchSerializer, ProductCategorySerializer, ProductStockUpdateSerializer
 )
 from ..services.woocommerce_service import woocommerce_service
+from ..services.translation_service import create_translator_from_request
+
+
+def translate_woocommerce_product(product, translator, translate_full=False):
+    """
+    Traduce los campos de texto de un producto de WooCommerce al idioma objetivo.
+    
+    Args:
+        product (dict): Producto de WooCommerce
+        translator (TranslationService): Instancia del servicio de traducción
+        translate_full (bool): Si True, traduce también description (pesado). Default False.
+    
+    Returns:
+        dict: Producto con campos traducidos
+    """
+    if not product or not isinstance(product, dict):
+        return product
+    
+    # Traducir solo campos esenciales para optimizar velocidad
+    # name y short_description son suficientes para listados
+    if product.get('name'):
+        product['name'] = translator.translate_if_needed(product['name'], content_language='es')
+    
+    if product.get('short_description'):
+        product['short_description'] = translator.translate_if_needed(product['short_description'], content_language='es')
+    
+    # Solo traducir description completa si es necesario (detalle de producto)
+    # La description es HTML largo y ralentiza mucho
+    if translate_full and product.get('description'):
+        product['description'] = translator.translate_if_needed(product['description'], content_language='es')
+    
+    # Traducir solo primera categoría (la principal)
+    # Traducir todas es innecesario y lento
+    if product.get('categories') and isinstance(product['categories'], list) and len(product['categories']) > 0:
+        if product['categories'][0].get('name'):
+            product['categories'][0]['name'] = translator.translate_if_needed(
+                product['categories'][0]['name'], 
+                content_language='es'
+            )
+    
+    # NO traducir atributos por ahora - son demasiados y ralentizan
+    # Los atributos se pueden traducir en detalle de producto si es necesario
+    
+    return product
+
+
+def translate_woocommerce_products(products, request, translate_full=False):
+    """
+    Traduce una lista de productos de WooCommerce según el idioma solicitado.
+    
+    Args:
+        products (list): Lista de productos de WooCommerce
+        request: Request object para obtener el idioma
+        translate_full (bool): Si True, traduce campos completos incluyendo description
+    
+    Returns:
+        list: Lista de productos traducidos
+    """
+    if not products or not isinstance(products, list):
+        return products
+    
+    # Permitir desactivar traducción con query param translate=false
+    if request.GET.get('translate', 'true').lower() == 'false':
+        return products
+    
+    translator = create_translator_from_request(request)
+    
+    # Si el idioma objetivo es español, no traducir (ya están en español)
+    if translator.target_language == 'es':
+        return products
+    
+    # Traducir cada producto (solo campos esenciales por defecto)
+    translated_products = []
+    for product in products:
+        translated_product = translate_woocommerce_product(
+            product.copy(), 
+            translator,
+            translate_full=translate_full
+        )
+        translated_products.append(translated_product)
+    
+    return translated_products
+
+
+def translate_woocommerce_categories(categories, request):
+    """
+    Traduce los nombres de categorías de WooCommerce según el idioma solicitado.
+    
+    Args:
+        categories (list): Lista de categorías de WooCommerce
+        request: Request object para obtener el idioma
+    
+    Returns:
+        list: Lista de categorías traducidas
+    """
+    if not categories or not isinstance(categories, list):
+        return categories
+    
+    translator = create_translator_from_request(request)
+    
+    # Si el idioma objetivo es español, no traducir (ya están en español)
+    if translator.target_language == 'es':
+        return categories
+    
+    # Traducir cada categoría
+    translated_categories = []
+    for category in categories:
+        if isinstance(category, dict):
+            category_copy = category.copy()
+            if category_copy.get('name'):
+                category_copy['name'] = translator.translate_if_needed(category_copy['name'], content_language='es')
+            if category_copy.get('description'):
+                category_copy['description'] = translator.translate_if_needed(category_copy['description'], content_language='es')
+            translated_categories.append(category_copy)
+        else:
+            translated_categories.append(category)
+    
+    return translated_categories
 
 
 @api_view(['GET'])
@@ -312,10 +430,13 @@ def get_woocommerce_products(request):
         )
         
         if result['success']:
+            # Traducir productos al idioma solicitado
+            translated_products = translate_woocommerce_products(result['data'], request)
+            
             return Response({
                 'success': True,
                 'message': 'Productos obtenidos exitosamente desde WooCommerce',
-                'data': result['data'],
+                'data': translated_products,
                 'pagination_info': {
                     'page': page,
                     'per_page': per_page,
@@ -366,10 +487,13 @@ def get_woocommerce_categories(request):
         )
         
         if result['success']:
+            # Traducir categorías al idioma solicitado
+            translated_categories = translate_woocommerce_categories(result['data'], request)
+            
             return Response({
                 'success': True,
                 'message': 'Categorías obtenidas exitosamente desde WooCommerce',
-                'data': result['data'],
+                'data': translated_categories,
                 'pagination_info': {
                     'page': page,
                     'per_page': per_page
@@ -412,10 +536,18 @@ def get_woocommerce_product_detail(request, product_id):
         result = woocommerce_service.get_product_by_id(product_id)
         
         if result['success']:
+            # Traducir producto al idioma solicitado (traducción completa para detalle)
+            translator = create_translator_from_request(request)
+            translated_product = translate_woocommerce_product(
+                result['data'].copy(), 
+                translator, 
+                translate_full=True  # Traducción completa incluyendo description
+            ) if translator.target_language != 'es' else result['data']
+            
             return Response({
                 'success': True,
                 'message': f'Producto {product_id} obtenido exitosamente desde WooCommerce',
-                'data': result['data'],
+                'data': translated_product,
                 'api_info': {
                     'status_code': result['status_code'],
                     'headers': result.get('headers', {})
@@ -492,12 +624,15 @@ def get_woocommerce_products_batch(request):
                     'error': 'ID inválido'
                 })
         
+        # Traducir productos al idioma solicitado
+        translated_products = translate_woocommerce_products(products, request)
+        
         return Response({
             'success': True,
-            'message': f'Obtenidos {len(products)} productos ({len(errors)} errores)',
-            'products': products,
+            'message': f'Obtenidos {len(translated_products)} productos ({len(errors)} errores)',
+            'products': translated_products,
             'total_requested': len(product_ids),
-            'total_found': len(products),
+            'total_found': len(translated_products),
             'total_errors': len(errors),
             'errors': errors if errors else None
         }, status=status.HTTP_200_OK)
@@ -601,11 +736,14 @@ def get_trending_products(request):
             # Tomar solo los 8 primeros
             trending_products = sorted_products[:8]
             
+            # Traducir productos al idioma solicitado
+            translated_products = translate_woocommerce_products(trending_products, request)
+            
             return Response({
                 'success': True,
-                'message': f'{len(trending_products)} productos en tendencia obtenidos exitosamente',
-                'data': trending_products,
-                'total_products': len(trending_products),
+                'message': f'{len(translated_products)} productos en tendencia obtenidos exitosamente',
+                'data': translated_products,
+                'total_products': len(translated_products),
                 'api_info': {
                     'status_code': result['status_code'],
                     'source': 'woocommerce',

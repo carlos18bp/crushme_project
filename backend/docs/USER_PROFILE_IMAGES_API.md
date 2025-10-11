@@ -960,3 +960,7 @@ Para preguntas o problemas con las imágenes de perfil, contacta al equipo de de
 **Última actualización:** 9 de octubre, 2025
 **Versión:** 1.2.0
 
+
+
+
+
