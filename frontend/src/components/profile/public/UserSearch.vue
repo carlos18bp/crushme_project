@@ -8,23 +8,48 @@
       <input 
         v-model="searchQuery"
         type="text" 
-        placeholder="Search by @username"
+        :placeholder="$t('diaries.userSearch.placeholder')"
         class="search-input"
       />
     </div>
     
+    <!-- Loading State -->
+    <div v-if="crushStore.isSearching" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">{{ $t('diaries.userSearch.searching') }}</p>
+    </div>
+    
+    <!-- Empty State (No query) -->
+    <div v-else-if="!searchQuery.trim()" class="empty-state">
+      <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <p class="empty-text">{{ $t('diaries.userSearch.startTyping') }}</p>
+    </div>
+    
+    <!-- No Results -->
+    <div v-else-if="crushStore.searchResults.length === 0" class="empty-state">
+      <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      <p class="empty-text">{{ $t('diaries.userSearch.noResults') }}</p>
+    </div>
+    
     <!-- Users List -->
-    <div class="users-list">
+    <div v-else class="users-list">
       <div 
-        v-for="(user, index) in filteredUsers" 
-        :key="index"
+        v-for="user in crushStore.searchResults" 
+        :key="user.id"
         class="user-item"
-        :class="{ 'selected': user.selected }"
+        @click="navigateToProfile(user.username)"
       >
         <!-- Avatar -->
         <div class="user-avatar">
           <img 
-            :src="user.avatar" 
+            :src="user.profile_picture_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200'" 
             :alt="user.username"
             class="avatar-img"
           />
@@ -33,8 +58,11 @@
         <!-- User Info -->
         <div class="user-info">
           <div class="username-container">
-            <span class="username">{{ user.username }}</span>
-            <span v-if="user.role" class="user-role">• {{ user.role }}</span>
+            <span class="username">@{{ user.username }}</span>
+            <span v-if="user.is_crush" class="crush-label">
+              <span class="crush-dot"></span>
+              Crush
+            </span>
           </div>
         </div>
       </div>
@@ -43,42 +71,57 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useCrushStore } from '@/stores'
+import { useI18nStore } from '@/stores/modules/i18nStore'
+
+const router = useRouter()
+const crushStore = useCrushStore()
+const i18nStore = useI18nStore()
 
 // Search query
 const searchQuery = ref('')
+let searchTimeout = null
 
-// Mock users data
-const users = ref([
-  {
-    username: '@maryla',
-    role: 'Webcammer',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-    selected: false
-  },
-  {
-    username: '@jhonbi',
-    role: '',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-    selected: false
-  },
-  {
-    username: '@guiller89',
-    role: '',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200',
-    selected: true
+// Watch search query with debounce
+watch(searchQuery, (newQuery) => {
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
   }
-])
-
-// Filtered users based on search
-const filteredUsers = computed(() => {
-  if (!searchQuery.value) return users.value
   
-  const query = searchQuery.value.toLowerCase()
-  return users.value.filter(user => 
-    user.username.toLowerCase().includes(query)
-  )
+  // Clear search if query is empty
+  if (!newQuery.trim()) {
+    crushStore.clearSearch()
+    return
+  }
+  
+  // Debounce search (300ms)
+  searchTimeout = setTimeout(async () => {
+    try {
+      await crushStore.searchUsers(newQuery.trim(), 10)
+    } catch (error) {
+      console.error('Error searching users:', error)
+    }
+  }, 300)
 })
+
+// Navigate to user profile
+const navigateToProfile = (username) => {
+  console.log('🔍 Navegando al perfil de:', username)
+  
+  // Limpiar búsqueda después de seleccionar
+  searchQuery.value = ''
+  crushStore.clearSearch()
+  
+  // Navegar a la URL del usuario
+  const currentLang = i18nStore.locale
+  router.push(`/${currentLang}/diaries/@${username}`)
+  
+  // Scroll suave hacia arriba para ver el perfil
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <style scoped>
@@ -197,6 +240,80 @@ const filteredUsers = computed(() => {
   color: #64748b;
 }
 
+/* Crush Label */
+.crush-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: #FF3FD5;
+}
+
+.crush-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #FF3FD5;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #C77DFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+}
+
+.empty-icon {
+  color: #cbd5e1;
+  stroke-width: 1.5;
+}
+
+.empty-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .user-search {
@@ -206,7 +323,22 @@ const filteredUsers = computed(() => {
   .search-input {
     font-size: 0.875rem;
   }
+  
+  .username {
+    font-size: 0.875rem;
+  }
+  
+  .crush-label {
+    font-size: 0.875rem;
+  }
+  
+  .crush-dot {
+    width: 5px;
+    height: 5px;
+  }
 }
 </style>
+
+
 
 

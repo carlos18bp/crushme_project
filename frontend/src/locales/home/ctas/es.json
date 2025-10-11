@@ -1,0 +1,14 @@
+{
+  "banner1": {
+    "title": "Dos diarios son mejor que uno 💕",
+    "description": "Dejé mis notas abiertas para ti, pero quizás tienes algunos secretos propios... ¿Por qué no los escribimos juntos? Sé parte de mi mundo secreto, o crea el tuyo propio y déjame echar un vistazo.",
+    "primaryButton": "Únete al Secreto",
+    "secondaryButton": "Crear Mi Lista de Deseos"
+  },
+  "banner2": {
+    "title": "Mira dentro de mi diario...",
+    "description": "Hoy no pude dejar de pensar en ti. Es curioso cómo hasta las cosas más pequeñas me recuerdan lo que anhelo: el tacto de la seda contra mi piel, la emoción de un regalo secreto esperando en mi puerta, la forma en que mi corazón late más rápido cuando imagino desenvolver algo solo de ti.",
+    "primaryButton": "Explorar Diarios"
+  }
+}
+

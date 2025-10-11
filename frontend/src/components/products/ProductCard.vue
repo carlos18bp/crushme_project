@@ -9,8 +9,8 @@
         class="w-full h-48 object-contain cursor-pointer"
         @click="$emit('navigate-to-product', product.id)">
       
-      <!-- Action Icons - Esquina superior derecha -->
-      <div class="product-actions absolute top-6 right-6 flex space-x-3">
+      <!-- Action Icons - Esquina superior derecha (solo si no está en modo gift) -->
+      <div v-if="!giftMode" class="product-actions absolute top-6 right-6 flex space-x-3">
         <!-- Icono de Lista (Wishlist) -->
         <button 
           @click.stop="handleAddToWishlist"
@@ -53,7 +53,17 @@
         </div>
         
         <!-- Botones de acción -->
-        <div class="product-buttons flex gap-2 flex-shrink-0">
+        <div v-if="giftMode" class="product-buttons flex gap-2 flex-shrink-0">
+          <!-- Botón único para modo regalo -->
+          <button 
+            @click.stop="handleBuyAsGift"
+            :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+            class="btn-gift text-white px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 whitespace-nowrap"
+            style="background-color: #DA9DFF;">
+            {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyAsGift') || 'Buy as Gift') }}
+          </button>
+        </div>
+        <div v-else class="product-buttons flex gap-2 flex-shrink-0">
           <button 
             @click.stop="handleBuyNow"
             :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
@@ -114,6 +124,10 @@ const props = defineProps({
     default: false
   },
   isInFavorites: {
+    type: Boolean,
+    default: false
+  },
+  giftMode: {
     type: Boolean,
     default: false
   }
@@ -245,6 +259,28 @@ const handleAddToCart = () => {
     console.error('Error adding product to cart:', error)
   }
 }
+
+const handleBuyAsGift = () => {
+  console.log('🎁 [ProductCard] handleBuyAsGift clicked for product:', props.product.id)
+  try {
+    // Agregar el producto al carrito (siempre 1 unidad)
+    const result = cartStore.addToCart(props.product.id, {
+      name: props.product.name,
+      price: parseFloat(props.product.price),
+      image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
+      stock_status: props.product.stock_status
+    })
+    
+    console.log('🎁 [ProductCard] handleBuyAsGift result:', result)
+    
+    if (result.success) {
+      // Redirigir al checkout
+      router.push({ name: `Checkout-${i18nStore.locale}` })
+    }
+  } catch (error) {
+    console.error('Error al comprar el producto como regalo:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -297,7 +333,8 @@ const handleAddToCart = () => {
 }
 
 .btn-buy,
-.btn-cart {
+.btn-cart,
+.btn-gift {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.02em;
   position: relative;
@@ -305,7 +342,8 @@ const handleAddToCart = () => {
 }
 
 .btn-buy::before,
-.btn-cart::before {
+.btn-cart::before,
+.btn-gift::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -319,19 +357,22 @@ const handleAddToCart = () => {
 }
 
 .btn-buy:hover::before,
-.btn-cart:hover::before {
+.btn-cart:hover::before,
+.btn-gift:hover::before {
   width: 300px;
   height: 300px;
 }
 
 .btn-buy:hover,
-.btn-cart:hover {
+.btn-cart:hover,
+.btn-gift:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(192, 132, 252, 0.5);
 }
 
 .btn-buy:active,
-.btn-cart:active {
+.btn-cart:active,
+.btn-gift:active {
   transform: translateY(0);
 }
 

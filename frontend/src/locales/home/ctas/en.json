@@ -1,0 +1,14 @@
+{
+  "banner1": {
+    "title": "Two diaries are better than one 💕",
+    "description": "I left my notes wide open for you, but maybe you have a few secrets of your own... Why don't we write them together? Be part of my secret world, or create your own and let me peek inside.",
+    "primaryButton": "Join the Secret",
+    "secondaryButton": "Create My Wishlist"
+  },
+  "banner2": {
+    "title": "Peek inside my diary...",
+    "description": "Today I couldn't stop thinking about you. It's funny how even the smallest things remind me of what I'm craving: the touch of silk against my skin, the thrill of a secret gift waiting at my door, the way my heart beats faster when I imagine unwrapping something just from you.",
+    "primaryButton": "Explore Diaries"
+  }
+}
+

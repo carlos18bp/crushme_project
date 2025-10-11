@@ -63,6 +63,10 @@ import diariesEn from '@/locales/diaries/en.json'
 import diariesEs from '@/locales/diaries/es.json'
 import publicProfileEn from '@/locales/diaries/public-profile/en.json'
 import publicProfileEs from '@/locales/diaries/public-profile/es.json'
+import userSearchEn from '@/locales/diaries/user-search/en.json'
+import userSearchEs from '@/locales/diaries/user-search/es.json'
+import youMayKnowEn from '@/locales/diaries/you-may-know/en.json'
+import youMayKnowEs from '@/locales/diaries/you-may-know/es.json'
 
 // Import alerts translations
 import alertsEn from '@/locales/alerts/en.json'
@@ -73,6 +77,10 @@ import heroEn from '@/locales/home/hero/en.json'
 import heroEs from '@/locales/home/hero/es.json'
 import trendingEn from '@/locales/home/trending/en.json'
 import trendingEs from '@/locales/home/trending/es.json'
+import notesEn from '@/locales/home/notes/en.json'
+import notesEs from '@/locales/home/notes/es.json'
+import ctasEn from '@/locales/home/ctas/en.json'
+import ctasEs from '@/locales/home/ctas/es.json'
 
 // Import profile translations
 import profileSidebarEn from '@/locales/profile/sidebar/en.json'
@@ -113,13 +121,17 @@ const messages = {
     contact: contactEn,
     diaries: {
       ...diariesEn,
-      publicProfile: publicProfileEn
+      publicProfile: publicProfileEn,
+      userSearch: userSearchEn,
+      youMayKnow: youMayKnowEn
     },
     alerts: alertsEn,
     footer: footerEn.footer,
     faq: faqEn,
     hero: heroEn,
     trending: trendingEn,
+    notes: notesEn,
+    ctas: ctasEn,
     profileSidebar: profileSidebarEn,
     profileDashboard: profileDashboardEn,
     profile: {
@@ -147,13 +159,17 @@ const messages = {
     contact: contactEs,
     diaries: {
       ...diariesEs,
-      publicProfile: publicProfileEs
+      publicProfile: publicProfileEs,
+      userSearch: userSearchEs,
+      youMayKnow: youMayKnowEs
     },
     alerts: alertsEs,
     footer: footerEs.footer,
     faq: faqEs,
     hero: heroEs,
     trending: trendingEs,
+    notes: notesEs,
+    ctas: ctasEs,
     profileSidebar: profileSidebarEs,
     profileDashboard: profileDashboardEs,
     profile: {

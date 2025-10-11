@@ -16,6 +16,8 @@
   "galleryImageAlt": "Gallery image",
   "loading": "Loading profile...",
   "error": "Error loading profile",
-  "retry": "Try again"
+  "retry": "Try again",
+  "share": "Share",
+  "linkCopied": "Link copied!"
 }
 

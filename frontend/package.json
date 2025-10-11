@@ -17,6 +17,7 @@
     "country-state-city": "^3.2.1",
     "flowbite": "^3.1.2",
     "pinia": "^3.0.3",
+    "pinia-plugin-persistedstate": "^4.5.0",
     "sweetalert2": "^11.23.0",
     "vue": "^3.5.13",
     "vue-i18n": "^9.14.5",

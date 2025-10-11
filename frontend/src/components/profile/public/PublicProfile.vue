@@ -8,6 +8,25 @@
         :style="profile.coverImage ? { backgroundImage: `url(${profile.coverImage})` } : {}"
       ></div>
       
+      <!-- Share Button -->
+      <button 
+        class="share-button" 
+        @click="copyProfileLink"
+        :class="{ 'copied': showCopiedMessage }"
+      >
+        <svg v-if="!showCopiedMessage" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span class="share-text">{{ showCopiedMessage ? $t('diaries.publicProfile.linkCopied') : $t('diaries.publicProfile.share') }}</span>
+      </button>
+      
       <!-- Avatar -->
       <div class="avatar-container">
         <img 
@@ -128,6 +147,7 @@
                   <ProductCard
                     v-if="item.product_info"
                     :product="formatProductForCard(item)"
+                    :gift-mode="true"
                     @navigate-to-product="navigateToProduct"
                     @add-to-cart="handleAddToCart"
                   />
@@ -135,20 +155,6 @@
                   <!-- Notes -->
                   <div v-if="item.notes" class="mt-2">
                     <p class="text-xs text-gray-600 italic">💭 {{ item.notes }}</p>
-                  </div>
-
-                  <!-- Priority badge -->
-                  <div v-if="item.priority" class="mt-1">
-                    <span 
-                      class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
-                      :class="{
-                        'bg-red-100 text-red-800': item.priority === 'high',
-                        'bg-yellow-100 text-yellow-800': item.priority === 'medium',
-                        'bg-blue-100 text-blue-800': item.priority === 'low'
-                      }"
-                    >
-                      {{ item.priority === 'high' ? '⭐ Alta' : item.priority === 'medium' ? '🔸 Media' : '🔹 Baja' }}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -170,15 +176,17 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import ProductCard from '@/components/products/ProductCard.vue'
 
 const router = useRouter()
+const route = useRoute()
 const i18nStore = useI18nStore()
 
 // State
 const expandedWishlists = ref([])
+const showCopiedMessage = ref(false)
 
 // Props
 const props = defineProps({
@@ -276,6 +284,46 @@ const handleAddToCart = (product) => {
   console.log('Product added to cart from wishlist:', product)
   // El ProductCard ya maneja esto internamente
 }
+
+// Copy profile link to clipboard
+const copyProfileLink = async () => {
+  try {
+    // Obtener la URL completa actual
+    const fullUrl = window.location.href
+    
+    // Copiar al portapapeles
+    await navigator.clipboard.writeText(fullUrl)
+    
+    // Mostrar mensaje de éxito
+    showCopiedMessage.value = true
+    console.log('✅ Link copiado al portapapeles:', fullUrl)
+    
+    // Ocultar mensaje después de 2 segundos
+    setTimeout(() => {
+      showCopiedMessage.value = false
+    }, 2000)
+  } catch (error) {
+    console.error('❌ Error copiando link:', error)
+    // Fallback para navegadores antiguos
+    try {
+      const textArea = document.createElement('textarea')
+      textArea.value = window.location.href
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      
+      showCopiedMessage.value = true
+      setTimeout(() => {
+        showCopiedMessage.value = false
+      }, 2000)
+    } catch (fallbackError) {
+      console.error('❌ Fallback también falló:', fallbackError)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -332,6 +380,53 @@ const handleAddToCart = (product) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Share Button */
+.share-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 24px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #11181E;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.share-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.share-button:active {
+  transform: translateY(0);
+}
+
+.share-button.copied {
+  background: rgba(218, 157, 255, 0.95);
+  color: white;
+  border-color: rgba(218, 157, 255, 0.3);
+}
+
+.share-button svg {
+  flex-shrink: 0;
+}
+
+.share-text {
+  white-space: nowrap;
 }
 
 /* Profile Content */
@@ -479,6 +574,11 @@ const handleAddToCart = (product) => {
   .gallery-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+  
+  .share-button {
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -498,6 +598,31 @@ const handleAddToCart = (product) => {
 
   .gallery-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .share-button {
+    top: 12px;
+    right: 12px;
+    padding: 8px;
+    gap: 4px;
+  }
+  
+  .share-text {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-button .share-text {
+    display: none;
+  }
+  
+  .share-button {
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
   }
 }
 </style>

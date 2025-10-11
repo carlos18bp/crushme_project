@@ -43,8 +43,9 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { useCrushStore } from '@/stores'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -52,12 +53,24 @@ import PublicProfile from '@/components/profile/public/PublicProfile.vue'
 import YouMayKnow from '@/components/profile/public/YouMayKnow.vue'
 import UserSearch from '@/components/profile/public/UserSearch.vue'
 
+// Props (username from route)
+const props = defineProps({
+  username: {
+    type: String,
+    default: null
+  }
+})
+
 const crushStore = useCrushStore()
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 
 // Mapear los datos del API al formato que espera PublicProfile
+// Usa crushProfile si está disponible (cuando se selecciona un usuario específico)
+// Si no, usa randomCrush (por defecto al cargar la página)
 const profileData = computed(() => {
-  const crush = crushStore.randomCrush
+  const crush = crushStore.crushProfile || crushStore.randomCrush
   if (!crush) return null
 
   return {
@@ -78,7 +91,38 @@ const profileData = computed(() => {
   }
 })
 
-// Cargar crush aleatorio cuando se inicializa el componente
+// Cargar perfil de usuario específico o crush aleatorio
+async function loadProfile() {
+  // Obtener username de props o de la ruta
+  const username = props.username || route.params.username
+  
+  if (username) {
+    // Si hay un username, cargar ese perfil específico
+    try {
+      await crushStore.fetchPublicProfile(username)
+      console.log(`✅ Perfil de @${username} cargado en DiariesView`)
+    } catch (error) {
+      console.error(`❌ Error cargando perfil de @${username}:`, error)
+    }
+  } else {
+    // Si no hay username, cargar un crush aleatorio
+    try {
+      const randomCrush = await crushStore.fetchRandomCrush()
+      console.log('✅ Crush aleatorio cargado en DiariesView')
+      
+      // Actualizar la URL con el username del crush aleatorio
+      if (randomCrush && randomCrush.username) {
+        const currentLang = route.path.split('/')[1] || 'en'
+        router.replace(`/${currentLang}/diaries/@${randomCrush.username}`)
+        console.log(`🔗 URL actualizada a: /${currentLang}/diaries/@${randomCrush.username}`)
+      }
+    } catch (error) {
+      console.error('❌ Error cargando crush aleatorio:', error)
+    }
+  }
+}
+
+// Cargar perfil aleatorio cuando se inicializa
 async function loadRandomCrush() {
   try {
     await crushStore.fetchRandomCrush()
@@ -88,8 +132,16 @@ async function loadRandomCrush() {
   }
 }
 
+// Watch para cambios en el username de la ruta
+watch(() => route.params.username, (newUsername, oldUsername) => {
+  // Solo recargar si el username cambió y es diferente
+  if (newUsername && newUsername !== oldUsername) {
+    loadProfile()
+  }
+})
+
 onMounted(() => {
-  loadRandomCrush()
+  loadProfile()
 })
 </script>
 

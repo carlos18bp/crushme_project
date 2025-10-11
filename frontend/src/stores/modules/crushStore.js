@@ -21,6 +21,7 @@ export const useCrushStore = defineStore('crush', () => {
     count: 0
   });
   const isLoading = ref(false);
+  const isSearching = ref(false);
   const error = ref(null);
 
   // Getters
@@ -185,14 +186,13 @@ export const useCrushStore = defineStore('crush', () => {
    * @param {number} params.limit - Maximum number of results (default: 20, max: 50)
    * @returns {Promise<Array>} - Array of matching users
    */
-  async function searchUsers({ query, limit = 20 } = {}) {
+  async function searchUsers(query, limit = 20) {
     if (!query || !query.trim()) {
       searchResults.value = [];
-      error.value = 'Search query is required';
       return [];
     }
 
-    isLoading.value = true;
+    isSearching.value = true;
     error.value = null;
 
     try {
@@ -220,7 +220,7 @@ export const useCrushStore = defineStore('crush', () => {
       searchResults.value = [];
       throw err;
     } finally {
-      isLoading.value = false;
+      isSearching.value = false;
     }
   }
 
@@ -326,6 +326,7 @@ export const useCrushStore = defineStore('crush', () => {
     searchResults,
     pagination,
     isLoading,
+    isSearching,
     error,
 
     // Getters
@@ -354,4 +355,6 @@ export const useCrushStore = defineStore('crush', () => {
     getProfilePicture
   };
 });
+
+
 

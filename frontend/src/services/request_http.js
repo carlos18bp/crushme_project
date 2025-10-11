@@ -4,6 +4,23 @@
  * Handles all API communication with the Django backend
  */
 import axios from "axios";
+import { useI18nStore } from '@/stores/modules/i18nStore';
+
+/**
+ * Get current language from i18n store
+ * @returns {string} - Current language code (en/es)
+ */
+function getCurrentLanguage() {
+  try {
+    // Get the store instance each time (don't cache it)
+    const i18nStore = useI18nStore();
+    return i18nStore?.locale || 'en';
+  } catch (error) {
+    // If Pinia is not initialized yet, default to 'en'
+    console.warn("Could not access i18n store, defaulting to 'en':", error);
+    return 'en';
+  }
+}
 
 /**
  * Get cookie value by name (for CSRF token)
@@ -78,7 +95,15 @@ export function isAuthenticated() {
  */
 async function makeRequest(method, url, params = {}, config = {}) {
   const startTime = performance.now();
-  const fullUrl = `/api/${url}`;
+  const currentLanguage = getCurrentLanguage();
+  
+  // For GET requests, add language as query parameter
+  let fullUrl = `/api/${url}`;
+  if (method === "GET") {
+    const separator = url.includes('?') ? '&' : '?';
+    fullUrl = `/api/${url}${separator}lang=${currentLanguage}`;
+  }
+  
   console.log(`🌐 → HTTP ${method} ${fullUrl}`);
   
   const csrfToken = getCookie("csrftoken");
@@ -90,6 +115,7 @@ async function makeRequest(method, url, params = {}, config = {}) {
   const headers = {
     ...(!isFormData && { "Content-Type": "application/json" }), // Solo para JSON
     "X-CSRFToken": csrfToken,
+    "Accept-Language": currentLanguage, // Add language header for all requests
     ...(token && { "Authorization": `Bearer ${token}` }),
     ...config.headers
   };
@@ -152,9 +178,16 @@ async function makeRequest(method, url, params = {}, config = {}) {
           
           const retryConfig = { ...requestConfig, headers: newHeaders };
           
+          // Recalculate fullUrl for retry (including language for GET requests)
+          let retryUrl = `/api/${url}`;
+          if (method === "GET") {
+            const separator = url.includes('?') ? '&' : '?';
+            retryUrl = `/api/${url}${separator}lang=${currentLanguage}`;
+          }
+          
           switch (method) {
             case "GET":
-              return await axios.get(`/api/${url}`, retryConfig);
+              return await axios.get(retryUrl, retryConfig);
             case "POST":
               return await axios.post(`/api/${url}`, params, retryConfig);
             case "PUT":
@@ -252,7 +285,8 @@ export async function upload_request(url, formData) {
 // NOTE: No configurar baseURL para que use el proxy de Vite (vite.config.js)
 // El proxy redirige /api/* a http://localhost:8000/api/*
 // axios.defaults.baseURL = 'http://localhost:8000';
-axios.defaults.timeout = 10000;
+// Timeout aumentado para entorno de desarrollo (2 minutos)
+axios.defaults.timeout = 120000;
 
 // Add response interceptor for global error handling
 axios.interceptors.response.use(

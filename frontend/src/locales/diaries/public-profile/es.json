@@ -16,6 +16,8 @@
   "galleryImageAlt": "Imagen de galería",
   "loading": "Cargando perfil...",
   "error": "Error al cargar el perfil",
-  "retry": "Intentar de nuevo"
+  "retry": "Intentar de nuevo",
+  "share": "Compartir",
+  "linkCopied": "¡Enlace copiado!"
 }
 

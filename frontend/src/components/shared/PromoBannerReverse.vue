@@ -129,7 +129,7 @@ const randomPin2 = computed(() => pins[Math.floor(Math.random() * pins.length)])
   padding: 3.5rem 4rem; /* Más largo y espacioso */
   max-width: 1400px; /* Aún más ancho */
   width: 100%;
-  transform: rotate(-1.5deg);
+  transform: rotate(1.5deg); /* Rotación invertida */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
@@ -232,7 +232,7 @@ p {
 @media (max-width: 768px) {
   .promo-banner {
     padding: 2.5rem 2rem; /* Más espacioso en móvil también */
-    transform: rotate(-0.5deg);
+    transform: rotate(0.5deg); /* Rotación invertida en móvil también */
   }
   
   .banner-content {
@@ -250,3 +250,4 @@ p {
   }
 }
 </style>
+

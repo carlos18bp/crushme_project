@@ -185,11 +185,17 @@ const baseRoutes = [
     component: () => import('@/views/ContactView.vue')
   },
   
-  // Diaries page
+  // Diaries pages
   {
     path: '/diaries',
     name: 'Diaries',
     component: () => import('@/views/diaries/DiariesView.vue')
+  },
+  {
+    path: '/diaries/@:username',
+    name: 'DiariesUser',
+    component: () => import('@/views/diaries/DiariesView.vue'),
+    props: true
   },
   
   // Error handling
