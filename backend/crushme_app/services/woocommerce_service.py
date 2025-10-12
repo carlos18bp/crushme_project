@@ -152,6 +152,37 @@ class WooCommerceService:
             dict: API response with category data
         """
         return self._make_request(f'products/categories/{category_id}')
+    
+    def get_product_variations(self, product_id, per_page=100, page=1):
+        """
+        Get all variations of a variable product
+        
+        Args:
+            product_id (int): Product ID
+            per_page (int): Number of variations per page (max 100)
+            page (int): Page number for pagination
+        
+        Returns:
+            dict: API response with variations data
+        """
+        params = {
+            'per_page': min(per_page, 100),
+            'page': page
+        }
+        return self._make_request(f'products/{product_id}/variations', params)
+    
+    def get_product_variation_by_id(self, product_id, variation_id):
+        """
+        Get a specific variation of a product
+        
+        Args:
+            product_id (int): Product ID
+            variation_id (int): Variation ID
+        
+        Returns:
+            dict: API response with variation data
+        """
+        return self._make_request(f'products/{product_id}/variations/{variation_id}')
 
 
 # Singleton instance

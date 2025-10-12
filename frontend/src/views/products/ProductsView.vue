@@ -259,6 +259,7 @@ import { useCartStore } from '@/stores/modules/cartStore'
 import ProductCard from '@/components/products/ProductCard.vue'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
+import { getProductPrice } from '@/utils/priceHelper.js'
 
 // i18n setup
 const { t } = useI18n()
@@ -535,10 +536,13 @@ const addToCart = async (product) => {
   console.log('🛒 Agregando al carrito desde ProductsView:', product.name)
   
   try {
+    // Obtener el precio correcto del producto (desde short_description)
+    const productPrice = getProductPrice(product)
+    
     // Preparar opciones del producto
     const options = {
       name: product.name,
-      price: parseFloat(product.price),
+      price: productPrice,
       image: product.images?.[0]?.src || null,
       stock_status: product.stock_status
     }

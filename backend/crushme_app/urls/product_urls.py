@@ -10,7 +10,8 @@ from ..views.product_views import (
     # WooCommerce integration endpoints
     get_woocommerce_products, get_woocommerce_categories, 
     get_woocommerce_product_detail, test_woocommerce_connection,
-    get_trending_products, get_woocommerce_products_batch
+    get_trending_products, get_woocommerce_products_batch,
+    get_product_variations, get_product_variation_detail
 )
 from ..views.category_views import (
     get_organized_categories, get_category_tree,
@@ -45,11 +46,15 @@ urlpatterns = [
     path('woocommerce/categories/', get_woocommerce_categories, name='get_woocommerce_categories'),
     path('woocommerce/products/<int:product_id>/', get_woocommerce_product_detail, name='get_woocommerce_product_detail'),
     
-    # Organized categories endpoints (Public) - NEW!
+    # Product variations endpoints (Public) - NEW!
+    path('woocommerce/products/<int:product_id>/variations/', get_product_variations, name='get_product_variations'),
+    path('woocommerce/products/<int:product_id>/variations/<int:variation_id>/', get_product_variation_detail, name='get_product_variation_detail'),
+    
+    # Organized categories endpoints (Public)
     path('woocommerce/categories/organized/', get_organized_categories, name='get_organized_categories'),
     path('woocommerce/categories/tree/', get_category_tree, name='get_category_tree'),
     
-    # Statistics endpoints (Public) - NEW!
+    # Statistics endpoints (Public)
     path('woocommerce/stats/', get_products_stats, name='get_products_stats'),
     path('woocommerce/categories/<int:category_id>/stats/', get_category_stats, name='get_category_stats'),
 ]

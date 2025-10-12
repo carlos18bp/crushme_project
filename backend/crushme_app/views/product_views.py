@@ -6,6 +6,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
+import json
+import logging
+import os
+from datetime import datetime
+from django.conf import settings
 
 from ..models import Product
 from ..serializers.product_serializers import (
@@ -14,6 +19,8 @@ from ..serializers.product_serializers import (
 )
 from ..services.woocommerce_service import woocommerce_service
 from ..services.translation_service import create_translator_from_request
+
+logger = logging.getLogger(__name__)
 
 
 def translate_woocommerce_product(product, translator, translate_full=False):
@@ -430,6 +437,36 @@ def get_woocommerce_products(request):
         )
         
         if result['success']:
+            # ===== LOG DE ESTRUCTURA DE DATOS EN ARCHIVO =====
+            products_data = result['data']
+            
+            # Preparar log para archivo
+            products_to_log = products_data[:9] if len(products_data) >= 9 else products_data
+            
+            log_data = {
+                "timestamp": datetime.now().isoformat(),
+                "endpoint": "get_woocommerce_products",
+                "params": {
+                    "category_id": category_id,
+                    "page": page,
+                    "per_page": per_page
+                },
+                "total_products_received": len(products_data),
+                "products_in_log": len(products_to_log),
+                "products": products_to_log
+            }
+            
+            # Guardar en archivo
+            log_file_path = os.path.join(settings.BASE_DIR, 'woocommerce_products_log.json')
+            try:
+                with open(log_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(log_data, f, indent=2, ensure_ascii=False)
+                logger.info(f"Log de productos guardado en: {log_file_path}")
+                print(f"✅ Log guardado en: {log_file_path} ({len(products_to_log)} productos)")
+            except Exception as e:
+                logger.error(f"Error al guardar log: {str(e)}")
+            # ===== FIN DEL LOG =====
+            
             # Traducir productos al idioma solicitado
             translated_products = translate_woocommerce_products(result['data'], request)
             
@@ -758,6 +795,133 @@ def get_trending_products(request):
                 'details': result.get('response_text')
             }, status=status.HTTP_502_BAD_GATEWAY)
             
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_product_variations(request, product_id):
+    """
+    Obtener todas las variaciones de un producto variable desde WooCommerce
+    Query params:
+    - per_page: Variaciones por página (máx 100, default 100)
+    - page: Número de página (default 1)
+    - translate: Si es 'false', no traduce el contenido (default 'true')
+    
+    Headers:
+    - Accept-Language: Idioma destino (ej: 'en', 'es'). Si es 'es' no traduce.
+    """
+    per_page = int(request.query_params.get('per_page', 100))
+    page = int(request.query_params.get('page', 1))
+    
+    try:
+        product_id = int(product_id)
+        
+        # Llamar al servicio de WooCommerce
+        result = woocommerce_service.get_product_variations(
+            product_id=product_id,
+            per_page=per_page,
+            page=page
+        )
+        
+        if result['success']:
+            # Traducir variaciones al idioma solicitado (traducción completa para variaciones)
+            translated_variations = translate_woocommerce_products(
+                result['data'], 
+                request, 
+                translate_full=True
+            )
+            
+            return Response({
+                'success': True,
+                'message': f'Variaciones del producto {product_id} obtenidas exitosamente',
+                'data': translated_variations,
+                'total_variations': len(translated_variations),
+                'pagination_info': {
+                    'page': page,
+                    'per_page': per_page,
+                    'product_id': product_id
+                },
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'headers': result.get('headers', {})
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except ValueError:
+        return Response({
+            'error': 'ID de producto inválido'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_product_variation_detail(request, product_id, variation_id):
+    """
+    Obtener una variación específica de un producto desde WooCommerce
+    Query params:
+    - translate: Si es 'false', no traduce el contenido (default 'true')
+    """
+    try:
+        product_id = int(product_id)
+        variation_id = int(variation_id)
+        
+        # Llamar al servicio de WooCommerce
+        result = woocommerce_service.get_product_variation_by_id(product_id, variation_id)
+        
+        if result['success']:
+            variation_data = result['data']
+            
+            # Verificar si se debe traducir
+            should_translate = request.GET.get('translate', 'true').lower() != 'false'
+            
+            if should_translate:
+                # Traducir variación al idioma solicitado (traducción completa para detalle)
+                translator = create_translator_from_request(request)
+                if translator.target_language != 'es':
+                    variation_data = translate_woocommerce_product(
+                        variation_data.copy(), 
+                        translator, 
+                        translate_full=True  # Traducción completa incluyendo description
+                    )
+            
+            return Response({
+                'success': True,
+                'message': f'Variación {variation_id} del producto {product_id} obtenida exitosamente',
+                'data': variation_data,
+                'api_info': {
+                    'status_code': result['status_code'],
+                    'headers': result.get('headers', {})
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error'],
+                'status_code': result.get('status_code'),
+                'details': result.get('response_text')
+            }, status=status.HTTP_502_BAD_GATEWAY)
+            
+    except ValueError:
+        return Response({
+            'error': 'IDs de producto o variación inválidos'
+        }, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({
             'error': 'Error interno del servidor',

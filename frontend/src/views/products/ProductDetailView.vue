@@ -80,8 +80,8 @@
               <h1 class="product-title">{{ product.name }}</h1>
               
               <!-- Short Description (debajo del título) -->
-              <div v-if="product.short_description" class="product-short-description">
-                <p v-html="product.short_description"></p>
+              <div v-if="cleanShortDescription" class="product-short-description">
+                <p v-html="cleanShortDescription"></p>
               </div>
               
               <!-- Reviews (Real data or hardcoded fallback) -->
@@ -96,7 +96,7 @@
               
               <!-- Price -->
               <div class="product-price">
-                <span class="current-price">${{ product.price }}</span>
+                <span class="current-price">{{ displayPrice }}</span>
                 <span v-if="product.on_sale && product.regular_price !== product.price" class="regular-price">
                   ${{ product.regular_price }}
                 </span>
@@ -108,40 +108,26 @@
                 <div v-html="product.description"></div>
               </div>
               
-              <!-- Color Options (from product attributes) -->
-              <div v-if="availableColors.length > 0" class="product-options">
-                <h4>{{ $t('productDetail.selectColor') }}</h4>
-                <div class="color-selector">
-                  <div 
-                    v-for="(color, index) in availableColors" 
-                    :key="index"
-                    class="color-option"
-                    :class="{ active: selectedColor?.name === color.name }"
-                    :style="{ backgroundColor: color.value || color.defaultColor }"
-                    @click="selectColor(color)"
-                    :title="color.name"
-                  ></div>
+              <!-- ⭐ NUEVO: Selectores de Variaciones (para productos variables) -->
+              <div v-if="isProductVariable && variationAttributes.length > 0" class="product-options-container">
+                <div v-for="attr in variationAttributes" :key="attr.id" class="product-options">
+                  <h4>{{ translateAttributeName(attr.name) }}</h4>
+                  <div class="attribute-selector">
+                    <button 
+                      v-for="option in attr.options" 
+                      :key="option"
+                      class="attribute-option"
+                      :class="{ active: selectedAttributes[attr.name] === option }"
+                      @click="selectAttribute(attr.name, option)"
+                    >
+                      {{ option }}
+                    </button>
+                  </div>
                 </div>
               </div>
               
-              <!-- Size Options (from product attributes) -->
-              <div v-if="availableSizes.length > 0" class="product-options">
-                <h4>{{ $t('productDetail.selectSize') }}</h4>
-                <div class="size-selector">
-                  <button 
-                    v-for="size in availableSizes" 
-                    :key="size"
-                    class="size-option"
-                    :class="{ active: selectedSize === size }"
-                    @click="selectedSize = size"
-                  >
-                    {{ size }}
-                  </button>
-                </div>
-              </div>
-              
-              <!-- Selectable Attributes (multiple options) -->
-              <div v-for="attr in selectableAttributes" :key="attr.id" class="product-options">
+              <!-- Selectable Attributes (multiple options) - Solo para productos simples -->
+              <div v-if="!isProductVariable" v-for="attr in selectableAttributes" :key="attr.id" class="product-options">
                 <h4>{{ translateAttributeName(attr.name) }}</h4>
                 <div class="attribute-selector">
                   <button 
@@ -243,6 +229,7 @@ import { useCartStore } from '@/stores/modules/cartStore'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useReviewStore } from '@/stores/modules/reviewStore'
+import { getFormattedProductPrice, getProductPrice, isSimpleProduct } from '@/utils/priceHelper.js'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
 import FAQ from '@/components/shared/FAQ.vue'
@@ -270,8 +257,6 @@ const reviewStore = useReviewStore()
 
 // Reactive data
 const selectedImageIndex = ref(0)
-const selectedColor = ref(null)
-const selectedSize = ref('')
 const selectedAttributes = ref({})
 const quantity = ref(1)
 const isAddingToCart = ref(false)
@@ -316,8 +301,9 @@ const totalReviews = computed(() => {
 })
 
 // Images handling
-const productImages = computed(() => {
-  if (!product.value?.images || product.value.images.length === 0) {
+// ⭐ Imágenes base del producto (directamente de product.images)
+const baseProductImages = computed(() => {
+  if (!product.value || !product.value.images || product.value.images.length === 0) {
     return [
       { src: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&h=500&fit=crop&crop=center' },
       { src: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop&crop=center' },
@@ -327,8 +313,31 @@ const productImages = computed(() => {
   return product.value.images
 })
 
+const productImages = computed(() => {
+  return displayImages.value
+})
+
 const selectedImage = computed(() => {
   return productImages.value[selectedImageIndex.value]?.src || productImages.value[0]?.src
+})
+
+// ⭐ Computed: Short description limpia (sin precio para productos simples)
+const cleanShortDescription = computed(() => {
+  if (!product.value?.short_description) return ''
+  
+  // Para productos simples, remover el HTML del precio del short_description
+  if (isProductSimple.value) {
+    // Remover tags que contengan "Precio sugerido" y el precio
+    let cleaned = product.value.short_description
+    // Remover h5, h4, h3 que contengan precio
+    cleaned = cleaned.replace(/<h[3-5][^>]*>.*?(?:Precio sugerido|precio sugerido).*?<\/h[3-5]>/gi, '')
+    // Remover spans o divs que contengan solo el precio
+    cleaned = cleaned.replace(/<(?:span|div)[^>]*>\s*\$[\d,.]+\s*<\/(?:span|div)>/gi, '')
+    
+    return cleaned.trim()
+  }
+  
+  return product.value.short_description
 })
 
 // Determine if we should show full description
@@ -345,50 +354,82 @@ const showFullDescription = computed(() => {
   return shortDesc !== fullDesc && fullDesc.length > shortDesc.length
 })
 
-// Extract attributes from product data
-const availableColors = computed(() => {
-  if (!product.value?.attributes) return []
-  
-  const colorAttr = product.value.attributes.find(attr => 
-    attr.name.toLowerCase().includes('color') || 
-    attr.name.toLowerCase().includes('colour') ||
-    attr.name.toLowerCase().includes('cor')
-  )
-  
-  if (!colorAttr || !colorAttr.options) return []
-  
-  // Map color names to hex values (fallback colors)
-  const colorMap = {
-    'red': '#dc2626', 'rojo': '#dc2626',
-    'blue': '#2563eb', 'azul': '#2563eb',
-    'green': '#16a34a', 'verde': '#16a34a',
-    'black': '#1f2937', 'negro': '#1f2937',
-    'white': '#f9fafb', 'blanco': '#f9fafb',
-    'yellow': '#eab308', 'amarillo': '#eab308',
-    'purple': '#9333ea', 'morado': '#9333ea',
-    'pink': '#ec4899', 'rosa': '#ec4899',
-    'orange': '#ea580c', 'naranja': '#ea580c',
-    'gray': '#6b7280', 'gris': '#6b7280'
-  }
-  
-  return colorAttr.options.map(colorName => ({
-    name: colorName,
-    value: colorMap[colorName.toLowerCase()] || '#6b7280',
-    defaultColor: '#6b7280'
-  }))
+// ⭐ Computed: Determinar si el producto es simple o variable
+const isProductSimple = computed(() => {
+  return product.value && isSimpleProduct(product.value)
 })
 
-const availableSizes = computed(() => {
+// ⭐ NUEVO: Computed para determinar si es producto variable
+const isProductVariable = computed(() => {
+  return product.value && product.value.type === 'variable'
+})
+
+// ⭐ NUEVO: Variación actualmente seleccionada (del store o primera por defecto)
+const currentVariation = computed(() => productStore.wooCurrentVariation)
+
+// ⭐ NUEVO: Atributos que generan variaciones (variation: true)
+const variationAttributes = computed(() => {
   if (!product.value?.attributes) return []
   
-  const sizeAttr = product.value.attributes.find(attr => 
-    attr.name.toLowerCase().includes('size') || 
-    attr.name.toLowerCase().includes('talla') ||
-    attr.name.toLowerCase().includes('tamaño')
-  )
-  
-  return sizeAttr?.options || []
+  return product.value.attributes.filter(attr => attr.variation === true)
 })
+
+// ⭐ NUEVO: Imágenes a mostrar (variación o producto base)
+const displayImages = computed(() => {
+  // Si es producto variable y hay variación seleccionada con imagen, usar esa
+  if (isProductVariable.value && currentVariation.value?.image?.src) {
+    console.log('🖼️ [ProductDetail] Usando imagen de variación')
+    return [currentVariation.value.image]
+  }
+  
+  // Si no, usar imágenes del producto base
+  console.log('🖼️ [ProductDetail] Usando imágenes del producto base')
+  return baseProductImages.value
+})
+
+// ⭐ Computed: Precio formateado del producto o variación
+const displayPrice = computed(() => {
+  if (!product.value) return '$0'
+  
+  // Para productos simples: extraer precio de short_description
+  if (isProductSimple.value) {
+    const extractedPrice = getFormattedProductPrice(product.value)
+    console.log(`💰 [ProductDetail] Producto simple - Precio extraído: ${extractedPrice}`)
+    return extractedPrice
+  }
+  
+  // Para productos variables: usar variación si está seleccionada
+  if (isProductVariable.value && currentVariation.value) {
+    const variationPrice = getFormattedProductPrice(currentVariation.value)
+    console.log(`💰 [ProductDetail] Variación seleccionada - Precio: ${variationPrice}`)
+    return variationPrice
+  }
+  
+  // Fallback: precio base del producto
+  console.log(`💰 [ProductDetail] Producto variable sin variación - Usando precio base: $${product.value.price}`)
+  return `$${product.value.price}`
+})
+
+// ⭐ Computed: Precio numérico del producto o variación (para cálculos)
+const numericPrice = computed(() => {
+  if (!product.value) return 0
+  
+  // Para productos simples: extraer precio de short_description
+  if (isProductSimple.value) {
+    return getProductPrice(product.value) || 0
+  }
+  
+  // Para productos variables: usar variación si está seleccionada
+  if (isProductVariable.value && currentVariation.value) {
+    return getProductPrice(currentVariation.value) || 0
+  }
+  
+  // Fallback: usar product.price
+  return parseFloat(product.value.price) || 0
+})
+
+// ⭐ LIMPIADO: Removed old availableColors and availableSizes computed properties
+// Now using variationAttributes which gets attributes with variation: true
 
 // Atributos base: excluir Color y Size que se manejan por separado
 const otherAttributes = computed(() => {
@@ -418,6 +459,71 @@ const informativeAttributes = computed(() => {
   return otherAttributes.value.filter(attr => attr.variation === false)
 })
 
+// ⭐ NUEVO: Cargar variaciones del producto
+const loadVariations = async () => {
+  if (!product.value) return
+  if (!isProductVariable.value) return
+  
+  console.log(`🔄 Cargando variaciones para producto ${product.value.id}`)
+  
+  try {
+    const result = await productStore.fetchWooProductVariations(product.value.id, 100, 1)
+    
+    if (result.success && result.data.length > 0) {
+      console.log(`✅ ${result.data.length} variaciones cargadas`)
+      
+      // ⭐ CARGAR PRIMERA VARIACIÓN POR DEFECTO
+      const firstVariationId = result.data[0].id
+      console.log(`🎯 Cargando primera variación por defecto: ${firstVariationId}`)
+      
+      await loadVariation(firstVariationId)
+    }
+  } catch (err) {
+    console.error('❌ Error cargando variaciones:', err)
+  }
+}
+
+// ⭐ NUEVO: Cargar una variación específica
+const loadVariation = async (variationId) => {
+  if (!product.value) return
+  
+  console.log(`🔄 Cargando variación ${variationId}`)
+  
+  try {
+    const result = await productStore.fetchWooProductVariation(product.value.id, variationId)
+    
+    if (result.success) {
+      console.log(`✅ Variación ${variationId} cargada`)
+      // Reset del índice de imagen cuando cambia la variación
+      selectedImageIndex.value = 0
+    }
+  } catch (err) {
+    console.error(`❌ Error cargando variación ${variationId}:`, err)
+  }
+}
+
+// ⭐ NUEVO: Seleccionar variación basada en atributos seleccionados
+const selectVariationByAttributes = async (selectedOptions) => {
+  if (!productStore.hasWooVariations) return
+  
+  console.log('🔍 Buscando variación con atributos:', selectedOptions)
+  
+  // Buscar variación que coincida con las opciones seleccionadas
+  const matchingVariation = productStore.wooProductVariations.find(variation => {
+    return variation.attributes.every(attr => {
+      const selectedValue = selectedOptions[attr.name]
+      return selectedValue === attr.option
+    })
+  })
+  
+  if (matchingVariation) {
+    console.log(`✅ Variación encontrada: ${matchingVariation.id}`)
+    await loadVariation(matchingVariation.id)
+  } else {
+    console.warn('⚠️ No se encontró variación con esos atributos')
+  }
+}
+
 // Methods
 const loadProduct = async () => {
   if (!productId.value) return
@@ -428,6 +534,11 @@ const loadProduct = async () => {
     const result = await productStore.fetchWooProduct(productId.value)
     if (result.success) {
       console.log('✅ Producto cargado:', result.data.name)
+      
+      // ⭐ Si es producto variable, cargar variaciones automáticamente
+      if (result.data.type === 'variable') {
+        await loadVariations()
+      }
     } else {
       console.error('❌ Error cargando producto:', result.error)
     }
@@ -440,10 +551,7 @@ const selectImage = (index) => {
   selectedImageIndex.value = index
 }
 
-const selectColor = (color) => {
-  selectedColor.value = color
-  console.log('Color seleccionado:', color.name)
-}
+// ⭐ LIMPIADO: Removed selectColor method - now handled by selectAttribute for variations
 
 const scrollThumbnailsUp = () => {
   if (thumbnailScrollPosition.value > 0) {
@@ -466,8 +574,19 @@ const updateThumbnailScroll = () => {
   }
 }
 
-const selectAttribute = (attributeName, option) => {
-  selectedAttributes.value[attributeName] = option
+const selectAttribute = async (attributeName, option) => {
+  // Crear nuevo objeto para asegurar reactividad
+  selectedAttributes.value = {
+    ...selectedAttributes.value,
+    [attributeName]: option
+  }
+  
+  console.log(`🎯 Atributo seleccionado: ${attributeName} = ${option}`)
+  
+  // ⭐ Si es producto variable, buscar y cargar la variación correspondiente
+  if (isProductVariable.value) {
+    await selectVariationByAttributes(selectedAttributes.value)
+  }
 }
 
 const translateAttributeName = (attributeName) => {
@@ -501,21 +620,12 @@ const addToCart = async () => {
     // Preparar opciones del producto
     const options = {
       name: product.value.name,
-      price: parseFloat(product.value.price),
+      price: numericPrice.value, // ⭐ Usa precio correcto: short_description para simple, price para variable
       image: product.value.images?.[0]?.src || null,
       stock_status: product.value.stock_status
     }
     
     // Agregar atributos seleccionados
-    if (selectedColor.value) {
-      options.color = selectedColor.value.name
-    }
-    
-    if (selectedSize.value) {
-      options.size = selectedSize.value
-    }
-    
-    // Agregar otros atributos
     if (Object.keys(selectedAttributes.value).length > 0) {
       options.attributes = selectedAttributes.value
     }
@@ -583,34 +693,48 @@ onMounted(() => {
   loadProduct()
 })
 
+// ⭐ NUEVO: Watch para inicializar atributos de variación con primera variación (solo productos variables)
+watch(currentVariation, (newVariation) => {
+  // Si hay variación nueva, inicializar atributos seleccionados
+  if (newVariation && newVariation.attributes && newVariation.attributes.length > 0) {
+    console.log('🔄 Inicializando atributos con variación:', newVariation.id)
+    
+    // Crear nuevo objeto para forzar reactividad
+    const newSelectedAttributes = {}
+    newVariation.attributes.forEach(attr => {
+      newSelectedAttributes[attr.name] = attr.option
+      console.log(`✅ Atributo "${attr.name}" = "${attr.option}"`)
+    })
+    
+    // Reemplazar el objeto completo para asegurar reactividad
+    selectedAttributes.value = newSelectedAttributes
+  }
+})
+
 // Watch for product changes to set default selections
-watch(product, (newProduct) => {
+watch(product, (newProduct, oldProduct) => {
   if (newProduct) {
+    // ⭐ Si cambió el producto, limpiar variaciones anteriores
+    if (oldProduct && newProduct.id !== oldProduct.id) {
+      console.log('🔄 Cambio de producto detectado, limpiando variaciones')
+      productStore.clearWooVariations()
+      selectedAttributes.value = {}
+    }
+    
     // Reset thumbnail scroll position
     thumbnailScrollPosition.value = 0
     selectedImageIndex.value = 0
     
-    // Set default color selection
-    if (availableColors.value.length > 0 && !selectedColor.value) {
-      selectedColor.value = availableColors.value[0]
+    // Set default attributes for selectable ones only (solo para productos NO variables)
+    if (!isProductVariable.value) {
+      const newSelectedAttributes = { ...selectedAttributes.value }
+      selectableAttributes.value.forEach(attr => {
+        if (attr.options && attr.options.length > 0 && !newSelectedAttributes[attr.name]) {
+          newSelectedAttributes[attr.name] = attr.options[0]
+        }
+      })
+      selectedAttributes.value = newSelectedAttributes
     }
-    
-    // Set default size selection
-    if (availableSizes.value.length > 0 && !selectedSize.value) {
-      // Try to select 'Large' or 'Medium' as default, otherwise first option
-      const preferredSizes = ['Large', 'L', 'Medium', 'M']
-      const defaultSize = availableSizes.value.find(size => 
-        preferredSizes.some(preferred => size.toLowerCase().includes(preferred.toLowerCase()))
-      ) || availableSizes.value[0]
-      selectedSize.value = defaultSize
-    }
-    
-    // Set default attributes for selectable ones only
-    selectableAttributes.value.forEach(attr => {
-      if (attr.options && attr.options.length > 0 && !selectedAttributes.value[attr.name]) {
-        selectedAttributes.value[attr.name] = attr.options[0]
-      }
-    })
   }
 }, { immediate: true })
 </script>

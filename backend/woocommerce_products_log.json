@@ -1,0 +1,4313 @@
+{
+  "timestamp": "2025-10-12T03:21:31.256047",
+  "endpoint": "get_woocommerce_products",
+  "params": {
+    "category_id": null,
+    "page": 1,
+    "per_page": 9
+  },
+  "total_products_received": 9,
+  "products_in_log": 9,
+  "products": [
+    {
+      "id": 73547,
+      "name": "Combo CUM Elixir",
+      "slug": "combo-cum-elixir",
+      "permalink": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/",
+      "date_created": "2025-04-09T10:33:07",
+      "date_created_gmt": "2025-04-09T15:33:07",
+      "date_modified": "2025-04-16T13:26:55",
+      "date_modified_gmt": "2025-04-16T18:26:55",
+      "type": "simple",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h3 class=\"\" data-start=\"209\" data-end=\"260\">Kit CUM Elixir – Placer Realista en Cada Gota</h3>\n<p class=\"\" data-start=\"261\" data-end=\"307\"><strong data-start=\"261\" data-end=\"307\">3 lubricantes | 250 ml c/u | Marca: Elixir</strong></p>\n<p class=\"\" data-start=\"309\" data-end=\"711\">Descubre una experiencia íntima más realista, intensa y placentera con el <strong data-start=\"383\" data-end=\"401\">Kit CUM Elixir</strong> , una colección exclusiva de lubricantes cremosos diseñada para simular la eyaculación masculina y femenina. Perfectos para quienes buscan elevar el juego en pareja o en solitario, estos lubricantes combinan texturas auténticas, sensaciones únicas y total compatibilidad con juguetes sexuales y preservativos.</p>\n<p class=\"\" data-start=\"713\" data-end=\"734\"><strong data-start=\"713\" data-end=\"734\">Este kit incluye:</strong></p>\n<p class=\"\" data-start=\"713\" data-end=\"734\"><strong data-start=\"739\" data-end=\"768\">Lubricante Íntimo Cremoso</strong><br data-start=\"768\" data-end=\"771\" />Textura blanca y densa que imita la eyaculación masculina. Proporciona una lubricación intensa y realista que reduce la fricción y multiplica el placer. Ideal para explorar fantasías, fetiches o juguetes complementarios tipo masturbadores. ¿Lo mejor? ¡Tiene un delicioso sabor dulce!</p>\n<p class=\"\" data-start=\"1053\" data-end=\"1310\"><strong data-start=\"1056\" data-end=\"1088\">Lubricante Cum Piel Sensible</strong><br data-start=\"1088\" data-end=\"1091\" />Diseñado para quienes buscan suavidad y realismo. Simula la eyaculación femenina con una fórmula delicada, perfecta para pieles sensibles. Proporciona hidratación, comodidad y una sensación natural durante el encuentro.</p>\n<p class=\"\" data-start=\"1312\" data-end=\"1585\"><strong data-start=\"1315\" data-end=\"1347\">Lubricante Íntimo Cum Neutro</strong><br data-start=\"1347\" data-end=\"1350\" />Una opción versátil y neutra que recrea la textura de la eyaculación femenina. Su fórmula suave permite una aplicación cómoda tanto en vagina como en pene, y puede reaplicarse sin interrupciones para mantener la intensidad del momento.</p>\n<p data-start=\"1312\" data-end=\"1585\">¡Todo en envases de 250 ml para que nunca falte el placer!</p>\n",
+      "short_description": "",
+      "sku": "EX-CLV-6012-KIT-CUM-250ML",
+      "price": "47800",
+      "regular_price": "47800",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 152,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": true,
+      "stock_quantity": 74,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 563,
+          "name": "Elixir",
+          "slug": "elixir"
+        },
+        {
+          "id": 256,
+          "name": "Lubricantes Tipo Cum",
+          "slug": "lubricantes-tipo-cum"
+        },
+        {
+          "id": 136,
+          "name": "Lubricantes y cosmética",
+          "slug": "lubricantes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 73635,
+          "date_created": "2025-04-10T11:30:44",
+          "date_created_gmt": "2025-04-10T21:30:44",
+          "date_modified": "2025-04-10T11:30:44",
+          "date_modified_gmt": "2025-04-10T21:30:44",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg",
+          "name": "cums concepto2 (1)",
+          "alt": ""
+        },
+        {
+          "id": 73523,
+          "date_created": "2025-04-08T12:29:49",
+          "date_created_gmt": "2025-04-08T22:29:49",
+          "date_modified": "2025-04-08T12:29:49",
+          "date_modified_gmt": "2025-04-08T22:29:49",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/CUM-SENSIBLE_Mesa-de-trabajo-1.jpg",
+          "name": "CUM SENSIBLE_Mesa de trabajo 1",
+          "alt": ""
+        },
+        {
+          "id": 69282,
+          "date_created": "2025-01-16T04:54:01",
+          "date_created_gmt": "2025-01-16T14:54:01",
+          "date_modified": "2025-01-16T04:54:01",
+          "date_modified_gmt": "2025-01-16T14:54:01",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2025/01/Cum-Neutro-2-.jpg",
+          "name": "Cum Neutro 2",
+          "alt": ""
+        },
+        {
+          "id": 70030,
+          "date_created": "2025-01-29T03:18:29",
+          "date_created_gmt": "2025-01-29T13:18:29",
+          "date_modified": "2025-01-29T03:18:29",
+          "date_modified_gmt": "2025-01-29T13:18:29",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2025/01/Cum-3-scaled.jpg",
+          "name": "Cum 3",
+          "alt": ""
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "1 año"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Unisex"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Tipo de base",
+          "slug": "Tipo de base",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Agua"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Modo de uso",
+          "slug": "Modo de uso",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "- Preparación: Asegúrate de que la zona de aplicación esté limpia y seca. Lava tus manos antes de aplicar el lubricante para garantizar higiene.\n- Aplicación: Abre el envase y aplica una cantidad moderada en la zona deseada (vagina, pene o juguete sexual).\n- Durante el uso: Reaplica el producto según sea necesario para mantener una lubricación óptima.\n- Después del uso: Limpia la zona de aplicación con agua tibia y jabón suave. Si utilizaste un juguete sexual, sigue las instrucciones del fabricante para limpiarlo adecuadamente."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Elixir"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Precauciones",
+          "slug": "Precauciones",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Precauciones\n- Si experimentas irritación, enrojecimiento o cualquier otra reacción adversa, suspende el uso y consulta a un médico.\n- Evita el contacto con los ojos. Si ocurre, enjuaga con abundante agua.\n- Guarda el lubricante en un lugar fresco y seco, lejos de la luz directa del sol. Asegúrate de cerrar bien el envase después de cada uso."
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>47,800</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
+      "related_ids": [
+        19397,
+        19343,
+        20486,
+        18768,
+        19294
+      ],
+      "meta_data": [
+        {
+          "id": 8335039,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 8335040,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 8335041,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 8335042,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "3",
+            "8295": "",
+            "8510": "",
+            "4378": "3",
+            "4379": "3",
+            "8585": "",
+            "4403": "",
+            "4380": "3",
+            "7918": "",
+            "4381": "3",
+            "4382": "3",
+            "4383": "3",
+            "4385": "3",
+            "8435": "",
+            "4386": "3",
+            "4387": "3",
+            "4388": "3",
+            "8548": "",
+            "8381": "",
+            "7792": "",
+            "4374": "3",
+            "8496": "",
+            "4373": "3",
+            "4372": "3",
+            "4398": "",
+            "4575": "",
+            "4375": "3"
+          }
+        },
+        {
+          "id": 8335043,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 8335044,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8335045,
+          "key": "onesignal_meta_box_present",
+          "value": "1"
+        },
+        {
+          "id": 8335046,
+          "key": "onesignal_send_notification",
+          "value": ""
+        },
+        {
+          "id": 8335047,
+          "key": "onesignal_modify_title_and_content",
+          "value": ""
+        },
+        {
+          "id": 8335048,
+          "key": "yikes_woo_products_tabs",
+          "value": []
+        },
+        {
+          "id": 8335049,
+          "key": "_yoast_wpseo_primary_product_brand",
+          "value": ""
+        },
+        {
+          "id": 8335050,
+          "key": "_yoast_wpseo_primary_product_cat",
+          "value": ""
+        },
+        {
+          "id": 8335051,
+          "key": "_yoast_wpseo_content_score",
+          "value": "90"
+        },
+        {
+          "id": 8335052,
+          "key": "_yoast_wpseo_estimated-reading-time-minutes",
+          "value": "2"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": false,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Combo CUM Elixir - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Combo CUM Elixir - DistriSex\" />\n<meta property=\"og:description\" content=\"Kit CUM Elixir – Placer Realista en Cada Gota 3 lubricantes | 250 ml c/u | Marca: Elixir Descubre una experiencia íntima más realista, intensa y placentera con el Kit CUM Elixir , una colección exclusiva de lubricantes cremosos diseñada para simular la eyaculación masculina y femenina. Perfectos para quienes buscan elevar el juego en &hellip; Continue reading\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-04-16T18:26:55+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1080\" />\n\t<meta property=\"og:image:height\" content=\"1080\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"Tiempo de lectura\" />\n\t<meta name=\"twitter:data1\" content=\"2 minutos\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/\",\"url\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/\",\"name\":\"Combo CUM Elixir - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg\",\"datePublished\":\"2025-04-09T15:33:07+00:00\",\"dateModified\":\"2025-04-16T18:26:55+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg\",\"width\":1080,\"height\":1080},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/combo-cum-elixir/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Combo CUM Elixir\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Combo CUM Elixir - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Combo CUM Elixir - DistriSex",
+        "og_description": "Kit CUM Elixir – Placer Realista en Cada Gota 3 lubricantes | 250 ml c/u | Marca: Elixir Descubre una experiencia íntima más realista, intensa y placentera con el Kit CUM Elixir , una colección exclusiva de lubricantes cremosos diseñada para simular la eyaculación masculina y femenina. Perfectos para quienes buscan elevar el juego en &hellip; Continue reading",
+        "og_url": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-04-16T18:26:55+00:00",
+        "og_image": [
+          {
+            "width": 1080,
+            "height": 1080,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "twitter_misc": {
+          "Tiempo de lectura": "2 minutos"
+        },
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/",
+              "url": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/",
+              "name": "Combo CUM Elixir - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg",
+              "datePublished": "2025-04-09T15:33:07+00:00",
+              "dateModified": "2025-04-16T18:26:55+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/combo-cum-elixir/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2025/04/cums-concepto2-1.jpg",
+              "width": 1080,
+              "height": 1080
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/combo-cum-elixir/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Combo CUM Elixir"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "3",
+          "8295": "",
+          "8510": "",
+          "4378": "3",
+          "4379": "3",
+          "8585": "",
+          "4403": "",
+          "4380": "3",
+          "7918": "",
+          "4381": "3",
+          "4382": "3",
+          "4383": "3",
+          "4385": "3",
+          "8435": "",
+          "4386": "3",
+          "4387": "3",
+          "4388": "3",
+          "8548": "",
+          "8381": "",
+          "7792": "",
+          "4374": "3",
+          "8496": "",
+          "4373": "3",
+          "4372": "3",
+          "4398": "",
+          "4575": "",
+          "4375": "3"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/73547",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19522,
+      "name": "Masturbador Masculino Fleshlight Launch - Realidad virtual",
+      "slug": "masturbador-masculino-fleshlight-launch-realidad-virtual",
+      "permalink": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/",
+      "date_created": "2025-04-08T15:33:16",
+      "date_created_gmt": "2025-04-08T20:33:16",
+      "date_modified": "2025-04-08T15:33:16",
+      "date_modified_gmt": "2025-04-08T20:33:16",
+      "type": "simple",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Masturbador Masculino Fleshlight Launch - Realidad virtual</h2>\n<p>Encuentra tu conexión ideal ya sea solo y manualmente o con alguien más virtualmente y sumérgete en la experiencia de contenido con calificación XXX, que seguramente cumplirá sus deseos y fantasías.</p>\n<p>The Launch es un masturbador masculino interactivo y es uno de los juguetes sexuales más realistas para hombres. El lanzamiento tiene 2 modos: modo manual e interactivo.</p>\n<p>En el modo manual, el lanzamiento se ejecuta hasta 180 veces por minuto. Elija la velocidad y la longitud del movimiento usted mismo. Experimenta golpes suaves o golpes bruscos.</p>\n<p>En modo interactivo, puedes sumergirte en contenido de realidad virtual y 2D. Incluso puedes experimentar videojuegos interactivos. Disfruta de la sensación de penetración en línea. Hasta en una relación a larga distancia. Experimenta tocar a tu amante por internet y hagan el amor sin importar la distancia que los separe.</p>\n<p>Use señales Bluetooth para conectarse a un dispositivo de su elección o la aplicación Feel Connect en su teléfono inteligente. Esta tecnología inalámbrica permite hacer el amor a larga distancia o la masturbación mutua.</p>\n<p>Es uno de los juguetes sexuales masculinos más apreciados en el mercado en este momento.</p>\n<h2>¡La experiencia en masturbación automatizada que estabas esperando!</h2>\n",
+      "short_description": "<h5><span style=\"color: #333333\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb\">$899,900</span></strong></h5>\n",
+      "sku": "KI-JMM-002-LAUNCH-NEG",
+      "price": "799900",
+      "regular_price": "799900",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 0,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": true,
+      "stock_quantity": 2,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 134,
+          "name": "Juguetes",
+          "slug": "juguetes"
+        },
+        {
+          "id": 567,
+          "name": "Kiiro°",
+          "slug": "kiiroo"
+        },
+        {
+          "id": 262,
+          "name": "Masturbadores",
+          "slug": "masturbadores"
+        },
+        {
+          "id": 378,
+          "name": "Masturbadores Masculinos",
+          "slug": "masturbadores-masculinos"
+        },
+        {
+          "id": 579,
+          "name": "Para Él",
+          "slug": "para-el"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        },
+        {
+          "id": 817,
+          "name": "Últimas unidades",
+          "slug": "ultimas-unidades"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25451,
+          "date_created": "2023-09-04T14:35:23",
+          "date_created_gmt": "2023-09-05T00:35:23",
+          "date_modified": "2023-09-04T14:35:23",
+          "date_modified_gmt": "2023-09-05T00:35:23",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg",
+          "name": "masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex",
+          "alt": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+        },
+        {
+          "id": 25452,
+          "date_created": "2023-09-04T14:35:24",
+          "date_created_gmt": "2023-09-05T00:35:24",
+          "date_modified": "2023-09-04T14:35:24",
+          "date_modified_gmt": "2023-09-05T00:35:24",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-2.jpg",
+          "name": "masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-2",
+          "alt": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+        },
+        {
+          "id": 25453,
+          "date_created": "2023-09-04T14:35:25",
+          "date_created_gmt": "2023-09-05T00:35:25",
+          "date_modified": "2023-09-04T14:35:25",
+          "date_modified_gmt": "2023-09-05T00:35:25",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-3.jpg",
+          "name": "masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-3",
+          "alt": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+        },
+        {
+          "id": 25454,
+          "date_created": "2023-09-04T14:35:25",
+          "date_created_gmt": "2023-09-05T00:35:25",
+          "date_modified": "2023-09-04T14:35:25",
+          "date_modified_gmt": "2023-09-05T00:35:25",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-4.jpg",
+          "name": "masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-4",
+          "alt": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+        },
+        {
+          "id": 25455,
+          "date_created": "2023-09-04T14:35:26",
+          "date_created_gmt": "2023-09-05T00:35:26",
+          "date_modified": "2023-09-04T14:35:26",
+          "date_modified_gmt": "2023-09-05T00:35:26",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-5.jpg",
+          "name": "masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex-5",
+          "alt": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Carga",
+          "slug": "Carga",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Batería recargable por medio de cable USB (Adaptador de corriente no incluido)"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Compatibilidad",
+          "slug": "Compatibilidad",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Compatible con: • Diferentes plataformas Webcam (Feel Connect Chrome Extension) • App Feel Connect 3.0 (O última versión) para Google Play y App Store en iOS y Android • iPhone/iPad Air/iPad Mini/iPod Touch iOS 12.0 o superior • Android 8.0 o superior"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Contenido",
+          "slug": "Contenido",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Incluye FLESHLIGHT"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "6 meses"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Masculino"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Interactivo o Con App",
+          "slug": "Interactivo o Con App",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Sí"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Limpieza",
+          "slug": "Limpieza",
+          "position": 6,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Antes de usar el juguete por primera vez",
+            "y después de cada uso",
+            "este debe ser limpiado para reducir el riesgo de infecciones",
+            "mantener la higiene adecuada y evitar el deterioro rápido del juguete.Recomendamos un producto especial para limpieza óptima como los Limpiadores para Juguetes Elixir."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 7,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Kiiroo"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Material",
+          "slug": "Material",
+          "position": 8,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Masturbador en ABS",
+            "Fleshlight en Silicona suave",
+            "segura para el cuerpo",
+            "no tóxica + ABS"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Presentación",
+          "slug": "Presentación",
+          "position": 9,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• Ofrece hasta 180 golpes de penetración por minuto. • Movimientos automáticos hacia arriba y hacia abajo. • Se adapta a la mayoría de los tamaños. • Compatible con todas las fundas estándar. • Es ideal para los que les gusta la realidad virtual y la tecnología combinado con el erotismo. "
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Recomendaciones de uso",
+          "slug": "Recomendaciones de uso",
+          "position": 10,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "The Launch es un masturbador masculino interactivo y es uno de los juguetes sexuales más realistas para hombres.El lanzamiento tiene 2 modos: modo manual e interactivo. En el modo manual",
+            "el lanzamiento se ejecuta hasta 180 veces por minuto. Elija la velocidad y la longitud del movimiento usted mismo. Experimenta golpes suaves o golpes bruscos. En modo interactivo",
+            "puedes sumergirte en contenido de realidad virtual y 2D. Incluso puedes experimentar videojuegos interactivos. Disfruta de la sensación de penetración en línea. Hasta en una relación a larga distancia. Experimenta tocar a tu amante por internet y hagan el amor sin importar la distancia que los separe. Para una experiencia más placentera",
+            "es ideal que el uso de este juguete sea con lubricantes a base de agua. Recomendamos el Gel Lubricante Íntimo Natural Elixir. No se deben usar lubricantes de silicona",
+            "con juguetes de silicona. Podrían sufrir daños irreversibles."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Resistente al agua",
+          "slug": "Resistente al agua",
+          "position": 11,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "IPX4: Protege de salpicaduras de agua",
+            "sin importar la dirección. No es sumergible."
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>799,900</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
+      "related_ids": [
+        15729,
+        15934,
+        15999,
+        16000,
+        15964
+      ],
+      "meta_data": [
+        {
+          "id": 83698,
+          "key": "_shopify_product_id",
+          "value": "6697863479487"
+        },
+        {
+          "id": 211630,
+          "key": "_role_base_price",
+          "value": {
+            "1": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "799900",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "2": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "799900",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "3": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "799900",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "4": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "799900",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "5": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "799900",
+              "min_qty": "0",
+              "max_qty": "0"
+            }
+          }
+        },
+        {
+          "id": 236545,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "2",
+            "5": "2",
+            "4378": "2",
+            "4379": "2",
+            "4380": "2",
+            "4403": "",
+            "7918": "",
+            "4381": "2",
+            "4382": "2",
+            "4383": "2",
+            "4385": "2",
+            "4386": "2",
+            "4387": "2",
+            "4388": "2",
+            "4389": "2",
+            "1798": "",
+            "7792": "",
+            "4374": "2",
+            "4373": "2",
+            "4372": "2",
+            "4398": "",
+            "4575": "",
+            "4375": "2"
+          }
+        },
+        {
+          "id": 251319,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 269111,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 4316120,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 4316121,
+          "key": "onesignal_meta_box_present",
+          "value": "1"
+        },
+        {
+          "id": 4316122,
+          "key": "onesignal_send_notification",
+          "value": ""
+        },
+        {
+          "id": 4316123,
+          "key": "onesignal_modify_title_and_content",
+          "value": ""
+        },
+        {
+          "id": 4316126,
+          "key": "yikes_woo_products_tabs",
+          "value": []
+        },
+        {
+          "id": 4316128,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 4316129,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 8331434,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        },
+        {
+          "id": 8332229,
+          "key": "woosw_count",
+          "value": "1"
+        },
+        {
+          "id": 8332230,
+          "key": "woosw_add",
+          "value": "1744150828"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": false,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$899,900\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg\" />\n\t<meta property=\"og:image:width\" content=\"600\" />\n\t<meta property=\"og:image:height\" content=\"729\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"Tiempo de lectura\" />\n\t<meta name=\"twitter:data1\" content=\"1 minuto\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/\",\"url\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/\",\"name\":\"Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg\",\"datePublished\":\"2025-04-08T20:33:16+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg\",\"width\":600,\"height\":729,\"caption\":\"Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex\"},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Masturbador Masculino Fleshlight Launch &#8211; Realidad virtual\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex",
+        "og_description": "Precio sugerido$899,900",
+        "og_url": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/",
+        "og_site_name": "DistriSex",
+        "og_image": [
+          {
+            "width": 600,
+            "height": 729,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "twitter_misc": {
+          "Tiempo de lectura": "1 minuto"
+        },
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/",
+              "url": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/",
+              "name": "Masturbador Masculino Fleshlight Launch - Realidad virtual - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg",
+              "datePublished": "2025-04-08T20:33:16+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/masturbador-masculino-fleshlight-launch-realidad-virtual-distrisexcolombia-distrisex.jpg",
+              "width": 600,
+              "height": 729,
+              "caption": "Masturbador Masculino Fleshlight Launch - Realidad virtual-DistriSexEcuador-DistriSex"
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/masturbador-masculino-fleshlight-launch-realidad-virtual/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Masturbador Masculino Fleshlight Launch &#8211; Realidad virtual"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "2",
+          "5": "2",
+          "4378": "2",
+          "4379": "2",
+          "4380": "2",
+          "4403": "",
+          "7918": "",
+          "4381": "2",
+          "4382": "2",
+          "4383": "2",
+          "4385": "2",
+          "4386": "2",
+          "4387": "2",
+          "4388": "2",
+          "4389": "2",
+          "1798": "",
+          "7792": "",
+          "4374": "2",
+          "4373": "2",
+          "4372": "2",
+          "4398": "",
+          "4575": "",
+          "4375": "2"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19522",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19425,
+      "name": "Lubricante Íntimo Trío Erotika",
+      "slug": "lubricante-intimo-trio-erotika",
+      "permalink": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/",
+      "date_created": "2025-04-08T15:33:16",
+      "date_created_gmt": "2025-04-08T20:33:16",
+      "date_modified": "2025-04-16T07:32:31",
+      "date_modified_gmt": "2025-04-16T12:32:31",
+      "type": "variable",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Lubricante Íntimo Trío - Lubricantes Con Sabor</h2>\n<p>El lubricante íntimo ofrece 3 usos diferentes: Masajes, sexo oral y lubricación.</p>\n<p>Es un lubricante que brinda una sensación tibia, la textura es súper suave y tiene un delicioso sabor a frutos rojos, lo que permite que sea adecuado para realizar sexo oral.</p>\n<p>Producto de uso externo, si presenta una reacción desfavorable, se suspende su uso y consulta con su médico si lo requiere. No es un espermicida.</p>\n<h2>El lubricante trío ¡lubrica, es tibio y tiene sabor!</h2>\n",
+      "short_description": "<h5><span style=\"color: #333333;\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb;\">$21,500</span></strong></h5>\n",
+      "sku": "EK-CLV-005-TRIO-FRR",
+      "price": "16790",
+      "regular_price": "",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 255,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": false,
+      "stock_quantity": null,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 566,
+          "name": "Erotika",
+          "slug": "erotika"
+        },
+        {
+          "id": 389,
+          "name": "Lubricantes Naturales",
+          "slug": "lubricantes-naturales"
+        },
+        {
+          "id": 136,
+          "name": "Lubricantes y cosmética",
+          "slug": "lubricantes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25286,
+          "date_created": "2023-09-04T14:31:31",
+          "date_created_gmt": "2023-09-05T00:31:31",
+          "date_modified": "2023-09-04T14:31:31",
+          "date_modified_gmt": "2023-09-05T00:31:31",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg",
+          "name": "lubricante-intimo-trio-erotika-distrisexcolombia-distrisex",
+          "alt": "Lubricante Íntimo Trío Erotika-DistriSexEcuador-DistriSex"
+        },
+        {
+          "id": 25287,
+          "date_created": "2023-09-04T14:31:32",
+          "date_created_gmt": "2023-09-05T00:31:32",
+          "date_modified": "2023-09-04T14:31:32",
+          "date_modified_gmt": "2023-09-05T00:31:32",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex-2.jpg",
+          "name": "lubricante-intimo-trio-erotika-distrisexcolombia-distrisex-2",
+          "alt": "Lubricante Íntimo Trío Erotika-DistriSexEcuador-DistriSex"
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Presentación",
+          "slug": "Presentación",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• Ofrece 3 usos diferentes: Masajes",
+            "sexo oral y lubricación • Sensación tibia"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "3 días"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Unisex"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Tipo de base",
+          "slug": "Tipo de base",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Agua"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Tamaño",
+          "slug": "Tamaño",
+          "position": 5,
+          "visible": true,
+          "variation": true,
+          "options": [
+            "30 ML",
+            "Sachet"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 6,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Erotic"
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [
+        19426,
+        19427
+      ],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>16,790</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
+      "related_ids": [
+        19162,
+        19343,
+        20495,
+        20386,
+        19339
+      ],
+      "meta_data": [
+        {
+          "id": 81970,
+          "key": "_shopify_product_id",
+          "value": "6697846571199"
+        },
+        {
+          "id": 213562,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 213563,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 213564,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 236430,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "1",
+            "4377": "1",
+            "4378": "1",
+            "4379": "1",
+            "4380": "1",
+            "4403": "",
+            "4381": "1",
+            "4382": "1",
+            "4383": "1",
+            "4384": "1",
+            "4385": "1",
+            "4386": "1",
+            "4387": "1",
+            "4388": "1",
+            "4389": "1",
+            "4390": "1",
+            "4374": "1",
+            "4373": "1",
+            "4372": "1",
+            "4398": "",
+            "4575": "",
+            "4375": "1"
+          }
+        },
+        {
+          "id": 251280,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 267180,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8331437,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": true,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Lubricante Íntimo Trío Erotika - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Lubricante Íntimo Trío Erotika - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$21,500\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-04-16T12:32:31+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg\" />\n\t<meta property=\"og:image:width\" content=\"452\" />\n\t<meta property=\"og:image:height\" content=\"584\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/\",\"url\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/\",\"name\":\"Lubricante Íntimo Trío Erotika - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg\",\"datePublished\":\"2025-04-08T20:33:16+00:00\",\"dateModified\":\"2025-04-16T12:32:31+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg\",\"width\":452,\"height\":584,\"caption\":\"Lubricante Íntimo Trío Erotika-DistriSexEcuador-DistriSex\"},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Lubricante Íntimo Trío Erotika\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Lubricante Íntimo Trío Erotika - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Lubricante Íntimo Trío Erotika - DistriSex",
+        "og_description": "Precio sugerido$21,500",
+        "og_url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-04-16T12:32:31+00:00",
+        "og_image": [
+          {
+            "width": 452,
+            "height": 584,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/",
+              "url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/",
+              "name": "Lubricante Íntimo Trío Erotika - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg",
+              "datePublished": "2025-04-08T20:33:16+00:00",
+              "dateModified": "2025-04-16T12:32:31+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-trio-erotika-distrisexcolombia-distrisex.jpg",
+              "width": 452,
+              "height": 584,
+              "caption": "Lubricante Íntimo Trío Erotika-DistriSexEcuador-DistriSex"
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-trio-erotika/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Lubricante Íntimo Trío Erotika"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "1",
+          "4377": "1",
+          "4378": "1",
+          "4379": "1",
+          "4380": "1",
+          "4403": "",
+          "4381": "1",
+          "4382": "1",
+          "4383": "1",
+          "4384": "1",
+          "4385": "1",
+          "4386": "1",
+          "4387": "1",
+          "4388": "1",
+          "4389": "1",
+          "4390": "1",
+          "4374": "1",
+          "4373": "1",
+          "4372": "1",
+          "4398": "",
+          "4575": "",
+          "4375": "1"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19425",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19397,
+      "name": "Lubricante Íntimo Saborizado Action Lube",
+      "slug": "lubricante-intimo-saborizado-action-lube",
+      "permalink": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/",
+      "date_created": "2025-04-08T15:33:16",
+      "date_created_gmt": "2025-04-08T20:33:16",
+      "date_modified": "2025-04-11T09:50:36",
+      "date_modified_gmt": "2025-04-11T14:50:36",
+      "type": "variable",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Lubricante Íntimo Saborizado Action Lube</h2>\n<h3>Lubricante saborizado a base de agua que causa una sensación de frescura</h3>\n<p>Descubre el placer más natural con ingredientes de la mejor calidad como los del Lubricante Íntimo Saborizado Action Lube, a base de agua es ideal para mejorar la lubricación natural y la comodidad en los momentos más íntimos.</p>\n<p>Puede ser usado con condón. Tiene un pH neutro y balanceado, es humectante y se seca sin dejar residuos. Es altamente compatible con las mucosas internas. Proporciona deslizamiento extra y hace que el juego previo sea más aplicada.</p>\n<p>No es un anticonceptivo, no contiene espermicidas. En caso de presentar irritación suspenda su uso, y si considera necesario consulte con su médico.</p>\n",
+      "short_description": "<h5><span style=\"color: #333333;\"><strong>Precio sugerido</strong></span></h5>\n<p><strong><span style=\"color: #18badb;\">$16.000</span></strong></p>\n",
+      "sku": "ER-CLV-005-ACTION",
+      "price": "6890",
+      "regular_price": "",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 276,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": false,
+      "stock_quantity": null,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 562,
+          "name": "Erotic",
+          "slug": "erotic"
+        },
+        {
+          "id": 255,
+          "name": "Lubricantes Saborizados",
+          "slug": "lubricantes-saborizados"
+        },
+        {
+          "id": 136,
+          "name": "Lubricantes y cosmética",
+          "slug": "lubricantes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25273,
+          "date_created": "2023-09-04T14:31:16",
+          "date_created_gmt": "2023-09-05T00:31:16",
+          "date_modified": "2023-09-04T14:31:16",
+          "date_modified_gmt": "2023-09-05T00:31:16",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg",
+          "name": "Lubricante-intimo-action-lube-bombombum-30ml-DistriSex",
+          "alt": "Lubricante Íntimo Saborizado Bombombum Action Lube DistriSex"
+        },
+        {
+          "id": 25274,
+          "date_created": "2023-09-04T14:31:18",
+          "date_created_gmt": "2023-09-05T00:31:18",
+          "date_modified": "2023-09-04T14:31:18",
+          "date_modified_gmt": "2023-09-05T00:31:18",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-chocolate-30ml-DistriSex.png",
+          "name": "Lubricante-intimo-action-lube-chocolate-30ml-DistriSex",
+          "alt": "Lubricante Íntimo Saborizado Chocolate Action Lube DistriSex"
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Beneficios",
+          "slug": "Beneficios",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• pH neutro y balanceado • Humecta y seca sin dejar rastro • Es altamente compatible con las mucosas internas. • Proporciona deslizamiento extra"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "30 días"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Unisex"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Erotic"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Precauciones",
+          "slug": "Precauciones",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "No es un anticonceptivo",
+            "no contiene espermicidas.Mantener en un lugar fresco y seco protegido de la luz a temperatura ambiente. En caso de presentar reacciones alérgicas o irritación",
+            "suspender el uso y consultar a un especialista.Mantener alejad"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Tipo de base",
+          "slug": "Tipo de base",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Agua"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Sabor",
+          "slug": "Sabor",
+          "position": 6,
+          "visible": true,
+          "variation": true,
+          "options": [
+            "Chocolate",
+            "Bonbonbum"
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [
+        19398,
+        19399
+      ],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>6,890</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
+      "related_ids": [
+        19157,
+        19162,
+        19300,
+        20493,
+        20486
+      ],
+      "meta_data": [
+        {
+          "id": 81482,
+          "key": "_shopify_product_id",
+          "value": "6697845588159"
+        },
+        {
+          "id": 213642,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 213643,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 213644,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 236400,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "1",
+            "4377": "1",
+            "4378": "1",
+            "4379": "1",
+            "4380": "1",
+            "4403": "",
+            "4381": "1",
+            "4382": "1",
+            "4383": "1",
+            "4384": "1",
+            "4385": "1",
+            "4386": "1",
+            "4387": "1",
+            "4388": "1",
+            "4389": "1",
+            "4390": "1",
+            "4374": "1",
+            "4373": "1",
+            "4372": "1",
+            "4398": "",
+            "4575": "",
+            "4375": "1"
+          }
+        },
+        {
+          "id": 251270,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 267171,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8331436,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": true,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Lubricante Íntimo Saborizado Action Lube - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Lubricante Íntimo Saborizado Action Lube - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido $16.000\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-04-11T14:50:36+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1200\" />\n\t<meta property=\"og:image:height\" content=\"1200\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"Tiempo de lectura\" />\n\t<meta name=\"twitter:data1\" content=\"1 minuto\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/\",\"url\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/\",\"name\":\"Lubricante Íntimo Saborizado Action Lube - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg\",\"datePublished\":\"2025-04-08T20:33:16+00:00\",\"dateModified\":\"2025-04-11T14:50:36+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg\",\"width\":1200,\"height\":1200,\"caption\":\"Lubricante Íntimo Saborizado Bombombum Action Lube DistriSex\"},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Lubricante Íntimo Saborizado Action Lube\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Lubricante Íntimo Saborizado Action Lube - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Lubricante Íntimo Saborizado Action Lube - DistriSex",
+        "og_description": "Precio sugerido $16.000",
+        "og_url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-04-11T14:50:36+00:00",
+        "og_image": [
+          {
+            "width": 1200,
+            "height": 1200,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "twitter_misc": {
+          "Tiempo de lectura": "1 minuto"
+        },
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/",
+              "url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/",
+              "name": "Lubricante Íntimo Saborizado Action Lube - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg",
+              "datePublished": "2025-04-08T20:33:16+00:00",
+              "dateModified": "2025-04-11T14:50:36+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Lubricante-intimo-action-lube-bombombum-30ml-DistriSex.jpg",
+              "width": 1200,
+              "height": 1200,
+              "caption": "Lubricante Íntimo Saborizado Bombombum Action Lube DistriSex"
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-saborizado-action-lube/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Lubricante Íntimo Saborizado Action Lube"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "1",
+          "4377": "1",
+          "4378": "1",
+          "4379": "1",
+          "4380": "1",
+          "4403": "",
+          "4381": "1",
+          "4382": "1",
+          "4383": "1",
+          "4384": "1",
+          "4385": "1",
+          "4386": "1",
+          "4387": "1",
+          "4388": "1",
+          "4389": "1",
+          "4390": "1",
+          "4374": "1",
+          "4373": "1",
+          "4372": "1",
+          "4398": "",
+          "4575": "",
+          "4375": "1"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19397",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19300,
+      "name": "Lubricante Íntimo Caliente Licor Lush",
+      "slug": "lubricante-intimo-caliente-licor-lush",
+      "permalink": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/",
+      "date_created": "2025-04-08T15:33:16",
+      "date_created_gmt": "2025-04-08T20:33:16",
+      "date_modified": "2025-04-14T11:17:24",
+      "date_modified_gmt": "2025-04-14T16:17:24",
+      "type": "variable",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Lubricante comestible con sabor a licor.</h2>\n<p>Lubricante íntimo a base de aceite con sabor a tequila, ideal para evitar la fricción y la incomodidad durante la penetración. También es perfecto para usar durante el juego previo y practicar sexo oral.</p>\n<h2>Lubricante caliente saborizado.</h2>\n",
+      "short_description": "",
+      "sku": "ER-CLV-001-LICOR",
+      "price": "2290",
+      "regular_price": "",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 1711,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": false,
+      "stock_quantity": null,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 562,
+          "name": "Erotic",
+          "slug": "erotic"
+        },
+        {
+          "id": 250,
+          "name": "Lubricantes Fríos Y Calientes",
+          "slug": "lubricantes-frios-y-calientes"
+        },
+        {
+          "id": 255,
+          "name": "Lubricantes Saborizados",
+          "slug": "lubricantes-saborizados"
+        },
+        {
+          "id": 136,
+          "name": "Lubricantes y cosmética",
+          "slug": "lubricantes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 44048,
+          "date_created": "2023-11-30T06:10:24",
+          "date_created_gmt": "2023-11-30T16:10:24",
+          "date_modified": "2023-11-30T06:10:24",
+          "date_modified_gmt": "2023-11-30T16:10:24",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg",
+          "name": "lubricante-intimo-caliente-licor-lush_2",
+          "alt": ""
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Tamaño",
+          "slug": "Tamaño",
+          "position": 0,
+          "visible": false,
+          "variation": true,
+          "options": [
+            "Sachet",
+            "39 ML"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Sabor",
+          "slug": "Sabor",
+          "position": 1,
+          "visible": false,
+          "variation": true,
+          "options": [
+            "Anís",
+            "Baileys",
+            "Mojito",
+            "Ron",
+            "Tequila"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Erotic"
+          ]
+        }
+      ],
+      "default_attributes": [
+        {
+          "id": 0,
+          "name": "Tamaño",
+          "option": "39 ML"
+        },
+        {
+          "id": 0,
+          "name": "Sabor",
+          "option": "Tequila"
+        }
+      ],
+      "variations": [
+        19301,
+        19303,
+        19304,
+        19305,
+        19306,
+        19307,
+        19308,
+        19309,
+        19310,
+        19311
+      ],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>2,290</bdi></span> - <span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>9,490</bdi></span></ins>",
+      "related_ids": [
+        18749,
+        19361,
+        20494,
+        19291,
+        19346
+      ],
+      "meta_data": [
+        {
+          "id": 79662,
+          "key": "_shopify_product_id",
+          "value": "6697840541887"
+        },
+        {
+          "id": 213624,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 213625,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 213626,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 236330,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "1",
+            "5": "",
+            "4378": "1",
+            "4379": "1",
+            "4380": "1",
+            "4403": "",
+            "4381": "1",
+            "4382": "1",
+            "4383": "1",
+            "4385": "1",
+            "4386": "1",
+            "4387": "1",
+            "4388": "1",
+            "4389": "1",
+            "4374": "1",
+            "4373": "1",
+            "4372": "1",
+            "4398": "",
+            "4575": "",
+            "4375": "1"
+          }
+        },
+        {
+          "id": 251241,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 267150,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8331435,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": true,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Lubricante Íntimo Caliente Licor Lush - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Lubricante Íntimo Caliente Licor Lush - DistriSex\" />\n<meta property=\"og:description\" content=\"Lubricante comestible con sabor a licor. Lubricante íntimo a base de aceite con sabor a tequila, ideal para evitar la fricción y la incomodidad durante la penetración. También es perfecto para usar durante el juego previo y practicar sexo oral. Lubricante caliente saborizado.\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-04-14T16:17:24+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1000\" />\n\t<meta property=\"og:image:height\" content=\"1000\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/\",\"url\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/\",\"name\":\"Lubricante Íntimo Caliente Licor Lush - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg\",\"datePublished\":\"2025-04-08T20:33:16+00:00\",\"dateModified\":\"2025-04-14T16:17:24+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg\",\"width\":1000,\"height\":1000},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Lubricante Íntimo Caliente Licor Lush\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Lubricante Íntimo Caliente Licor Lush - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Lubricante Íntimo Caliente Licor Lush - DistriSex",
+        "og_description": "Lubricante comestible con sabor a licor. Lubricante íntimo a base de aceite con sabor a tequila, ideal para evitar la fricción y la incomodidad durante la penetración. También es perfecto para usar durante el juego previo y practicar sexo oral. Lubricante caliente saborizado.",
+        "og_url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-04-14T16:17:24+00:00",
+        "og_image": [
+          {
+            "width": 1000,
+            "height": 1000,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/",
+              "url": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/",
+              "name": "Lubricante Íntimo Caliente Licor Lush - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg",
+              "datePublished": "2025-04-08T20:33:16+00:00",
+              "dateModified": "2025-04-14T16:17:24+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lubricante-intimo-caliente-licor-lush_2.jpg",
+              "width": 1000,
+              "height": 1000
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/lubricante-intimo-caliente-licor-lush/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Lubricante Íntimo Caliente Licor Lush"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "1",
+          "5": "",
+          "4378": "1",
+          "4379": "1",
+          "4380": "1",
+          "4403": "",
+          "4381": "1",
+          "4382": "1",
+          "4383": "1",
+          "4385": "1",
+          "4386": "1",
+          "4387": "1",
+          "4388": "1",
+          "4389": "1",
+          "4374": "1",
+          "4373": "1",
+          "4372": "1",
+          "4398": "",
+          "4575": "",
+          "4375": "1"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19300",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19725,
+      "name": "Mueble Erótico Eva",
+      "slug": "mueble-erotico-eva",
+      "permalink": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/",
+      "date_created": "2025-04-08T15:33:15",
+      "date_created_gmt": "2025-04-08T20:33:15",
+      "date_modified": "2025-04-08T15:33:15",
+      "date_modified_gmt": "2025-04-08T20:33:15",
+      "type": "simple",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>¡Compacto y fácil de usar! Así es el Mueble Erótico Eva</h2>\n<h3>Potencie el placer con los muebles para juguetes sexuales de Bednotic</h3>\n<p>Un mueble siempre será el elemento indicado para potenciar el placer en pareja, ya que permite recrear de una mejor manera esas poses o posiciones sexuales que tanto se han imaginado.</p>\n<p>El <strong>Mueble Erótico Eva</strong> cuenta con un tamaño ideal para vivir una penetración profunda y una extrema experiencia de estimulación en punto G.</p>\n<p>Podrá usarse para posiciones como el misionero y yendo más allá, podrá aumentar la diversión dentro de la habitación.</p>\n<p>Este mueble funciona con tecnología Memory Foam, la cual, permite que después de usarse, vuelva a su estado original. Se puede complementar con el Mueble Erótico Adam. </p>\n",
+      "short_description": "<h5><span style=\"color: #333333\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb\">$67,900</span></strong></h5>\n",
+      "sku": "BD-JMU-006-EVA-GRI",
+      "price": "72900",
+      "regular_price": "72900",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 9,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": true,
+      "stock_quantity": 28,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": true,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 134,
+          "name": "Juguetes",
+          "slug": "juguetes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25863,
+          "date_created": "2023-09-04T14:45:07",
+          "date_created_gmt": "2023-09-05T00:45:07",
+          "date_modified": "2023-09-04T14:45:07",
+          "date_modified_gmt": "2023-09-05T00:45:07",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg",
+          "name": "Mueble-Erotico-Eva-3",
+          "alt": ""
+        },
+        {
+          "id": 25864,
+          "date_created": "2023-09-04T14:45:09",
+          "date_created_gmt": "2023-09-05T00:45:09",
+          "date_modified": "2023-09-04T14:45:09",
+          "date_modified_gmt": "2023-09-05T00:45:09",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-2.jpg",
+          "name": "Mueble-Erotico-Eva-2",
+          "alt": ""
+        },
+        {
+          "id": 25865,
+          "date_created": "2023-09-04T14:45:10",
+          "date_created_gmt": "2023-09-05T00:45:10",
+          "date_modified": "2023-09-04T14:45:10",
+          "date_modified_gmt": "2023-09-05T00:45:10",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-1.jpg",
+          "name": "Mueble-Erotico-Eva-1",
+          "alt": ""
+        },
+        {
+          "id": 25866,
+          "date_created": "2023-09-04T14:45:11",
+          "date_created_gmt": "2023-09-05T00:45:11",
+          "date_modified": "2023-09-04T14:45:11",
+          "date_modified_gmt": "2023-09-05T00:45:11",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-5.jpg",
+          "name": "Mueble-Erotico-Eva-5",
+          "alt": ""
+        },
+        {
+          "id": 25867,
+          "date_created": "2023-09-04T14:45:12",
+          "date_created_gmt": "2023-09-05T00:45:12",
+          "date_modified": "2023-09-04T14:45:12",
+          "date_modified_gmt": "2023-09-05T00:45:12",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-6.jpg",
+          "name": "Mueble-Erotico-Eva-6",
+          "alt": ""
+        },
+        {
+          "id": 25868,
+          "date_created": "2023-09-04T14:45:14",
+          "date_created_gmt": "2023-09-05T00:45:14",
+          "date_modified": "2023-09-04T14:45:14",
+          "date_modified_gmt": "2023-09-05T00:45:14",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-7.jpg",
+          "name": "Mueble-Erotico-Eva-7",
+          "alt": ""
+        },
+        {
+          "id": 25869,
+          "date_created": "2023-09-04T14:45:15",
+          "date_created_gmt": "2023-09-05T00:45:15",
+          "date_modified": "2023-09-04T14:45:15",
+          "date_modified_gmt": "2023-09-05T00:45:15",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-4.jpg",
+          "name": "Mueble-Erotico-Eva-4",
+          "alt": ""
+        },
+        {
+          "id": 25870,
+          "date_created": "2023-09-04T14:45:16",
+          "date_created_gmt": "2023-09-05T00:45:16",
+          "date_modified": "2023-09-04T14:45:16",
+          "date_modified_gmt": "2023-09-05T00:45:16",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-9.jpg",
+          "name": "Mueble-Erotico-Eva-9",
+          "alt": ""
+        },
+        {
+          "id": 25871,
+          "date_created": "2023-09-04T14:45:18",
+          "date_created_gmt": "2023-09-05T00:45:18",
+          "date_modified": "2023-09-04T14:45:18",
+          "date_modified_gmt": "2023-09-05T00:45:18",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/empaque-bednotic-2_0e792168-8d3d-46a2-aa02-c9de81b4c54b.jpg",
+          "name": "empaque-bednotic-2_0e792168-8d3d-46a2-aa02-c9de81b4c54b",
+          "alt": ""
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Contenido",
+          "slug": "Contenido",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Incluye Mueble y funda protectora antifluidos"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "1 año"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Unisex"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Interactivo o Con App",
+          "slug": "Interactivo o Con App",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "No"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Limpieza",
+          "slug": "Limpieza",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Tenga presente darle un mantenimiento y cuidado adecuado en el cual: • No planche el Mueble Erótico Venus • Lave a mano sin superar los 30° C • Lave en seco • No use blanqueador",
+            "ni detergentes fuertes • Limpie con un cepillo de cerdas suaves o un paño • Limpia cada año con un limpiador profesional de tapicería"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Bednotic"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Material",
+          "slug": "Material",
+          "position": 6,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Espuma de alta intensidad con tecnología Memory Foam",
+            "microfibra y funda"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Medidas",
+          "slug": "Medidas",
+          "position": 7,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• Alto: 16 cm • Ancho: 61",
+            "5 cm • Largo: 33 cm"
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>72,900</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
+      "related_ids": [
+        15960,
+        15729,
+        15913,
+        15939,
+        15964
+      ],
+      "meta_data": [
+        {
+          "id": 87200,
+          "key": "_shopify_product_id",
+          "value": "7468549734625"
+        },
+        {
+          "id": 211713,
+          "key": "_role_base_price",
+          "value": {
+            "10000": {
+              "discount_type": "fixed_price",
+              "discount_value": "54900",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "distribuidor"
+            },
+            "10001": {
+              "discount_type": "fixed_price",
+              "discount_value": "54900",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "estudio"
+            },
+            "10002": {
+              "discount_type": "fixed_price",
+              "discount_value": "54900",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "farmacia"
+            },
+            "10003": {
+              "discount_type": "fixed_price",
+              "discount_value": "54900",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "motel"
+            },
+            "10004": {
+              "discount_type": "fixed_price",
+              "discount_value": "54900",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "tienda"
+            }
+          }
+        },
+        {
+          "id": 236774,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "3",
+            "5": "3",
+            "4377": "3",
+            "4378": "3",
+            "4379": "3",
+            "4380": "3",
+            "4381": "3",
+            "4382": "3",
+            "4383": "3",
+            "4384": "3",
+            "4385": "3",
+            "4386": "3",
+            "4387": "3",
+            "4388": "3",
+            "4389": "3",
+            "4390": "3",
+            "4374": "3",
+            "4373": "3",
+            "4372": "3",
+            "4375": "3",
+            "4403": "",
+            "4398": "",
+            "4575": ""
+          }
+        },
+        {
+          "id": 251419,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 269165,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8331427,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": false,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Mueble Erótico Eva - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Mueble Erótico Eva - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$67,900\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1000\" />\n\t<meta property=\"og:image:height\" content=\"1000\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"Tiempo de lectura\" />\n\t<meta name=\"twitter:data1\" content=\"1 minuto\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/\",\"url\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/\",\"name\":\"Mueble Erótico Eva - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg\",\"datePublished\":\"2025-04-08T20:33:15+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg\",\"width\":1000,\"height\":1000},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Mueble Erótico Eva\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Mueble Erótico Eva - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Mueble Erótico Eva - DistriSex",
+        "og_description": "Precio sugerido$67,900",
+        "og_url": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/",
+        "og_site_name": "DistriSex",
+        "og_image": [
+          {
+            "width": 1000,
+            "height": 1000,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "twitter_misc": {
+          "Tiempo de lectura": "1 minuto"
+        },
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/",
+              "url": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/",
+              "name": "Mueble Erótico Eva - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg",
+              "datePublished": "2025-04-08T20:33:15+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/Mueble-Erotico-Eva-3.jpg",
+              "width": 1000,
+              "height": 1000
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/mueble-erotico-eva/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Mueble Erótico Eva"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "3",
+          "5": "3",
+          "4377": "3",
+          "4378": "3",
+          "4379": "3",
+          "4380": "3",
+          "4381": "3",
+          "4382": "3",
+          "4383": "3",
+          "4384": "3",
+          "4385": "3",
+          "4386": "3",
+          "4387": "3",
+          "4388": "3",
+          "4389": "3",
+          "4390": "3",
+          "4374": "3",
+          "4373": "3",
+          "4372": "3",
+          "4375": "3",
+          "4403": "",
+          "4398": "",
+          "4575": ""
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19725",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19652,
+      "name": "Mini falda Gadea Lerot Negro",
+      "slug": "mini-falda-gadea-lerot-negro",
+      "permalink": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/",
+      "date_created": "2025-04-08T15:33:15",
+      "date_created_gmt": "2025-04-08T20:33:15",
+      "date_modified": "2025-04-16T11:38:34",
+      "date_modified_gmt": "2025-04-16T16:38:34",
+      "type": "variable",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<p>La mini falda Gadea Lerot en color negro es una prenda de moda versátil y llamativa que te hará lucir con estilo y confianza en cualquier ocasión. Confeccionada con materiales de alta calidad y atención al detalle. Este producto no está sujeto a cambios; sin embargo, se ofrece garantía únicamente por defectos de fabricación.</p>\n",
+      "short_description": "<h5><span style=\"color: #333333;\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb;\">$33,900</span></strong></h5>\n",
+      "sku": "LT-PO-61108-GADEA",
+      "price": "18370",
+      "regular_price": "",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 269,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": false,
+      "stock_quantity": null,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 352,
+          "name": "Lencería",
+          "slug": "lenceria-2"
+        },
+        {
+          "id": 246,
+          "name": "Lencería Para Ella",
+          "slug": "lenceria-para-ella"
+        },
+        {
+          "id": 550,
+          "name": "Lerot",
+          "slug": "lerot"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25750,
+          "date_created": "2023-09-04T14:42:36",
+          "date_created_gmt": "2023-09-05T00:42:36",
+          "date_modified": "2023-09-04T14:42:36",
+          "date_modified_gmt": "2023-09-05T00:42:36",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg",
+          "name": "lt-po-61108-gadea_1",
+          "alt": ""
+        }
+      ],
+      "attributes": [
+        {
+          "id": 4,
+          "name": "Tamaño",
+          "slug": "pa_tamano",
+          "position": 0,
+          "visible": true,
+          "variation": true,
+          "options": [
+            "ML",
+            "SM"
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [
+        19653,
+        19654
+      ],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>18,370</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
+      "related_ids": [
+        16752,
+        16064,
+        16601,
+        16555,
+        16726
+      ],
+      "meta_data": [
+        {
+          "id": 85909,
+          "key": "_shopify_product_id",
+          "value": "8051106054369"
+        },
+        {
+          "id": 228337,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 228338,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 228339,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 230881,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "3",
+            "4377": "3",
+            "4378": "3",
+            "4379": "3",
+            "4380": "3",
+            "4403": "",
+            "4381": "3",
+            "4382": "3",
+            "4383": "3",
+            "4384": "3",
+            "4385": "3",
+            "4386": "3",
+            "4387": "3",
+            "4388": "3",
+            "4389": "3",
+            "4390": "3",
+            "4374": "3",
+            "4373": "3",
+            "4372": "3",
+            "4398": "",
+            "4575": "",
+            "4375": "3"
+          }
+        },
+        {
+          "id": 230882,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 251372,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 8331430,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        },
+        {
+          "id": 8352912,
+          "key": "woosw_count",
+          "value": "1"
+        },
+        {
+          "id": 8352913,
+          "key": "woosw_add",
+          "value": "1744474453"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": true,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Mini falda Gadea Lerot Negro - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Mini falda Gadea Lerot Negro - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$33,900\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-04-16T16:38:34+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1000\" />\n\t<meta property=\"og:image:height\" content=\"1000\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/\",\"url\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/\",\"name\":\"Mini falda Gadea Lerot Negro - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg\",\"datePublished\":\"2025-04-08T20:33:15+00:00\",\"dateModified\":\"2025-04-16T16:38:34+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg\",\"width\":1000,\"height\":1000},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Mini falda Gadea Lerot Negro\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Mini falda Gadea Lerot Negro - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Mini falda Gadea Lerot Negro - DistriSex",
+        "og_description": "Precio sugerido$33,900",
+        "og_url": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-04-16T16:38:34+00:00",
+        "og_image": [
+          {
+            "width": 1000,
+            "height": 1000,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/",
+              "url": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/",
+              "name": "Mini falda Gadea Lerot Negro - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg",
+              "datePublished": "2025-04-08T20:33:15+00:00",
+              "dateModified": "2025-04-16T16:38:34+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/lt-po-61108-gadea_1.jpg",
+              "width": 1000,
+              "height": 1000
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-falda-gadea-lerot-negro/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Mini falda Gadea Lerot Negro"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "3",
+          "4377": "3",
+          "4378": "3",
+          "4379": "3",
+          "4380": "3",
+          "4403": "",
+          "4381": "3",
+          "4382": "3",
+          "4383": "3",
+          "4384": "3",
+          "4385": "3",
+          "4386": "3",
+          "4387": "3",
+          "4388": "3",
+          "4389": "3",
+          "4390": "3",
+          "4374": "3",
+          "4373": "3",
+          "4372": "3",
+          "4398": "",
+          "4575": "",
+          "4375": "3"
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19652",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19644,
+      "name": "Mini Bala Vibradora Celeste",
+      "slug": "mini-bala-vibradora-celeste",
+      "permalink": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/",
+      "date_created": "2025-04-08T15:33:15",
+      "date_created_gmt": "2025-04-08T20:33:15",
+      "date_modified": "2025-04-08T15:33:15",
+      "date_modified_gmt": "2025-04-08T20:33:15",
+      "type": "simple",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Diseño elegante y delgado en la Mini Bala Vibradora Celeste</h2>\n<p>Con 5 intensos modos de vibración, la <strong>Mini Bala Vibradora Celeste</strong> eleva inmediatamente la excitación de quien la usa, dejando ver que es diminuta pero poderosa al momento de estimular a las mujeres.</p>\n<p>Está elaborada en silicona recubierta de PU, suave como la seda, segura para el cuerpo y agradable al tacto.</p>\n<p>Además, es a prueba de salpicaduras para disfrutar en cualquier momento y lugar.</p>\n<p>Sus niveles de vibración pueden ser manejados desde un control por medio de un botón pulsador. Funciona con 2 Pilas AAA no incluidas. </p>\n",
+      "short_description": "<h5><span style=\"color: #333333\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb\">$54,900</span></strong></h5>\n",
+      "sku": "DS-JVB-131-CELESTE-ROS",
+      "price": "28080",
+      "regular_price": "28080",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 13,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": true,
+      "stock_quantity": 63,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": false,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 200,
+          "name": "Balas Y Huevos Vibradores",
+          "slug": "balas-y-huevos-vibradores"
+        },
+        {
+          "id": 539,
+          "name": "DistriSex",
+          "slug": "distrisex"
+        },
+        {
+          "id": 134,
+          "name": "Juguetes",
+          "slug": "juguetes"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        },
+        {
+          "id": 817,
+          "name": "Últimas unidades",
+          "slug": "ultimas-unidades"
+        },
+        {
+          "id": 315,
+          "name": "Vibradores",
+          "slug": "vibradores"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25745,
+          "date_created": "2023-09-04T14:42:31",
+          "date_created_gmt": "2023-09-05T00:42:31",
+          "date_modified": "2023-09-04T14:42:31",
+          "date_modified_gmt": "2023-09-05T00:42:31",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg",
+          "name": "mini-bala-vibradora-celeste-distrisex-distrisex",
+          "alt": "Mini Bala Vibradora Celeste-DistriSex-DistriSex"
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Carga",
+          "slug": "Carga",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "2 Pilas AAA (No incluidas)"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "30 días"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Femenino"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Interactivo o Con App",
+          "slug": "Interactivo o Con App",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "No"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Limpieza",
+          "slug": "Limpieza",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Antes de usar el juguete por primera vez",
+            "y después de cada uso",
+            "este debe ser limpiado para reducir el riesgo de infecciones",
+            "mantener la higiene adecuada y evitar el deterioro rápido del juguete.Recomendamos un producto especial para limpieza óptima como los Limpiadores para Juguetes Elixir."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "DistriSex"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Material",
+          "slug": "Material",
+          "position": 6,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Silicona recubierta de PU segura",
+            "no tóxica"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Medidas",
+          "slug": "Medidas",
+          "position": 7,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• Bala: largo: 3 cm • diámetro: 0",
+            "8 cm"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Peso",
+          "slug": "Peso",
+          "position": 8,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "66 g"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Presentación",
+          "slug": "Presentación",
+          "position": 9,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "• 5 modos de vibración.• Control con cable con botón pulsador"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Recomendaciones de uso",
+          "slug": "Recomendaciones de uso",
+          "position": 10,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Para una experiencia más placentera",
+            "es ideal que el uso de este juguete sea con lubricantes a base de agua. Recomendamos el Gel Lubricante Íntimo Natural Elixir.No se deben usar lubricantes de silicona con juguetes de silicona. Podrían sufrir daños irreversibles."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Resistente al agua",
+          "slug": "Resistente al agua",
+          "position": 11,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Bala vibradora resistente al agua. Control no."
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>28,080</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
+      "related_ids": [
+        15939,
+        15990,
+        15914,
+        15875,
+        16071
+      ],
+      "meta_data": [
+        {
+          "id": 85805,
+          "key": "_shopify_product_id",
+          "value": "6697884025023"
+        },
+        {
+          "id": 211667,
+          "key": "_role_base_price",
+          "value": {
+            "1": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "28080",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "2": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "28080",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "3": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "28080",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "4": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "28080",
+              "min_qty": "0",
+              "max_qty": "0"
+            },
+            "5": {
+              "user_role": "administrator",
+              "discount_type": "fixed_price",
+              "discount_value": "31190",
+              "min_qty": "0",
+              "max_qty": "0"
+            }
+          }
+        },
+        {
+          "id": 236680,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "1",
+            "4377": "1",
+            "4378": "1",
+            "4379": "1",
+            "4380": "1",
+            "4403": "",
+            "4381": "1",
+            "4382": "1",
+            "4383": "1",
+            "4384": "1",
+            "4385": "1",
+            "4386": "1",
+            "4387": "1",
+            "4388": "1",
+            "4389": "1",
+            "4390": "1",
+            "4374": "1",
+            "4373": "1",
+            "4372": "1",
+            "4398": "",
+            "4575": "",
+            "4375": "1",
+            "5": "",
+            "7918": "",
+            "1798": "",
+            "7792": ""
+          }
+        },
+        {
+          "id": 251369,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 269138,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 302019,
+          "key": "_wp_page_template",
+          "value": "default"
+        },
+        {
+          "id": 302020,
+          "key": "variation_swatches_disabled",
+          "value": "no"
+        },
+        {
+          "id": 302021,
+          "key": "goal_product_header_type",
+          "value": "global"
+        },
+        {
+          "id": 8331433,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        },
+        {
+          "id": 8354069,
+          "key": "woosw_count",
+          "value": "1"
+        },
+        {
+          "id": 8354070,
+          "key": "woosw_add",
+          "value": "1744511629"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": false,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Mini Bala Vibradora Celeste - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Mini Bala Vibradora Celeste - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$54,900\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1200\" />\n\t<meta property=\"og:image:height\" content=\"1200\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<meta name=\"twitter:label1\" content=\"Tiempo de lectura\" />\n\t<meta name=\"twitter:data1\" content=\"1 minuto\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/\",\"url\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/\",\"name\":\"Mini Bala Vibradora Celeste - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg\",\"datePublished\":\"2025-04-08T20:33:15+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg\",\"width\":1200,\"height\":1200,\"caption\":\"Mini Bala Vibradora Celeste-DistriSex-DistriSex\"},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Mini Bala Vibradora Celeste\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Mini Bala Vibradora Celeste - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Mini Bala Vibradora Celeste - DistriSex",
+        "og_description": "Precio sugerido$54,900",
+        "og_url": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/",
+        "og_site_name": "DistriSex",
+        "og_image": [
+          {
+            "width": 1200,
+            "height": 1200,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "twitter_misc": {
+          "Tiempo de lectura": "1 minuto"
+        },
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/",
+              "url": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/",
+              "name": "Mini Bala Vibradora Celeste - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg",
+              "datePublished": "2025-04-08T20:33:15+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/mini-bala-vibradora-celeste-distrisex-distrisex.jpg",
+              "width": 1200,
+              "height": 1200,
+              "caption": "Mini Bala Vibradora Celeste-DistriSex-DistriSex"
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/mini-bala-vibradora-celeste/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Mini Bala Vibradora Celeste"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "1",
+          "4377": "1",
+          "4378": "1",
+          "4379": "1",
+          "4380": "1",
+          "4403": "",
+          "4381": "1",
+          "4382": "1",
+          "4383": "1",
+          "4384": "1",
+          "4385": "1",
+          "4386": "1",
+          "4387": "1",
+          "4388": "1",
+          "4389": "1",
+          "4390": "1",
+          "4374": "1",
+          "4373": "1",
+          "4372": "1",
+          "4398": "",
+          "4575": "",
+          "4375": "1",
+          "5": "",
+          "7918": "",
+          "1798": "",
+          "7792": ""
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19644",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    },
+    {
+      "id": 19631,
+      "name": "Medias Nerea Lerot",
+      "slug": "medias-nerea-lerot",
+      "permalink": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/",
+      "date_created": "2025-04-08T15:33:15",
+      "date_created_gmt": "2025-04-08T20:33:15",
+      "date_modified": "2025-10-03T13:27:59",
+      "date_modified_gmt": "2025-10-03T18:27:59",
+      "type": "simple",
+      "status": "publish",
+      "featured": false,
+      "catalog_visibility": "visible",
+      "description": "<h2>Medias Nerea Lerot</h2>\n<p>Un diseño que hará que su imaginación fluya, puesto que podrá jugar con el largo y dibujar el patrón que desea en sus piernas.</p>\n<p>Serán un complemento ideal para show en vivo, puesto que podrán retirarse con demasiada sensualidad.</p>\n<p> Este producto no está sujeto a cambios; sin embargo, se ofrece garantía únicamente por defectos de fabricación.</p>\n",
+      "short_description": "<h5><span style=\"color: #333333\"><strong>Precio sugerido</strong></span><strong><span style=\"color: #18badb\">$34,900</span></strong></h5>\n",
+      "sku": "LT-PME-41204-NEG-U",
+      "price": "18970",
+      "regular_price": "18970",
+      "sale_price": "",
+      "date_on_sale_from": null,
+      "date_on_sale_from_gmt": null,
+      "date_on_sale_to": null,
+      "date_on_sale_to_gmt": null,
+      "on_sale": false,
+      "purchasable": true,
+      "total_sales": 519,
+      "virtual": false,
+      "downloadable": false,
+      "downloads": [],
+      "download_limit": 0,
+      "download_expiry": 0,
+      "external_url": "",
+      "button_text": "",
+      "tax_status": "taxable",
+      "tax_class": "",
+      "manage_stock": true,
+      "stock_quantity": 2,
+      "backorders": "no",
+      "backorders_allowed": false,
+      "backordered": false,
+      "low_stock_amount": null,
+      "sold_individually": false,
+      "weight": "1",
+      "dimensions": {
+        "length": "30",
+        "width": "30",
+        "height": "30"
+      },
+      "shipping_required": true,
+      "shipping_taxable": true,
+      "shipping_class": "",
+      "shipping_class_id": 0,
+      "reviews_allowed": true,
+      "average_rating": "0.00",
+      "rating_count": 0,
+      "upsell_ids": [],
+      "cross_sell_ids": [],
+      "parent_id": 0,
+      "purchase_note": "",
+      "categories": [
+        {
+          "id": 352,
+          "name": "Lencería",
+          "slug": "lenceria-2"
+        },
+        {
+          "id": 246,
+          "name": "Lencería Para Ella",
+          "slug": "lenceria-para-ella"
+        },
+        {
+          "id": 550,
+          "name": "Lerot",
+          "slug": "lerot"
+        },
+        {
+          "id": 264,
+          "name": "Medias Y Ligueros",
+          "slug": "medias-y-ligueros"
+        },
+        {
+          "id": 838,
+          "name": "Todo",
+          "slug": "todo"
+        }
+      ],
+      "tags": [],
+      "images": [
+        {
+          "id": 25706,
+          "date_created": "2023-09-04T14:41:32",
+          "date_created_gmt": "2023-09-05T00:41:32",
+          "date_modified": "2023-09-04T14:41:32",
+          "date_modified_gmt": "2023-09-05T00:41:32",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg",
+          "name": "medias-nerea-lerot_1",
+          "alt": ""
+        },
+        {
+          "id": 25707,
+          "date_created": "2023-09-04T14:41:33",
+          "date_created_gmt": "2023-09-05T00:41:33",
+          "date_modified": "2023-09-04T14:41:33",
+          "date_modified_gmt": "2023-09-05T00:41:33",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_2.jpg",
+          "name": "medias-nerea-lerot_2",
+          "alt": ""
+        },
+        {
+          "id": 25708,
+          "date_created": "2023-09-04T14:41:35",
+          "date_created_gmt": "2023-09-05T00:41:35",
+          "date_modified": "2023-09-04T14:41:35",
+          "date_modified_gmt": "2023-09-05T00:41:35",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_3.jpg",
+          "name": "medias-nerea-lerot_3",
+          "alt": ""
+        },
+        {
+          "id": 25709,
+          "date_created": "2023-09-04T14:41:36",
+          "date_created_gmt": "2023-09-05T00:41:36",
+          "date_modified": "2023-09-04T14:41:36",
+          "date_modified_gmt": "2023-09-05T00:41:36",
+          "src": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_4.jpg",
+          "name": "medias-nerea-lerot_4",
+          "alt": ""
+        }
+      ],
+      "attributes": [
+        {
+          "id": 0,
+          "name": "Contenido",
+          "slug": "Contenido",
+          "position": 0,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Incluye un par de medias"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Cuidados",
+          "slug": "Cuidados",
+          "position": 1,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Lavar con agua fría",
+            "a mano",
+            "por separado o en el proceso de prendas delicadas",
+            "no usar desinfectantes",
+            "ni plancha",
+            "y secar a la sombra."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Garantía",
+          "slug": "Garantía",
+          "position": 2,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "30 días"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Género",
+          "slug": "Género",
+          "position": 3,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Femenino"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Marca",
+          "slug": "Marca",
+          "position": 4,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Lerot"
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Material",
+          "slug": "Material",
+          "position": 5,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Cargaderas en algodón",
+            "nylon y herrajes metálicos."
+          ]
+        },
+        {
+          "id": 0,
+          "name": "Medidas",
+          "slug": "Medidas",
+          "position": 6,
+          "visible": true,
+          "variation": false,
+          "options": [
+            "Talla única"
+          ]
+        }
+      ],
+      "default_attributes": [],
+      "variations": [],
+      "grouped_products": [],
+      "menu_order": 0,
+      "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>18,970</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
+      "related_ids": [
+        16022,
+        16061,
+        16702,
+        16569,
+        16582
+      ],
+      "meta_data": [
+        {
+          "id": 85598,
+          "key": "_shopify_product_id",
+          "value": "7589713412321"
+        },
+        {
+          "id": 211666,
+          "key": "_role_base_price",
+          "value": {
+            "10000": {
+              "discount_type": "fixed_price",
+              "discount_value": "18970",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "distribuidor"
+            },
+            "10001": {
+              "discount_type": "fixed_price",
+              "discount_value": "18970",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "estudio"
+            },
+            "10002": {
+              "discount_type": "fixed_price",
+              "discount_value": "18970",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "farmacia"
+            },
+            "10003": {
+              "discount_type": "fixed_price",
+              "discount_value": "18970",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "motel"
+            },
+            "10004": {
+              "discount_type": "fixed_price",
+              "discount_value": "18970",
+              "max_qty": "0",
+              "min_qty": "0",
+              "user_role": "tienda"
+            }
+          }
+        },
+        {
+          "id": 236675,
+          "key": "wcb2bsa_commissions",
+          "value": {
+            "4376": "3",
+            "5": "3",
+            "4377": "3",
+            "4378": "3",
+            "4379": "3",
+            "4380": "3",
+            "4381": "3",
+            "4382": "3",
+            "4383": "3",
+            "4384": "3",
+            "4385": "3",
+            "4386": "3",
+            "4387": "3",
+            "4388": "3",
+            "4389": "3",
+            "4390": "3",
+            "4374": "3",
+            "4373": "3",
+            "4372": "3",
+            "4375": "3",
+            "4403": "",
+            "4398": "",
+            "4575": ""
+          }
+        },
+        {
+          "id": 251368,
+          "key": "_shipping_custom_price_product_smp",
+          "value": "500"
+        },
+        {
+          "id": 269137,
+          "key": "wcb2bsa_min_price",
+          "value": "0"
+        },
+        {
+          "id": 8331431,
+          "key": "_wp_old_date",
+          "value": "2023-09-04"
+        }
+      ],
+      "stock_status": "instock",
+      "has_options": false,
+      "post_password": "",
+      "global_unique_id": "",
+      "yoast_head": "<!-- This site is optimized with the Yoast SEO plugin v24.7 - https://yoast.com/wordpress/plugins/seo/ -->\n<title>Medias Nerea Lerot - DistriSex</title>\n<!-- Aviso solo para el Administrador: esta página no muestra una meta description porque no la tiene. Haz una de estas dos cosas: escribe una específicamente para esta página o ve al menú [Yoast SEO - Ajustes] y configura una plantilla. -->\n<meta name=\"robots\" content=\"noindex, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1\" />\n<meta property=\"og:locale\" content=\"es_ES\" />\n<meta property=\"og:type\" content=\"article\" />\n<meta property=\"og:title\" content=\"Medias Nerea Lerot - DistriSex\" />\n<meta property=\"og:description\" content=\"Precio sugerido$34,900\" />\n<meta property=\"og:url\" content=\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/\" />\n<meta property=\"og:site_name\" content=\"DistriSex\" />\n<meta property=\"article:modified_time\" content=\"2025-10-03T18:27:59+00:00\" />\n<meta property=\"og:image\" content=\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg\" />\n\t<meta property=\"og:image:width\" content=\"1000\" />\n\t<meta property=\"og:image:height\" content=\"1000\" />\n\t<meta property=\"og:image:type\" content=\"image/jpeg\" />\n<meta name=\"twitter:card\" content=\"summary_large_image\" />\n<script type=\"application/ld+json\" class=\"yoast-schema-graph\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/\",\"url\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/\",\"name\":\"Medias Nerea Lerot - DistriSex\",\"isPartOf\":{\"@id\":\"https://desarrollo.distrisex.com/#website\"},\"primaryImageOfPage\":{\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage\"},\"image\":{\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage\"},\"thumbnailUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg\",\"datePublished\":\"2025-04-08T20:33:15+00:00\",\"dateModified\":\"2025-10-03T18:27:59+00:00\",\"breadcrumb\":{\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#breadcrumb\"},\"inLanguage\":\"es\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/\"]}]},{\"@type\":\"ImageObject\",\"inLanguage\":\"es\",\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage\",\"url\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg\",\"contentUrl\":\"https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg\",\"width\":1000,\"height\":1000},{\"@type\":\"BreadcrumbList\",\"@id\":\"https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Portada\",\"item\":\"https://desarrollo.distrisex.com/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Shop\",\"item\":\"https://desarrollo.distrisex.com/shop/\"},{\"@type\":\"ListItem\",\"position\":3,\"name\":\"Medias Nerea Lerot\"}]},{\"@type\":\"WebSite\",\"@id\":\"https://desarrollo.distrisex.com/#website\",\"url\":\"https://desarrollo.distrisex.com/\",\"name\":\"DistriSex\",\"description\":\"Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.\",\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https://desarrollo.distrisex.com/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"es\"}]}</script>\n<!-- / Yoast SEO plugin. -->",
+      "yoast_head_json": {
+        "title": "Medias Nerea Lerot - DistriSex",
+        "robots": {
+          "index": "noindex",
+          "follow": "follow",
+          "max-snippet": "max-snippet:-1",
+          "max-image-preview": "max-image-preview:large",
+          "max-video-preview": "max-video-preview:-1"
+        },
+        "og_locale": "es_ES",
+        "og_type": "article",
+        "og_title": "Medias Nerea Lerot - DistriSex",
+        "og_description": "Precio sugerido$34,900",
+        "og_url": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/",
+        "og_site_name": "DistriSex",
+        "article_modified_time": "2025-10-03T18:27:59+00:00",
+        "og_image": [
+          {
+            "width": 1000,
+            "height": 1000,
+            "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg",
+            "type": "image/jpeg"
+          }
+        ],
+        "twitter_card": "summary_large_image",
+        "schema": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/",
+              "url": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/",
+              "name": "Medias Nerea Lerot - DistriSex",
+              "isPartOf": {
+                "@id": "https://desarrollo.distrisex.com/#website"
+              },
+              "primaryImageOfPage": {
+                "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage"
+              },
+              "image": {
+                "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage"
+              },
+              "thumbnailUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg",
+              "datePublished": "2025-04-08T20:33:15+00:00",
+              "dateModified": "2025-10-03T18:27:59+00:00",
+              "breadcrumb": {
+                "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#breadcrumb"
+              },
+              "inLanguage": "es",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "ImageObject",
+              "inLanguage": "es",
+              "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#primaryimage",
+              "url": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg",
+              "contentUrl": "https://desarrollo.distrisex.com/wp-content/uploads/2023/09/medias-nerea-lerot_1.jpg",
+              "width": 1000,
+              "height": 1000
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://desarrollo.distrisex.com/producto/medias-nerea-lerot/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Portada",
+                  "item": "https://desarrollo.distrisex.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://desarrollo.distrisex.com/shop/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Medias Nerea Lerot"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://desarrollo.distrisex.com/#website",
+              "url": "https://desarrollo.distrisex.com/",
+              "name": "DistriSex",
+              "description": "Distribuidores Mayoristas de Juguetes Sexuales y Artículos Eróticos.",
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://desarrollo.distrisex.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "es"
+            }
+          ]
+        }
+      },
+      "brands": [],
+      "wcb2bsa_commissions": [
+        {
+          "4376": "3",
+          "5": "3",
+          "4377": "3",
+          "4378": "3",
+          "4379": "3",
+          "4380": "3",
+          "4381": "3",
+          "4382": "3",
+          "4383": "3",
+          "4384": "3",
+          "4385": "3",
+          "4386": "3",
+          "4387": "3",
+          "4388": "3",
+          "4389": "3",
+          "4390": "3",
+          "4374": "3",
+          "4373": "3",
+          "4372": "3",
+          "4375": "3",
+          "4403": "",
+          "4398": "",
+          "4575": ""
+        }
+      ],
+      "_links": {
+        "self": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products/19631",
+            "targetHints": {
+              "allow": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+              ]
+            }
+          }
+        ],
+        "collection": [
+          {
+            "href": "https://desarrollo.distrisex.com/wp-json/wc/v3/products"
+          }
+        ]
+      }
+    }
+  ]
+}

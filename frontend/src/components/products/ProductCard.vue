@@ -48,7 +48,7 @@
         <!-- Precio -->
         <div class="price-section">
           <span class="product-price text-2xl font-medium text-gray-900 font-poppins">
-            ${{ product.price }}
+            {{ displayPrice }}
           </span>
         </div>
         
@@ -102,6 +102,7 @@ import { useAuthStore } from '@/stores/modules/authStore'
 import { useProfileStore } from '@/stores/modules/profileStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
+import { getFormattedProductPrice, getProductPrice } from '@/utils/priceHelper.js'
 
 // Importar iconos SVG como URLs
 import HeartCheckIcon from '@/assets/icons/heart/check.svg?url'
@@ -154,6 +155,16 @@ const i18nStore = useI18nStore()
 const showWishlistSelector = ref(false)
 const isFavorited = ref(props.isInFavorites)
 const isTogglingFavorite = ref(false)
+
+// Computed: Precio formateado del producto (extrae de short_description)
+const displayPrice = computed(() => {
+  return getFormattedProductPrice(props.product)
+})
+
+// Computed: Precio numérico (para cálculos)
+const numericPrice = computed(() => {
+  return getProductPrice(props.product)
+})
 
 // Watch for changes in isInFavorites prop
 watch(() => props.isInFavorites, (newValue) => {
@@ -223,7 +234,7 @@ const handleBuyNow = () => {
     // Agregar el producto al carrito (siempre 1 unidad)
     const result = cartStore.addToCart(props.product.id, {
       name: props.product.name,
-      price: parseFloat(props.product.price),
+      price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
       stock_status: props.product.stock_status
     })
@@ -244,7 +255,7 @@ const handleAddToCart = () => {
   try {
     const result = cartStore.addToCart(props.product.id, {
       name: props.product.name,
-      price: parseFloat(props.product.price),
+      price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
       stock_status: props.product.stock_status
     })
@@ -266,7 +277,7 @@ const handleBuyAsGift = () => {
     // Agregar el producto al carrito (siempre 1 unidad)
     const result = cartStore.addToCart(props.product.id, {
       name: props.product.name,
-      price: parseFloat(props.product.price),
+      price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
       stock_status: props.product.stock_status
     })
