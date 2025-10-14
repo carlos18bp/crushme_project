@@ -382,3 +382,4 @@ El sistema de precios está funcionando correctamente. Los clientes ahora verán
 
 **¿Siguiente paso?** Probar en producción y monitorear que todos los productos tengan precios correctos en `short_description`.
 
+

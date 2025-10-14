@@ -108,7 +108,7 @@ export const usePaymentStore = defineStore('payment', () => {
     try {
       // Los datos ya vienen completos con paypal_order_id, items, shipping, etc.
       const response = await create_request('orders/paypal/capture/', captureData);
-      
+
       const captureResult = {
         order: response.data.order,
         payment: response.data.payment,
@@ -118,8 +118,8 @@ export const usePaymentStore = defineStore('payment', () => {
       currentOrder.value = captureResult.order;
       paymentStatus.value = captureResult.payment.status;
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: captureResult,
         order: captureResult.order,
         payment: captureResult.payment
@@ -127,11 +127,49 @@ export const usePaymentStore = defineStore('payment', () => {
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to capture PayPal payment';
 
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.value,
         details: err.response?.data?.details,
         paypal_status: err.response?.data?.paypal_status
+      };
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  /**
+   * Enviar regalo entre usuarios
+   * POST /api/orders/gifts/send/
+   * @param {Object} giftData - Datos del regalo
+   */
+  async function sendGift(giftData) {
+    isProcessing.value = true;
+    error.value = null;
+
+    try {
+      console.log('🎁 [GIFT] Enviando regalo:', giftData);
+
+      const response = await create_request('orders/gifts/send/', giftData);
+
+      console.log('✅ [GIFT] Regalo enviado exitosamente:', response.data);
+
+      return {
+        success: true,
+        data: response.data,
+        paypal_order_id: response.data.paypal_order_id,
+        receiver_info: response.data.receiver_info
+      };
+    } catch (err) {
+      console.error('❌ [GIFT] Error enviando regalo:', err);
+
+      const errorMessage = err.response?.data?.error || 'Failed to send gift';
+
+      return {
+        success: false,
+        error: errorMessage,
+        details: err.response?.data?.missing_fields,
+        user_info: err.response?.data?.user_info
       };
     } finally {
       isProcessing.value = false;
@@ -186,6 +224,7 @@ export const usePaymentStore = defineStore('payment', () => {
     fetchPayPalConfig,
     createPayPalOrder,
     capturePayPalOrder,
+    sendGift,
     clearPaymentState,
     clearError,
     getPaymentState

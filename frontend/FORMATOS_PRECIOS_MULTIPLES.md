@@ -342,3 +342,4 @@ Ahora **no importa** cómo escriban los precios en WooCommerce:
 
 **Problema resuelto:** Formatos inconsistentes de precios normalizados ✅
 
+

@@ -84,7 +84,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'total', 'total_items', 'items', 'email', 'name',
             'shipping_address', 'shipping_city', 'shipping_state',
             'shipping_postal_code', 'shipping_country', 'phone_number',
-            'full_shipping_address', 'notes',
+            'full_shipping_address', 'notes', 'gift_message',
             'created_at', 'updated_at', 'shipped_at', 'delivered_at'
         ]
         read_only_fields = [

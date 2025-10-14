@@ -33,7 +33,7 @@
                     <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                       <div class="flex items-start justify-between border-b border-gray-200 pb-4">
                         <DialogTitle class="text-2xl font-comfortaa font-semibold text-gray-900">
-                          {{ $t('cart.shoppingCart') || 'Shopping Cart' }}
+                          {{ $t('cart.shoppingCart') }}
                         </DialogTitle>
                         <div class="ml-3 flex h-7 items-center">
                           <button 
@@ -41,7 +41,7 @@
                             class="relative -m-2 p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100" 
                             @click="open = false">
                             <span class="absolute -inset-0.5" />
-                            <span class="sr-only">{{ $t('cart.closePanel') || 'Close panel' }}</span>
+                            <span class="sr-only">{{ $t('cart.closePanel') }}</span>
                             <XMarkIcon class="size-6" aria-hidden="true" />
                           </button>
                         </div>
@@ -54,8 +54,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z" />
                           </svg>
                         </div>
-                        <h3 class="text-xl font-comfortaa font-semibold text-gray-900 mb-2">{{ $t('cart.emptyCart') || 'Your cart is empty' }}</h3>
-                        <p class="text-sm font-poppins text-gray-500">{{ $t('cart.startShopping') || 'Start adding some products!' }}</p>
+                        <h3 class="text-xl font-comfortaa font-semibold text-gray-900 mb-2">{{ $t('cart.emptyCart') }}</h3>
+                        <p class="text-sm font-poppins text-gray-500">{{ $t('cart.startShopping') }}</p>
                       </div>
 
                       <!-- Cart items -->
@@ -67,7 +67,7 @@
                               <div class="size-20 shrink-0 overflow-hidden rounded-lg border border-gray-200">
                                 <img 
                                   :src="item.image || 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=300&fit=crop&crop=center'" 
-                                  :alt="item.name || 'Product image'" 
+                                  :alt="item.name || $t('cart.labels.product')" 
                                   class="size-full object-cover" />
                               </div>
 
@@ -76,7 +76,7 @@
                                 <div>
                                   <div class="flex justify-between">
                                     <h3 class="font-comfortaa font-medium text-gray-900 text-sm leading-tight">
-                                      {{ item.name || 'Product' }}
+                                      {{ item.name || $t('cart.labels.product') }}
                                     </h3>
                                     <p class="ml-4 font-poppins font-semibold text-gray-900">${{ (item.price * item.quantity).toFixed(2) }}</p>
                                   </div>
@@ -106,12 +106,12 @@
                                   </div>
 
                                   <!-- Remove button -->
-                                  <button 
-                                    type="button" 
+                                  <button
+                                    type="button"
                                     @click="removeItem(item.id)"
                                     :disabled="cartStore.isUpdating"
                                     class="font-poppins text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                    {{ cartStore.isUpdating ? ($t('cart.removing') || 'Removing...') : ($t('cart.remove') || 'Remove') }}
+                                    {{ cartStore.isUpdating ? $t('cart.removing') : $t('cart.remove') }}
                                   </button>
                                 </div>
                               </div>
@@ -125,19 +125,19 @@
                     <div v-if="!cartStore.isEmpty" class="border-t border-gray-200 bg-white px-6 py-6">
                       <!-- Subtotal -->
                       <div class="flex justify-between font-poppins text-lg font-medium text-gray-900 mb-1">
-                        <p>{{ $t('cart.subtotal') || 'Subtotal' }}</p>
+                        <p>{{ $t('cart.subtotal') }}</p>
                         <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
                       </div>
                       
                       <!-- Shipping -->
                       <div class="flex justify-between font-poppins text-lg font-medium text-gray-900 mb-3">
-                        <p>{{ $t('cart.shipping') || 'Shipping' }}</p>
+                        <p>{{ $t('cart.shipping') }}</p>
                         <p>$0</p>
                       </div>
                       
                       <!-- Total -->
                       <div class="flex justify-between font-poppins text-xl font-semibold text-gray-900 border-t border-gray-200 pt-3 mb-4">
-                        <p>{{ $t('cart.total') || 'Total' }}</p>
+                        <p>{{ $t('cart.total') }}</p>
                         <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
                       </div>
 
@@ -147,19 +147,19 @@
                           @click="handleCheckout"
                           :disabled="cartStore.isEmpty || cartStore.isUpdating"
                           class="flex w-full items-center justify-center rounded-full bg-gray-900 px-6 py-4 font-poppins text-base font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                          {{ $t('cart.checkout') || 'Checkout' }}
+                          {{ $t('cart.checkoutButton') }}
                         </button>
                       </div>
 
                       <!-- Continue shopping -->
                       <div class="flex justify-center text-center">
                         <p class="font-poppins text-sm text-gray-500">
-                          {{ $t('cart.or') || 'or' }}{{ ' ' }}
-                          <button 
-                            type="button" 
-                            class="font-medium text-gray-900 hover:text-gray-700 transition-colors" 
+                          {{ $t('cart.or') }}{{ ' ' }}
+                          <button
+                            type="button"
+                            class="font-medium text-gray-900 hover:text-gray-700 transition-colors"
                             @click="open = false">
-                            {{ $t('cart.continueShopping') || 'Continue Shopping' }}
+                            {{ $t('cart.continueShopping') }}
                             <span aria-hidden="true"> &rarr;</span>
                           </button>
                         </p>
@@ -180,6 +180,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+
+// Composables
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useCartStore } from '@/stores/modules/cartStore.js'
@@ -197,8 +199,8 @@ const props = defineProps({
 const emit = defineEmits(['close', 'checkout'])
 
 // Composables
-const router = useRouter()
 const { t } = useI18n()
+const router = useRouter()
 const cartStore = useCartStore()
 const i18nStore = useI18nStore()
 
@@ -228,7 +230,7 @@ const removeItem = (itemId) => {
 }
 
 const clearCart = () => {
-  if (confirm(t('cart.confirmClear') || 'Are you sure you want to clear your cart?')) {
+  if (confirm(t('cart.confirmations.clearCart'))) {
     try {
       cartStore.clearCart()
     } catch (error) {
@@ -259,7 +261,7 @@ const handleCheckout = () => {
     }
   } catch (error) {
     console.error('❌ [CART DRAWER] Error durante checkout:', error)
-    alert('Error during checkout. Please try again.')
+    alert(t('cart.messages.generalError'))
   }
 }
 

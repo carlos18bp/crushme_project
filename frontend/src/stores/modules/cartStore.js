@@ -66,16 +66,17 @@ export const useCartStore = defineStore('cart', () => {
 
   /**
    * Agregar producto al carrito
-   * @param {number} productId - ID del producto
+   * @param {number} productId - ID del producto principal
    * @param {number} quantity - Cantidad a agregar (por defecto 1)
-   * @param {object} productData - Datos del producto (name, price, image, stock_status, color, size, attributes)
+   * @param {object} productData - Datos del producto (name, price, image, stock_status, color, size, attributes, variation_id)
    */
   function addToCart(productId, quantity = 1, productData = {}) {
     isUpdating.value = true;
 
     try {
-      // Crear una clave única para el producto basada en sus atributos
+      // ⭐ Crear una clave única para el producto basada en variation_id (si existe) y atributos
       const attributesKey = JSON.stringify({
+        variation_id: productData.variation_id || null,
         color: productData.color || null,
         size: productData.size || null,
         attributes: productData.attributes || null
@@ -83,6 +84,7 @@ export const useCartStore = defineStore('cart', () => {
 
       const existingItem = items.value.find(item => {
         const itemAttributesKey = JSON.stringify({
+          variation_id: item.variation_id || null,
           color: item.color || null,
           size: item.size || null,
           attributes: item.attributes || null
@@ -102,18 +104,20 @@ export const useCartStore = defineStore('cart', () => {
         // Agregar nuevo producto con la cantidad especificada
         const newItem = {
           id: Date.now(), // ID temporal único
-          product_id: productId,
+          product_id: productId, // ⭐ ID del producto principal
+          variation_id: productData.variation_id || null, // ⭐ ID de la variación (si es producto variable)
           name: productData.name || `Producto ${productId}`,
           price: parseFloat(productData.price) || 0,
           image: productData.image || null,
           stock_status: productData.stock_status || 'instock',
           color: productData.color || null,
           size: productData.size || null,
-          attributes: productData.attributes || null,
+          attributes: productData.attributes || null, // ⭐ Atributos seleccionados (para productos variables)
           quantity: quantity,
           added_at: new Date().toISOString()
         };
         
+        console.log('🛒 [CartStore] Nuevo item agregado:', newItem);
         items.value.push(newItem);
       }
       

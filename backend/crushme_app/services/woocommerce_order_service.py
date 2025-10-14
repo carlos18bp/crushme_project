@@ -190,10 +190,15 @@ class WooCommerceOrderService:
         # Build line items
         line_items = []
         for item in order.items.all():
-            line_items.append({
+            line_item = {
                 'product_id': item.woocommerce_product_id,
                 'quantity': item.quantity
-            })
+            }
+            # Add variation_id if present
+            if item.woocommerce_variation_id:
+                line_item['variation_id'] = item.woocommerce_variation_id
+            
+            line_items.append(line_item)
         
         # Fixed billing (your store info)
         billing = {
@@ -222,6 +227,13 @@ class WooCommerceOrderService:
         }
         
         # Base payload
+        customer_note = order.notes if order.notes else ''
+        if order.gift_message:
+            if customer_note:
+                customer_note += '\n\n' + order.gift_message
+            else:
+                customer_note = order.gift_message
+
         payload = {
             'customer_id': self.STORE_CUSTOMER_ID,
             'status': 'on-hold',
@@ -231,7 +243,7 @@ class WooCommerceOrderService:
             'payment_method': 'bacs',
             'payment_method_title': 'Transferencia Bancaria',
             'line_items': line_items,
-            'customer_note': order.notes if order.notes else ''
+            'customer_note': customer_note
         }
         
         # Add country-specific metadata
@@ -323,6 +335,7 @@ class WooCommerceOrderService:
 
 # Singleton instance
 woocommerce_order_service = WooCommerceOrderService()
+
 
 
 

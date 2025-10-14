@@ -472,11 +472,11 @@ const loadVariations = async () => {
     if (result.success && result.data.length > 0) {
       console.log(`✅ ${result.data.length} variaciones cargadas`)
       
-      // ⭐ CARGAR PRIMERA VARIACIÓN POR DEFECTO
-      const firstVariationId = result.data[0].id
-      console.log(`🎯 Cargando primera variación por defecto: ${firstVariationId}`)
+      // ⭐ CARGAR ÚLTIMA VARIACIÓN POR DEFECTO
+      const lastVariationId = result.data[result.data.length - 1].id
+      console.log(`🎯 Cargando última variación por defecto: ${lastVariationId}`)
       
-      await loadVariation(firstVariationId)
+      await loadVariation(lastVariationId)
     }
   } catch (err) {
     console.error('❌ Error cargando variaciones:', err)
@@ -492,8 +492,19 @@ const loadVariation = async (variationId) => {
   try {
     const result = await productStore.fetchWooProductVariation(product.value.id, variationId)
     
-    if (result.success) {
+    if (result.success && result.data) {
       console.log(`✅ Variación ${variationId} cargada`)
+      
+      // ⭐ Inicializar selectedAttributes con los atributos de esta variación
+      if (result.data.attributes && result.data.attributes.length > 0) {
+        const newSelectedAttributes = {}
+        result.data.attributes.forEach(attr => {
+          newSelectedAttributes[attr.name] = attr.option
+          console.log(`🎯 Atributo inicializado: "${attr.name}" = "${attr.option}"`)
+        })
+        selectedAttributes.value = newSelectedAttributes
+      }
+      
       // Reset del índice de imagen cuando cambia la variación
       selectedImageIndex.value = 0
     }
@@ -625,6 +636,16 @@ const addToCart = async () => {
       stock_status: product.value.stock_status
     }
     
+    // ⭐ Para productos variables: agregar variation_id e imagen de variación
+    if (isProductVariable.value && currentVariation.value) {
+      options.variation_id = currentVariation.value.id
+      // Si la variación tiene imagen, usar esa en lugar de la del producto
+      if (currentVariation.value.image?.src) {
+        options.image = currentVariation.value.image.src
+      }
+      console.log(`📦 Producto variable - Variación ID: ${currentVariation.value.id}`)
+    }
+    
     // Agregar atributos seleccionados
     if (Object.keys(selectedAttributes.value).length > 0) {
       options.attributes = selectedAttributes.value
@@ -632,6 +653,7 @@ const addToCart = async () => {
     
     console.log('🛒 Agregando al carrito:', {
       productId: product.value.id,
+      variationId: options.variation_id || null,
       quantity: quantity.value,
       options
     })

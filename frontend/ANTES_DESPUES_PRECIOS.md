@@ -310,3 +310,4 @@ console.table({
 
 **🎉 Resultado Final:** Los precios en la lista de productos ahora son **correctos y consistentes** con WooCommerce.
 
+

@@ -17,6 +17,107 @@ from ..serializers.order_serializers import OrderDetailSerializer
 from ..services.paypal_service import paypal_service
 from ..services.woocommerce_order_service import woocommerce_order_service
 
+
+def create_paypal_order_data(data_dict):
+    """
+    Create PayPal order from data dictionary (internal function)
+
+    Args:
+        data_dict: Dictionary containing order data with keys:
+            - customer_email, customer_name, items, shipping_address,
+            - shipping_city, shipping_state, shipping_postal_code,
+            - shipping_country, phone_number, notes, gift_message
+
+    Returns:
+        Response-like object with status_code and data attributes
+    """
+    try:
+        # Extract data from dictionary
+        items = data_dict.get('items', [])
+        customer_name = data_dict.get('customer_name', 'Guest')
+        customer_email = data_dict.get('customer_email', '')
+
+        # Validate items
+        if not items or len(items) == 0:
+            return type('Response', (), {
+                'status_code': 400,
+                'data': {'error': 'Cart is empty'}
+            })()
+
+        for item in items:
+            if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
+                return type('Response', (), {
+                    'status_code': 400,
+                    'data': {'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'}
+                })()
+
+        # Get shipping info
+        shipping_info = {
+            'name': customer_name,
+            'address_line_1': data_dict.get('shipping_address', ''),
+            'city': data_dict.get('shipping_city', ''),
+            'state': data_dict.get('shipping_state', ''),
+            'zipcode': data_dict.get('shipping_postal_code', ''),
+            'country': data_dict.get('shipping_country', 'CO'),
+            'phone': data_dict.get('phone_number', '')
+        }
+
+        # Validate required shipping fields
+        if not all([shipping_info['address_line_1'], shipping_info['city'],
+                   shipping_info['state'], shipping_info['zipcode']]):
+            return type('Response', (), {
+                'status_code': 400,
+                'data': {'error': 'Missing required shipping information'}
+            })()
+
+        # Build cart items for PayPal
+        cart_items = []
+        total_amount = 0
+        for item in items:
+            cart_items.append({
+                'product_name': item['product_name'],
+                'quantity': item['quantity'],
+                'unit_price': float(item['unit_price']),
+                'woocommerce_product_id': item['woocommerce_product_id']
+            })
+            total_amount += float(item['unit_price']) * item['quantity']
+
+        # Create PayPal order
+        paypal_result = paypal_service.create_order(
+            cart_items=cart_items,
+            shipping_info=shipping_info,
+            total_amount=total_amount
+        )
+
+        if paypal_result['success']:
+            return type('Response', (), {
+                'status_code': 201,
+                'data': {
+                    'success': True,
+                    'message': 'PayPal order created successfully',
+                    'paypal_order_id': paypal_result['order_id'],
+                    'total': str(total_amount),
+                    'items_count': len(cart_items)
+                }
+            })()
+        else:
+            return type('Response', (), {
+                'status_code': 500,
+                'data': {
+                    'error': 'Failed to create PayPal order',
+                    'details': paypal_result.get('error')
+                }
+            })()
+
+    except Exception as e:
+        return type('Response', (), {
+            'status_code': 500,
+            'data': {
+                'error': 'Internal server error',
+                'details': str(e)
+            }
+        })()
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
@@ -159,7 +260,7 @@ def get_or_create_user(email, name):
 def create_paypal_order(request):
     """
     Step 1: Create PayPal order for payment (PUBLIC ENDPOINT)
-    
+
     Request Body:
     {
         "customer_email": "customer@example.com",
@@ -169,7 +270,8 @@ def create_paypal_order(request):
                 "woocommerce_product_id": 1234,
                 "product_name": "Product Name",
                 "quantity": 2,
-                "unit_price": 25.99
+                "unit_price": 25.99,
+                "variation_id": 5679  // Optional - for product variations
             }
         ],
         "shipping_address": "Carrera 80 #50-25 Apto 301",
@@ -180,89 +282,18 @@ def create_paypal_order(request):
         "phone_number": "+57 300 1234567",
         "notes": "Optional notes"
     }
-    
+
     Returns PayPal order_id for frontend to show PayPal popup
     """
-    try:
-        # Get cart items from request
-        items = request.data.get('items', [])
-        
-        if not items or len(items) == 0:
-            return Response({
-                'error': 'Cart is empty'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate items structure
-        for item in items:
-            if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
-                return Response({
-                    'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'
-                }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Get customer info
-        customer_name = request.data.get('customer_name', 'Guest')
-        customer_email = request.data.get('customer_email', '')
-        
-        # Get shipping info from request
-        shipping_info = {
-            'name': customer_name,
-            'address_line_1': request.data.get('shipping_address', ''),
-            'city': request.data.get('shipping_city', ''),
-            'state': request.data.get('shipping_state', ''),
-            'zipcode': request.data.get('shipping_postal_code', ''),
-            'country': request.data.get('shipping_country', 'CO'),
-            'phone': request.data.get('phone_number', '')
-        }
-        
-        # Validate required fields
-        if not all([shipping_info['address_line_1'], shipping_info['city'], 
-                   shipping_info['state'], shipping_info['zipcode']]):
-            return Response({
-                'error': 'Missing required shipping information'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Build cart items for PayPal
-        cart_items = []
-        total_amount = 0
-        for item in items:
-            cart_items.append({
-                'product_name': item['product_name'],
-                'quantity': item['quantity'],
-                'unit_price': float(item['unit_price']),
-                'woocommerce_product_id': item['woocommerce_product_id']
-            })
-            total_amount += float(item['unit_price']) * item['quantity']
-        
-        # Create PayPal order
-        paypal_result = paypal_service.create_order(
-            cart_items=cart_items,
-            shipping_info=shipping_info,
-            total_amount=total_amount
-        )
-        
-        if paypal_result['success']:
-            logger.info(f"✅ PayPal order created: {paypal_result['order_id']}")
-            
-            return Response({
-                'success': True,
-                'message': 'PayPal order created successfully',
-                'paypal_order_id': paypal_result['order_id'],
-                'total': str(total_amount),
-                'items_count': len(cart_items)
-            }, status=status.HTTP_201_CREATED)
-        else:
-            logger.error(f"❌ PayPal order creation failed: {paypal_result.get('error')}")
-            return Response({
-                'error': 'Failed to create PayPal order',
-                'details': paypal_result.get('error')
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    except Exception as e:
-        logger.error(f"❌ Error creating PayPal order: {str(e)}")
-        return Response({
-            'error': 'Internal server error',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # Convert request.data to dict and call helper function
+    result = create_paypal_order_data(dict(request.data))
+
+    if result.status_code == 201:
+        logger.info(f"✅ PayPal order created: {result.data.get('paypal_order_id')}")
+        return Response(result.data, status=status.HTTP_201_CREATED)
+    else:
+        logger.error(f"❌ PayPal order creation failed: {result.data}")
+        return Response(result.data, status=result.status_code)
 
 
 @api_view(['POST'])
@@ -284,7 +315,8 @@ def capture_paypal_order(request):
                 "woocommerce_product_id": 1234,
                 "product_name": "Product Name",
                 "quantity": 2,
-                "unit_price": 25.99
+                "unit_price": 25.99,
+                "variation_id": 5679  // Optional - for product variations
             }
         ],
         "shipping_address": "Carrera 80 #50-25 Apto 301",
@@ -293,7 +325,8 @@ def capture_paypal_order(request):
         "shipping_postal_code": "050031",
         "shipping_country": "CO",
         "phone_number": "+57 300 1234567",
-        "notes": "Optional notes"
+        "notes": "Optional notes",
+        "gift_message": "¡Feliz cumpleaños! Espero que te guste este regalo ❤️"
     }
     
     Flow:
@@ -366,6 +399,7 @@ def capture_paypal_order(request):
             country=request.data.get('shipping_country', 'CO'),
             phone=request.data.get('phone_number', ''),
             notes=request.data.get('notes', ''),
+            gift_message=request.data.get('gift_message', ''),  # New field for gift messages
             status='processing'  # Payment confirmed, processing order
         )
         
@@ -374,6 +408,7 @@ def capture_paypal_order(request):
             OrderItem.objects.create(
                 order=order,
                 woocommerce_product_id=item['woocommerce_product_id'],
+                woocommerce_variation_id=item.get('variation_id'),  # Optional field
                 quantity=item['quantity'],
                 unit_price=item['unit_price'],
                 product_name=item['product_name'],

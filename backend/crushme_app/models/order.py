@@ -103,6 +103,13 @@ class Order(models.Model):
         blank=True,
         help_text="Additional notes or instructions"
     )
+
+    # Gift message for presents/gifts
+    gift_message = models.TextField(
+        verbose_name="Gift Message",
+        blank=True,
+        help_text="Personalized message for gifts and presents"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(
@@ -233,6 +240,12 @@ class OrderItem(models.Model):
     woocommerce_product_id = models.IntegerField(
         verbose_name="WooCommerce Product ID",
         help_text="ID of the product in WooCommerce"
+    )
+    woocommerce_variation_id = models.IntegerField(
+        verbose_name="WooCommerce Variation ID",
+        help_text="ID of the product variation in WooCommerce (optional)",
+        null=True,
+        blank=True
     )
     quantity = models.PositiveIntegerField(
         verbose_name="Quantity"

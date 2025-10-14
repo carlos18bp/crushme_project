@@ -9,7 +9,7 @@
   "shipping": "Shipping",
   "total": "Total",
   "validating": "Validating...",
-  "checkout": "Checkout",
+  "checkoutButton": "Checkout",
   "or": "or",
   "continueShopping": "Continue Shopping",
   "title": "Shopping Cart",
@@ -66,10 +66,40 @@
     "cancel": "Cancel"
   },
   "summary": {
-    "cartSummary": "Cart Summary",
+    "cartSummary": "Order Summary",
     "itemsInCart": "{count} items in cart",
     "itemInCart": "{count} item in cart",
     "freeShipping": "Free shipping",
-    "shippingCalculated": "Shipping calculated at checkout"
+    "shippingCalculated": "Shipping calculated at checkout",
+    "securePayment": "Secure Payment",
+    "fastShipping": "Fast Shipping"
+  },
+  "checkout": {
+    "shippingInformation": "Shipping information",
+    "shippingType": {
+      "forMe": "For me",
+      "forGift": "For gift"
+    },
+    "form": {
+      "email": "Email",
+      "username": "Username",
+      "note": "Note",
+      "paymentMethod": "Payment method",
+      "selectPaymentMethod": "Select your preferred payment method",
+      "orderSummary": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax (19%)",
+      "total": "Total",
+      "includesTax": "Includes {tax} in taxes",
+      "placeholders": {
+        "email": "you@example.com",
+        "searchUser": "Search user...",
+        "note": "Whisper something sweet (or keep it a surprise 😊)"
+      },
+      "help": {
+        "username": "@LovelyFan92 This is how your Darling will recognize you as the sender 💕"
+      }
+    }
   }
 }

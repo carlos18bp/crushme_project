@@ -147,3 +147,4 @@ Si un precio no se muestra correctamente:
 
 El regex busca cualquier patrón `$XX,XXX` en el HTML.
 
+

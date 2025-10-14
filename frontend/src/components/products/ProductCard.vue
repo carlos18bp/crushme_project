@@ -232,11 +232,13 @@ const handleBuyNow = () => {
   console.log('🔵 [ProductCard] handleBuyNow clicked for product:', props.product.id)
   try {
     // Agregar el producto al carrito (siempre 1 unidad)
-    const result = cartStore.addToCart(props.product.id, {
+    // Nota: En ProductCard no tenemos variaciones, solo productos simples desde la lista
+    const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status
+      stock_status: props.product.stock_status,
+      variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
     console.log('🔵 [ProductCard] handleBuyNow result:', result)
@@ -253,11 +255,12 @@ const handleBuyNow = () => {
 const handleAddToCart = () => {
   console.log('🟢 [ProductCard] handleAddToCart clicked for product:', props.product.id)
   try {
-    const result = cartStore.addToCart(props.product.id, {
+    const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status
+      stock_status: props.product.stock_status,
+      variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
     console.log('🟢 [ProductCard] handleAddToCart result:', result)
@@ -275,11 +278,12 @@ const handleBuyAsGift = () => {
   console.log('🎁 [ProductCard] handleBuyAsGift clicked for product:', props.product.id)
   try {
     // Agregar el producto al carrito (siempre 1 unidad)
-    const result = cartStore.addToCart(props.product.id, {
+    const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status
+      stock_status: props.product.stock_status,
+      variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
     console.log('🎁 [ProductCard] handleBuyAsGift result:', result)

@@ -86,11 +86,6 @@ const baseRoutes = [
   
   // Shopping cart routes
   {
-    path: '/cart',
-    name: 'Cart',
-    component: () => import('@/views/cart/CartView.vue')
-  },
-  {
     path: '/checkout',
     name: 'Checkout',
     component: () => import('@/views/cart/CheckoutView.vue')

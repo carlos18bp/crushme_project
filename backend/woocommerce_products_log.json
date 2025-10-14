@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-10-12T03:21:31.256047",
+  "timestamp": "2025-10-14T20:45:56.403457",
   "endpoint": "get_woocommerce_products",
   "params": {
     "category_id": null,
@@ -207,11 +207,11 @@
       "menu_order": 0,
       "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>47,800</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
       "related_ids": [
-        19397,
-        19343,
-        20486,
-        18768,
-        19294
+        20493,
+        19156,
+        19346,
+        19162,
+        19739
       ],
       "meta_data": [
         {
@@ -790,11 +790,11 @@
       "menu_order": 0,
       "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>799,900</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
       "related_ids": [
-        15729,
-        15934,
-        15999,
+        15971,
+        16071,
+        16082,
         16000,
-        15964
+        15874
       ],
       "meta_data": [
         {
@@ -1288,11 +1288,11 @@
       "menu_order": 0,
       "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>16,790</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
       "related_ids": [
-        19162,
-        19343,
-        20495,
-        20386,
-        19339
+        20500,
+        20486,
+        18749,
+        20494,
+        20386
       ],
       "meta_data": [
         {
@@ -1724,11 +1724,11 @@
       "menu_order": 0,
       "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>6,890</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
       "related_ids": [
-        19157,
-        19162,
-        19300,
-        20493,
-        20486
+        20486,
+        18749,
+        19345,
+        19425,
+        18769
       ],
       "meta_data": [
         {
@@ -1993,7 +1993,7 @@
       "date_on_sale_to_gmt": null,
       "on_sale": false,
       "purchasable": true,
-      "total_sales": 1711,
+      "total_sales": 1712,
       "virtual": false,
       "downloadable": false,
       "downloads": [],
@@ -2135,11 +2135,11 @@
       "menu_order": 0,
       "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>2,290</bdi></span> - <span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>9,490</bdi></span></ins>",
       "related_ids": [
-        18749,
-        19361,
-        20494,
-        19291,
-        19346
+        19156,
+        20496,
+        19162,
+        18769,
+        19343
       ],
       "meta_data": [
         {
@@ -2634,11 +2634,11 @@
       "menu_order": 0,
       "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>72,900</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
       "related_ids": [
-        15960,
+        16072,
+        15990,
+        16079,
         15729,
-        15913,
-        15939,
-        15964
+        15997
       ],
       "meta_data": [
         {
@@ -3020,11 +3020,11 @@
       "menu_order": 0,
       "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>18,370</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
       "related_ids": [
-        16752,
-        16064,
+        16562,
+        16073,
+        16061,
         16601,
-        16555,
-        16726
+        16582
       ],
       "meta_data": [
         {
@@ -3520,11 +3520,11 @@
       "menu_order": 0,
       "price_html": "<ins class=\"highlight\"><span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>28,080</bdi></span></ins> <small class=\"woocommerce-price-suffix\"> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small></small>",
       "related_ids": [
-        15939,
-        15990,
-        15914,
-        15875,
-        16071
+        15947,
+        16079,
+        16084,
+        16071,
+        16072
       ],
       "meta_data": [
         {
@@ -4041,11 +4041,11 @@
       "menu_order": 0,
       "price_html": "<span class=\"woocommerce-Price-amount amount\"><bdi><span class=\"woocommerce-Price-currencySymbol\">&#36;</span>18,970</bdi></span> <small class=\"woocommerce-price-suffix\">IVA INCLUIDO</small>",
       "related_ids": [
-        16022,
-        16061,
+        16026,
+        16582,
+        16043,
         16702,
-        16569,
-        16582
+        16562
       ],
       "meta_data": [
         {

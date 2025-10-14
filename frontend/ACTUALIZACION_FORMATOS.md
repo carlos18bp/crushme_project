@@ -77,3 +77,4 @@ console.log(extractPriceFromShortDescription('$16.000'))  // 16000
 
 **Fecha:** ${new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
 
+

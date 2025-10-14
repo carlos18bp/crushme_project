@@ -544,7 +544,8 @@ const addToCart = async (product) => {
       name: product.name,
       price: productPrice,
       image: product.images?.[0]?.src || null,
-      stock_status: product.stock_status
+      stock_status: product.stock_status,
+      variation_id: null // Los productos desde la lista no tienen variación seleccionada
     }
     
     // Llamar al cartStore para agregar el producto

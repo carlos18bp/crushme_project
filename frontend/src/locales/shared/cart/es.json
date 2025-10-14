@@ -9,7 +9,7 @@
   "shipping": "Envío",
   "total": "Total",
   "validating": "Validando...",
-  "checkout": "Finalizar compra",
+  "checkoutButton": "Finalizar compra",
   "or": "o",
   "continueShopping": "Seguir comprando",
   "title": "Carrito de Compras",
@@ -66,10 +66,40 @@
     "cancel": "Cancelar"
   },
   "summary": {
-    "cartSummary": "Resumen del Carrito",
+    "cartSummary": "Resumen del Pedido",
     "itemsInCart": "{count} artículos en el carrito",
     "itemInCart": "{count} artículo en el carrito",
     "freeShipping": "Envío gratis",
-    "shippingCalculated": "Envío calculado al finalizar compra"
+    "shippingCalculated": "Envío calculado al finalizar compra",
+    "securePayment": "Pago Seguro",
+    "fastShipping": "Envío Rápido"
+  },
+  "checkout": {
+    "shippingInformation": "Información de envío",
+    "shippingType": {
+      "forMe": "Para mí",
+      "forGift": "Para regalo"
+    },
+    "form": {
+      "email": "Correo electrónico",
+      "username": "Usuario",
+      "note": "Nota",
+      "paymentMethod": "Método de pago",
+      "selectPaymentMethod": "Selecciona tu método de pago preferido",
+      "orderSummary": "Resumen del pedido",
+      "subtotal": "Subtotal",
+      "shipping": "Envío",
+      "tax": "Impuestos (19%)",
+      "total": "Total",
+      "includesTax": "Incluye {tax} en impuestos",
+      "placeholders": {
+        "email": "tu@ejemplo.com",
+        "searchUser": "Buscar usuario...",
+        "note": "Escribe algo dulce (o mantenlo sorpresa 😊)"
+      },
+      "help": {
+        "username": "@LovelyFan92 Esta es la forma en que tu Darling te reconocerá como remitente 💕"
+      }
+    }
   }
 }

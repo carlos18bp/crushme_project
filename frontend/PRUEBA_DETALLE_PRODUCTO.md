@@ -324,3 +324,4 @@ console.log('Error:', productStore.wooError)
 
 **🎯 Próximo Paso:** Implementar selector de variaciones con precio dinámico
 
+

@@ -226,3 +226,4 @@ Si todo está ✅, los precios en la lista de productos ahora funcionan correcta
 
 **Próximo paso:** Actualizar `ProductDetailView.vue` (página de detalle del producto)
 
+
