@@ -364,7 +364,7 @@ def get_products_stats(request):
 def get_category_stats(request, category_id):
     """
     Obtener estadísticas de una categoría específica
-    
+
     Devuelve:
     - Información de la categoría
     - Total de productos
@@ -372,32 +372,32 @@ def get_category_stats(request, category_id):
     """
     try:
         result = woocommerce_service.get_categories(per_page=100)
-        
+
         if not result['success']:
             return Response({
                 'success': False,
                 'error': 'Error obteniendo categorías'
             }, status=status.HTTP_502_BAD_GATEWAY)
-        
+
         categories = result['data']
-        
+
         # Buscar la categoría
         category = next((cat for cat in categories if cat['id'] == category_id), None)
-        
+
         if not category:
             return Response({
                 'success': False,
                 'error': f'Categoría {category_id} no encontrada'
             }, status=status.HTTP_404_NOT_FOUND)
-        
+
         # Buscar subcategorías
         subcategories = [cat for cat in categories if cat['parent'] == category_id]
-        
+
         # Calcular total incluyendo subcategorías
         total_with_subcategories = category['count']
         if subcategories:
             total_with_subcategories += sum(sub['count'] for sub in subcategories)
-        
+
         # Traducir nombres
         translator = create_translator_from_request(request)
         category_data = {
@@ -416,11 +416,11 @@ def get_category_stats(request, category_id):
             }
             for sub in subcategories
         ]
-        
+
         if translator.target_language != 'es':
             category_data = translate_category_names(category_data, translator)
             subcategories_data = translate_category_names(subcategories_data, translator)
-        
+
         return Response({
             'success': True,
             'data': {
@@ -432,9 +432,84 @@ def get_category_stats(request, category_id):
                 'subcategories': subcategories_data
             }
         }, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         return Response({
             'success': False,
             'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_random_featured_categories(request):
+    """
+    Obtener 4 categorías aleatorias de las categorías principales con la imagen del primer producto.
+
+    Devuelve:
+    - 4 categorías seleccionadas aleatoriamente de las principales.
+    - Para cada categoría: nombre, slug, ID y la imagen del primer producto disponible.
+    - El slug se puede usar para consultar el endpoint existente: /api/products/category/?category=<slug>
+    """
+    try:
+        # Definir las categorías principales (igual que en organize_categories_by_theme)
+        main_themes = [
+            {'name': 'Juguetes', 'slug': 'juguetes', 'icon': '🎮', 'main_categories': [134]},
+            {'name': 'Lencería', 'slug': 'lenceria', 'icon': '👗', 'main_categories': [246, 352]},
+            {'name': 'Lubricantes y Cosmética', 'slug': 'lubricantes', 'icon': '💧', 'main_categories': [136]},
+            {'name': 'Bondage', 'slug': 'bondage', 'icon': '⛓️', 'main_categories': [137]},
+            {'name': 'Bienestar Sexual', 'slug': 'bienestar', 'icon': '🌿', 'main_categories': [531]},
+            {'name': 'Marcas', 'slug': 'marcas', 'icon': '🏷️', 'main_categories': [546, 539, 550]},
+            {'name': 'Ofertas y Descuentos', 'slug': 'ofertas', 'icon': '💰', 'main_categories': [695]}
+        ]
+
+        # Seleccionar 4 categorías aleatorias
+        import random
+        selected_themes = random.sample(main_themes, min(4, len(main_themes)))
+
+        featured_categories = []
+
+        for theme in selected_themes:
+            # Obtener productos de la primera categoría principal de este tema
+            category_id = theme['main_categories'][0]
+            products_result = woocommerce_service.get_products(category_id=category_id, per_page=1, page=1)
+
+            # Extraer la imagen del primer producto si está disponible
+            first_product_image = None
+            if products_result['success'] and products_result['data']:
+                first_product = products_result['data'][0]
+                images = first_product.get('images', [])
+                if images:
+                    first_product_image = images[0].get('src', '')  # URL de la imagen principal
+
+            # Construir el objeto de la categoría
+            category_data = {
+                'name': theme['name'],
+                'slug': theme['slug'],  # Este slug se usa para el endpoint existente
+                'icon': theme['icon'],
+                'category_id': category_id,  # ID de la categoría en WooCommerce
+                'first_product_image': first_product_image  # Imagen del primer producto
+            }
+
+            featured_categories.append(category_data)
+
+        # Traducir nombres si es necesario (reutilizando la lógica existente)
+        translator = create_translator_from_request(request)
+        if translator.target_language != 'es':
+            for cat in featured_categories:
+                cat['name'] = translator.translate_if_needed(cat['name'], content_language='es')
+
+        return Response({
+            'success': True,
+            'message': '4 categorías destacadas obtenidas exitosamente',
+            'data': featured_categories,
+            'total_selected': len(featured_categories)
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Error obteniendo categorías destacadas: {str(e)}")
+        return Response({
+            'success': False,
+            'error': 'Error interno del servidor',
+            'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

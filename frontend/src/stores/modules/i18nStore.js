@@ -81,6 +81,8 @@ import notesEn from '@/locales/home/notes/en.json'
 import notesEs from '@/locales/home/notes/es.json'
 import ctasEn from '@/locales/home/ctas/en.json'
 import ctasEs from '@/locales/home/ctas/es.json'
+import categoriesEn from '@/locales/home/categories/en.json'
+import categoriesEs from '@/locales/home/categories/es.json'
 
 // Import profile translations
 import profileSidebarEn from '@/locales/profile/sidebar/en.json'
@@ -132,6 +134,7 @@ const messages = {
     trending: trendingEn,
     notes: notesEn,
     ctas: ctasEn,
+    categories: categoriesEn,
     profileSidebar: profileSidebarEn,
     profileDashboard: profileDashboardEn,
     profile: {
@@ -170,6 +173,7 @@ const messages = {
     trending: trendingEs,
     notes: notesEs,
     ctas: ctasEs,
+    categories: categoriesEs,
     profileSidebar: profileSidebarEs,
     profileDashboard: profileDashboardEs,
     profile: {

@@ -110,6 +110,35 @@ class Order(models.Model):
         blank=True,
         help_text="Personalized message for gifts and presents"
     )
+
+    # WooCommerce order ID (populated after successful WooCommerce sync)
+    woocommerce_order_id = models.IntegerField(
+        blank=True,
+        null=True,
+        verbose_name="WooCommerce Order ID",
+        help_text="ID of the corresponding order in WooCommerce (populated after sync)"
+    )
+
+    # Gift order tracking
+    is_gift = models.BooleanField(
+        default=False,
+        verbose_name="Is Gift Order",
+        help_text="True if this order was sent as a gift to another user"
+    )
+    sender_username = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Gift Sender Username",
+        help_text="Username of the person who sent this gift (if different from order owner)"
+    )
+    receiver_username = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Gift Receiver Username",
+        help_text="Username of the person who received this gift"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(

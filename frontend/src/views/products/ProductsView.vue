@@ -250,7 +250,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useProductStore } from '@/stores/modules/productStore'
 import { useProfileStore } from '@/stores/modules/profileStore'
@@ -264,6 +264,7 @@ import { getProductPrice } from '@/utils/priceHelper.js'
 // i18n setup
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const i18nStore = useI18nStore()
 
 // Store setup
@@ -625,11 +626,36 @@ watch(selectedCategory, (newCategory) => {
   }
 })
 
+// Función para manejar parámetros de consulta iniciales
+const handleInitialQuery = async () => {
+  // Leer parámetros de consulta para establecer filtros iniciales
+  const categoryQuery = route.query.category
+  const themeQuery = route.query.theme
+
+  if (categoryQuery) {
+    console.log('🔍 Parámetro de categoría inicial:', categoryQuery)
+    // Buscar la categoría por slug y establecerla
+    const theme = productStore.getThemeBySlug(categoryQuery)
+    if (theme && theme.categories.length > 0) {
+      selectedTheme.value = categoryQuery
+      selectedCategory.value = theme.categories[0].id
+      await loadThemeProducts(categoryQuery)
+    }
+  } else if (themeQuery) {
+    console.log('🔍 Parámetro de tema inicial:', themeQuery)
+    selectedTheme.value = themeQuery
+    await loadThemeProducts(themeQuery)
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   // Inicializar catálogo de productos
   await initializeCatalog()
-  
+
+  // Manejar parámetros de consulta iniciales
+  await handleInitialQuery()
+
   // Cargar IDs de favoritos si el usuario está autenticado
   if (authStore.isLoggedIn) {
     console.log('🔄 Cargando IDs de favoritos...')

@@ -49,11 +49,18 @@
               <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4">
                 <!-- User Profile Section -->
                 <div class="flex items-center gap-3 pt-6 pb-4">
-                  <img 
-                    class="h-12 w-12 rounded-full object-cover"
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                    alt="User avatar" 
-                  />
+                  <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                    <img
+                      v-if="userProfileImage"
+                      class="h-12 w-12 rounded-full object-cover"
+                      :src="userProfileImage"
+                      alt="User avatar"
+                    />
+                    <UserIcon
+                      v-else
+                      class="h-8 w-8 text-gray-400"
+                    />
+                  </div>
                   <span class="text-lg font-medium text-gray-900 font-comfortaa">@{{ authStore.username }}</span>
                 </div>
 
@@ -116,11 +123,18 @@
       <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-8">
         <!-- User Profile Section -->
         <div class="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <img 
-            class="h-12 w-12 rounded-full object-cover"
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-            alt="User avatar" 
-          />
+          <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <img
+              v-if="userProfileImage"
+              class="h-12 w-12 rounded-full object-cover"
+              :src="userProfileImage"
+              alt="User avatar"
+            />
+            <UserIcon
+              v-else
+              class="h-8 w-8 text-gray-400"
+            />
+          </div>
           <span class="text-lg font-medium text-gray-900 font-comfortaa">@{{ authStore.username }}</span>
         </div>
 
@@ -186,13 +200,20 @@
         </svg>
       </button>
       <div class="flex-1 text-sm font-semibold text-gray-900 font-comfortaa">Profile</div>
-      <a href="#">
+      <a href="#" @click="router.push({ name: `MyProfile-${i18nStore.locale}` })">
         <span class="sr-only">Your profile</span>
-        <img 
-          class="h-8 w-8 rounded-full object-cover"
-          src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-          alt="User avatar" 
-        />
+        <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          <img
+            v-if="userProfileImage"
+            class="h-8 w-8 rounded-full object-cover"
+            :src="userProfileImage"
+            alt="User avatar"
+          />
+          <UserIcon
+            v-else
+            class="h-5 w-5 text-gray-400"
+          />
+        </div>
       </a>
     </div>
   </div>
@@ -228,6 +249,11 @@ const handleLogout = async () => {
   router.push({ name: `Home-${i18nStore.locale}` })
 }
 
+// Computed property for user profile image
+const userProfileImage = computed(() => {
+  return authStore.user?.profile_picture_url || null
+})
+
 const navigation = computed(() => [
   { 
     name: t('profileSidebar.dashboard'),
@@ -249,9 +275,9 @@ const navigation = computed(() => [
   },
   { 
     name: t('profileSidebar.myGifts'),
-    to: `/${i18nStore.locale}/profile/my-gifts`, 
+    to: { name: `MyGifts-${i18nStore.locale}` }, 
     icon: GiftIcon, 
-    current: route.path.includes('/profile/my-gifts')
+    current: route.name === `MyGifts-${i18nStore.locale}`
   },
   { 
     name: t('profileSidebar.favorites'),

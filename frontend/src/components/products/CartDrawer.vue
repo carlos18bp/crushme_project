@@ -132,7 +132,7 @@
                       <!-- Shipping -->
                       <div class="flex justify-between font-poppins text-lg font-medium text-gray-900 mb-3">
                         <p>{{ $t('cart.shipping') }}</p>
-                        <p>$0</p>
+                        <p>{{ $t('cart.summary.shippingCalculated') }}</p>
                       </div>
                       
                       <!-- Total -->

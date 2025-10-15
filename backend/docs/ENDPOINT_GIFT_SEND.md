@@ -220,6 +220,155 @@ fetch('/api/orders/gifts/send/', {
 
 ---
 
+---
+
+## 🎁 **MARCAR ÓRDENES COMO REGALOS**
+
+### **Campos de Regalo en el Modelo Order**
+
+Ahora las órdenes pueden marcarse explícitamente como regalos con estos campos:
+
+```python
+# En el modelo Order
+is_gift = models.BooleanField(default=False)                    # Marca si es regalo
+sender_username = models.CharField(max_length=150, blank=True)  # Quién envía
+receiver_username = models.CharField(max_length=150, blank=True) # Quién recibe
+gift_message = models.TextField(blank=True)                     # Mensaje personalizado
+```
+
+### **Métodos para Crear Órdenes de Regalo**
+
+#### **1. Endpoint Especial de Regalos** ⭐ **(Recomendado)**
+```
+POST /api/orders/gifts/send/
+```
+- ✅ **Automático**: Marca `is_gift=True` automáticamente
+- ✅ **Verificación**: Valida que el destinatario tenga dirección de envío
+- ✅ **Campos incluidos**: `sender_username`, `receiver_username`, `gift_message`
+- ✅ **Flujo completo**: Crea orden PayPal → Marca como regalo → Envía a WooCommerce
+
+**Campos que se guardan automáticamente:**
+- `is_gift = True` (marca como regalo)
+- `sender_username = request.data.get('sender_username')` (quién envía)
+- `receiver_username = receiver_username` (quién recibe)
+- `gift_message = request.data.get('gift_message')` (mensaje personalizado)
+
+#### **2. Endpoint Normal con Campos de Regalo**
+```
+POST /api/orders/paypal/create/
+```
+**Request Body adicional:**
+```json
+{
+  "customer_email": "cliente@ejemplo.com",
+  "customer_name": "Cliente",
+  "items": [...],
+  "shipping_address": "...",
+  // ... otros campos normales
+
+  // Campos de regalo (opcionales)
+  "is_gift": true,
+  "sender_username": "remitente_user",
+  "receiver_username": "destinatario_user",
+  "gift_message": "¡Feliz cumpleaños! 🎂"
+}
+```
+
+#### **3. Creación Manual en Admin**
+- ✅ **Panel de Admin**: `/admin/crushme_app/order/`
+- ✅ **Editar orden**: Marcar `is_gift = True`
+- ✅ **Campos disponibles**: Todos los campos de regalo
+
+---
+
+### **Identificación de Órdenes de Regalo**
+
+#### **En Respuestas de API**
+```json
+{
+  "order": {
+    "id": 123,
+    "order_number": "ORD1699123456ABC123",
+    "status": "processing",
+    "total": "25.99",
+    "is_gift": true,
+    "sender_username": "usuario_remitente",
+    "receiver_username": "usuario_destinatario",
+    "gift_message": "¡Feliz cumpleaños! 🎂",
+    "email": "destinatario@ejemplo.com",
+    "name": "Usuario Destinatario",
+    "items": [
+      {
+        "id": 1,
+        "woocommerce_product_id": 1234,
+        "quantity": 1,
+        "unit_price": "25.99",
+        "product_name": "Producto de Regalo",
+        "subtotal": "25.99"
+      }
+    ],
+    "shipping_address": "Carrera 80 #50-25 Apto 301",
+    "shipping_city": "Medellín",
+    "shipping_state": "Antioquia",
+    "shipping_postal_code": "050031",
+    "shipping_country": "CO",
+    "phone_number": "+57 300 1234567",
+    "notes": "",
+    "created_at": "2025-10-14T18:30:00Z",
+    "updated_at": "2025-10-14T18:30:00Z"
+  }
+}
+```
+
+#### **En Base de Datos**
+```sql
+-- Buscar órdenes de regalo
+SELECT * FROM crushme_app_order WHERE is_gift = True;
+
+-- Buscar regalos enviados por un usuario
+SELECT * FROM crushme_app_order WHERE sender_username = 'usuario_remitente';
+
+-- Buscar regalos recibidos por un usuario
+SELECT * FROM crushme_app_order WHERE receiver_username = 'usuario_destinatario';
+```
+
+#### **En WooCommerce** (como metadata)
+- ✅ **customer_note**: Incluye `gift_message` si existe
+- ✅ **Campos personalizados**: Se pueden añadir más campos específicos
+
+---
+
+### **Casos de Uso**
+
+#### **🎁 Regalo Verificado** (Endpoint Especial)
+```javascript
+// Frontend envía regalo verificando destinatario
+const giftData = {
+  receiver_username: "amiga_secreta",
+  sender_username: "yo_mismo",
+  gift_message: "¡Para la mejor amiga! 💕",
+  items: [...]
+};
+
+fetch('/api/orders/gifts/send/', {
+  method: 'POST',
+  body: JSON.stringify(giftData)
+});
+```
+
+#### **🎀 Regalo Simple** (Endpoint Normal)
+```javascript
+// Cualquier orden puede marcarse como regalo
+const orderData = {
+  customer_email: "cliente@ejemplo.com",
+  items: [...],
+  is_gift: true,
+  gift_message: "Mensaje personalizado"
+};
+```
+
+---
+
 ## 🎯 **Próximas Mejoras**
 
 - [ ] **Notificaciones push** al destinatario cuando recibe regalo

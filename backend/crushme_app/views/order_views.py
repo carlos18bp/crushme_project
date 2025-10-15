@@ -13,7 +13,7 @@ from ..models import Order, Cart
 from ..serializers.order_serializers import (
     OrderListSerializer, OrderDetailSerializer, OrderCreateSerializer,
     OrderStatusUpdateSerializer, OrderTrackingSerializer, OrderSearchSerializer,
-    OrderCancelSerializer
+    OrderCancelSerializer, OrderPrivateSerializer
 )
 from ..services.woocommerce_order_service import woocommerce_order_service
 
@@ -346,3 +346,130 @@ def get_order_statistics(request):
             }
         }
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_gift_orders(request):
+    """
+    Get orders that are marked as gifts for the authenticated user
+
+    Query Parameters:
+    - type: 'sent' (default), 'received', or 'all'
+        - sent: Orders where user is the sender
+        - received: Orders where user is the receiver
+        - all: Both sent and received gifts
+
+    Returns user's gift orders with gift information
+    """
+    user = request.user
+    gift_type = request.GET.get('type', 'sent')
+
+    # Base query for gift orders
+    if gift_type == 'all':
+        gift_orders = Order.objects.filter(
+            Q(is_gift=True) &
+            (Q(sender_username=user.username) | Q(receiver_username=user.username))
+        ).order_by('-created_at')
+    elif gift_type == 'received':
+        gift_orders = Order.objects.filter(
+            is_gift=True,
+            receiver_username=user.username
+        ).order_by('-created_at')
+    else:  # sent (default)
+        gift_orders = Order.objects.filter(
+            is_gift=True,
+            sender_username=user.username
+        ).order_by('-created_at')
+
+    # Paginate results
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 10))
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+
+    paginated_orders = gift_orders[start_index:end_index]
+
+    # Serialize orders with enriched product data and conditional shipping info
+    serializer = OrderPrivateSerializer(paginated_orders, many=True, context={'request': request})
+
+    return Response({
+        'orders': serializer.data,
+        'pagination': {
+            'current_page': page,
+            'page_size': page_size,
+            'total_orders': gift_orders.count(),
+            'total_pages': (gift_orders.count() + page_size - 1) // page_size,
+            'has_next': end_index < gift_orders.count(),
+            'has_previous': page > 1
+        },
+        'gift_summary': {
+            'type': gift_type,
+            'total_gifts': gift_orders.count(),
+            'sent_gifts': Order.objects.filter(is_gift=True, sender_username=user.username).count(),
+            'received_gifts': Order.objects.filter(is_gift=True, receiver_username=user.username).count()
+        },
+        'user_stats': {
+            'total_purchases': user.purchase_history.count(),
+            'sent_gifts_count': user.sent_gifts_count,
+            'received_gifts_count': user.received_gifts.count()
+        }
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_purchase_history(request):
+    """
+    Get user's complete purchase history
+
+    Query Parameters:
+    - page: Page number (default: 1)
+    - page_size: Items per page (default: 10)
+    - include_gifts: 'true' to include gift orders, 'false' for only regular purchases (default: true)
+
+    Returns user's purchase history with statistics
+    """
+    user = request.user
+    include_gifts = request.GET.get('include_gifts', 'true').lower() == 'true'
+
+    # Base query for user's purchases
+    if include_gifts:
+        purchases = user.purchase_history.all().order_by('-created_at')
+    else:
+        purchases = user.purchase_history.filter(is_gift=False).order_by('-created_at')
+
+    # Paginate results
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 10))
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+
+    paginated_purchases = purchases[start_index:end_index]
+
+    # Serialize orders with enriched product data and conditional shipping info
+    serializer = OrderPrivateSerializer(paginated_purchases, many=True, context={'request': request})
+
+    # Debug logging para ver respuesta al frontend
+    response_data = {
+        'purchases': serializer.data,
+        'pagination': {
+            'current_page': page,
+            'page_size': page_size,
+            'total_purchases': purchases.count(),
+            'total_pages': (purchases.count() + page_size - 1) // page_size,
+            'has_next': end_index < purchases.count(),
+            'has_previous': page > 1
+        },
+        'user_stats': {
+            'total_purchases': user.purchase_history.count(),
+            'regular_purchases': user.purchase_history.filter(is_gift=False).count(),
+            'gift_purchases': user.purchase_history.filter(is_gift=True).count(),
+            'sent_gifts_count': user.sent_gifts_count,
+            'received_gifts_count': user.received_gifts.count(),
+            'total_spent': str(sum(order.total for order in user.purchase_history.all()))
+        }
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+

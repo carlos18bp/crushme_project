@@ -15,7 +15,7 @@ from ..views.product_views import (
 )
 from ..views.category_views import (
     get_organized_categories, get_category_tree,
-    get_products_stats, get_category_stats
+    get_products_stats, get_category_stats, get_random_featured_categories
 )
 
 urlpatterns = [
@@ -53,7 +53,8 @@ urlpatterns = [
     # Organized categories endpoints (Public)
     path('woocommerce/categories/organized/', get_organized_categories, name='get_organized_categories'),
     path('woocommerce/categories/tree/', get_category_tree, name='get_category_tree'),
-    
+    path('woocommerce/categories/featured-random/', get_random_featured_categories, name='get_random_featured_categories'),
+
     # Statistics endpoints (Public)
     path('woocommerce/stats/', get_products_stats, name='get_products_stats'),
     path('woocommerce/categories/<int:category_id>/stats/', get_category_stats, name='get_category_stats'),

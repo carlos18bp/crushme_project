@@ -1,0 +1,36 @@
+<svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo -->
+  <rect width="200" height="150" fill="#FFF" rx="10"/>
+
+  <!-- Botella de perfume principal -->
+  <rect x="85" y="40" width="30" height="80" fill="#FF69B4" stroke="#000" stroke-width="2" rx="5"/>
+
+  <!-- Cuello de la botella -->
+  <rect x="90" y="35" width="20" height="10" fill="#FF69B4" stroke="#000" stroke-width="2"/>
+
+  <!-- Tapón de la botella -->
+  <ellipse cx="100" cy="32" rx="12" ry="8" fill="#FFD700" stroke="#000" stroke-width="2"/>
+  <rect x="96" y="25" width="8" height="8" fill="#FFD700" stroke="#000" stroke-width="1"/>
+
+  <!-- Etiqueta en la botella -->
+  <ellipse cx="100" cy="70" rx="12" ry="8" fill="#FFF" stroke="#000" stroke-width="1"/>
+  <text x="100" y="73" text-anchor="middle" font-family="Arial" font-size="6" fill="#000">LOVE</text>
+
+  <!-- Atomizador/pulverizador -->
+  <circle cx="100" cy="42" r="3" fill="#C0C0C0" stroke="#000" stroke-width="1"/>
+  <line x1="100" y1="45" x2="100" y2="50" stroke="#C0C0C0" stroke-width="2"/>
+
+  <!-- Gotas de perfume -->
+  <circle cx="70" cy="60" r="3" fill="#FF69B4" opacity="0.7"/>
+  <circle cx="130" cy="80" r="2" fill="#FF69B4" opacity="0.5"/>
+  <circle cx="60" cy="90" r="2" fill="#FF69B4" opacity="0.3"/>
+
+  <!-- Estrellas decorativas -->
+  <path d="M50 30 L52 36 L58 36 L53 40 L55 46 L50 42 L45 46 L47 40 L42 36 L48 36 Z" fill="#FFD700"/>
+  <path d="M150 35 L152 39 L156 39 L153 42 L154 45 L150 43 L146 45 L148 42 L144 39 L148 39 Z" fill="#FFD700"/>
+  <circle cx="155" cy="25" r="1" fill="#FFD700"/>
+  <circle cx="45" cy="45" r="1" fill="#FFD700"/>
+
+  <!-- Base/sombra de la botella -->
+  <ellipse cx="100" cy="125" rx="20" ry="5" fill="#000" opacity="0.2"/>
+</svg>

@@ -101,7 +101,10 @@ def send_gift(request):
             'shipping_country': shipping_info['address']['country'],
             'phone_number': shipping_info['phone'] or '',
             'notes': request.data.get('notes', ''),
-            'gift_message': request.data.get('gift_message', '')
+            'gift_message': request.data.get('gift_message', ''),
+            'is_gift': True,  # Mark as gift order
+            'sender_username': request.data.get('sender_username'),  # Who sent the gift
+            'receiver_username': receiver_username  # Who receives the gift
         }
 
         # Create PayPal order

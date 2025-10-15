@@ -24,7 +24,7 @@
       <NotesSection />
       
       <!-- Promo Banner 1 -->
-      <PromoBannerReverse 
+      <PromoBannerReverse
         :title="$t('ctas.banner1.title')"
         :description="$t('ctas.banner1.description')"
         :primary-button="{ text: $t('ctas.banner1.primaryButton') }"
@@ -33,9 +33,12 @@
         @primary-click="handleJoinSecret"
         @secondary-click="handleCreateWishlist"
       />
-      
+
+      <!-- Category Cards Section -->
+      <CategoryCards />
+
       <!-- Promo Banner 2 -->
-      <PromoBanner 
+      <PromoBanner
         :title="$t('ctas.banner2.title')"
         :description="$t('ctas.banner2.description')"
         :primary-button="{ text: $t('ctas.banner2.primaryButton') }"
@@ -57,6 +60,7 @@ import { useRouter } from 'vue-router'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import Navbar from '@/components/shared/Navbar.vue'
 import Hero from '@/components/home/Hero.vue'
+import CategoryCards from '@/components/home/CategoryCards.vue'
 import TrendingProducts from '@/components/products/TrendingProducts.vue'
 import NotesSection from '@/components/home/notes/NotesSection.vue'
 import PromoBanner from '@/components/shared/PromoBanner.vue'

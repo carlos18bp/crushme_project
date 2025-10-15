@@ -213,6 +213,27 @@ class User(AbstractUser):
         help_text="Reason for Crush verification rejection"
     )
 
+    # Purchase history and gift tracking
+    purchase_history = models.ManyToManyField(
+        'Order',
+        related_name='purchasers',
+        blank=True,
+        verbose_name="Purchase History",
+        help_text="Orders made by this user"
+    )
+    received_gifts = models.ManyToManyField(
+        'Order',
+        related_name='gift_recipients',
+        blank=True,
+        verbose_name="Received Gifts",
+        help_text="Gift orders received by this user"
+    )
+    sent_gifts_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Sent Gifts Count",
+        help_text="Number of gifts sent by this user"
+    )
+
     # Set email as the username field for authentication
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

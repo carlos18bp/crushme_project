@@ -1,0 +1,18 @@
+<svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo -->
+  <rect width="200" height="150" fill="#FFF" rx="10"/>
+
+  <!-- Vibrador/juguete principal -->
+  <ellipse cx="100" cy="75" rx="25" ry="70" fill="#FF69B4" stroke="#000" stroke-width="2"/>
+
+  <!-- Base del juguete -->
+  <rect x="85" y="140" width="30" height="10" fill="#FF69B4" stroke="#000" stroke-width="2"/>
+
+  <!-- Detalles del vibrador -->
+  <circle cx="100" cy="60" r="8" fill="#FF1493"/>
+  <circle cx="100" cy="90" r="6" fill="#FF1493"/>
+
+  <!-- Líneas de detalle -->
+  <line x1="75" y1="50" x2="125" y2="50" stroke="#FF1493" stroke-width="2"/>
+  <line x1="75" y1="100" x2="125" y2="100" stroke="#FF1493" stroke-width="2"/>
+</svg>

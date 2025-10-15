@@ -158,6 +158,12 @@ const baseRoutes = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'my-gifts',
+        name: 'MyGifts',
+        component: () => import('@/views/profile/MyGifts.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'history',
         name: 'ProfileHistory',
         component: () => import('@/views/profile/ProfileHistory.vue'),

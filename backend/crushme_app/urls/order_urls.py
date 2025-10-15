@@ -6,7 +6,7 @@ from django.urls import path
 from ..views.order_views import (
     get_orders, get_order, create_order, cancel_order,
     track_order, get_recent_orders, get_all_orders,
-    update_order_status, get_order_statistics
+    update_order_status, get_order_statistics, get_gift_orders, get_user_purchase_history
 )
 from ..views.paypal_order_views import (
     create_paypal_order, capture_paypal_order, get_paypal_config
@@ -31,7 +31,13 @@ urlpatterns = [
     # Order tracking
     path('track/<str:order_number>/', track_order, name='track_order'),
     path('recent/', get_recent_orders, name='get_recent_orders'),
-    
+
+    # Gift orders (NEW - Get user's gift orders)
+    path('gifts/', get_gift_orders, name='get_gift_orders'),
+
+    # User purchase history (NEW - Get user's complete purchase history)
+    path('history/', get_user_purchase_history, name='get_user_purchase_history'),
+
     # Admin endpoints
     path('admin/all/', get_all_orders, name='get_all_orders'),
     path('admin/<int:order_id>/status/', update_order_status, name='update_order_status'),

@@ -62,15 +62,16 @@ export const useOrderStore = defineStore('order', () => {
   // Actions
 
   /**
-   * Fetch user's orders
+   * Fetch user's orders (purchase history)
    */
   async function fetchOrders() {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await get_request('orders/');
-      orders.value = response.data.orders || [];
+      const response = await get_request('orders/history/');
+      // Backend returns 'purchases' array in history endpoint
+      orders.value = response.data.purchases || response.data.orders || [];
       return { success: true, data: orders.value };
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch orders';
@@ -91,6 +92,13 @@ export const useOrderStore = defineStore('order', () => {
     try {
       const response = await get_request(`orders/${orderId}/`);
       currentOrder.value = response.data.order;
+      
+      // Update order in the orders list if it exists
+      const orderIndex = orders.value.findIndex(o => o.id === orderId);
+      if (orderIndex !== -1) {
+        orders.value[orderIndex] = response.data.order;
+      }
+      
       return { success: true, data: response.data.order };
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch order';

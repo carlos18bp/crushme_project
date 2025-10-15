@@ -31,16 +31,56 @@ class OrderItemSerializer(serializers.ModelSerializer):
     
     def get_product(self, obj):
         """
-        Return product information from WooCommerce
-        Uses cached data from order item
+        Return enriched product information from WooCommerce
+        Uses cached data from order item and enriches with current WooCommerce data
         """
-        return {
-            'id': obj.woocommerce_product_id,
-            'woocommerce_product_id': obj.woocommerce_product_id,
-            'name': obj.product_name,
-            'price': str(obj.unit_price),
-            'image_url': None  # Could be enriched with WooCommerce API call if needed
-        }
+        from ..services.woocommerce_service import woocommerce_service
+
+        try:
+            # Try to get current product data from WooCommerce
+            result = woocommerce_service.get_product_by_id(obj.woocommerce_product_id)
+            if result['success']:
+                wc_product = result['data']
+
+                # Extract image URL
+                image_url = None
+                if wc_product.get('images') and len(wc_product['images']) > 0:
+                    image_url = wc_product['images'][0].get('src')
+
+                return {
+                    'id': obj.woocommerce_product_id,
+                    'woocommerce_product_id': obj.woocommerce_product_id,
+                    'name': wc_product.get('name', obj.product_name),
+                    'price': str(obj.unit_price),
+                    'regular_price': str(wc_product.get('regular_price', obj.unit_price)),
+                    'sale_price': str(wc_product.get('sale_price', obj.unit_price)) if wc_product.get('sale_price') else None,
+                    'image_url': image_url,
+                    'description': wc_product.get('short_description', obj.product_description),
+                    'stock_quantity': wc_product.get('stock_quantity'),
+                    'stock_status': wc_product.get('stock_status'),
+                    'categories': [cat.get('name') for cat in wc_product.get('categories', [])],
+                    'tags': [tag.get('name') for tag in wc_product.get('tags', [])]
+                }
+            else:
+                # Fallback to cached data if WooCommerce fails
+                return {
+                    'id': obj.woocommerce_product_id,
+                    'woocommerce_product_id': obj.woocommerce_product_id,
+                    'name': obj.product_name,
+                    'price': str(obj.unit_price),
+                    'image_url': None,
+                    'description': obj.product_description
+                }
+        except Exception:
+            # Fallback to cached data if any error occurs
+            return {
+                'id': obj.woocommerce_product_id,
+                'woocommerce_product_id': obj.woocommerce_product_id,
+                'name': obj.product_name,
+                'price': str(obj.unit_price),
+                'image_url': None,
+                'description': obj.product_description
+            }
 
 
 class OrderListSerializer(serializers.ModelSerializer):
@@ -85,6 +125,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'shipping_address', 'shipping_city', 'shipping_state',
             'shipping_postal_code', 'shipping_country', 'phone_number',
             'full_shipping_address', 'notes', 'gift_message',
+            'woocommerce_order_id', 'is_gift', 'sender_username', 'receiver_username',
             'created_at', 'updated_at', 'shipped_at', 'delivered_at'
         ]
         read_only_fields = [
@@ -346,10 +387,158 @@ class OrderCancelSerializer(serializers.Serializer):
     def validate(self, attrs):
         """Validate order can be cancelled"""
         order = self.context['order']
-        
+
         if not order.can_be_cancelled():
             raise serializers.ValidationError(
                 f"Order with status '{order.status}' cannot be cancelled."
             )
-        
+
         return attrs
+
+
+class OrderPrivateSerializer(serializers.ModelSerializer):
+    """
+    Enhanced serializer for private user order endpoints
+    Includes shipping information for regular orders but limits it for gifts
+    Enriches product information with current WooCommerce data
+    """
+    items = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    total_items = serializers.ReadOnlyField()
+    full_shipping_address = serializers.ReadOnlyField()
+
+    # Gift information
+    gift_summary = serializers.SerializerMethodField()
+
+    # Shipping information (conditional for gifts)
+    shipping_address = serializers.SerializerMethodField()
+    shipping_city = serializers.SerializerMethodField()
+    shipping_state = serializers.SerializerMethodField()
+    shipping_postal_code = serializers.SerializerMethodField()
+    shipping_country = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'order_number', 'status', 'status_display',
+            'total', 'total_items', 'items', 'email', 'name',
+            'shipping_address', 'shipping_city', 'shipping_state',
+            'shipping_postal_code', 'shipping_country', 'phone_number',
+            'full_shipping_address', 'notes', 'gift_message',
+            'woocommerce_order_id', 'is_gift', 'sender_username', 'receiver_username',
+            'gift_summary', 'created_at', 'updated_at', 'shipped_at', 'delivered_at'
+        ]
+        read_only_fields = [
+            'id', 'order_number', 'created_at', 'updated_at',
+            'shipped_at', 'delivered_at'
+        ]
+
+    def get_items(self, obj):
+        """Get enriched items with current WooCommerce product data"""
+        items_data = []
+        for item in obj.items.all():
+            try:
+                # Get current product data from WooCommerce
+                from ..services.woocommerce_service import woocommerce_service
+                result = woocommerce_service.get_product_by_id(item.woocommerce_product_id)
+
+                if result['success']:
+                    wc_product = result['data']
+                    image_url = None
+                    if wc_product.get('images') and len(wc_product['images']) > 0:
+                        image_url = wc_product['images'][0].get('src')
+
+                    item_data = {
+                        'id': item.id,
+                        'woocommerce_product_id': item.woocommerce_product_id,
+                        'woocommerce_variation_id': item.woocommerce_variation_id,
+                        'quantity': item.quantity,
+                        'unit_price': str(item.unit_price),
+                        'subtotal': str(item.quantity * item.unit_price),
+                        'product_name': wc_product.get('name', item.product_name),
+                        'product_description': wc_product.get('short_description', item.product_description),
+                        'image_url': image_url,
+                        'categories': [cat.get('name') for cat in wc_product.get('categories', [])],
+                        'stock_status': wc_product.get('stock_status')
+                    }
+                else:
+                    # Fallback to cached data
+                    item_data = {
+                        'id': item.id,
+                        'woocommerce_product_id': item.woocommerce_product_id,
+                        'woocommerce_variation_id': item.woocommerce_variation_id,
+                        'quantity': item.quantity,
+                        'unit_price': str(item.unit_price),
+                        'subtotal': str(item.quantity * item.unit_price),
+                        'product_name': item.product_name,
+                        'product_description': item.product_description,
+                        'image_url': None
+                    }
+
+                items_data.append(item_data)
+
+            except Exception:
+                # Fallback for any error
+                items_data.append({
+                    'id': item.id,
+                    'woocommerce_product_id': item.woocommerce_product_id,
+                    'woocommerce_variation_id': item.woocommerce_variation_id,
+                    'quantity': item.quantity,
+                    'unit_price': str(item.unit_price),
+                    'subtotal': str(item.quantity * item.unit_price),
+                    'product_name': item.product_name,
+                    'product_description': item.product_description,
+                    'image_url': None
+                })
+
+        return items_data
+
+    def get_shipping_address(self, obj):
+        """Return shipping address only for non-gift orders"""
+        if obj.is_gift:
+            return "Dirección de envío privada (regalo)"
+        return obj.address_line_1
+
+    def get_shipping_city(self, obj):
+        """Return shipping city only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.city
+
+    def get_shipping_state(self, obj):
+        """Return shipping state only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.state
+
+    def get_shipping_postal_code(self, obj):
+        """Return shipping postal code only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.zipcode
+
+    def get_shipping_country(self, obj):
+        """Return shipping country only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.country
+
+    def get_phone_number(self, obj):
+        """Return phone only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.phone
+
+    def get_gift_summary(self, obj):
+        """Return gift summary for gift orders"""
+        if not obj.is_gift:
+            return None
+
+        return {
+            'type': 'gift_order',
+            'sender': obj.sender_username,
+            'receiver': obj.receiver_username,
+            'message': obj.gift_message,
+            'privacy_note': 'Shipping details hidden for privacy'
+        }

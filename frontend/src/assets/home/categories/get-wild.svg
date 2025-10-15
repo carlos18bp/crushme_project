@@ -1,0 +1,27 @@
+<svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo -->
+  <rect width="200" height="150" fill="#FFF" rx="10"/>
+
+  <!-- Esposas principales (aro izquierdo) -->
+  <ellipse cx="70" cy="75" rx="25" ry="15" fill="#FF69B4" stroke="#000" stroke-width="3" transform="rotate(-15 70 75)"/>
+
+  <!-- Esposas principales (aro derecho) -->
+  <ellipse cx="130" cy="75" rx="25" ry="15" fill="#FF69B4" stroke="#000" stroke-width="3" transform="rotate(15 130 75)"/>
+
+  <!-- Cadena conectando las esposas -->
+  <path d="M95 75 Q112.5 60 130 75" fill="none" stroke="#000" stroke-width="3"/>
+  <path d="M95 75 Q112.5 90 130 75" fill="none" stroke="#000" stroke-width="3"/>
+
+  <!-- Candado en el medio -->
+  <rect x="105" y="55" width="15" height="20" fill="#C0C0C0" stroke="#000" stroke-width="2" rx="2"/>
+  <rect x="107" y="57" width="11" height="3" fill="#FFD700"/>
+  <circle cx="112.5" cy="70" r="2" fill="#000"/>
+
+  <!-- Detalles adicionales -->
+  <circle cx="70" cy="75" r="3" fill="#FF1493"/>
+  <circle cx="130" cy="75" r="3" fill="#FF1493"/>
+
+  <!-- Sombras -->
+  <ellipse cx="72" cy="85" rx="20" ry="3" fill="#000" opacity="0.2"/>
+  <ellipse cx="132" cy="85" rx="20" ry="3" fill="#000" opacity="0.2"/>
+</svg>

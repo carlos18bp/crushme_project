@@ -7,7 +7,10 @@
       <p class="text-gray-600 font-comfortaa text-lg mb-4">
         {{ $t('profileDashboard.banner.title') }}
       </p>
-      <button class="bg-brand-pink-medium hover:bg-brand-pink-dark text-white font-comfortaa px-6 py-2.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg">
+      <button
+        @click="handleShopRedirect"
+        class="bg-brand-pink-medium hover:bg-brand-pink-dark text-white font-comfortaa px-6 py-2.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+      >
         {{ $t('profileDashboard.banner.button') }}
       </button>
     </div>
@@ -24,7 +27,16 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/modules/i18nStore'
 import bannerImage from '@/assets/profile/banner/banner.png'
+
+const router = useRouter()
+const i18nStore = useI18nStore()
+
+const handleShopRedirect = () => {
+  router.push({ name: `Products-${i18nStore.locale}` })
+}
 </script>
 
 <style scoped>

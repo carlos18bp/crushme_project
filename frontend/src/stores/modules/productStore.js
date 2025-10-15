@@ -27,8 +27,6 @@ export const useProductStore = defineStore('product', () => {
   const selectedSubcategory = ref(''); // NUEVO: Subcategoría seleccionada
   const wooStats = ref(null); // ⭐ NUEVO: Estadísticas globales (total de productos, etc.)
   const trendingProducts = ref([]); // ⭐ NUEVO: Productos en tendencia (8 tops)
-  const wooProductVariations = ref([]); // ⭐ NUEVO: Variaciones del producto actual
-  const wooCurrentVariation = ref(null); // ⭐ NUEVO: Variación específica seleccionada
   
   const isLoading = ref(false);
   const isLoadingProduct = ref(false);
@@ -39,8 +37,6 @@ export const useProductStore = defineStore('product', () => {
   const isLoadingWooThemes = ref(false); // NUEVO: Loading para temas organizados
   const isLoadingWooCategoryTree = ref(false); // NUEVO: Loading para árbol de categorías
   const isLoadingTrending = ref(false); // ⭐ NUEVO: Loading para productos en tendencia
-  const isLoadingWooVariations = ref(false); // ⭐ NUEVO: Loading para variaciones de producto
-  const isLoadingWooVariation = ref(false); // ⭐ NUEVO: Loading para variación específica
   const error = ref(null);
   const wooError = ref(null);
   
@@ -103,7 +99,6 @@ export const useProductStore = defineStore('product', () => {
   const hasWooCategories = computed(() => wooCategories.value.length > 0);
   const hasWooThemes = computed(() => wooThemes.value.length > 0); // NUEVO
   const hasTrendingProducts = computed(() => trendingProducts.value.length > 0); // ⭐ NUEVO
-  const hasWooVariations = computed(() => wooProductVariations.value.length > 0); // ⭐ NUEVO
   const isWooConnected = computed(() => wooConnectionStatus.value === 'OK');
 
   // NUEVO: Getters para temas organizados
@@ -507,14 +502,35 @@ export const useProductStore = defineStore('product', () => {
 
     try {
       const response = await get_request('products/woocommerce/categories/organized/');
+
+      // 🔥 DEBUG: Ver respuesta completa del backend
+      console.log('🚀 RESPUESTA COMPLETA DEL BACKEND:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+        fullResponse: response
+      });
+
+      console.log('📊 DATOS DE TEMAS RECIBIDOS:', response.data.data);
+      console.log('🔢 TOTAL DE CATEGORÍAS:', response.data.total_categories);
+
       wooThemes.value = response.data.data || [];
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         data: response.data.data || [],
         total_categories: response.data.total_categories || 0
       };
     } catch (err) {
+      // 🔥 DEBUG: Ver error completo del backend
+      console.error('❌ ERROR EN LLAMADA AL BACKEND:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        fullError: err
+      });
+
       wooError.value = err.response?.data?.error || 'Failed to fetch organized WooCommerce categories';
       return { success: false, error: wooError.value };
     } finally {
@@ -674,6 +690,13 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
+   * Clear featured categories (wooThemes)
+   */
+  function clearFeaturedCategories() {
+    wooThemes.value = [];
+  }
+
+  /**
    * Set WooCommerce loading state
    * @param {boolean} loading - Loading state
    */
@@ -817,11 +840,11 @@ export const useProductStore = defineStore('product', () => {
     try {
       const response = await get_request('products/woocommerce/products/trending/');
       const products = response.data.data || [];
-      
+
       trendingProducts.value = products;
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         data: products,
         total_products: response.data.total_products || 0,
         message: response.data.message
@@ -836,107 +859,102 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
-   * ⭐ NUEVO: Obtener todas las variaciones de un producto WooCommerce
-   * @param {number} productId - ID del producto variable
-   * @param {number} perPage - Variaciones por página (máximo 100, default 100)
-   * @param {number} page - Número de página (default 1)
-   * @returns {Promise} - Objeto con variaciones y metadatos
+   * ⭐ NUEVO: Obtener 4 categorías destacadas aleatorias desde WooCommerce
+   * Obtiene categorías principales con la imagen del primer producto disponible
    */
-  async function fetchWooProductVariations(productId, perPage = 100, page = 1) {
-    isLoadingWooVariations.value = true;
+  async function fetchFeaturedCategories() {
+    isLoadingWooThemes.value = true;
     wooError.value = null;
 
     try {
-      const url = `products/woocommerce/products/${productId}/variations/?per_page=${perPage}&page=${page}`;
-      const response = await get_request(url);
-      
-      if (response.data.success) {
-        const variations = response.data.data || [];
-        
-        // Si es la primera página, reemplazar; si no, agregar
-        if (page === 1) {
-          wooProductVariations.value = variations;
-        } else {
-          wooProductVariations.value.push(...variations);
-        }
-        
-        console.log(`✅ [productStore] ${variations.length} variaciones del producto ${productId} cargadas (página ${page})`);
-        
-        return {
-          success: true,
-          data: variations,
-          total_variations: response.data.total_variations || variations.length,
-          pagination_info: response.data.pagination_info
-        };
-      } else {
-        wooError.value = response.data.error || 'Error obteniendo variaciones';
-        return { success: false, error: wooError.value };
-      }
+      const response = await get_request('products/woocommerce/categories/featured-random/');
+
+      // 🔥 DEBUG: Ver respuesta completa del backend
+      console.log('🚀 RESPUESTA FEATURED CATEGORIES:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+        fullResponse: response
+      });
+
+      const featuredCategories = response.data.data || [];
+
+      // Almacenar en wooThemes para compatibilidad con componentes existentes
+      wooThemes.value = featuredCategories.map(cat => ({
+        theme: cat.slug,
+        name: cat.name,
+        icon: cat.icon,
+        first_product_image: cat.first_product_image,
+        category_id: cat.category_id
+      }));
+
+      return {
+        success: true,
+        data: featuredCategories,
+        total_selected: response.data.total_selected || 0,
+        message: response.data.message
+      };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to fetch product variations';
-      wooError.value = errorMessage;
-      console.error(`❌ [productStore] Error obteniendo variaciones del producto ${productId}:`, errorMessage);
+      // 🔥 DEBUG: Ver error completo del backend
+      console.error('❌ ERROR EN FEATURED CATEGORIES:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        fullError: err
+      });
+
+      wooError.value = err.response?.data?.error || 'Failed to fetch featured categories';
       return { success: false, error: wooError.value };
     } finally {
-      isLoadingWooVariations.value = false;
+      isLoadingWooThemes.value = false;
     }
   }
 
   /**
-   * ⭐ NUEVO: Obtener una variación específica de un producto WooCommerce
-   * @param {number} productId - ID del producto variable
-   * @param {number} variationId - ID de la variación específica
-   * @returns {Promise} - Objeto con datos de la variación
+   * ⭐ NUEVO: Obtener productos por slug de categoría desde WooCommerce
+   * @param {string} categorySlug - Slug de la categoría (ej: 'juguetes', 'lenceria')
+   * @param {number} perPage - Productos por página (default: 20)
+   * @param {number} page - Número de página (default: 1)
    */
-  async function fetchWooProductVariation(productId, variationId) {
-    isLoadingWooVariation.value = true;
-    wooError.value = null;
+  async function fetchProductsByCategorySlug(categorySlug, perPage = 20, page = 1) {
+    isLoading.value = true;
+    error.value = null;
 
     try {
-      const url = `products/woocommerce/products/${productId}/variations/${variationId}/`;
-      const response = await get_request(url);
-      
-      if (response.data.success) {
-        const variation = response.data.data;
-        wooCurrentVariation.value = variation;
-        
-        console.log(`✅ [productStore] Variación ${variationId} del producto ${productId} cargada`);
-        
-        return {
-          success: true,
-          data: variation
-        };
-      } else {
-        wooError.value = response.data.error || 'Error obteniendo variación';
-        wooCurrentVariation.value = null;
-        return { success: false, error: wooError.value };
-      }
+      const response = await get_request(`products/category/?category=${encodeURIComponent(categorySlug)}&per_page=${perPage}&page=${page}`);
+
+      // 🔥 DEBUG: Ver respuesta completa del backend
+      console.log('🚀 RESPUESTA PRODUCTS BY CATEGORY SLUG:', {
+        status: response.status,
+        data: response.data,
+        categorySlug,
+        perPage,
+        page
+      });
+
+      const categoryProducts = response.data.products || [];
+
+      return {
+        success: true,
+        data: categoryProducts,
+        pagination: response.data.pagination_info,
+        total_products: response.data.total_products || 0
+      };
     } catch (err) {
-      const errorMessage = err.response?.data?.error || 'Failed to fetch product variation';
-      wooError.value = errorMessage;
-      wooCurrentVariation.value = null;
-      console.error(`❌ [productStore] Error obteniendo variación ${variationId} del producto ${productId}:`, errorMessage);
-      return { success: false, error: wooError.value };
+      // 🔥 DEBUG: Ver error completo del backend
+      console.error('❌ ERROR EN PRODUCTS BY CATEGORY SLUG:', {
+        message: err.message,
+        response: err.response,
+        categorySlug,
+        fullError: err
+      });
+
+      error.value = err.response?.data?.error || 'Failed to fetch category products';
+      return { success: false, error: error.value };
     } finally {
-      isLoadingWooVariation.value = false;
+      isLoading.value = false;
     }
-  }
-
-  /**
-   * ⭐ NUEVO: Limpiar variaciones del producto actual
-   */
-  function clearWooVariations() {
-    wooProductVariations.value = [];
-    wooCurrentVariation.value = null;
-  }
-
-  /**
-   * ⭐ NUEVO: Obtener variación por ID desde las variaciones cargadas
-   * @param {number} variationId - ID de la variación
-   * @returns {object|null} - Variación encontrada o null
-   */
-  function getWooVariationById(variationId) {
-    return wooProductVariations.value.find(v => v.id === variationId) || null;
   }
 
   /**
@@ -1001,16 +1019,12 @@ export const useProductStore = defineStore('product', () => {
     wooConnectionStatus,
     wooStats, // ⭐ NUEVO: Estadísticas globales
     trendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
-    wooProductVariations, // ⭐ NUEVO: Variaciones del producto actual
-    wooCurrentVariation, // ⭐ NUEVO: Variación específica seleccionada
     isLoadingWoo,
     isLoadingWooProduct,
     isLoadingWooCategories,
     isLoadingWooThemes, // ⭐ NUEVO
     isLoadingWooCategoryTree, // ⭐ NUEVO
     isLoadingTrending, // ⭐ NUEVO: Loading para productos en tendencia
-    isLoadingWooVariations, // ⭐ NUEVO: Loading para variaciones de producto
-    isLoadingWooVariation, // ⭐ NUEVO: Loading para variación específica
     wooError,
     selectedWooCategory,
     selectedTheme, // ⭐ NUEVO
@@ -1033,7 +1047,6 @@ export const useProductStore = defineStore('product', () => {
     hasWooCategories,
     hasWooThemes, // ⭐ NUEVO
     hasTrendingProducts, // ⭐ NUEVO
-    hasWooVariations, // ⭐ NUEVO
     isWooConnected,
     wooProductsByTheme, // ⭐ NUEVO
     wooProductsBySubcategory, // ⭐ NUEVO
@@ -1066,17 +1079,16 @@ export const useProductStore = defineStore('product', () => {
     fetchWooCategoryTree, // ⭐ NUEVO
     fetchWooStats, // ⭐ NUEVO: Estadísticas globales
     fetchWooTrendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
-    fetchWooProductVariations, // ⭐ NUEVO: Obtener variaciones de un producto
-    fetchWooProductVariation, // ⭐ NUEVO: Obtener variación específica
+    fetchFeaturedCategories, // ⭐ NUEVO: Categorías destacadas aleatorias
+    fetchProductsByCategorySlug, // ⭐ NUEVO: Productos por slug de categoría
     fetchWooProduct,
     getWooProductById,
-    getWooVariationById, // ⭐ NUEVO: Obtener variación por ID desde las cargadas
     filterWooByPriceRange,
     sortWooProducts,
     clearWooCategory,
     clearWooCurrentProduct,
-    clearWooVariations, // ⭐ NUEVO: Limpiar variaciones
     clearWooError,
+    clearFeaturedCategories, // ⭐ NUEVO: Limpiar categorías destacadas
     setWooLoading,
     
     // ⭐ NUEVAS ACCIONES PARA TEMAS
