@@ -1,27 +1,18 @@
 <template>
   <div 
-    class="rounded-2xl p-6 relative overflow-hidden border-2 border-gray-900"
+    class="rounded-lg md:rounded-xl p-3 md:p-5 border-2 border-gray-900 min-h-[130px] sm:min-h-[150px] md:min-h-[180px] flex items-center"
     style="background-color: rgba(66, 142, 255, 0.2);"
   >
-    <div class="relative z-10">
-      <p class="text-gray-600 font-comfortaa text-lg mb-4">
+    <div class="w-full">
+      <p class="text-gray-600 font-comfortaa text-xs sm:text-sm md:text-base lg:text-lg mb-2 sm:mb-3 md:mb-4 leading-tight">
         {{ $t('profileDashboard.banner.title') }}
       </p>
       <button
         @click="handleShopRedirect"
-        class="bg-brand-pink-medium hover:bg-brand-pink-dark text-white font-comfortaa px-6 py-2.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+        class="bg-brand-pink-medium hover:bg-brand-pink-dark text-white font-comfortaa px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-2.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer text-xs sm:text-sm md:text-base"
       >
         {{ $t('profileDashboard.banner.button') }}
       </button>
-    </div>
-    
-    <!-- Banner Image -->
-    <div class="absolute bottom-0 right-0 h-full flex items-end">
-      <img 
-        :src="bannerImage" 
-        alt="Products" 
-        class="h-[85%] w-auto object-contain"
-      />
     </div>
   </div>
 </template>

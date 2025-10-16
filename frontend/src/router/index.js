@@ -90,42 +90,7 @@ const baseRoutes = [
     name: 'Checkout',
     component: () => import('@/views/cart/CheckoutView.vue')
   },
-  
-  // Order routes (protected)
-  {
-    path: '/orders',
-    name: 'Orders',
-    component: () => import('@/views/orders/OrdersView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/orders/:id',
-    name: 'OrderDetail',
-    component: () => import('@/views/orders/OrderDetailView.vue'),
-    meta: { requiresAuth: true },
-    props: true
-  },
-  
-  // Wishlist routes (protected)
-  {
-    path: '/wishlists',
-    name: 'Wishlists',
-    component: () => import('@/views/wishlists/WishlistsView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/wishlists/:id',
-    name: 'WishlistDetail',
-    component: () => import('@/views/wishlists/WishlistDetailView.vue'),
-    meta: { requiresAuth: true },
-    props: true
-  },
-  {
-    path: '/wishlists/public/:uuid',
-    name: 'PublicWishlist',
-    component: () => import('@/views/wishlists/PublicWishlistView.vue'),
-    props: true
-  },
+
   
   // User profile routes (protected) - with layout and children
   {
@@ -214,7 +179,9 @@ const routes = [
     path: '/',
     redirect: to => {
       const i18nStore = useI18nStore();
-      return `/${i18nStore.locale}`;
+      // Use detected locale if available, otherwise use current locale or default to 'en'
+      const targetLocale = i18nStore.detectedLocale || i18nStore.locale || 'en';
+      return `/${targetLocale}`;
     }
   },
   
@@ -284,8 +251,11 @@ routes.forEach(route => {
 });
 
 // Navigation guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const i18nStore = useI18nStore();
+  
+  // Ensure language detection has run at least once
+  await i18nStore.initializeIfNeeded();
   
   // Extract language from URL
   const urlLang = to.path.split('/')[1];
@@ -298,13 +268,13 @@ router.beforeEach((to, from, next) => {
   
   // Check if it's a valid language route
   if (!availableLanguages.includes(urlLang)) {
-    // If no language prefix, redirect to current language
-    const currentLang = i18nStore.locale;
-    next(`/${currentLang}${to.path}`);
+    // If no language prefix, redirect to detected or current language
+    const targetLang = i18nStore.detectedLocale || i18nStore.locale || 'en';
+    next(`/${targetLang}${to.path}`);
     return;
   }
   
-  // Set language if different from current
+  // Set language from URL (URL takes priority)
   if (urlLang !== i18nStore.locale) {
     i18nStore.setLocale(urlLang);
   }

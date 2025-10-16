@@ -1,43 +1,43 @@
 <template>
-  <section class="notes-section">
+  <section class="w-full max-w-[1600px] mx-auto py-12 md:py-16 lg:py-20 px-6 md:px-10 bg-transparent">
     <!-- Section Header -->
-    <div class="section-header">
+    <div class="flex flex-col mb-12 md:mb-16 gap-5 md:gap-6">
       <!-- Primera fila: Título alineado a la derecha -->
-      <div class="title-row">
-        <h2 class="section-title">{{ $t('notes.title') }}</h2>
+      <div class="flex justify-start lg:justify-end w-full">
+        <h2 class="font-comfortaa text-2xl md:text-3xl lg:text-4xl font-bold text-[#11181E] m-0 leading-tight">{{ $t('notes.title') }}</h2>
       </div>
       
       <!-- Segunda fila: Subtítulo alineado a la izquierda -->
-      <div class="subtitle-row">
-        <p class="section-subtitle">
+      <div class="flex justify-start w-full">
+        <p class="font-poppins text-lg md:text-xl lg:text-2xl font-normal text-slate-500 m-0 leading-relaxed">
           {{ $t('notes.subtitle') }}
         </p>
       </div>
       
       <!-- Tercera fila: Botón alineado a la izquierda -->
-      <div class="button-row">
-        <button class="secrets-button">
+      <div class="flex justify-start w-full">
+        <button class="px-8 md:px-10 lg:px-12 py-3 md:py-4 lg:py-[1.125rem] bg-slate-600 text-white border-none rounded-full font-poppins text-base md:text-lg lg:text-xl font-medium cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-slate-700 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,0,0,0.15)] active:translate-y-0 w-full sm:w-auto">
           {{ $t('notes.secretsButton') }}
         </button>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
-      <div class="spinner"></div>
-      <p>{{ $t('notes.loading') }}</p>
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-16 md:py-20 gap-4">
+      <div class="w-12 h-12 border-4 border-red-400/20 border-t-red-500 rounded-full animate-spin"></div>
+      <p class="font-poppins text-base text-black/60">{{ $t('notes.loading') }}</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="error-state">
-      <p>❌ {{ error }}</p>
-      <button @click="crushStore.fetchRandomSevenCrushes()" class="retry-button">
+    <div v-else-if="error" class="flex flex-col items-center justify-center py-16 md:py-20 gap-4">
+      <p class="font-poppins text-base text-black/60">❌ {{ error }}</p>
+      <button @click="crushStore.fetchRandomSevenCrushes()" class="px-6 py-3 bg-red-500 text-white border-none rounded-lg font-poppins text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-red-600 hover:-translate-y-0.5 active:translate-y-0">
         {{ $t('notes.tryAgain') }}
       </button>
     </div>
 
     <!-- Notes Grid -->
-    <div v-else-if="notes.length > 0" class="notes-grid">
+    <div v-else-if="notes.length > 0" class="flex flex-wrap justify-center gap-8 md:gap-10 lg:gap-12 items-start">
       <NoteCard
         v-for="note in notes"
         :key="note.id"
@@ -49,8 +49,8 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="empty-state">
-      <p>{{ $t('notes.empty') }}</p>
+    <div v-else class="flex items-center justify-center py-16 md:py-20">
+      <p class="font-poppins text-base text-black/50">{{ $t('notes.empty') }}</p>
     </div>
   </section>
 </template>
@@ -102,237 +102,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Notes Section Container */
-.notes-section {
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 80px 40px;
-  background: transparent;
-}
-
-/* Section Header */
-.section-header {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 60px;
-  gap: 24px;
-}
-
-/* Primera fila: Título alineado a la derecha */
-.title-row {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.section-title {
-  font-family: 'Comfortaa', cursive;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #11181E;
-  margin: 0;
-  line-height: 1.2;
-}
-
-/* Segunda fila: Subtítulo alineado a la izquierda */
-.subtitle-row {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.section-subtitle {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Tercera fila: Botón alineado a la izquierda */
-.button-row {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.secrets-button {
-  padding: 18px 48px;
-  background: #475569;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.secrets-button:hover {
-  background: #334155;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.secrets-button:active {
-  transform: translateY(0);
-}
-
-/* Notes Grid */
-.notes-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 48px 32px;
-  align-items: start;
-}
-
-/* Loading State */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 43, 43, 0.2);
-  border-top-color: rgb(255, 43, 43);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-/* Error State */
-.error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-}
-
-.error-state p {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.retry-button {
-  padding: 12px 24px;
-  background: rgb(255, 43, 43);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.retry-button:hover {
-  background: rgb(220, 38, 38);
-  transform: translateY(-2px);
-}
-
-.retry-button:active {
-  transform: translateY(0);
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-}
-
-.empty-state p {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .notes-section {
-    padding: 60px 32px;
-  }
-  
-  .section-title {
-    font-size: 2rem;
-  }
-  
-  .notes-grid {
-    gap: 40px 24px;
-  }
-}
-
-@media (max-width: 768px) {
-  .notes-section {
-    padding: 48px 24px;
-  }
-  
-  .section-header {
-    margin-bottom: 40px;
-    gap: 20px;
-  }
-  
-  .section-title {
-    font-size: 1.75rem;
-  }
-  
-  .section-subtitle {
-    font-size: 1.25rem;
-  }
-  
-  .secrets-button {
-    width: 100%;
-    padding: 16px 36px;
-    font-size: 1.125rem;
-  }
-  
-  .notes-grid {
-    gap: 32px;
-  }
-}
-
-@media (max-width: 480px) {
-  .notes-section {
-    padding: 40px 16px;
-  }
-  
-  .section-title {
-    font-size: 1.5rem;
-  }
-  
-  .section-subtitle {
-    font-size: 1.125rem;
-  }
-  
-  .secrets-button {
-    padding: 14px 32px;
-    font-size: 1rem;
-  }
-}
+/* No custom styles needed - using Tailwind */
 </style>
 

@@ -1,38 +1,38 @@
 <template>
-  <div class="py-6">
+  <div class="py-4 md:py-6">
     <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
             {{ $t('profile.favorites.title') || 'Mis Favoritos' }}
           </h1>
-          <p class="text-sm text-gray-600 mt-1">
+          <p class="text-xs md:text-sm text-gray-600 mt-1">
             {{ totalFavorites }} {{ totalFavorites !== 1 ? ($t('profile.favorites.productsPlural') || 'productos favoritos') : ($t('profile.favorites.products') || 'producto favorito') }}
           </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2 md:gap-3">
           <!-- Refresh button -->
           <button 
             v-if="hasFavorites"
             @click="refreshFavorites" 
             :disabled="profileStore.isLoadingFavorites"
-            class="flex items-center gap-2 px-4 py-2 border-2 border-gray-400 text-gray-700 bg-white rounded-full text-sm font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+            class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-gray-400 text-gray-700 bg-white rounded-full text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
             :title="$t('profile.favorites.refresh') || 'Actualizar'">
-            <svg class="w-4 h-4" :class="{ 'animate-spin': profileStore.isLoadingFavorites }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3 h-3 md:w-4 md:h-4" :class="{ 'animate-spin': profileStore.isLoadingFavorites }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            {{ $t('profile.favorites.refresh') || 'Actualizar' }}
+            <span class="hidden sm:inline">{{ $t('profile.favorites.refresh') || 'Actualizar' }}</span>
           </button>
           
           <!-- Go to shop button -->
           <button 
             @click="goToShop" 
-            class="flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
+            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-            {{ $t('profile.favorites.goToShop') || 'Ir a la tienda' }}
+            <span class="hidden sm:inline">{{ $t('profile.favorites.goToShop') || 'Ir a la tienda' }}</span>
           </button>
         </div>
       </div>
@@ -48,9 +48,9 @@
       </div>
 
       <!-- Products Grid -->
-      <div v-else-if="hasFavorites" class="space-y-6">
+      <div v-else-if="hasFavorites" class="space-y-4 md:space-y-6">
         <!-- Grid: 2 cards por fila -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
           <div v-for="favorite in favoriteProducts" :key="favorite.id" class="relative">
             <!-- Remove button -->
             <button 
@@ -74,20 +74,20 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="text-center py-12">
-        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else class="text-center py-8 md:py-12">
+        <svg class="mx-auto h-12 w-12 md:h-16 md:w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900">
+        <h3 class="mt-3 md:mt-4 text-base md:text-lg font-medium text-gray-900">
           {{ $t('profile.favorites.noFavoritesYet') || 'No tienes productos favoritos' }}
         </h3>
-        <p class="mt-2 text-sm text-gray-500">
+        <p class="mt-2 text-xs md:text-sm text-gray-500">
           {{ $t('profile.favorites.addFavoritesMessage') || 'Empieza a agregar productos que te gusten a tus favoritos' }}
         </p>
         <button 
           @click="goToShop" 
-          class="mt-4 inline-flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          class="mt-4 inline-flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
+          <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
           {{ $t('profile.favorites.browseProducts') || 'Explorar productos' }}

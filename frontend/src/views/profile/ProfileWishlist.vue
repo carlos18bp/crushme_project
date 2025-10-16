@@ -1,34 +1,34 @@
 <template>
-  <div class="py-6">
+  <div class="py-4 md:py-6">
     <div class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
             {{ searchedUser ? `@${searchedUser.username}${$t('profile.wishlist.usersWishlists')}` : $t('profile.wishlist.myWishlists') }}
           </h1>
-          <p v-if="searchedUser" class="text-sm text-gray-600 mt-1">
+          <p v-if="searchedUser" class="text-xs md:text-sm text-gray-600 mt-1">
             {{ searchedUser.fullName }} · {{ searchedUser.totalWishlists }} {{ searchedUser.totalWishlists !== 1 ? $t('profile.wishlist.publicWishlistsPlural') : $t('profile.wishlist.publicWishlists') }}
           </p>
         </div>
-        <div class="flex items-center gap-3">
-          <button v-if="searchedUser" @click="clearSearch" class="flex items-center gap-2 px-4 py-2 border-2 border-gray-400 text-gray-700 bg-white rounded-full text-sm font-medium hover:bg-gray-100 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            {{ $t('profile.wishlist.backToMyWishlists') }}
+        <div class="flex flex-wrap items-center gap-2 md:gap-3">
+          <button v-if="searchedUser" @click="clearSearch" class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-gray-400 text-gray-700 bg-white rounded-full text-xs md:text-sm font-medium hover:bg-gray-100 transition-colors">
+            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            <span class="hidden sm:inline">{{ $t('profile.wishlist.backToMyWishlists') }}</span>
           </button>
-          <button @click="goToShop" class="flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            {{ $t('profile.wishlist.goToShop') }}
+          <button @click="goToShop" class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
+            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            <span class="hidden sm:inline">{{ $t('profile.wishlist.goToShop') }}</span>
           </button>
-          <button v-if="!searchedUser" @click="showCreateModal = true" :disabled="wishlistStore.isUpdating" class="flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          <button v-if="!searchedUser" @click="showCreateModal = true" :disabled="wishlistStore.isUpdating" class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">
+            <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             {{ $t('profile.wishlist.create') }}
           </button>
         </div>
       </div>
 
       <!-- Search -->
-      <div class="mb-6">
+      <div class="mb-4 md:mb-6">
         <form @submit.prevent="searchByUsername" class="relative max-w-md">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -60,25 +60,25 @@
       </div>
 
       <!-- Wishlists -->
-      <div v-else-if="filteredWishlists.length > 0" class="space-y-4">
-        <div v-for="wishlist in filteredWishlists" :key="wishlist.id" class="wishlist-card border-2 border-gray-900 rounded-2xl overflow-hidden">
-          <div class="p-6">
-            <div class="flex items-start justify-between">
+      <div v-else-if="filteredWishlists.length > 0" class="space-y-3 md:space-y-4">
+        <div v-for="wishlist in filteredWishlists" :key="wishlist.id" class="wishlist-card border-2 border-gray-900 rounded-xl md:rounded-2xl overflow-hidden">
+          <div class="p-4 md:p-6">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ wishlist.name }}</h3>
-                <p class="text-sm text-gray-600 mb-2">{{ wishlist.description || $t('profile.wishlist.noDescription') }}</p>
+                <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-1">{{ wishlist.name }}</h3>
+                <p class="text-xs md:text-sm text-gray-600 mb-2">{{ wishlist.description || $t('profile.wishlist.noDescription') }}</p>
                 <p class="text-xs text-gray-500">
                   {{ wishlist.total_items }} {{ $t('profile.wishlist.items') }} · ${{ wishlist.total_value?.toFixed(2) || '0.00' }} · 
                   <span v-if="wishlist.is_public">{{ $t('profile.wishlist.public') }}</span>
                   <span v-else>{{ $t('profile.wishlist.private') }}</span>
                 </p>
               </div>
-              <div class="flex items-center gap-2 ml-4">
-                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :disabled="copyingId === wishlist.id" class="flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap disabled:opacity-50">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                  {{ copyingId === wishlist.id ? $t('profile.wishlist.copied') : $t('profile.wishlist.copyWishlistLink') }}
+              <div class="flex flex-wrap items-center gap-2">
+                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :disabled="copyingId === wishlist.id" class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap disabled:opacity-50">
+                  <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                  <span class="hidden sm:inline">{{ copyingId === wishlist.id ? $t('profile.wishlist.copied') : $t('profile.wishlist.copyWishlistLink') }}</span>
                 </button>
-                <button @click="buyWishlist(wishlist)" class="px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
+                <button @click="buyWishlist(wishlist)" class="px-3 md:px-4 py-1.5 md:py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
                 <button @click="toggleWishlist(wishlist.id)" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <svg class="w-5 h-5 text-gray-600 transition-transform" :class="{ 'rotate-180': expandedWishlists.includes(wishlist.id) }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -87,14 +87,14 @@
           </div>
 
           <!-- Products -->
-          <div v-if="expandedWishlists.includes(wishlist.id)" class="px-6 pb-6">
+          <div v-if="expandedWishlists.includes(wishlist.id)" class="px-4 md:px-6 pb-4 md:pb-6">
             <!-- Loading products -->
-            <div v-if="loadingWishlistId === wishlist.id" class="flex justify-center py-8">
-              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-pink-medium"></div>
+            <div v-if="loadingWishlistId === wishlist.id" class="flex justify-center py-6 md:py-8">
+              <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-b-2 border-brand-pink-medium"></div>
             </div>
             
             <!-- Products grid -->
-            <div v-else-if="getWishlistProducts(wishlist.id).length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-else-if="getWishlistProducts(wishlist.id).length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div v-for="item in getWishlistProducts(wishlist.id)" :key="item.id" class="relative">
                 <!-- Remove button (solo para mis wishlists) -->
                 <button 
@@ -153,9 +153,9 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-white/40 backdrop-blur-md flex items-center justify-center z-50" @click.self="showCreateModal = false">
-      <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">{{ $t('profile.wishlist.createWishlistTitle') }}</h2>
+    <div v-if="showCreateModal" class="fixed inset-0 bg-white/40 backdrop-blur-md flex items-center justify-center z-50 p-4" @click.self="showCreateModal = false">
+      <div class="bg-white rounded-xl md:rounded-2xl p-5 md:p-6 max-w-md w-full">
+        <h2 class="text-lg md:text-xl font-bold text-gray-900 mb-4">{{ $t('profile.wishlist.createWishlistTitle') }}</h2>
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.wishlist.name') }}</label>

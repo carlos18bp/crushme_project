@@ -1,84 +1,89 @@
 <template>
-  <div class="product-card bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+  <div class="product-card bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
     
     <!-- Imagen del producto con iconos -->
-    <div class="product-image relative bg-white p-4">
+    <div class="product-image relative bg-white p-3 md:p-4">
       <img 
         :src="product.images && product.images.length > 0 ? product.images[0].src : 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=300&h=300&fit=crop&crop=center'" 
         :alt="product.name" 
-        class="w-full h-48 object-contain cursor-pointer"
+        class="w-full h-40 md:h-44 lg:h-48 object-contain cursor-pointer"
         @click="$emit('navigate-to-product', product.id)">
       
       <!-- Action Icons - Esquina superior derecha (solo si no está en modo gift) -->
-      <div v-if="!giftMode" class="product-actions absolute top-6 right-6 flex space-x-3">
+      <div v-if="!giftMode" class="product-actions absolute top-4 md:top-5 lg:top-6 right-4 md:right-5 lg:right-6 flex space-x-2 md:space-x-2.5 lg:space-x-3">
         <!-- Icono de Lista (Wishlist) -->
         <button 
           @click.stop="handleAddToWishlist"
-          class="action-btn bg-white p-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110"
+          class="action-btn bg-white p-2 md:p-2.5 rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110"
           :title="$t('products.product.addToList')">
           <img 
             :src="isInList ? ListCheckIcon : ListNoCheckIcon" 
             alt="List icon"
-            class="w-6 h-6">
+            class="w-5 h-5 md:w-6 md:h-6">
         </button>
         
         <!-- Icono de Corazón (Favoritos) -->
         <button 
           @click.stop="handleToggleWishlist"
           :disabled="isTogglingFavorite"
-          class="action-btn bg-white p-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="action-btn bg-white p-2 md:p-2.5 rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
           :title="isFavorited ? $t('products.product.removeFromFavorites') : $t('products.product.addToFavorites')">
           <img 
             :src="isFavorited ? HeartCheckIcon : HeartNoCheckIcon" 
             alt="Heart icon"
-            class="w-6 h-6">
+            class="w-5 h-5 md:w-6 md:h-6">
         </button>
       </div>
     </div>
 
     <!-- Información del producto -->
-    <div class="product-info px-4 pb-4">
+    <div class="product-info px-3 md:px-4 pb-3 md:pb-4">
       <h3 
-        class="product-title text-base font-normal text-gray-900 mb-3 cursor-pointer hover:text-brand-pink-dark transition-colors font-comfortaa"
+        class="product-title text-sm md:text-base font-normal text-gray-900 mb-2 md:mb-3 cursor-pointer hover:text-brand-pink-dark transition-colors font-comfortaa line-clamp-2"
         @click="$emit('navigate-to-product', product.id)">
         {{ product.name }}
       </h3>
       
-      <div class="product-footer flex items-center justify-between gap-3 mt-3">
-        <!-- Precio -->
+      <div class="product-footer flex flex-col gap-3 md:gap-4 mt-2 md:mt-3">
+        <!-- Precio o Find Me para productos variables -->
         <div class="price-section">
-          <span class="product-price text-2xl font-medium text-gray-900 font-poppins">
+          <span v-if="product.type === 'variable'" class="product-price text-lg md:text-xl font-medium text-brand-pink-dark font-poppins italic cursor-pointer hover:text-brand-pink transition-colors" @click="$emit('navigate-to-product', product.id)">
+            {{ $t('products.product.findMe') || 'Find me ✨' }}
+          </span>
+          <span v-else class="product-price text-xl md:text-2xl font-medium text-gray-900 font-poppins">
             {{ displayPrice }}
           </span>
         </div>
         
-        <!-- Botones de acción -->
-        <div v-if="giftMode" class="product-buttons flex gap-2 flex-shrink-0">
-          <!-- Botón único para modo regalo -->
-          <button 
-            @click.stop="handleBuyAsGift"
-            :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
-            class="btn-gift text-white px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 whitespace-nowrap"
-            style="background-color: #DA9DFF;">
-            {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyAsGift') || 'Buy as Gift') }}
-          </button>
-        </div>
-        <div v-else class="product-buttons flex gap-2 flex-shrink-0">
-          <button 
-            @click.stop="handleBuyNow"
-            :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
-            class="btn-buy text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90"
-            style="background-color: #DA9DFF;">
-            {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyNow') || 'Buy now') }}
-          </button>
-          <button 
-            @click.stop="handleAddToCart"
-            :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
-            class="btn-cart text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90"
-            style="background-color: #DA9DFF;">
-            {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.addToCart') || 'Add to cart') }}
-          </button>
-        </div>
+        <!-- Botones de acción (solo para productos NO variables) -->
+        <template v-if="product.type !== 'variable'">
+          <div v-if="giftMode" class="product-buttons flex gap-2 md:gap-2.5 w-full">
+            <!-- Botón único para modo regalo -->
+            <button 
+              @click.stop="handleBuyAsGift"
+              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              class="btn-gift text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 whitespace-nowrap flex-1"
+              style="background-color: #DA9DFF;">
+              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyAsGift') || 'Buy as Gift') }}
+            </button>
+          </div>
+          <div v-else class="product-buttons flex gap-2 md:gap-2.5 w-full">
+            <button 
+              @click.stop="handleBuyNow"
+              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              class="btn-buy text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
+              style="background-color: #DA9DFF;">
+              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyNow') || 'Buy now') }}
+            </button>
+            <button 
+              @click.stop="handleAddToCart"
+              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              class="btn-cart text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
+              style="background-color: #DA9DFF;">
+              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.addToCart') || 'Add to cart') }}
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -230,6 +235,13 @@ const handleCreateWishlist = () => {
 
 const handleBuyNow = () => {
   console.log('🔵 [ProductCard] handleBuyNow clicked for product:', props.product.id)
+  
+  // Si es un producto variable, redirigir al detalle
+  if (props.product.type === 'variable') {
+    emit('navigate-to-product', props.product.id)
+    return
+  }
+  
   try {
     // Agregar el producto al carrito (siempre 1 unidad)
     // Nota: En ProductCard no tenemos variaciones, solo productos simples desde la lista
@@ -254,6 +266,13 @@ const handleBuyNow = () => {
 
 const handleAddToCart = () => {
   console.log('🟢 [ProductCard] handleAddToCart clicked for product:', props.product.id)
+  
+  // Si es un producto variable, redirigir al detalle
+  if (props.product.type === 'variable') {
+    emit('navigate-to-product', props.product.id)
+    return
+  }
+  
   try {
     const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
@@ -276,6 +295,13 @@ const handleAddToCart = () => {
 
 const handleBuyAsGift = () => {
   console.log('🎁 [ProductCard] handleBuyAsGift clicked for product:', props.product.id)
+  
+  // Si es un producto variable, redirigir al detalle
+  if (props.product.type === 'variable') {
+    emit('navigate-to-product', props.product.id)
+    return
+  }
+  
   try {
     // Agregar el producto al carrito (siempre 1 unidad)
     const result = cartStore.addToCart(props.product.id, 1, {
@@ -299,16 +325,31 @@ const handleBuyAsGift = () => {
 </script>
 
 <style scoped>
-/* Product Cards */
+/* Product Cards - Mobile First */
 .product-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
 
 .product-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 768px) {
+  .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.10);
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .product-image {
@@ -338,8 +379,18 @@ const handleBuyAsGift = () => {
 }
 
 .product-title {
-  line-height: 1.5;
+  line-height: 1.4;
   letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .product-title {
+    line-height: 1.5;
+  }
 }
 
 .product-price {
@@ -391,17 +442,46 @@ const handleBuyAsGift = () => {
   transform: translateY(0);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .product-buttons {
-    flex-direction: column;
-    width: 100%;
-    gap: 0.5rem;
+/* Responsive Design - Mobile First */
+.product-buttons {
+  width: 100%;
+}
+
+.product-buttons button {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+/* Touch targets for mobile */
+@media (max-width: 640px) {
+  .action-btn {
+    min-width: 40px;
+    min-height: 40px;
   }
   
-  .product-buttons button {
-    width: 100%;
-    text-align: center;
+  .btn-buy,
+  .btn-cart,
+  .btn-gift {
+    min-height: 36px;
+  }
+}
+
+/* Reduce hover effects on touch devices */
+@media (hover: none) {
+  .product-card:hover {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .action-btn:hover {
+    transform: scale(1);
+  }
+  
+  .btn-buy:hover,
+  .btn-cart:hover,
+  .btn-gift:hover {
+    transform: none;
   }
 }
 </style>

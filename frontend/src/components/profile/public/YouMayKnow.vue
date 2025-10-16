@@ -107,28 +107,66 @@ const navigateToCrush = (username) => {
 </script>
 
 <style scoped>
-/* Container */
+/* Container - Mobile First */
 .you-may-know {
   background: white;
   border-radius: 1rem;
-  padding: 32px;
+  padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Title */
-.component-title {
-  font-family: 'Comfortaa', cursive;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #11181E;
-  margin: 0 0 24px 0;
+@media (min-width: 640px) {
+  .you-may-know {
+    padding: 24px;
+  }
 }
 
-/* Users List */
+@media (min-width: 1024px) {
+  .you-may-know {
+    padding: 32px;
+  }
+}
+
+/* Title - Mobile First */
+.component-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #11181E;
+  margin: 0 0 16px 0;
+}
+
+@media (min-width: 640px) {
+  .component-title {
+    font-size: 1.25rem;
+    margin: 0 0 20px 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .component-title {
+    font-size: 1.5rem;
+    margin: 0 0 24px 0;
+  }
+}
+
+/* Users List - Mobile First */
 .users-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .users-list {
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .users-list {
+    gap: 20px;
+  }
 }
 
 /* User Item */
@@ -146,14 +184,28 @@ const navigateToCrush = (username) => {
   background: #f8fafc;
 }
 
-/* Avatar */
+/* Avatar - Mobile First */
 .user-avatar {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   background: #f1f5f9;
+}
+
+@media (min-width: 640px) {
+  .user-avatar {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .avatar-img {
@@ -170,20 +222,39 @@ const navigateToCrush = (username) => {
 
 .user-name {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #11181E;
   margin: 0 0 2px 0;
 }
 
+@media (min-width: 640px) {
+  .user-name {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-name {
+    font-size: 0.9375rem;
+  }
+}
+
 .user-description {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: #FF3FD5;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+}
+
+@media (min-width: 640px) {
+  .user-description {
+    font-size: 0.8125rem;
+    gap: 6px;
+  }
 }
 
 .crush-dot {
@@ -198,23 +269,39 @@ const navigateToCrush = (username) => {
   color: #FF3FD5;
 }
 
-/* Watch Button */
+/* Watch Button - Mobile First */
 .watch-button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
+  gap: 4px;
+  padding: 6px 12px;
   background: #f1f5f9;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: #11181E;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .watch-button {
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .watch-button {
+    padding: 8px 20px;
+    font-size: 0.875rem;
+  }
 }
 
 .watch-button:hover {
@@ -284,19 +371,29 @@ const navigateToCrush = (username) => {
   margin: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+/* Additional responsive tweaks */
+@media (max-width: 480px) {
   .you-may-know {
-    padding: 24px;
+    padding: 16px;
   }
   
   .component-title {
-    font-size: 1.25rem;
+    font-size: 1rem;
+    margin: 0 0 12px 0;
+  }
+  
+  .users-list {
+    gap: 10px;
+  }
+  
+  .user-avatar {
+    width: 36px;
+    height: 36px;
   }
   
   .watch-button {
-    padding: 6px 16px;
-    font-size: 0.8125rem;
+    padding: 5px 10px;
+    font-size: 0.7rem;
   }
 }
 </style>

@@ -1,25 +1,16 @@
 <template>
   <div 
-    class="rounded-2xl p-6 flex items-center justify-between border-2 border-gray-900"
+    class="rounded-lg md:rounded-xl p-3 md:p-5 flex items-center border-2 border-gray-900 min-h-[130px] sm:min-h-[150px] md:min-h-[180px]"
     style="background-color: #FFDDDD;"
   >
-    <div class="flex items-center gap-6">
-      <p class="text-7xl font-bold text-gray-900 font-comfortaa">
+    <div class="flex items-center gap-2 sm:gap-3 md:gap-4">
+      <p class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 font-comfortaa">
         {{ isLoading ? '...' : giftsCount }}
       </p>
       <div>
-        <p class="text-xl text-gray-900 font-comfortaa">{{ $t('profile.dashboard.gifts.title') }}</p>
-        <p class="text-xl text-gray-900 font-comfortaa">{{ $t('profile.dashboard.gifts.subtitle') }}</p>
+        <p class="text-xs sm:text-sm md:text-base lg:text-lg text-gray-900 font-comfortaa leading-tight">{{ $t('profileDashboard.gifts.title') }}</p>
+        <p class="text-xs sm:text-sm md:text-base lg:text-lg text-gray-900 font-comfortaa leading-tight">{{ $t('profileDashboard.gifts.subtitle') }}</p>
       </div>
-    </div>
-    
-    <!-- Gift Icon -->
-    <div class="flex-shrink-0">
-      <img 
-        :src="giftIcon" 
-        alt="Gift" 
-        class="w-20 h-20 object-contain"
-      />
     </div>
   </div>
 </template>
@@ -56,7 +47,8 @@ const loadGifts = async () => {
     const response = await get_request('orders/gifts/?type=received')
 
     if (response.data) {
-      gifts.value = response.data.orders || []
+      // API returns array directly, not wrapped in 'orders' property
+      gifts.value = Array.isArray(response.data) ? response.data : (response.data.orders || [])
     } else {
       gifts.value = []
     }

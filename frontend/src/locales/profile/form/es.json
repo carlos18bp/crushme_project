@@ -54,14 +54,19 @@
     "remove": "Quitar"
   },
   "linktree": {
-    "title": "Linktree",
+    "title": "Mis Enlaces",
     "subtitle": "Añade enlaces a tus redes sociales y sitios web",
     "url": "URL",
-    "urlPlaceholder": "https://ejemplo.com",
+    "urlPlaceholder": "ejemplo.com",
     "title_field": "Título",
     "titlePlaceholder": "Mi Sitio Web",
     "addLink": "Añadir Enlace",
     "removeLink": "Eliminar Enlace"
+  },
+  "preferences": {
+    "title": "Preferencias",
+    "language": "Idioma",
+    "languageHelp": "Elige tu idioma preferido para la interfaz"
   },
   "buttons": {
     "save": "Guardar Cambios",

@@ -40,17 +40,15 @@ def create_paypal_order_data(data_dict):
 
         # Validate items
         if not items or len(items) == 0:
-            return type('Response', (), {
-                'status_code': 400,
-                'data': {'error': 'Cart is empty'}
-            })()
+            from rest_framework.response import Response
+            return Response({'error': 'Cart is empty'}, status=400)
 
         for item in items:
             if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
-                return type('Response', (), {
-                    'status_code': 400,
-                    'data': {'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'}
-                })()
+                from rest_framework.response import Response
+                return Response({
+                    'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'
+                }, status=400)
 
         # Get shipping info
         shipping_info = {
@@ -66,14 +64,12 @@ def create_paypal_order_data(data_dict):
         # Validate required shipping fields
         if not all([shipping_info['address_line_1'], shipping_info['city'],
                    shipping_info['state'], shipping_info['zipcode']]):
-            return type('Response', (), {
-                'status_code': 400,
-                'data': {'error': 'Missing required shipping information'}
-            })()
+            from rest_framework.response import Response
+            return Response({'error': 'Missing required shipping information'}, status=400)
 
         # Build cart items for PayPal
         cart_items = []
-        total_amount = 0
+        items_total = 0
         for item in items:
             cart_items.append({
                 'product_name': item['product_name'],
@@ -81,7 +77,10 @@ def create_paypal_order_data(data_dict):
                 'unit_price': float(item['unit_price']),
                 'woocommerce_product_id': item['woocommerce_product_id']
             })
-            total_amount += float(item['unit_price']) * item['quantity']
+            items_total += float(item['unit_price']) * item['quantity']
+
+        # Total solo incluye productos para PayPal (envío se maneja en WooCommerce)
+        total_amount = items_total
 
         # Create PayPal order
         paypal_result = paypal_service.create_order(
@@ -104,45 +103,40 @@ def create_paypal_order_data(data_dict):
             # Store gift data with PayPal order ID as key (expires in 1 hour)
             cache.set(f'gift_data_{paypal_result["order_id"]}', gift_data, 3600)
 
-            return type('Response', (), {
-                'status_code': 201,
-                'data': {
-                    'success': True,
-                    'message': 'PayPal order created successfully',
-                    'paypal_order_id': paypal_result['order_id'],
-                    'total': str(total_amount),
-                    'items_count': len(cart_items)
-                }
-            })()
+            from rest_framework.response import Response
+            return Response({
+                'success': True,
+                'message': 'PayPal order created successfully',
+                'paypal_order_id': paypal_result['order_id'],
+                'total': str(total_amount),
+                'items_count': len(cart_items)
+            }, status=201)
         else:
-            return type('Response', (), {
-                'status_code': 500,
-                'data': {
-                    'error': 'Failed to create PayPal order',
-                    'details': paypal_result.get('error')
-                }
-            })()
+            from rest_framework.response import Response
+            return Response({
+                'error': 'Failed to create PayPal order',
+                'details': paypal_result.get('error')
+            }, status=500)
 
     except Exception as e:
-        return type('Response', (), {
-            'status_code': 500,
-            'data': {
-                'error': 'Internal server error',
-                'details': str(e)
-            }
-        })()
+        from rest_framework.response import Response
+        return Response({
+            'error': 'Internal server error',
+            'details': str(e)
+        }, status=500)
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def send_to_woocommerce_async(order_id):
+def send_to_woocommerce_async(order_id, shipping_cost_cents=0):
     """
     Send order to WooCommerce in background thread
     This prevents blocking the response to the frontend
 
     Args:
         order_id: ID of the order to send to WooCommerce
+        shipping_cost_cents: Shipping cost in cents for WooCommerce
     """
     import sys
     import time
@@ -177,7 +171,9 @@ def send_to_woocommerce_async(order_id):
         logger.info(f"📍 [WOOCOMMERCE SYNC] Destino: {order.city}, {order.state}, {order.country}")
         
         print(f"🔄 [WOOCOMMERCE THREAD] Enviando a WooCommerce...", file=sys.stderr, flush=True)
-        wc_result = woocommerce_order_service.send_order(order)
+        # Use shipping cost passed as parameter
+        print(f"📦 [WOOCOMMERCE THREAD] Shipping cost: {shipping_cost_cents} cents", file=sys.stderr, flush=True)
+        wc_result = woocommerce_order_service.send_order(order, shipping_cost=shipping_cost_cents)
         
         if wc_result['success']:
             try:
@@ -361,6 +357,7 @@ def create_paypal_order(request):
         "shipping_postal_code": "050031",
         "shipping_country": "CO",
         "phone_number": "+57 300 1234567",
+        "shipping": 15000,  // ← Costo de envío en pesos colombianos (opcional)
         "notes": "Optional notes"
     }
 
@@ -406,6 +403,7 @@ def capture_paypal_order(request):
         "shipping_postal_code": "050031",
         "shipping_country": "CO",
         "phone_number": "+57 300 1234567",
+        "shipping": 15000,  // ← Costo de envío en pesos colombianos (opcional)
         "notes": "Optional notes",
         "gift_message": "¡Feliz cumpleaños! Espero que te guste este regalo ❤️"
     }
@@ -457,8 +455,10 @@ def capture_paypal_order(request):
         # Payment captured successfully!
         logger.info(f"✅ PayPal payment captured: {paypal_order_id}")
         
-        # Calculate total
-        total_amount = sum(float(item['unit_price']) * item['quantity'] for item in items)
+        # Calculate total (productos + envío para orden local)
+        items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
+        shipping_cost = float(request.data.get('shipping', 0))
+        total_amount = items_total + shipping_cost
         
         # Get customer info
         customer_email = request.data.get('customer_email', capture_result.get('payer_email', 'guest@example.com'))
@@ -471,12 +471,14 @@ def capture_paypal_order(request):
         from django.core.cache import cache
         gift_data = cache.get(f'gift_data_{paypal_order_id}', {})
 
-        # STEP 3: Create local order
+        # STEP 3: Create local order (incluye costo de envío en el total)
+        shipping_cost_for_order = float(request.data.get('shipping', 0))
+        order_total_with_shipping = total_amount + shipping_cost_for_order
         order = Order.objects.create(
             user=user,  # Use obtained/created user
             email=customer_email,
             name=customer_name,
-            total=total_amount,
+            total=order_total_with_shipping,
             address_line_1=request.data.get('shipping_address', ''),
             city=request.data.get('shipping_city', ''),
             state=request.data.get('shipping_state', ''),
@@ -537,9 +539,10 @@ def capture_paypal_order(request):
 
         # Start WooCommerce sync in background AFTER building response
         # This ensures the transaction is committed before the thread tries to read
+        shipping_cost_cents = int(request.data.get('shipping', 0))
         woocommerce_thread = threading.Thread(
             target=send_to_woocommerce_async,
-            args=(order.id,),
+            args=(order.id, shipping_cost_cents),
             name=f"WooCommerce-Sync-{order.order_number}"
         )
         woocommerce_thread.daemon = False  # Allow thread to complete even if main thread ends
@@ -620,8 +623,9 @@ def test_paypal_woocommerce_flow():
     # Simular el flujo del hilo de WooCommerce
     print("🔄 Simulando envío a WooCommerce...")
 
-    # Probar envío a WooCommerce
-    result = woocommerce_order_service.send_order(order)
+    # Probar envío a WooCommerce con costo de envío real
+    shipping_cost_cents = int(request.data.get('shipping', 0))
+    result = woocommerce_order_service.send_order(order, shipping_cost=shipping_cost_cents)
 
     if result['success']:
         print(f"✅ Orden enviada exitosamente a WooCommerce")

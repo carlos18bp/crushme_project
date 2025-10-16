@@ -1,28 +1,29 @@
 <template>
   <div class="my-gifts">
-    <div class="px-6 py-8 lg:px-8 max-w-7xl mx-auto">
+    <div class="px-4 md:px-6 py-6 md:py-8 lg:px-8 max-w-7xl mx-auto">
       <!-- Header -->
-      <h1 class="text-3xl font-medium text-gray-900 font-comfortaa mb-8">
+      <h1 class="text-2xl md:text-3xl font-medium text-brand-dark font-comfortaa mb-6 md:mb-8">
         My Gifts
       </h1>
 
       <!-- Tabs for Sent/Received -->
-      <div class="tabs-container mb-8">
-        <div class="flex gap-2 border-b border-gray-200">
+      <div class="tabs-container mb-6 md:mb-8">
+        <div class="flex gap-1 md:gap-2 border-b border-brand-pink-light overflow-x-auto">
           <button
             @click="activeTab = 'received'"
             :class="[
-              'tab-btn px-6 py-3 font-semibold font-poppins text-sm transition-all duration-200 relative',
+              'tab-btn px-4 md:px-6 py-2.5 md:py-3 font-semibold font-poppins text-xs md:text-sm transition-all duration-200 relative whitespace-nowrap',
               activeTab === 'received' 
                 ? 'text-brand-pink' 
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-brand-blue-medium hover:text-brand-pink-dark'
             ]"
           >
-            <span class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <span class="flex items-center gap-1.5 md:gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
               </svg>
-              Gifts Received
+              <span class="hidden sm:inline">Gifts Received</span>
+              <span class="sm:hidden">Received</span>
             </span>
             <span 
               v-if="activeTab === 'received'" 
@@ -33,17 +34,18 @@
           <button
             @click="activeTab = 'sent'"
             :class="[
-              'tab-btn px-6 py-3 font-semibold font-poppins text-sm transition-all duration-200 relative',
+              'tab-btn px-4 md:px-6 py-2.5 md:py-3 font-semibold font-poppins text-xs md:text-sm transition-all duration-200 relative whitespace-nowrap',
               activeTab === 'sent' 
                 ? 'text-brand-pink' 
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-brand-blue-medium hover:text-brand-pink-dark'
             ]"
           >
-            <span class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <span class="flex items-center gap-1.5 md:gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
               </svg>
-              Gifts Sent
+              <span class="hidden sm:inline">Gifts Sent</span>
+              <span class="sm:hidden">Sent</span>
             </span>
             <span 
               v-if="activeTab === 'sent'" 
@@ -54,15 +56,15 @@
       </div>
 
       <!-- Filter Section -->
-      <div class="filters-section mb-6">
-        <h2 class="text-lg font-medium text-gray-900 font-comfortaa mb-4">
+      <div class="filters-section mb-4 md:mb-6">
+        <h2 class="text-base md:text-lg font-medium text-brand-dark font-comfortaa mb-3 md:mb-4">
           Filter by
         </h2>
-        <div class="filters-row flex gap-4 items-center">
+        <div class="filters-row flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
           <!-- Search Input -->
-          <div class="search-input relative flex-1 max-w-xs">
-            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="search-input relative flex-1 sm:max-w-xs">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-pink-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
@@ -70,15 +72,15 @@
               type="text" 
               placeholder="Search"
               v-model="searchQuery"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa"
+              class="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-brand-pink-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa text-brand-dark"
             />
           </div>
 
           <!-- Date Filter -->
-          <div class="date-filter relative">
+          <div class="date-filter relative w-full sm:w-auto">
             <select 
               v-model="dateFilter"
-              class="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa cursor-pointer bg-white"
+              class="appearance-none w-full px-4 py-2 pr-10 text-sm md:text-base border border-brand-pink-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa cursor-pointer bg-white text-brand-dark"
             >
               <option value="">Date</option>
               <option value="last-week">Last Week</option>
@@ -86,7 +88,7 @@
               <option value="last-3-months">Last 3 Months</option>
               <option value="last-year">Last Year</option>
             </select>
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-brand-pink-medium">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
@@ -101,25 +103,24 @@
       </div>
 
       <!-- Gifts List -->
-      <div v-else class="gifts-list space-y-6">
+      <div v-else class="gifts-list space-y-4 md:space-y-6">
         <!-- Gift Card -->
         <div
           v-for="gift in transformedGifts"
           :key="gift.id"
-          class="gift-card rounded-3xl p-6 border border-gray-200"
-          style="background-color: rgba(255, 63, 213, 0.2);"
+          class="gift-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-brand-pink-light bg-brand-pink-lighter"
         >
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <!-- Left Section: Gift Details -->
-            <div class="lg:col-span-2 space-y-4">
+            <div class="lg:col-span-2 space-y-3 md:space-y-4">
               <!-- Order ID with Gift Badge -->
-              <div class="order-id mb-4 flex items-center gap-3">
-                <p class="text-sm text-gray-600 font-comfortaa">
+              <div class="order-id mb-3 md:mb-4 flex flex-wrap items-center gap-2 md:gap-3">
+                <p class="text-xs md:text-sm text-brand-blue-medium font-comfortaa">
                   Order ID #{{ gift.orderNumber }}
                 </p>
                 <span
-                  class="gift-badge px-3 py-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  class="gift-badge px-2.5 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-brand-pink to-brand-purple-light text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                   </svg>
                   GIFT
@@ -128,10 +129,10 @@
 
               <!-- Gift Info -->
               <div class="gift-info">
-                <h3 class="text-base font-semibold text-gray-900 font-comfortaa mb-2">
+                <h3 class="text-sm md:text-base font-semibold text-brand-dark font-comfortaa mb-2">
                   Gift Information
                 </h3>
-                <ul class="space-y-1 text-sm text-gray-600 font-comfortaa">
+                <ul class="space-y-1 text-xs md:text-sm text-brand-blue-medium font-comfortaa">
                   <li v-if="activeTab === 'received'">• From: <span class="font-semibold text-brand-pink">{{ gift.sender }}</span></li>
                   <li v-if="activeTab === 'sent'">• To: <span class="font-semibold text-brand-pink">{{ gift.receiver }}</span></li>
                   <li>• Product: {{ gift.product.name }}</li>
@@ -142,24 +143,24 @@
               </div>
 
               <!-- Gift Message -->
-              <div v-if="gift.message" class="gift-message p-4 bg-pink-50 rounded-xl border border-pink-200">
-                <h3 class="text-base font-semibold text-brand-pink font-comfortaa mb-2 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <div v-if="gift.message" class="gift-message p-3 md:p-4 bg-brand-pink-lighter rounded-lg md:rounded-xl border border-brand-pink-light">
+                <h3 class="text-sm md:text-base font-semibold text-brand-pink font-comfortaa mb-2 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd" />
                   </svg>
                   Message
                 </h3>
-                <p class="text-sm text-gray-700 font-comfortaa italic">
+                <p class="text-xs md:text-sm text-brand-dark font-comfortaa italic">
                   "{{ gift.message }}"
                 </p>
               </div>
 
               <!-- Shipping Information (only for sent gifts) -->
               <div v-if="activeTab === 'sent'" class="shipping-info">
-                <h3 class="text-base font-semibold text-gray-900 font-comfortaa mb-2">
+                <h3 class="text-sm md:text-base font-semibold text-brand-dark font-comfortaa mb-2">
                   Shipping information
                 </h3>
-                <ul class="space-y-1 text-sm text-gray-600 font-comfortaa">
+                <ul class="space-y-1 text-xs md:text-sm text-brand-blue-medium font-comfortaa">
                   <li>• Address: {{ gift.shippingAddress }}</li>
                   <li>• City: {{ gift.shippingCity }}</li>
                   <li>• Date: {{ formatDate(gift.createdAt) }}</li>
@@ -167,8 +168,8 @@
               </div>
 
               <!-- Privacy Note (for received gifts) -->
-              <div v-if="activeTab === 'received'" class="privacy-note p-3 bg-purple-50 rounded-lg border border-purple-200">
-                <p class="text-xs text-purple-700 font-comfortaa flex items-center gap-2">
+              <div v-if="activeTab === 'received'" class="privacy-note p-3 bg-brand-pink-lighter rounded-lg border border-brand-purple-light">
+                <p class="text-xs text-brand-purple-light font-comfortaa flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                   </svg>
@@ -191,13 +192,13 @@
         <!-- Empty State -->
         <div v-if="transformedGifts.length === 0 && !isLoading" class="empty-state text-center py-12">
           <div class="flex flex-col items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-brand-pink-light mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
             </svg>
-            <h3 class="text-xl font-medium text-gray-900 font-comfortaa mb-2">
+            <h3 class="text-xl font-medium text-brand-dark font-comfortaa mb-2">
               No gifts {{ activeTab === 'received' ? 'received' : 'sent' }} yet
             </h3>
-            <p class="text-gray-500 font-comfortaa mb-6">
+            <p class="text-brand-blue-medium font-comfortaa mb-6">
               {{ activeTab === 'received'
                 ? 'When someone sends you a gift, it will appear here'
                 : 'Send your first gift to someone special'
@@ -206,8 +207,7 @@
             <button
               v-if="activeTab === 'sent'"
               @click="router.push({ name: `Products-${i18nStore.locale}` })"
-              class="btn-shop px-6 py-3 rounded-full text-white font-semibold font-poppins transition-all duration-200 hover:opacity-90"
-              style="background-color: #DA9DFF;">
+              class="btn-shop px-6 py-3 rounded-full text-white font-semibold font-poppins transition-all duration-200 hover:opacity-90 bg-brand-purple-light">
               Send a Gift
             </button>
           </div>
@@ -250,9 +250,9 @@ const filteredGifts = computed(() => {
   // Filter by tab (received/sent)
   filtered = filtered.filter(gift => {
     if (activeTab.value === 'received') {
-      return gift.receiver === authStore.username
+      return gift.receiver_username === authStore.username
     } else {
-      return gift.sender === authStore.username
+      return gift.sender_username === authStore.username
     }
   })
 
@@ -362,9 +362,10 @@ const loadGifts = async () => {
     const response = await get_request(`orders/gifts/?type=${activeTab.value}`)
 
     if (response.data) {
-      gifts.value = response.data.orders || []
+      // API returns array directly, not wrapped in 'orders' property
+      gifts.value = Array.isArray(response.data) ? response.data : (response.data.orders || [])
       console.log('🎁 [MyGifts] Gifts loaded:', gifts.value.length, 'gifts')
-      console.log('🎁 [MyGifts] Gifts data sample:', response.data.orders?.[0] || 'No gifts')
+      console.log('🎁 [MyGifts] Gifts data sample:', gifts.value[0] || 'No gifts')
     } else {
       console.error('🎁 [MyGifts] No data in response')
       gifts.value = []
@@ -493,7 +494,7 @@ select {
 }
 
 .tab-btn:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(250, 243, 243, 0.5); /* brand-pink-lighter with opacity */
 }
 
 /* Action buttons */
@@ -503,7 +504,7 @@ select {
 
 .btn-shop:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(192, 132, 252, 0.5);
+  box-shadow: 0 8px 20px rgba(218, 157, 255, 0.5); /* brand-purple-light */
 }
 
 .btn-shop:active {

@@ -212,9 +212,9 @@ GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production
 
 # WooCommerce API settings
 # TODO: Mover estas credenciales a variables de entorno en producción
-WOOCOMMERCE_CONSUMER_KEY = 'ck_2997c6fc6d68b3d998045a33002b2e88cce81682'
-WOOCOMMERCE_CONSUMER_SECRET = 'cs_51006180ee1f5999d5cae68d3091e3313174c9c9'
-WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'
+WOOCOMMERCE_CONSUMER_KEY = 'ck_75db39323bb52ffb84e19a0ea4633fe46da8512f'
+WOOCOMMERCE_CONSUMER_SECRET = 'cs_5b78adcd4f49a287fb155c255b5a62cee13207cc'
+WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
 
 # PayPal API settings
 # TODO: Mover estas credenciales a variables de entorno en producción

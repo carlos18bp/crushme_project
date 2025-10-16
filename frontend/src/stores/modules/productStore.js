@@ -22,6 +22,8 @@ export const useProductStore = defineStore('product', () => {
   const wooThemes = ref([]); // NUEVO: Categorías organizadas por temas (juguetes, lencería, etc.)
   const wooCategoryTree = ref([]); // NUEVO: Árbol jerárquico de categorías
   const wooCurrentProduct = ref(null);
+  const wooProductVariations = ref([]); // ⭐ NUEVO: Variaciones del producto actual
+  const wooCurrentVariation = ref(null); // ⭐ NUEVO: Variación actualmente seleccionada
   const wooConnectionStatus = ref(null);
   const selectedTheme = ref(''); // NUEVO: Tema seleccionado
   const selectedSubcategory = ref(''); // NUEVO: Subcategoría seleccionada
@@ -98,6 +100,7 @@ export const useProductStore = defineStore('product', () => {
   const hasWooProducts = computed(() => wooProducts.value.length > 0);
   const hasWooCategories = computed(() => wooCategories.value.length > 0);
   const hasWooThemes = computed(() => wooThemes.value.length > 0); // NUEVO
+  const hasWooVariations = computed(() => wooProductVariations.value.length > 0); // ⭐ NUEVO
   const hasTrendingProducts = computed(() => trendingProducts.value.length > 0); // ⭐ NUEVO
   const isWooConnected = computed(() => wooConnectionStatus.value === 'OK');
 
@@ -606,6 +609,93 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
+   * ⭐ NUEVO: Fetch product variations from WooCommerce
+   * @param {number} productId - WooCommerce product ID
+   * @param {number} perPage - Variations per page
+   * @param {number} page - Page number
+   */
+  async function fetchWooProductVariations(productId, perPage = 100, page = 1) {
+    isLoadingWooProduct.value = true;
+    wooError.value = null;
+
+    try {
+      const response = await get_request(`products/woocommerce/products/${productId}/variations/?per_page=${perPage}&page=${page}`);
+      
+      if (response.data.success) {
+        const variations = response.data.data || [];
+        wooProductVariations.value = variations;
+        return { success: true, data: variations };
+      } else {
+        wooError.value = response.data.error || 'Error desconocido del backend';
+        wooProductVariations.value = [];
+        return { success: false, error: wooError.value };
+      }
+    } catch (err) {
+      let errorMessage = 'Failed to fetch product variations';
+      if (err.response?.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
+      wooError.value = errorMessage;
+      wooProductVariations.value = [];
+      return { success: false, error: wooError.value };
+    } finally {
+      isLoadingWooProduct.value = false;
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Fetch a specific product variation from WooCommerce
+   * @param {number} productId - WooCommerce product ID
+   * @param {number} variationId - Variation ID
+   */
+  async function fetchWooProductVariation(productId, variationId) {
+    isLoadingWooProduct.value = true;
+    wooError.value = null;
+
+    try {
+      const response = await get_request(`products/woocommerce/products/${productId}/variations/${variationId}/`);
+      
+      if (response.data.success) {
+        const variation = response.data.data;
+        wooCurrentVariation.value = variation;
+        return { success: true, data: variation };
+      } else {
+        wooError.value = response.data.error || 'Error desconocido del backend';
+        wooCurrentVariation.value = null;
+        return { success: false, error: wooError.value };
+      }
+    } catch (err) {
+      let errorMessage = 'Failed to fetch product variation';
+      if (err.response?.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
+      wooError.value = errorMessage;
+      wooCurrentVariation.value = null;
+      return { success: false, error: wooError.value };
+    } finally {
+      isLoadingWooProduct.value = false;
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Clear product variations
+   */
+  function clearWooVariations() {
+    wooProductVariations.value = [];
+    wooCurrentVariation.value = null;
+  }
+
+  /**
    * Get WooCommerce product by ID from current products
    * @param {number} productId - WooCommerce product ID
    */
@@ -1016,6 +1106,8 @@ export const useProductStore = defineStore('product', () => {
     wooThemes, // ⭐ NUEVO
     wooCategoryTree, // ⭐ NUEVO
     wooCurrentProduct,
+    wooProductVariations, // ⭐ NUEVO: Variaciones del producto actual
+    wooCurrentVariation, // ⭐ NUEVO: Variación actualmente seleccionada
     wooConnectionStatus,
     wooStats, // ⭐ NUEVO: Estadísticas globales
     trendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
@@ -1046,6 +1138,7 @@ export const useProductStore = defineStore('product', () => {
     hasWooProducts,
     hasWooCategories,
     hasWooThemes, // ⭐ NUEVO
+    hasWooVariations, // ⭐ NUEVO
     hasTrendingProducts, // ⭐ NUEVO
     isWooConnected,
     wooProductsByTheme, // ⭐ NUEVO
@@ -1082,11 +1175,14 @@ export const useProductStore = defineStore('product', () => {
     fetchFeaturedCategories, // ⭐ NUEVO: Categorías destacadas aleatorias
     fetchProductsByCategorySlug, // ⭐ NUEVO: Productos por slug de categoría
     fetchWooProduct,
+    fetchWooProductVariations, // ⭐ NUEVO: Obtener variaciones del producto
+    fetchWooProductVariation, // ⭐ NUEVO: Obtener variación específica
     getWooProductById,
     filterWooByPriceRange,
     sortWooProducts,
     clearWooCategory,
     clearWooCurrentProduct,
+    clearWooVariations, // ⭐ NUEVO: Limpiar variaciones
     clearWooError,
     clearFeaturedCategories, // ⭐ NUEVO: Limpiar categorías destacadas
     setWooLoading,

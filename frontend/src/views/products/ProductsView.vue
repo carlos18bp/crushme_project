@@ -5,10 +5,10 @@
 
     <!-- Main Content -->
     <div class="main-content bg-pink-50 min-h-screen pt-0">
-      <div class="container mx-auto px-6 pt-24 pb-6">
+      <div class="container mx-auto px-4 md:px-5 lg:px-6 pt-20 md:pt-22 lg:pt-24 pb-4 md:pb-5 lg:pb-6">
         
         <!-- Breadcrumb Dinámico -->
-        <div class="breadcrumb mb-8 flex items-center relative z-10 pt-4">
+        <div class="breadcrumb mb-4 md:mb-6 lg:mb-8 flex items-center relative z-10 pt-2 md:pt-3 lg:pt-4">
           <button @click="clearAllFilters" class="text-gray-600 hover:text-brand-pink-dark transition-colors">
             {{ $t('products.breadcrumb.home') }}
           </button>
@@ -25,15 +25,15 @@
           </span>
         </div>
 
-        <div class="flex gap-8 relative z-10">
+        <div class="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 relative z-10">
           <!-- Sidebar Filters -->
-          <aside class="sidebar w-80 flex-shrink-0">
-            <div class="filters-container bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
+          <aside class="sidebar w-full lg:w-80 flex-shrink-0">
+            <div class="filters-container bg-white rounded-2xl md:rounded-3xl shadow-sm p-4 md:p-5 lg:p-6 border border-gray-100">
               
               <!-- Filters Header -->
-              <div class="filters-header mb-6 pb-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-2xl font-semibold text-gray-800">{{ $t('products.filters.title') }}</h3>
-                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="filters-header mb-4 md:mb-5 lg:mb-6 pb-3 md:pb-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">{{ $t('products.filters.title') }}</h3>
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                 </svg>
               </div>
@@ -42,39 +42,39 @@
               <div class="filter-categories">
                 
                 <!-- Loading Categories -->
-                <div v-if="isLoadingThemes" class="text-center py-4">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue-medium mx-auto"></div>
-                  <p class="text-gray-600 mt-2">{{ $t('products.filters.loadingCategories') }}</p>
+                <div v-if="isLoadingThemes" class="text-center py-3 md:py-4">
+                  <div class="animate-spin rounded-full h-7 w-7 md:h-8 md:w-8 border-b-2 border-brand-blue-medium mx-auto"></div>
+                  <p class="text-gray-600 mt-2 text-sm md:text-base">{{ $t('products.filters.loadingCategories') }}</p>
                 </div>
 
                 <!-- Themes from WooCommerce (Organized) -->
                 <div v-else>
                   <!-- All Products Option -->
-                  <div class="filter-item mb-3">
+                  <div class="filter-item mb-2 md:mb-3">
                     <button 
                       @click="clearAllFilters"
-                      :class="['filter-button w-full flex items-center justify-between py-3 px-3 text-left transition-colors rounded-lg',
+                      :class="['filter-button w-full flex items-center justify-between py-2.5 md:py-3 px-2.5 md:px-3 text-left transition-colors rounded-lg',
                                !selectedTheme && !selectedCategory ? 'bg-brand-pink-light' : 'hover:bg-gray-50']">
-                      <span class="text-gray-700 text-base font-medium">{{ $t('products.filters.allProducts') }}</span>
+                      <span class="text-gray-700 text-sm md:text-base font-medium">{{ $t('products.filters.allProducts') }}</span>
                       <span v-if="!selectedTheme && !selectedCategory" class="text-brand-pink-dark">✓</span>
                     </button>
                   </div>
 
                   <!-- Dynamic Themes -->
-                  <div v-for="theme in themes" :key="theme.theme" class="filter-item mb-3">
+                  <div v-for="theme in themes" :key="theme.theme" class="filter-item mb-2 md:mb-3">
                     <!-- Theme Button -->
                     <button 
                       @click="toggleTheme(theme.theme)"
-                      :class="['filter-button w-full flex items-center justify-between py-3 px-3 text-left transition-colors rounded-lg',
+                      :class="['filter-button w-full flex items-center justify-between py-2.5 md:py-3 px-2.5 md:px-3 text-left transition-colors rounded-lg',
                                selectedTheme === theme.theme ? 'bg-brand-pink-light' : 'hover:bg-gray-50']">
                       <div class="flex items-center">
                         <div>
-                          <span class="text-gray-800 text-base font-medium">{{ theme.name }}</span>
-                          <span class="text-gray-500 text-xs ml-2">({{ theme.total_products }})</span>
+                          <span class="text-gray-800 text-sm md:text-base font-medium">{{ theme.name }}</span>
+                          <span class="text-gray-500 text-xs ml-1.5 md:ml-2">({{ theme.total_products }})</span>
                         </div>
                       </div>
                       <svg 
-                        :class="['arrow w-5 h-5 text-gray-400 transition-transform',
+                        :class="['arrow w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform',
                                  selectedTheme === theme.theme ? 'rotate-90' : '']" 
                         fill="none" 
                         stroke="currentColor" 
@@ -84,22 +84,22 @@
                     </button>
 
                     <!-- Categories dentro del tema (expandible) -->
-                    <div v-if="selectedTheme === theme.theme" class="mt-2 ml-4 space-y-2">
+                    <div v-if="selectedTheme === theme.theme" class="mt-1.5 md:mt-2 ml-3 md:ml-4 space-y-1.5 md:space-y-2">
                       <!-- Categorías del tema -->
                       <div v-for="category in theme.categories" :key="category.id">
                         <button
                           @click.stop="selectCategory(category.id)"
-                          :class="['w-full flex items-center justify-between py-2 px-3 text-left transition-colors rounded-lg text-sm',
+                          :class="['w-full flex items-center justify-between py-1.5 md:py-2 px-2.5 md:px-3 text-left transition-colors rounded-lg text-xs md:text-sm',
                                    selectedCategory === category.id ? 'bg-purple-100 text-purple-700' : 'hover:bg-gray-100']">
                           <div class="flex items-center">
                             <span>{{ category.name }}</span>
-                            <span class="text-gray-400 text-xs ml-2">({{ category.count }})</span>
+                            <span class="text-gray-400 text-xs ml-1.5 md:ml-2">({{ category.count }})</span>
                           </div>
                           <div class="flex items-center">
-                            <span v-if="selectedCategory === category.id" class="text-purple-700 text-sm mr-2">✓</span>
+                            <span v-if="selectedCategory === category.id" class="text-purple-700 text-xs md:text-sm mr-1.5 md:mr-2">✓</span>
                             <svg 
                               v-if="category.has_subcategories" 
-                              :class="['w-4 h-4 text-gray-400 transition-transform',
+                              :class="['w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 transition-transform',
                                        expandedCategories.has(category.id) ? 'rotate-90' : '']"
                               fill="none" 
                               stroke="currentColor" 
@@ -110,19 +110,19 @@
                         </button>
 
                         <!-- Subcategorías (si existen) -->
-                        <div v-if="category.has_subcategories && expandedCategories.has(category.id)" class="ml-4 mt-1 space-y-1">
+                        <div v-if="category.has_subcategories && expandedCategories.has(category.id)" class="ml-3 md:ml-4 mt-1 space-y-1">
                           <button
                             v-for="subcategory in category.subcategories"
                             :key="subcategory.id"
                             @click.stop="selectCategory(subcategory.id)"
-                            :class="['w-full flex items-center justify-between py-2 px-3 text-left transition-colors rounded-lg text-sm',
+                            :class="['w-full flex items-center justify-between py-1.5 md:py-2 px-2.5 md:px-3 text-left transition-colors rounded-lg text-xs md:text-sm',
                                      selectedCategory === subcategory.id ? 'bg-purple-100 text-purple-700' : 'hover:bg-gray-100']">
                             <div class="flex items-center">
-                              <span class="text-gray-400 mr-2">└─</span>
+                              <span class="text-gray-400 mr-1.5 md:mr-2 text-xs">└─</span>
                               <span>{{ subcategory.name }}</span>
-                              <span class="text-gray-400 text-xs ml-2">({{ subcategory.count }})</span>
+                              <span class="text-gray-400 text-xs ml-1.5 md:ml-2">({{ subcategory.count }})</span>
                             </div>
-                            <span v-if="selectedCategory === subcategory.id" class="text-purple-700 text-sm">✓</span>
+                            <span v-if="selectedCategory === subcategory.id" class="text-purple-700 text-xs md:text-sm">✓</span>
                           </button>
                         </div>
                       </div>
@@ -137,12 +137,12 @@
           <main class="products-section flex-1">
             
             <!-- Products Header -->
-            <div class="products-header flex items-center justify-between mb-8">
+            <div class="products-header flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 lg:mb-8 gap-3 md:gap-4">
               <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-1.5 md:mb-2 flex items-center">
                   <span>{{ pageTitle }}</span>
                 </h1>
-                <p class="text-gray-600">
+                <p class="text-sm md:text-base text-gray-600">
                   {{ $t('products.header.showing', { 
                     start: Math.min((currentPage - 1) * productsPerPage + 1, totalProducts), 
                     end: Math.min(currentPage * productsPerPage, totalProducts), 
@@ -150,12 +150,12 @@
                   }) }}
                 </p>
               </div>
-              <div class="sort-section flex items-center">
-                <span class="text-gray-600 mr-3">{{ $t('products.header.sortBy') }}</span>
+              <div class="sort-section flex items-center w-full md:w-auto">
+                <span class="text-gray-600 mr-2 md:mr-3 text-sm md:text-base">{{ $t('products.header.sortBy') }}</span>
                 <select 
                   v-model="sortBy"
                   @change="handleSortChange"
-                  class="sort-select bg-white border border-gray-300 rounded px-3 py-2 text-gray-700 focus:outline-none focus:border-brand-pink-medium">
+                  class="sort-select bg-white border border-gray-300 rounded px-2.5 md:px-3 py-1.5 md:py-2 text-sm md:text-base text-gray-700 focus:outline-none focus:border-brand-pink-medium flex-1 md:flex-initial">
                   <option value="mostPopular">{{ $t('products.header.sortOptions.mostPopular') }}</option>
                   <option value="priceLowHigh">{{ $t('products.header.sortOptions.priceLowHigh') }}</option>
                   <option value="priceHighLow">{{ $t('products.header.sortOptions.priceHighLow') }}</option>
@@ -169,36 +169,36 @@
             <div class="products-grid">
               
               <!-- Loading State -->
-              <div v-if="isLoading" class="text-center py-12">
-                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-blue-medium mx-auto mb-4"></div>
-                <p class="text-gray-600 text-lg">{{ $t('products.loading') }}</p>
+              <div v-if="isLoading" class="text-center py-8 md:py-10 lg:py-12">
+                <div class="animate-spin rounded-full h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16 border-b-2 border-brand-blue-medium mx-auto mb-3 md:mb-4"></div>
+                <p class="text-gray-600 text-base md:text-lg">{{ $t('products.loading') }}</p>
               </div>
 
               <!-- Error State -->
-              <div v-else-if="error" class="text-center py-12">
-                <div class="text-red-500 mb-4">
-                  <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div v-else-if="error" class="text-center py-8 md:py-10 lg:py-12">
+                <div class="text-red-500 mb-3 md:mb-4">
+                  <svg class="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                 </div>
-                <p class="text-gray-600 text-lg mb-4">{{ error }}</p>
-                <button @click="loadProducts" class="bg-brand-blue-medium text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
+                <p class="text-gray-600 text-base md:text-lg mb-3 md:mb-4">{{ error }}</p>
+                <button @click="loadProducts" class="bg-brand-blue-medium text-white px-4 md:px-6 py-1.5 md:py-2 rounded-lg hover:bg-opacity-90 transition-colors text-sm md:text-base">
                   {{ $t('products.retry') }}
                 </button>
               </div>
 
               <!-- No Products State -->
-              <div v-else-if="paginatedProducts.length === 0" class="text-center py-12">
-                <div class="text-gray-400 mb-4">
-                  <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div v-else-if="paginatedProducts.length === 0" class="text-center py-8 md:py-10 lg:py-12">
+                <div class="text-gray-400 mb-3 md:mb-4">
+                  <svg class="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                   </svg>
                 </div>
-                <p class="text-gray-600 text-lg">{{ $t('products.noProducts') }}</p>
+                <p class="text-gray-600 text-base md:text-lg">{{ $t('products.noProducts') }}</p>
               </div>
 
               <!-- Products Grid -->
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
                 <ProductCard
                   v-for="product in paginatedProducts" 
                   :key="product.id"
@@ -215,16 +215,16 @@
               </div>
 
               <!-- Pagination -->
-              <div v-if="totalProducts > 0" class="flex justify-center items-center mt-12 space-x-4">
+              <div v-if="totalProducts > 0" class="flex justify-center items-center mt-8 md:mt-10 lg:mt-12 space-x-2 md:space-x-4">
                 <button 
                   @click="changePage(currentPage - 1)"
                   :disabled="currentPage === 1 || isLoading"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  class="px-3 md:px-4 py-1.5 md:py-2 border border-gray-300 rounded-lg text-sm md:text-base text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   {{ $t('products.pagination.previous') }}
                 </button>
                 
-                <div class="flex items-center space-x-2">
-                  <span class="text-sm text-gray-600">
+                <div class="flex items-center space-x-1 md:space-x-2">
+                  <span class="text-xs md:text-sm text-gray-600">
                     {{ $t('products.pagination.page') }} {{ currentPage }}
                   </span>
                 </div>
@@ -232,7 +232,7 @@
                 <button 
                   @click="changePage(currentPage + 1)"
                   :disabled="displayedProducts.length < productsPerPage || isLoading"
-                  class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  class="px-3 md:px-4 py-1.5 md:py-2 border border-gray-300 rounded-lg text-sm md:text-base text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   {{ $t('products.pagination.next') }}
                 </button>
               </div>
@@ -397,11 +397,15 @@ const toggleTheme = (themeSlug) => {
     // Si es el mismo tema, colapsarlo
     selectedTheme.value = ''
     selectedCategory.value = ''
+    updateURL()
   } else {
     // Expandir nuevo tema
     selectedTheme.value = themeSlug
     selectedCategory.value = ''
     currentPage.value = 1
+    
+    // Actualizar URL
+    updateURL()
     
     // Cargar productos del tema
     loadThemeProducts(themeSlug)
@@ -415,6 +419,9 @@ const onThemeSelect = async (themeSlug) => {
   selectedTheme.value = themeSlug
   selectedCategory.value = ''
   currentPage.value = 1
+  
+  // Actualizar URL
+  updateURL()
   
   await loadThemeProducts(themeSlug)
 }
@@ -452,6 +459,9 @@ const selectCategory = async (categoryId) => {
     expandedCategories.value = new Set(expandedCategories.value)
   }
   
+  // Actualizar URL
+  updateURL()
+  
   // ⭐ Cargar solo 9 productos de la categoría
   try {
     const result = await productStore.fetchWooProductsByCategory(categoryId, 9, 1)
@@ -473,6 +483,9 @@ const clearAllFilters = async () => {
   currentPage.value = 1
   productStore.clearTheme()
   productStore.clearSubcategory()
+  
+  // Actualizar URL (limpiar query params)
+  updateURL()
   
   console.log('🔄 Limpiando filtros, cargando productos generales...')
   // Cargar primeros 9 productos sin filtros
@@ -496,6 +509,9 @@ const changePage = async (newPage) => {
   console.log(`📄 PAGINATION DEBUG - Cambiando a página ${newPage}, productos actuales en store:`, productStore.wooProducts.length)
   
   currentPage.value = newPage
+  
+  // Actualizar URL con nueva página
+  updateURL()
   
   try {
     // Determinar qué cargar según el contexto
@@ -626,26 +642,83 @@ watch(selectedCategory, (newCategory) => {
   }
 })
 
-// Función para manejar parámetros de consulta iniciales
-const handleInitialQuery = async () => {
-  // Leer parámetros de consulta para establecer filtros iniciales
-  const categoryQuery = route.query.category
-  const themeQuery = route.query.theme
-
-  if (categoryQuery) {
-    console.log('🔍 Parámetro de categoría inicial:', categoryQuery)
-    // Buscar la categoría por slug y establecerla
-    const theme = productStore.getThemeBySlug(categoryQuery)
-    if (theme && theme.categories.length > 0) {
-      selectedTheme.value = categoryQuery
-      selectedCategory.value = theme.categories[0].id
-      await loadThemeProducts(categoryQuery)
-    }
-  } else if (themeQuery) {
-    console.log('🔍 Parámetro de tema inicial:', themeQuery)
-    selectedTheme.value = themeQuery
-    await loadThemeProducts(themeQuery)
+/**
+ * ⭐ NUEVO: Actualizar URL con query params
+ */
+const updateURL = () => {
+  const query = {}
+  
+  // Agregar tema si existe
+  if (selectedTheme.value) {
+    query.theme = selectedTheme.value
   }
+  
+  // Agregar categoría si existe
+  if (selectedCategory.value) {
+    query.category = selectedCategory.value
+  }
+  
+  // Agregar página si no es la primera
+  if (currentPage.value > 1) {
+    query.page = currentPage.value
+  }
+  
+  // Actualizar URL sin recargar la página
+  router.replace({ 
+    name: route.name, 
+    query 
+  })
+}
+
+/**
+ * ⭐ NUEVO: Restaurar estado desde URL
+ */
+const restoreFromURL = async () => {
+  const { theme, category, page } = route.query
+  
+  console.log('🔍 Restaurando estado desde URL:', { theme, category, page })
+  
+  // Restaurar página
+  if (page) {
+    currentPage.value = parseInt(page) || 1
+  }
+  
+  // Restaurar tema
+  if (theme) {
+    selectedTheme.value = theme
+    console.log('🔍 Tema restaurado:', theme)
+  }
+  
+  // Restaurar categoría
+  if (category) {
+    const categoryId = parseInt(category)
+    selectedCategory.value = categoryId
+    console.log('🔍 Categoría restaurada:', categoryId)
+    
+    // Cargar productos de la categoría con la página correcta
+    const result = await productStore.fetchWooProductsByCategory(categoryId, 9, currentPage.value)
+    if (result.success) {
+      console.log(`✅ Productos de categoría ${categoryId} cargados (página ${currentPage.value}):`, result.data.length)
+    }
+  } else if (theme) {
+    // Si solo hay tema, cargar productos del tema
+    const result = await productStore.fetchProductsByTheme(theme, 9, currentPage.value)
+    if (result.success) {
+      console.log(`✅ Productos de tema ${theme} cargados (página ${currentPage.value}):`, result.data.length)
+    }
+  } else if (page) {
+    // Si solo hay página, cargar todos los productos de esa página
+    const result = await productStore.fetchWooProducts({ perPage: 9, page: currentPage.value })
+    if (result.success) {
+      console.log(`✅ Productos generales cargados (página ${currentPage.value}):`, result.data.length)
+    }
+  }
+}
+
+// Función para manejar parámetros de consulta iniciales (DEPRECATED - usar restoreFromURL)
+const handleInitialQuery = async () => {
+  // Esta función ahora es manejada por restoreFromURL
+  await restoreFromURL()
 }
 
 // Lifecycle
@@ -653,8 +726,8 @@ onMounted(async () => {
   // Inicializar catálogo de productos
   await initializeCatalog()
 
-  // Manejar parámetros de consulta iniciales
-  await handleInitialQuery()
+  // Restaurar estado desde URL (tema, categoría, página)
+  await restoreFromURL()
 
   // Cargar IDs de favoritos si el usuario está autenticado
   if (authStore.isLoggedIn) {
@@ -668,16 +741,34 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Main Content */
+/* Main Content - Mobile First */
 .main-content {
   background-color: #fdf2f8;
-  margin-top: -25px; /* Superposición con el navbar */
+  margin-top: -15px; /* Superposición con el navbar en mobile */
   position: relative;
 }
 
-/* Sidebar */
+@media (min-width: 768px) {
+  .main-content {
+    margin-top: -20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    margin-top: -25px;
+  }
+}
+
+/* Sidebar - Mobile First */
 .sidebar {
-  max-width: 320px;
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    max-width: 320px;
+  }
 }
 
 .filters-container {
@@ -687,8 +778,20 @@ onMounted(async () => {
 .filter-button {
   border: none;
   background: none;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   color: #6b7280;
+}
+
+@media (min-width: 768px) {
+  .filter-button {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .filter-button {
+    font-size: 0.95rem;
+  }
 }
 
 .filter-button:hover {
@@ -696,7 +799,13 @@ onMounted(async () => {
 }
 
 .filter-button:hover .arrow {
-  transform: translateX(3px);
+  transform: translateX(2px);
+}
+
+@media (min-width: 768px) {
+  .filter-button:hover .arrow {
+    transform: translateX(3px);
+  }
 }
 
 .arrow {
@@ -708,8 +817,20 @@ onMounted(async () => {
 }
 
 .apply-filter-btn {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.025em;
+}
+
+@media (min-width: 768px) {
+  .apply-filter-btn {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .apply-filter-btn {
+    font-size: 0.9rem;
+  }
 }
 
 /* Theme buttons */
@@ -738,14 +859,26 @@ onMounted(async () => {
   background-color: #faf5ff;
 }
 
-/* Products Section */
+/* Products Section - Mobile First */
 .products-header h1 {
   font-weight: 700;
   color: #1f2937;
 }
 
 .sort-select {
-  min-width: 180px;
+  min-width: auto;
+}
+
+@media (min-width: 640px) {
+  .sort-select {
+    min-width: 160px;
+  }
+}
+
+@media (min-width: 768px) {
+  .sort-select {
+    min-width: 180px;
+  }
 }
 
 
@@ -764,67 +897,51 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-/* Responsive Design */
+/* Responsive Design - Mobile First */
+.nav-menu {
+  display: flex;
+}
+
 @media (max-width: 768px) {
   .nav-menu {
     display: none;
   }
-  
-  .main-content {
-    margin-top: -12px; /* Menos superposición en móvil */
-  }
-  
-  .container {
-    padding-top: 4rem !important; /* Más espacio en móvil para el navbar */
-  }
-  
-  .sidebar {
-    max-width: 100%;
-    margin-bottom: 2rem;
-  }
-  
-  .products-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .sort-section {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
-  .sort-select {
-    min-width: 200px;
-  }
-  
 }
 
-/* Breadcrumb styling */
+/* Breadcrumb styling - Mobile First */
 .breadcrumb {
   backdrop-filter: blur(5px);
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.15);
-  margin-left: -1rem;
-  margin-right: -1rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .breadcrumb {
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.625rem;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .breadcrumb {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    font-size: 1rem;
+  }
 }
 
 .breadcrumb button {
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 1024px) {
-  .main-content {
-    margin-top: -18px; /* Menos superposición en tablet */
-  }
-  
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 5rem !important; /* Más espacio en tablet para el navbar */
-  }
 }
 </style>
 

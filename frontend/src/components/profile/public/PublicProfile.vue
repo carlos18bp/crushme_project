@@ -336,11 +336,23 @@ const copyProfileLink = async () => {
   height: fit-content;
 }
 
-/* Header Section */
+/* Header Section - Mobile First */
 .profile-header {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 150px;
+}
+
+@media (min-width: 640px) {
+  .profile-header {
+    height: 180px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-header {
+    height: 200px;
+  }
 }
 
 .header-gradient {
@@ -362,18 +374,37 @@ const copyProfileLink = async () => {
   /* Si tiene cover image, el background-image se aplicará desde el template */
 }
 
-/* Avatar */
+/* Avatar - Mobile First */
 .avatar-container {
   position: absolute;
-  bottom: -40px;
-  left: 32px;
-  width: 100px;
-  height: 100px;
+  bottom: -30px;
+  left: 16px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 3px solid white;
   overflow: hidden;
   background: white;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .avatar-container {
+    bottom: -35px;
+    left: 24px;
+    width: 85px;
+    height: 85px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .avatar-container {
+    bottom: -40px;
+    left: 32px;
+    width: 100px;
+    height: 100px;
+    border: 4px solid white;
+  }
 }
 
 .avatar-image {
@@ -429,52 +460,134 @@ const copyProfileLink = async () => {
   white-space: nowrap;
 }
 
-/* Profile Content */
+/* Profile Content - Mobile First */
 .profile-content {
-  padding: 56px 32px 32px 32px;
+  padding: 44px 16px 20px 16px;
 }
 
-/* Profile Info */
+@media (min-width: 640px) {
+  .profile-content {
+    padding: 50px 24px 24px 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-content {
+    padding: 56px 32px 32px 32px;
+  }
+}
+
+/* Profile Info - Mobile First */
 .profile-info {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .profile-info {
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-info {
+    margin-bottom: 24px;
+  }
 }
 
 .profile-username {
   font-family: 'Comfortaa', cursive;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: #11181E;
   margin: 0;
 }
 
-/* Section Titles */
-.section-title {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #11181E;
-  margin: 0 0 12px 0;
+@media (min-width: 640px) {
+  .profile-username {
+    font-size: 1.25rem;
+  }
 }
 
-/* Biography Section */
+@media (min-width: 1024px) {
+  .profile-username {
+    font-size: 1.5rem;
+  }
+}
+
+/* Section Titles - Mobile First */
+.section-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #11181E;
+  margin: 0 0 10px 0;
+}
+
+@media (min-width: 640px) {
+  .section-title {
+    font-size: 0.9375rem;
+    margin: 0 0 12px 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-title {
+    font-size: 1rem;
+  }
+}
+
+/* Biography Section - Mobile First */
 .biography-section {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .biography-section {
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .biography-section {
+    margin-bottom: 24px;
+  }
 }
 
 .biography-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: #475569;
   white-space: pre-line;
 }
 
-/* Three Column Grid: Links, State, Notes */
+@media (min-width: 640px) {
+  .biography-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+}
+
+/* Three Column Grid - Mobile First */
 .three-column-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .three-column-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .three-column-grid {
+    margin-bottom: 24px;
+  }
 }
 
 /* Links Section */
@@ -486,21 +599,35 @@ const copyProfileLink = async () => {
 .links-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .links-buttons {
+    gap: 12px;
+  }
 }
 
 .link-button {
   width: 100%;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 24px;
+  border-radius: 20px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .link-button {
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 0.875rem;
+  }
 }
 
 .link-button:hover {
@@ -520,21 +647,46 @@ const copyProfileLink = async () => {
 
 .info-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: #475569;
   margin: 0;
 }
 
-/* Gallery Section */
+@media (min-width: 640px) {
+  .info-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+}
+
+/* Gallery Section - Mobile First */
 .gallery-section {
   margin-bottom: 0;
 }
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .gallery-item {
@@ -556,9 +708,21 @@ const copyProfileLink = async () => {
   transform: scale(1.05);
 }
 
-/* Wishlists Section */
+/* Wishlists Section - Mobile First */
 .wishlists-section {
-  margin-top: 24px;
+  margin-top: 16px;
+}
+
+@media (min-width: 640px) {
+  .wishlists-section {
+    margin-top: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .wishlists-section {
+    margin-top: 24px;
+  }
 }
 
 .space-y-4 > * + * {
@@ -569,49 +733,7 @@ const copyProfileLink = async () => {
   background: rgba(255, 63, 213, 0.2);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .gallery-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .share-button {
-    padding: 8px 12px;
-    font-size: 0.8125rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .profile-content {
-    padding: 56px 20px 20px 20px;
-  }
-
-  .avatar-container {
-    left: 20px;
-    width: 80px;
-    height: 80px;
-  }
-
-  .three-column-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .gallery-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .share-button {
-    top: 12px;
-    right: 12px;
-    padding: 8px;
-    gap: 4px;
-  }
-  
-  .share-text {
-    font-size: 0.75rem;
-  }
-}
-
+/* Share Button Responsive */
 @media (max-width: 480px) {
   .share-button .share-text {
     display: none;

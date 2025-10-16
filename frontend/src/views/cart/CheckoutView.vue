@@ -83,15 +83,47 @@
             </div>
 
             <div class="form-group">
-              <label for="city">City <span class="text-red-500">*</span></label>
+              <label for="city">Ciudad <span class="text-red-500">*</span></label>
               <input
                 type="text"
                 id="city"
                 v-model="shippingForm.city"
-                placeholder="Bogotá"
+                placeholder="Ej: Bogotá, Medellín, Cali..."
                 class="form-input"
                 required
+                list="colombia-cities"
               >
+              <datalist id="colombia-cities">
+                <option value="Medellín"></option>
+                <option value="Bogotá"></option>
+                <option value="Cali"></option>
+                <option value="Barranquilla"></option>
+                <option value="Cartagena"></option>
+                <option value="San Andrés Isla"></option>
+                <option value="Santa Catalina"></option>
+                <option value="Providencia"></option>
+                <option value="Bucaramanga"></option>
+                <option value="Pereira"></option>
+                <option value="Manizales"></option>
+                <option value="Ibagué"></option>
+                <option value="Villavicencio"></option>
+                <option value="Pasto"></option>
+                <option value="Neiva"></option>
+              </datalist>
+              <p class="city-shipping-info" v-if="shippingForm.city">
+                <span v-if="shippingForm.city.toLowerCase().includes('medellín') || shippingForm.city.toLowerCase().includes('medellin')">
+                  📦 Envío a Medellín: {{ formatCOP(10500) }}
+                </span>
+                <span v-else-if="shippingForm.city.toLowerCase().includes('san andrés') || 
+                              shippingForm.city.toLowerCase().includes('san andres') ||
+                              shippingForm.city.toLowerCase().includes('santa catalina') ||
+                              shippingForm.city.toLowerCase().includes('providencia')">
+                  📦 Envío a Islas: {{ formatCOP(45000) }}
+                </span>
+                <span v-else>
+                  📦 Envío estándar: {{ formatCOP(15000) }}
+                </span>
+              </p>
             </div>
 
             <div class="form-row">
@@ -286,7 +318,12 @@
             </div>
             <div class="total-row">
               <span>{{ $t('cart.checkout.form.shipping') }}</span>
-              <span class="total-value">{{ formatCOP(shipping) }}</span>
+              <span class="total-value">
+                {{ formatCOP(shipping) }}
+                <span v-if="shippingForm.city" class="shipping-city-note">
+                  ({{ shippingForm.city }})
+                </span>
+              </span>
             </div>
             <div class="total-row tax-row">
               <span>{{ $t('cart.checkout.form.tax') }}</span>
@@ -496,7 +533,8 @@ const createRegularOrder = async () => {
     shipping_postal_code: shippingForm.value.zipCode,
     shipping_country: countryName,
     phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
-    notes: shippingForm.value.additionalDetails || ''
+    notes: shippingForm.value.additionalDetails || '',
+    shipping: shipping.value // ⭐ Agregar costo de envío calculado
   };
 
   console.log('📤 [REGULAR] Enviando datos completos al backend:', orderData);
@@ -608,7 +646,8 @@ const captureGiftPayment = async (paypalOrderId) => {
     sender_username: authStore.isLoggedIn ? authStore.username : null,
     receiver_username: shippingForm.value.username.replace('@', ''), // Remover @ si existe
     items: items,
-    gift_message: shippingForm.value.note || ''
+    gift_message: shippingForm.value.note || '',
+    shipping: shipping.value // ⭐ Agregar costo de envío calculado
   };
 
   console.log('🎁 [GIFT] Datos de captura de regalo:', captureData);
@@ -691,7 +730,8 @@ const captureRegularPayment = async (paypalOrderId) => {
     shipping_postal_code: shippingForm.value.zipCode,
     shipping_country: countryName,
     phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
-    notes: shippingForm.value.additionalDetails || ''
+    notes: shippingForm.value.additionalDetails || '',
+    shipping: shipping.value // ⭐ Agregar costo de envío calculado
   };
 
   console.log('📦 [REGULAR] Datos de captura:', captureData);
@@ -744,12 +784,31 @@ const captureRegularPayment = async (paypalOrderId) => {
 };
 
 const shipping = computed(() => {
-  // Calcular envío estándar (puedes ajustar la lógica según necesites)
-  const subtotalValue = subtotal.value;
-  if (subtotalValue >= 100) {
-    return 0; // Envío gratis para compras mayores a $100
+  // ⭐ Cálculo de envío según ciudad colombiana
+  const ciudad = (shippingForm.value.city || '').toLowerCase().trim();
+  
+  // Validar que haya ciudad seleccionada
+  if (!ciudad) {
+    return 15000; // Tarifa por defecto si no hay ciudad
   }
-  return 10; // Envío estándar $10
+  
+  // Aplicar tarifas según la ciudad
+  switch (ciudad) {
+    case 'medellín':
+    case 'medellin': // Sin tilde también
+      return 10500;
+      
+    case 'san andrés isla':
+    case 'san andres isla': // Sin tilde
+    case 'san andrés':
+    case 'san andres':
+    case 'santa catalina':
+    case 'providencia':
+      return 45000;
+      
+    default:
+      return 15000; // Tarifa estándar para otras ciudades
+  }
 });
 
 const tax = computed(() => {
@@ -1017,36 +1076,88 @@ onBeforeUnmount(() => {
 .checkout-container {
   max-width: 1400px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .checkout-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
 }
 
 /* Shipping Section */
 .shipping-section {
   width: 100%;
+  order: 2;
+}
+
+@media (min-width: 1024px) {
+  .shipping-section {
+    order: 1;
+  }
 }
 
 .shipping-card {
   background: white;
-  border-radius: 24px;
-  padding: 2.5rem;
+  border-radius: 16px;
+  padding: 1.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
+@media (min-width: 640px) {
+  .shipping-card {
+    padding: 1.75rem;
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shipping-card {
+    padding: 2.5rem;
+    border-radius: 24px;
+  }
+}
+
 .section-title {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 /* Shipping Type Radio */
 .shipping-type {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .shipping-type {
+    flex-direction: row;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
 }
 
 .radio-label {
@@ -1067,15 +1178,36 @@ onBeforeUnmount(() => {
 
 /* Form Groups */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #333;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    font-size: 0.9rem;
+  }
 }
 
 .text-red-500 {
@@ -1084,12 +1216,26 @@ onBeforeUnmount(() => {
 
 .form-input {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
   transition: all 0.3s ease;
   background: #fafafa;
+}
+
+@media (min-width: 640px) {
+  .form-input {
+    padding: 0.875rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .form-input {
+    font-size: 0.95rem;
+  }
 }
 
 .form-input:focus {
@@ -1171,6 +1317,23 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
+/* City Shipping Info */
+.city-shipping-info {
+  font-size: 0.75rem;
+  color: #059669;
+  margin-top: 0.375rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .city-shipping-info {
+    font-size: 0.8125rem;
+  }
+}
+
 /* Username Search Styles */
 .username-search-container {
   position: relative;
@@ -1250,24 +1413,39 @@ onBeforeUnmount(() => {
 /* Form Row */
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Phone Input */
 .phone-input {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .phone-input {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
 }
 
 .phone-code {
-  padding: 0.875rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fafafa;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  min-width: 120px;
+  min-width: auto;
+  width: 100%;
   transition: all 0.3s ease;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
@@ -1275,6 +1453,22 @@ onBeforeUnmount(() => {
   background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
   appearance: none;
+}
+
+@media (min-width: 640px) {
+  .phone-code {
+    padding: 0.875rem;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    min-width: 120px;
+    width: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .phone-code {
+    font-size: 0.95rem;
+  }
 }
 
 .phone-code:focus {
@@ -1321,15 +1515,37 @@ onBeforeUnmount(() => {
 
 /* Summary Section */
 .summary-section {
-  position: sticky;
-  top: 2rem;
+  width: 100%;
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .summary-section {
+    position: sticky;
+    top: 2rem;
+    order: 2;
+  }
 }
 
 .summary-card {
   background: white;
-  border-radius: 24px;
-  padding: 2.5rem;
+  border-radius: 16px;
+  padding: 1.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 640px) {
+  .summary-card {
+    padding: 1.75rem;
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .summary-card {
+    padding: 2.5rem;
+    border-radius: 24px;
+  }
 }
 
 /* Products List */
@@ -1339,11 +1555,28 @@ onBeforeUnmount(() => {
 
 .product-item {
   display: grid;
-  grid-template-columns: 80px 1fr auto auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 1.25rem 0;
+  grid-template-columns: 60px 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 1rem 0;
   border-bottom: 1px solid #f0f0f0;
+}
+
+@media (min-width: 640px) {
+  .product-item {
+    grid-template-columns: 70px 1fr auto;
+    gap: 0.875rem;
+    align-items: center;
+    padding: 1.125rem 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-item {
+    grid-template-columns: 80px 1fr auto auto;
+    gap: 1rem;
+    padding: 1.25rem 0;
+  }
 }
 
 .product-item:last-child {
@@ -1351,11 +1584,27 @@ onBeforeUnmount(() => {
 }
 
 .product-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
   overflow: hidden;
   background: #f5f5f5;
+}
+
+@media (min-width: 640px) {
+  .product-image {
+    width: 70px;
+    height: 70px;
+    border-radius: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+  }
 }
 
 .product-image img {
@@ -1369,16 +1618,42 @@ onBeforeUnmount(() => {
 }
 
 .product-name {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  .product-name {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-name {
+    font-size: 1rem;
+  }
 }
 
 .product-meta {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #666;
   margin: 0.15rem 0;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  .product-meta {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-meta {
+    font-size: 0.85rem;
+  }
 }
 
 .product-meta span {
@@ -1397,6 +1672,24 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
+  font-size: 0.875rem;
+  grid-column: 2;
+  justify-self: start;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .product-quantity {
+    grid-column: auto;
+    justify-self: auto;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-quantity {
+    font-size: 1rem;
+  }
 }
 
 .quantity-btn {
@@ -1410,30 +1703,83 @@ onBeforeUnmount(() => {
 }
 
 .product-price {
-  font-size: 1.1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #1a1a1a;
   text-align: right;
+  grid-column: 2;
+  justify-self: end;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .product-price {
+    font-size: 1rem;
+    grid-column: auto;
+    justify-self: auto;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-price {
+    font-size: 1.1rem;
+  }
 }
 
 /* Discount Section */
 .discount-section {
-  padding: 1.5rem 0;
+  padding: 1rem 0;
   border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .discount-section {
+    padding: 1.25rem 0;
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .discount-section {
+    padding: 1.5rem 0;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .discount-title {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .discount-title {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .discount-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
 }
 
 .discount-input {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .discount-input {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
 }
 
 .discount-input .form-input {
@@ -1441,16 +1787,32 @@ onBeforeUnmount(() => {
 }
 
 .validate-btn {
-  padding: 0.875rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .validate-btn {
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    width: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .validate-btn {
+    font-size: 0.95rem;
+  }
 }
 
 .validate-btn:hover {
@@ -1493,21 +1855,62 @@ onBeforeUnmount(() => {
 }
 
 .total-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+@media (min-width: 640px) {
+  .total-label {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .total-label {
+    font-size: 1.25rem;
+  }
+}
+
+.total-amount {
   font-size: 1.25rem;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.total-amount {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1a1a1a;
+@media (min-width: 640px) {
+  .total-amount {
+    font-size: 1.375rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .total-amount {
+    font-size: 1.5rem;
+  }
 }
 
 .tax-note {
   font-size: 0.85rem;
   color: #999;
   margin: 0;
+}
+
+/* Shipping City Note */
+.shipping-city-note {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 400;
+  display: block;
+  margin-top: 0.125rem;
+}
+
+@media (min-width: 640px) {
+  .shipping-city-note {
+    display: inline;
+    margin-left: 0.375rem;
+    margin-top: 0;
+  }
 }
 
 /* Loading State */
@@ -1547,59 +1950,36 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .checkout-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
+/* Payment Title Responsive */
+.payment-title {
+  font-size: 0.9375rem;
+}
 
-  .summary-section {
-    position: static;
+@media (min-width: 640px) {
+  .payment-title {
+    font-size: 1rem;
   }
 }
 
-@media (max-width: 768px) {
-  .checkout-view {
-    padding: 1rem;
+@media (min-width: 1024px) {
+  .payment-title {
+    font-size: 1.1rem;
   }
+}
 
-  .shipping-card,
-  .summary-card {
-    padding: 1.5rem;
-    border-radius: 16px;
+.payment-subtitle {
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 640px) {
+  .payment-subtitle {
+    font-size: 0.875rem;
   }
+}
 
-  .section-title {
-    font-size: 1.5rem;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .product-item {
-    grid-template-columns: 60px 1fr;
-    gap: 0.75rem;
-  }
-
-  .product-image {
-    width: 60px;
-    height: 60px;
-  }
-
-  .product-quantity,
-  .product-price {
-    grid-column: 2;
-    justify-self: end;
-  }
-
-  .discount-input {
-    flex-direction: column;
-  }
-
-  .validate-btn {
-    width: 100%;
+@media (min-width: 1024px) {
+  .payment-subtitle {
+    font-size: 0.9rem;
   }
 }
 </style>

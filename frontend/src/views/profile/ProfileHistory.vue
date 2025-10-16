@@ -1,21 +1,21 @@
 <template>
   <div class="profile-history">
-    <div class="px-6 py-8 lg:px-8 max-w-7xl mx-auto">
+    <div class="px-4 md:px-6 py-6 md:py-8 lg:px-8 max-w-7xl mx-auto">
       <!-- Header -->
-      <h1 class="text-3xl font-medium text-gray-900 font-comfortaa mb-8">
+      <h1 class="text-2xl md:text-3xl font-medium text-gray-900 font-comfortaa mb-6 md:mb-8">
         Purchase History
       </h1>
 
       <!-- Filters -->
-      <div class="filters-section mb-6">
-        <h2 class="text-lg font-medium text-gray-900 font-comfortaa mb-4">
+      <div class="filters-section mb-4 md:mb-6">
+        <h2 class="text-base md:text-lg font-medium text-gray-900 font-comfortaa mb-3 md:mb-4">
           Filter by
         </h2>
-        <div class="filters-row flex gap-4 items-center">
+        <div class="filters-row flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
           <!-- Search Input -->
-          <div class="search-input relative flex-1 max-w-xs">
+          <div class="search-input relative flex-1 sm:max-w-xs">
             <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
@@ -23,15 +23,15 @@
               type="text" 
               placeholder="Search"
               v-model="searchQuery"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa"
+              class="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa"
             />
           </div>
 
           <!-- Date Filter -->
-          <div class="date-filter relative">
+          <div class="date-filter relative w-full sm:w-auto">
             <select 
               v-model="dateFilter"
-              class="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa cursor-pointer bg-white"
+              class="appearance-none w-full px-4 py-2 pr-10 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa cursor-pointer bg-white"
             >
               <option value="">Date</option>
               <option value="last-week">Last Week</option>
@@ -75,26 +75,26 @@
       </div>
 
       <!-- Orders List -->
-      <div v-else class="orders-list space-y-6">
+      <div v-else class="orders-list space-y-4 md:space-y-6">
         <!-- Order Card -->
         <div 
           v-for="order in filteredOrders" 
           :key="order.id"
-          class="order-card rounded-3xl p-6 border border-gray-200"
+          class="order-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-200"
           style="background-color: rgba(255, 63, 213, 0.2);"
         >
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <!-- Left Section: Order Details -->
-            <div class="lg:col-span-2 space-y-4">
+            <div class="lg:col-span-2 space-y-3 md:space-y-4">
               <!-- Order ID -->
-              <div class="order-id mb-4 flex items-center gap-3">
-                <p class="text-sm text-gray-600 font-comfortaa">
+              <div class="order-id mb-3 md:mb-4 flex flex-wrap items-center gap-2 md:gap-3">
+                <p class="text-xs md:text-sm text-gray-600 font-comfortaa">
                   Order ID #{{ order.orderNumber }}
                 </p>
                 <span 
                   v-if="order.isGift" 
-                  class="gift-badge px-3 py-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  class="gift-badge px-2.5 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                   </svg>
                   GIFT
@@ -103,10 +103,10 @@
 
               <!-- Order Summary -->
               <div class="order-summary">
-                <h3 class="text-base font-semibold text-gray-900 font-comfortaa mb-2">
+                <h3 class="text-sm md:text-base font-semibold text-gray-900 font-comfortaa mb-2">
                   Order Summary
                 </h3>
-                <ul class="space-y-1 text-sm text-gray-600 font-comfortaa">
+                <ul class="space-y-1 text-xs md:text-sm text-gray-600 font-comfortaa">
                   <li>• Product: {{ order.product.name }}</li>
                   <li>• Quantity: {{ order.quantity }}</li>
                   <li>• Price: ${{ order.price }}</li>
@@ -117,10 +117,10 @@
 
               <!-- Shipping Information -->
               <div class="shipping-info">
-                <h3 class="text-base font-semibold text-gray-900 font-comfortaa mb-2">
+                <h3 class="text-sm md:text-base font-semibold text-gray-900 font-comfortaa mb-2">
                   Shipping information
                 </h3>
-                <ul class="space-y-1 text-sm text-gray-600 font-comfortaa">
+                <ul class="space-y-1 text-xs md:text-sm text-gray-600 font-comfortaa">
                   <li>• Name: {{ order.shippingName }}</li>
                   <li>• Address: {{ order.shippingAddress }}</li>
                   <li>• Phone: {{ order.shippingPhone }}</li>
@@ -128,14 +128,14 @@
               </div>
 
               <!-- Gift Message (if it's a gift) -->
-              <div v-if="order.isGift && order.giftMessage" class="gift-message mt-4 p-4 bg-pink-50 rounded-xl border border-pink-200">
-                <h3 class="text-base font-semibold text-brand-pink font-comfortaa mb-2 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <div v-if="order.isGift && order.giftMessage" class="gift-message mt-3 md:mt-4 p-3 md:p-4 bg-pink-50 rounded-lg md:rounded-xl border border-pink-200">
+                <h3 class="text-sm md:text-base font-semibold text-brand-pink font-comfortaa mb-2 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                   </svg>
                   Gift Message
                 </h3>
-                <p class="text-sm text-gray-700 font-comfortaa italic">
+                <p class="text-xs md:text-sm text-gray-700 font-comfortaa italic">
                   "{{ order.giftMessage }}"
                 </p>
               </div>
@@ -153,21 +153,21 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="filteredOrders.length === 0" class="empty-state text-center py-12">
+        <div v-if="filteredOrders.length === 0" class="empty-state text-center py-8 md:py-12">
           <div class="flex flex-col items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 lg:h-24 lg:w-24 text-gray-300 mb-3 md:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            <h3 class="text-xl font-medium text-gray-900 font-comfortaa mb-2">
+            <h3 class="text-lg md:text-xl font-medium text-gray-900 font-comfortaa mb-2">
               No orders found
             </h3>
-            <p class="text-gray-500 font-comfortaa mb-6">
+            <p class="text-sm md:text-base text-gray-500 font-comfortaa mb-4 md:mb-6">
               {{ searchQuery || dateFilter ? 'Try adjusting your filters' : "You haven't made any purchases yet" }}
             </p>
             <button 
               v-if="!searchQuery && !dateFilter"
               @click="router.push({ name: `Products-${i18nStore.locale}` })"
-              class="btn-shop px-6 py-3 rounded-full text-white font-semibold font-poppins transition-all duration-200 hover:opacity-90"
+              class="btn-shop px-5 md:px-6 py-2.5 md:py-3 rounded-full text-white font-semibold font-poppins text-sm md:text-base transition-all duration-200 hover:opacity-90"
               style="background-color: #DA9DFF;">
               Start Shopping
             </button>

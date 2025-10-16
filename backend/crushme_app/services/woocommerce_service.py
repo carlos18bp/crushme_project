@@ -16,7 +16,7 @@ class WooCommerceService:
     """
     
     def __init__(self):
-        self.base_url = "https://desarrollo.distrisex.com/wp-json/wc/v3"
+        self.base_url = getattr(settings, 'WOOCOMMERCE_API_URL', 'https://distrisexcolombia.com/wp-json/wc/v3')
         # Estas credenciales deberían venir de settings o variables de entorno
         # Por ahora las dejamos como placeholder
         self.consumer_key = getattr(settings, 'WOOCOMMERCE_CONSUMER_KEY', 'your_consumer_key_here')

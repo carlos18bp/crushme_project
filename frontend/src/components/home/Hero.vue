@@ -1,33 +1,33 @@
 <template>
-  <section class="hero-section">
+  <section class="relative min-h-screen flex items-center pt-[60px]">
     <!-- Content Container -->
-    <div class="hero-container">
-      <div class="max-w-[1800px] mx-auto px-12 py-20">
-        <div class="hero-content-wrapper">
+    <div class="relative w-full z-[2]">
+      <div class="max-w-[1800px] mx-auto px-6 md:px-12 py-12 md:py-20">
+        <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-8 lg:gap-8 items-center mb-12 md:mb-20">
           
           <!-- Left Content: Text and Buttons -->
-          <div class="hero-text-section">
-            <h1 class="hero-title">
+          <div class="flex flex-col gap-6 md:gap-8 text-center lg:text-left items-center lg:items-start">
+            <h1 class="font-comfortaa text-3xl md:text-4xl lg:text-5xl xl:text-[3.5rem] font-normal leading-tight text-black m-0">
               {{ $t('hero.title') }}<br>
               {{ $t('hero.titleSecondLine') }} 💕
             </h1>
             
-            <p class="hero-subtitle">
+            <p class="font-poppins text-lg md:text-xl lg:text-2xl font-light leading-relaxed text-black m-0 max-w-[600px]">
               {{ $t('hero.subtitle') }}
             </p>
             
             <!-- Call to Action Buttons -->
-            <div class="hero-buttons">
+            <div class="flex flex-col sm:flex-row gap-4 md:gap-6 w-full sm:w-auto">
               <router-link 
                 :to="`/${i18nStore.locale}/products`"
-                class="btn-primary"
+                class="font-poppins text-base md:text-lg font-medium text-white bg-[#4A6FA5] border-none rounded-full px-8 md:px-12 py-3 md:py-4 cursor-pointer no-underline inline-block transition-all duration-300 shadow-[0_4px_12px_rgba(74,111,165,0.3)] hover:bg-[#3d5a8a] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(74,111,165,0.4)] text-center"
               >
                 {{ $t('hero.buttons.shop') }}
               </router-link>
               
               <router-link 
                 :to="`/${i18nStore.locale}/diaries`"
-                class="btn-secondary"
+                class="font-poppins text-base md:text-lg font-medium text-white bg-[rgba(233,195,205,0.8)] border-none rounded-full px-8 md:px-12 py-3 md:py-4 cursor-pointer no-underline inline-block transition-all duration-300 shadow-[0_4px_12px_rgba(233,195,205,0.3)] hover:bg-[rgba(233,195,205,1)] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(233,195,205,0.4)] text-center"
               >
                 {{ $t('hero.buttons.diaries') }}
               </router-link>
@@ -35,34 +35,34 @@
           </div>
           
           <!-- Right Content: Hero Image -->
-          <div class="hero-image-section">
+          <div class="flex items-center justify-center relative">
             <img 
               src="@/assets/home/hero/hero.svg" 
               alt="Hero Products" 
-              class="hero-image"
+              class="w-full h-auto max-w-[500px] lg:max-w-[800px] animate-float"
             />
           </div>
           
         </div>
         
         <!-- Trust Badges Section -->
-        <div class="trust-badges">
+        <div class="flex flex-wrap justify-center lg:justify-between gap-4 md:gap-6 lg:gap-10 mt-8 md:mt-12">
           <div 
             v-for="badge in trustBadges" 
             :key="badge.key"
-            class="trust-badge"
+            class="relative bg-white/30 backdrop-blur-[10px] border-2 border-white/50 rounded-full px-6 md:px-8 lg:px-12 py-3 md:py-4 lg:py-6 cursor-pointer transition-all duration-300 flex-1 min-w-[180px] md:min-w-[220px] flex items-center justify-center hover:bg-white/50 hover:border-white/80 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)]"
             @mouseenter="showTooltip(badge.key)"
             @mouseleave="hideTooltip(badge.key)"
           >
-            <span class="badge-text">{{ $t(`hero.trustBadges.${badge.key}.title`) }}</span>
+            <span class="font-poppins text-base md:text-lg lg:text-xl font-medium text-black/80 whitespace-nowrap text-center">{{ $t(`hero.trustBadges.${badge.key}.title`) }}</span>
             
             <!-- Tooltip -->
             <transition name="tooltip-fade">
               <div 
                 v-if="activeTooltip === badge.key" 
-                class="tooltip"
+                class="absolute bottom-[calc(100%+12px)] left-1/2 -translate-x-1/2 bg-white border-2 border-black/10 rounded-xl px-5 md:px-7 py-4 md:py-5 shadow-[0_8px_24px_rgba(0,0,0,0.15)] min-w-[220px] md:min-w-[280px] max-w-[280px] md:max-w-[320px] z-10 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-8 after:border-transparent after:border-t-white"
               >
-                <p class="tooltip-text">
+                <p class="font-poppins text-sm md:text-[0.9375rem] leading-relaxed text-black/80 m-0 text-center">
                   {{ $t(`hero.trustBadges.${badge.key}.tooltip`) }}
                 </p>
               </div>
@@ -105,126 +105,6 @@ const hideTooltip = (key) => {
 </script>
 
 <style scoped>
-/* Hero Section Container */
-.hero-section {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  padding-top: 60px; /* Compensar altura del navbar */
-}
-
-/* Content Container */
-.hero-container {
-  position: relative;
-  width: 100%;
-  z-index: 2;
-}
-
-/* Content Wrapper - Grid Layout */
-.hero-content-wrapper {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 2rem;
-  align-items: center;
-  margin-bottom: 5rem;
-}
-
-/* Left Content Section */
-.hero-text-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.hero-title {
-  font-family: 'Comfortaa', cursive;
-  font-size: 3.5rem;
-  font-weight: 400;
-  line-height: 1.2;
-  color: #000000;
-  margin: 0;
-}
-
-.hero-subtitle {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 300;
-  line-height: 1.6;
-  color: #000000;
-  margin: 0;
-  max-width: 600px;
-}
-
-/* Buttons Container */
-.hero-buttons {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-/* Primary Button */
-.btn-primary {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background: #4A6FA5;
-  border: none;
-  border-radius: 50px;
-  padding: 1rem 3rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3);
-}
-
-.btn-primary:hover {
-  background: #3d5a8a;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 111, 165, 0.4);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background: rgba(233, 195, 205, 0.8);
-  border: none;
-  border-radius: 50px;
-  padding: 1rem 3rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(233, 195, 205, 0.3);
-}
-
-.btn-secondary:hover {
-  background: rgba(233, 195, 205, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(233, 195, 205, 0.4);
-}
-
-/* Right Content Section - Hero Image */
-.hero-image-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.hero-image {
-  width: 100%;
-  height: auto;
-  max-width: 800px;
-  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
-  animation: float 6s ease-in-out infinite;
-}
-
 /* Floating Animation */
 @keyframes float {
   0%, 100% {
@@ -235,81 +115,9 @@ const hideTooltip = (key) => {
   }
 }
 
-/* Trust Badges Section */
-.trust-badges {
-  display: flex;
-  justify-content: space-between;
-  gap: 2.5rem;
-  flex-wrap: wrap;
-  margin-top: 3rem;
-  max-width: 100%;
-}
-
-.trust-badge {
-  position: relative;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 50px;
-  padding: 1.5rem 3rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1;
-  min-width: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.trust-badge:hover {
-  background: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.8);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.badge-text {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.8);
-  white-space: nowrap;
-  text-align: center;
-}
-
-/* Tooltip */
-.tooltip {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #FFFFFF;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  padding: 1.25rem 1.75rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  min-width: 280px;
-  max-width: 320px;
-  z-index: 10;
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 8px solid transparent;
-  border-top-color: #FFFFFF;
-}
-
-.tooltip-text {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: rgba(0, 0, 0, 0.8);
-  margin: 0;
-  text-align: center;
+.animate-float {
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
+  animation: float 6s ease-in-out infinite;
 }
 
 /* Tooltip Fade Animation */
@@ -328,123 +136,6 @@ const hideTooltip = (key) => {
 .tooltip-fade-leave-from {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .hero-content-wrapper {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-  
-  .hero-text-section {
-    text-align: center;
-    align-items: center;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.25rem;
-  }
-  
-  .hero-buttons {
-    justify-content: center;
-  }
-  
-  .hero-image {
-    max-width: 500px;
-  }
-  
-  .trust-badges {
-    justify-content: center;
-    gap: 1.5rem;
-  }
-  
-  .trust-badge {
-    flex: 0 1 auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-section {
-    padding-top: 80px;
-  }
-  
-  .hero-container > div {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  
-  .hero-title {
-    font-size: 2rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.125rem;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    font-size: 1rem;
-    padding: 0.875rem 2rem;
-  }
-  
-  .trust-badges {
-    gap: 1rem;
-    justify-content: center;
-  }
-  
-  .trust-badge {
-    padding: 1rem 2rem;
-    min-width: 180px;
-  }
-  
-  .badge-text {
-    font-size: 1rem;
-  }
-  
-  .tooltip {
-    min-width: 220px;
-    max-width: 260px;
-    padding: 1rem 1.25rem;
-  }
-  
-  .tooltip-text {
-    font-size: 0.875rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.75rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  
-  .hero-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .trust-badges {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .trust-badge {
-    text-align: center;
-  }
 }
 </style>
 

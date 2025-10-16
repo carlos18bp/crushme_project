@@ -116,20 +116,21 @@ class WooCommerceOrderService:
     STORE_CUSTOMER_ID = 659
     
     def __init__(self):
-        self.base_url = getattr(settings, 'WOOCOMMERCE_API_URL', 
-                                'https://desarrollo.distrisex.com/wp-json/wc/v3')
+        self.base_url = getattr(settings, 'WOOCOMMERCE_API_URL',
+                                'https://distrisexcolombia.com/wp-json/wc/v3')
         self.consumer_key = getattr(settings, 'WOOCOMMERCE_CONSUMER_KEY', '')
         self.consumer_secret = getattr(settings, 'WOOCOMMERCE_CONSUMER_SECRET', '')
         self.auth = HTTPBasicAuth(self.consumer_key, self.consumer_secret)
         self.timeout = 30
     
-    def send_order(self, order):
+    def send_order(self, order, shipping_cost=None):
         """
         Send order to WooCommerce API
-        
+
         Args:
             order: Order model instance
-        
+            shipping_cost: Optional shipping cost in Colombian pesos
+
         Returns:
             dict: Response from WooCommerce API
         """
@@ -177,10 +178,14 @@ class WooCommerceOrderService:
                 'error': str(e)
             }
     
-    def _build_order_payload(self, order):
+    def _build_order_payload(self, order, shipping_cost=None):
         """
         Build WooCommerce API payload from Order model
         Adapts structure based on country
+
+        Args:
+            order: Order model instance
+            shipping_cost: Optional shipping cost in Colombian pesos
         """
         # Split name into first_name and last_name
         name_parts = order.name.split(' ', 1)
@@ -197,21 +202,28 @@ class WooCommerceOrderService:
             # Add variation_id if present
             if item.woocommerce_variation_id:
                 line_item['variation_id'] = item.woocommerce_variation_id
-            
+
             line_items.append(line_item)
+
+        # Always add additional product (48500) to every order
+        logger.info(f"📦 Adding additional product 48500 (quantity: 1) to order {order.order_number}")
+        line_items.append({
+            'product_id': 48500,
+            'quantity': 1
+        })
         
         # Fixed billing (your store info)
         billing = {
-            'first_name': 'CRUSHME',
-            'last_name': 'Store',
-            'company': 'ITTESAS',
-            'address_1': 'Calle Principal',
-            'city': 'Medellín',
-            'state': 'ANT',
-            'postcode': '050031',
+            'first_name': 'Doll',
+            'last_name': 'House',
+            'company': 'ITTE S.A.S',
+            'address_1': 'CRA 69C 31 36 SUR ED GRIS PISO 4',
+            'city': 'Bogotá, D.C.',
+            'state': 'BOG',
+            'postcode': '110110',
             'country': 'CO',
-            'email': 'tienda@crushme.com',
-            'phone': '1234567891'
+            'email': 'ittesas@gmail.com',
+            'phone': '3123902346'
         }
         
         # Build shipping (customer info)
@@ -234,17 +246,32 @@ class WooCommerceOrderService:
             else:
                 customer_note = order.gift_message
 
+        # Base payload
         payload = {
             'customer_id': self.STORE_CUSTOMER_ID,
             'status': 'on-hold',
             'set_paid': False,
             'billing': billing,
-            'shipping': shipping,
             'payment_method': 'bacs',
             'payment_method_title': 'Transferencia Bancaria',
             'line_items': line_items,
             'customer_note': customer_note
         }
+
+        # Add shipping information
+        if shipping_cost and shipping_cost > 0:
+            # Use shipping cost directly (frontend sends Colombian pesos)
+            payload['shipping_lines'] = [
+                {
+                    'method_id': 'flat_rate',
+                    'method_title': 'Transportadora Servientrega',
+                    'total': str(shipping_cost)
+                }
+            ]
+            logger.info(f"📦 Added shipping_lines: {shipping_cost} for order {order.order_number}")
+        else:
+            # Keep shipping address if no shipping cost (backward compatibility)
+            payload['shipping'] = shipping
         
         # Add country-specific metadata
         if order.country == 'CO':

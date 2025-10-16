@@ -1,35 +1,34 @@
 <template>
-  <div class="promo-banner-container my-16">
-    <div class="promo-banner">
+  <div class="flex justify-center px-4 my-8 md:my-12 lg:my-16">
+    <div class="promo-banner relative bg-[rgba(66,142,255,0.2)] border-[3px] border-[#11181E] rounded-2xl p-8 md:p-10 lg:p-14 max-w-[1400px] w-full rotate-[1.5deg] shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
       <!-- Push Pins -->
       <img 
         :src="randomPin1" 
         alt="Pin" 
-        class="push-pin pin-top-left"
+        class="absolute w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 z-10 top-[-12px] md:top-[-14px] lg:top-[-16px] left-[20px] md:left-[25px] lg:left-[30px] rotate-[-15deg]"
       />
       <img 
         :src="randomPin2" 
         alt="Pin" 
-        class="push-pin pin-top-right"
+        class="absolute w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 z-10 top-[-12px] md:top-[-14px] lg:top-[-16px] right-[20px] md:right-[25px] lg:right-[30px] rotate-[25deg]"
       />
       
       <!-- Content -->
-      <div class="banner-content">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-20 items-center">
         <!-- Text Section (Left) -->
-        <div class="text-section">
+        <div class="text-center md:text-left">
           <p 
-            class="font-poppins text-xl md:text-2xl lg:text-3xl leading-relaxed mb-10"
-            style="color: rgba(0, 0, 0, 0.72); font-weight: 300;"
+            class="font-poppins text-lg md:text-xl lg:text-2xl xl:text-3xl leading-relaxed mb-8 md:mb-10 text-black/72 font-light"
           >
             {{ description }}
           </p>
           
           <!-- Buttons -->
-          <div class="buttons-section flex flex-col sm:flex-row gap-4">
+          <div class="flex flex-col sm:flex-row gap-3 md:gap-4">
             <button 
               v-if="primaryButton"
               @click="$emit('primary-click')"
-              class="btn-primary"
+              class="bg-[#E9C3CD] text-white font-comfortaa font-semibold px-8 md:px-10 lg:px-12 py-4 md:py-5 rounded-full border-none cursor-pointer transition-all duration-300 capitalize tracking-wide text-base md:text-lg lg:text-xl hover:bg-[#D89AB2] hover:-translate-y-0.5"
             >
               {{ primaryButton.text }}
             </button>
@@ -37,7 +36,7 @@
             <button 
               v-if="secondaryButton"
               @click="$emit('secondary-click')"
-              class="btn-secondary"
+              class="bg-[#E9C3CD] text-white font-comfortaa font-semibold px-8 md:px-10 lg:px-12 py-4 md:py-5 rounded-full border-none cursor-pointer transition-all duration-300 capitalize tracking-wide text-base md:text-lg lg:text-xl hover:bg-[#D89AB2] hover:-translate-y-0.5"
             >
               {{ secondaryButton.text }}
             </button>
@@ -45,17 +44,17 @@
         </div>
         
         <!-- Image Section (Right) with Title -->
-        <div class="image-section" v-if="image">
+        <div class="flex flex-col justify-center" v-if="image">
           <h3 
             v-if="title" 
-            class="font-comfortaa text-brand-dark text-3xl md:text-4xl lg:text-5xl font-bold mb-8 text-right"
+            class="font-comfortaa text-brand-dark text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 md:mb-8 text-center md:text-right"
           >
             {{ title }}
           </h3>
           <img 
             :src="image.src" 
             :alt="image.alt || 'Banner image'"
-            class="banner-image"
+            class="w-full h-auto object-cover max-h-[300px] md:max-h-[350px] lg:max-h-[400px]"
           />
         </div>
       </div>
@@ -115,139 +114,20 @@ const randomPin2 = computed(() => pins[Math.floor(Math.random() * pins.length)])
 </script>
 
 <style scoped>
-.promo-banner-container {
-  display: flex;
-  justify-content: center;
-  padding: 0 1rem;
-}
-
-.promo-banner {
-  position: relative;
-  background: rgba(66, 142, 255, 0.2); /* #428EFF con 20% opacidad */
-  border: 3px solid #11181E;
-  border-radius: 1rem;
-  padding: 3.5rem 4rem; /* Más largo y espacioso */
-  max-width: 1400px; /* Aún más ancho */
-  width: 100%;
-  transform: rotate(1.5deg); /* Rotación invertida */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.banner-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .banner-content {
-    grid-template-columns: 1fr 1fr;
-    gap: 5rem; /* Aún más espacio entre columnas */
+/* Mobile adjustments for rotation - rotated in opposite direction */
+@media (max-width: 768px) {
+  .promo-banner {
+    transform: rotate(0.5deg);
   }
 }
 
-.push-pin {
-  position: absolute;
-  width: 64px; /* Mucho más grandes */
-  height: 64px;
-  z-index: 10;
-}
-
-.pin-top-left {
-  top: -16px; /* Ajustado para pins más grandes */
-  left: 30px;
-  transform: rotate(-15deg);
-}
-
-.pin-top-right {
-  top: -16px; /* Ajustado para pins más grandes */
-  right: 30px;
-  transform: rotate(25deg);
-}
-
-.btn-primary {
-  background: #E9C3CD; /* brand-pink-light */
-  color: white;
-  font-family: 'Comfortaa', cursive;
-  font-weight: 600;
-  padding: 1.25rem 3rem; /* Botones más grandes */
-  border-radius: 2rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: capitalize;
-  letter-spacing: 0.3px;
-  font-size: 1.25rem; /* Texto más grande */
-}
-
-.btn-primary:hover {
-  background: #D89AB2;
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background: #E9C3CD; /* brand-pink-light */
-  color: white;
-  font-family: 'Comfortaa', cursive;
-  font-weight: 600;
-  padding: 1.25rem 3rem; /* Botones más grandes */
-  border-radius: 2rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: capitalize;
-  letter-spacing: 0.3px;
-  font-size: 1.25rem; /* Texto más grande */
-}
-
-.btn-secondary:hover {
-  background: #D89AB2;
-  transform: translateY(-2px);
-}
-
-.banner-image {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  max-height: 400px; /* Aumentar altura máxima de la imagen */
-}
-
-.image-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* Force fonts */
+/* Ensure fonts */
 h3 {
   font-family: 'Comfortaa', cursive !important;
 }
 
 p {
   font-family: 'Poppins', sans-serif !important;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .promo-banner {
-    padding: 2.5rem 2rem; /* Más espacioso en móvil también */
-    transform: rotate(0.5deg); /* Rotación invertida en móvil también */
-  }
-  
-  .banner-content {
-    text-align: center;
-  }
-  
-  .pin-top-left {
-    left: 15px;
-    top: -12px; /* Ajustado para móvil */
-  }
-  
-  .pin-top-right {
-    right: 15px;
-    top: -12px; /* Ajustado para móvil */
-  }
 }
 </style>
 

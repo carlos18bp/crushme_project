@@ -171,7 +171,7 @@ onUnmounted(() => {
 
 .confirmation-title {
   font-family: 'Comfortaa', cursive;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 400;
   color: #2c3e50;
   margin: 0;
@@ -181,42 +181,42 @@ onUnmounted(() => {
 
 .countdown {
   font-family: 'Comfortaa', cursive;
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #7f8c8d;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   font-weight: 300;
   opacity: 0.8;
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (min-width: 360px) {
+  .confirmation-title {
+    font-size: 1.75rem;
+  }
+}
+
+@media (min-width: 480px) {
+  .confirmation-view {
+    padding: 2rem;
+  }
+  
   .confirmation-title {
     font-size: 2rem;
   }
   
   .countdown {
     font-size: 0.9rem;
+    margin-top: 2rem;
   }
 }
 
-@media (max-width: 480px) {
-  .confirmation-view {
-    padding: 1rem;
-  }
-  
+@media (min-width: 768px) {
   .confirmation-title {
-    font-size: 1.75rem;
+    font-size: 2.5rem;
   }
   
   .countdown {
-    font-size: 0.875rem;
-    margin-top: 1.5rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .confirmation-title {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 }
 </style>

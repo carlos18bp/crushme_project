@@ -1,29 +1,29 @@
 <template>
-  <section class="trending-products-section">
-    <div class="trending-container">
-      <div class="max-w-[1800px] mx-auto px-12 py-16">
+  <section class="relative py-8 md:py-12 lg:py-16 bg-transparent">
+    <div class="w-full">
+      <div class="max-w-[1800px] mx-auto px-6 md:px-12 py-8 md:py-12 lg:py-16">
         
         <!-- Header Section -->
-        <div class="trending-header mb-12">
+        <div class="mb-8 md:mb-12">
           <!-- Row 1: Title -->
-          <div class="titles-section mb-6">
-            <h2 class="trending-title">
+          <div class="mb-4 md:mb-6">
+            <h2 class="font-comfortaa text-2xl md:text-3xl lg:text-4xl font-bold text-black m-0 leading-tight whitespace-pre-line">
               {{ $t('trending.title') }} ✨
             </h2>
           </div>
           
           <!-- Row 2: Subtitle - aligned right -->
-          <div class="subtitle-section mb-4 flex justify-end">
-            <p class="trending-subtitle text-right">
+          <div class="mb-3 md:mb-4 flex justify-start lg:justify-end">
+            <p class="font-comfortaa text-lg md:text-xl lg:text-[1.75rem] font-normal text-black/70 m-0 leading-relaxed max-w-full lg:max-w-[65%] text-left lg:text-right">
               {{ $t('trending.subtitle') }}
             </p>
           </div>
           
           <!-- Row 3: Button - aligned right -->
-          <div class="button-section flex justify-end">
+          <div class="flex justify-start lg:justify-end">
             <router-link 
               :to="`/${i18nStore.locale}/products`"
-              class="trending-button"
+              class="font-comfortaa text-base md:text-lg lg:text-[1.375rem] font-semibold text-white bg-[#4A6FA5] border-none rounded-full px-6 md:px-8 lg:px-12 py-3 md:py-4 lg:py-[1.125rem] cursor-pointer no-underline inline-block transition-all duration-300 shadow-[0_4px_12px_rgba(74,111,165,0.3)] whitespace-nowrap hover:bg-[#3d5a8a] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(74,111,165,0.4)] w-full sm:w-auto text-center"
             >
               {{ $t('trending.button') }} 🔥
             </router-link>
@@ -31,31 +31,30 @@
         </div>
         
         <!-- Loading State -->
-        <div v-if="productStore.isLoadingTrending" class="loading-state">
-          <div class="loading-spinner"></div>
-          <p class="loading-text">{{ $t('trending.loading') }}</p>
+        <div v-if="productStore.isLoadingTrending" class="flex flex-col items-center justify-center py-12 md:py-16 gap-4">
+          <div class="w-12 h-12 border-4 border-[rgba(74,111,165,0.2)] border-t-[#4A6FA5] rounded-full animate-spin"></div>
+          <p class="font-poppins text-base text-black/60">{{ $t('trending.loading') }}</p>
         </div>
         
         <!-- Error State -->
-        <div v-else-if="productStore.wooError" class="error-state">
-          <p class="error-text">{{ $t('trending.error') }}</p>
+        <div v-else-if="productStore.wooError" class="flex items-center justify-center py-12 md:py-16">
+          <p class="font-poppins text-base md:text-lg text-red-500 text-center">{{ $t('trending.error') }}</p>
         </div>
         
         <!-- No Products State -->
-        <div v-else-if="!productStore.hasTrendingProducts" class="empty-state">
-          <p class="empty-text">{{ $t('trending.noProducts') }}</p>
+        <div v-else-if="!productStore.hasTrendingProducts" class="flex items-center justify-center py-12 md:py-16">
+          <p class="font-poppins text-base md:text-lg text-black/50 text-center">{{ $t('trending.noProducts') }}</p>
         </div>
         
         <!-- Products Carousel -->
-        <div v-else class="carousel-wrapper">
+        <div v-else class="relative flex items-center gap-2 md:gap-4">
           <!-- Navigation Button - Left -->
           <button 
             @click="scrollLeft" 
-            class="carousel-nav carousel-nav-left"
+            class="hidden md:flex absolute top-1/2 -translate-y-1/2 z-10 left-[-12px] lg:left-[-24px] w-9 h-9 lg:w-12 lg:h-12 rounded-full bg-white border-2 border-black/10 text-[#4A6FA5] items-center justify-center cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#4A6FA5] hover:text-white hover:scale-110 hover:shadow-[0_6px_20px_rgba(74,111,165,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="isAtStart"
-            :class="{ 'opacity-50 cursor-not-allowed': isAtStart }"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -63,14 +62,14 @@
           <!-- Carousel Container -->
           <div 
             ref="carouselRef" 
-            class="carousel-container"
+            class="flex-1 overflow-x-auto overflow-y-hidden scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-4 mx-0 md:mx-9 lg:mx-12"
             @scroll="handleScroll"
           >
-            <div class="carousel-track">
+            <div class="flex gap-4 md:gap-6 p-2">
               <div 
                 v-for="product in productStore.trendingProducts" 
                 :key="product.id"
-                class="carousel-item"
+                class="flex-[0_0_85%] sm:flex-[0_0_calc((100%-1.5rem)/2)] md:flex-[0_0_calc((100%-3rem)/3)] lg:flex-[0_0_calc((100%-4.5rem)/4)] min-w-[220px] sm:min-w-[240px] md:min-w-[260px] lg:min-w-[280px] max-w-[280px] sm:max-w-[300px] md:max-w-[320px] lg:max-w-[380px]"
               >
                 <ProductCard 
                   :product="product"
@@ -88,11 +87,10 @@
           <!-- Navigation Button - Right -->
           <button 
             @click="scrollRight" 
-            class="carousel-nav carousel-nav-right"
+            class="hidden md:flex absolute top-1/2 -translate-y-1/2 z-10 right-[-12px] lg:right-[-24px] w-9 h-9 lg:w-12 lg:h-12 rounded-full bg-white border-2 border-black/10 text-[#4A6FA5] items-center justify-center cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-[#4A6FA5] hover:text-white hover:scale-110 hover:shadow-[0_6px_20px_rgba(74,111,165,0.3)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="isAtEnd"
-            :class="{ 'opacity-50 cursor-not-allowed': isAtEnd }"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -178,381 +176,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Section Container */
-.trending-products-section {
-  position: relative;
-  padding: 4rem 0;
-  background: transparent;
-}
-
-.trending-container {
-  width: 100%;
-}
-
-/* Header Section */
-.trending-header {
-  margin-bottom: 3rem;
-}
-
-.titles-section {
-  margin-bottom: 1.5rem;
-}
-
-.subtitle-section {
-  margin-bottom: 1rem;
-}
-
-.button-section {
-  /* Button row */
-}
-
-.trending-title {
-  font-family: 'Comfortaa', cursive;
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #000000;
-  margin: 0;
-  line-height: 1.2;
-  white-space: pre-line;
-}
-
-.trending-subtitle {
-  font-family: 'Comfortaa', cursive;
-  font-size: 1.75rem;
-  font-weight: 400;
-  color: rgba(0, 0, 0, 0.7);
-  margin: 0;
-  line-height: 1.5;
-  max-width: 65%;
-}
-
-.trending-button {
-  font-family: 'Comfortaa', cursive;
-  font-size: 1.375rem;
-  font-weight: 600;
-  color: #FFFFFF;
-  background: #4A6FA5;
-  border: none;
-  border-radius: 50px;
-  padding: 1.125rem 3rem;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3);
-  white-space: nowrap;
-}
-
-.trending-button:hover {
-  background: #3d5a8a;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 111, 165, 0.4);
-}
-
-/* Loading State */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 0;
-  gap: 1rem;
-}
-
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(74, 111, 165, 0.2);
-  border-top-color: #4A6FA5;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-/* Error State */
-.error-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 0;
-}
-
-.error-text {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
-  color: #ef4444;
-  text-align: center;
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 0;
-}
-
-.empty-text {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.125rem;
-  color: rgba(0, 0, 0, 0.5);
-  text-align: center;
-}
-
-/* Carousel Wrapper */
-.carousel-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* Navigation Buttons */
-.carousel-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  color: #4A6FA5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.carousel-nav:hover:not(:disabled) {
-  background: #4A6FA5;
-  color: white;
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 20px rgba(74, 111, 165, 0.3);
-}
-
-.carousel-nav:active:not(:disabled) {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.carousel-nav-left {
-  left: -24px;
-}
-
-.carousel-nav-right {
-  right: -24px;
-}
-
-/* Carousel Container */
-.carousel-container {
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  padding: 1rem 0;
-  margin: 0 48px;
-}
-
-.carousel-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* Carousel Track */
-.carousel-track {
-  display: flex;
-  gap: 1.5rem;
-  padding: 0.5rem 0;
-}
-
-/* Carousel Item */
-.carousel-item {
-  flex: 0 0 calc((100% - 4.5rem) / 4); /* 4 tarjetas visibles, 1.5rem gap entre cada una */
-  min-width: 280px;
-  max-width: 380px;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .trending-title {
-    font-size: 2rem;
-  }
-  
-  .trending-subtitle {
-    font-size: 1.5rem;
-  }
-  
-  .trending-button {
-    font-size: 1.25rem;
-    padding: 1rem 2.5rem;
-  }
-  
-  .trending-subtitle {
-    max-width: 70%;
-  }
-  
-  .carousel-container {
-    margin: 0 36px;
-  }
-  
-  .carousel-nav {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .carousel-nav-left {
-    left: -20px;
-  }
-  
-  .carousel-nav-right {
-    right: -20px;
-  }
-  
-  .carousel-item {
-    flex: 0 0 calc((100% - 3rem) / 3); /* 3 tarjetas visibles en tablet */
-    min-width: 260px;
-    max-width: 320px;
-  }
-}
-
-@media (max-width: 768px) {
-  .trending-products-section {
-    padding: 2rem 0;
-  }
-  
-  .trending-container > div {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  
-  .trending-title {
-    font-size: 1.75rem;
-  }
-  
-  .trending-subtitle {
-    font-size: 1.25rem;
-    max-width: 100%;
-    text-align: left;
-  }
-  
-  .subtitle-section {
-    justify-content: flex-start;
-  }
-  
-  .button-section {
-    justify-content: flex-start;
-  }
-  
-  .trending-button {
-    width: 100%;
-    text-align: center;
-    font-size: 1.125rem;
-  }
-  
-  .carousel-container {
-    margin: 0 28px;
-  }
-  
-  .carousel-nav {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .carousel-nav-left {
-    left: -18px;
-  }
-  
-  .carousel-nav-right {
-    right: -18px;
-  }
-  
-  .carousel-item {
-    flex: 0 0 calc((100% - 1.5rem) / 2); /* 2 tarjetas visibles en mobile */
-    min-width: 240px;
-    max-width: 280px;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Ajuste adicional para pantallas medianas */
-  .carousel-item {
-    flex: 0 0 calc((100% - 1.5rem) / 2);
-    min-width: 240px;
-    max-width: 300px;
-  }
-}
-
-@media (max-width: 480px) {
-  .trending-title {
-    font-size: 1.5rem;
-  }
-  
-  .trending-subtitle {
-    font-size: 1.125rem;
-  }
-  
-  .trending-button {
-    font-size: 1rem;
-    padding: 0.875rem 2rem;
-  }
-  
-  .carousel-wrapper {
-    margin: 0 -1.5rem;
-    padding: 0 1.5rem;
-  }
-  
-  .carousel-container {
-    margin: 0;
-  }
-  
-  .carousel-nav {
-    display: none;
-  }
-  
-  .carousel-item {
-    flex: 0 0 85%;
-    min-width: 220px;
-    max-width: 280px;
-  }
-  
-  .carousel-track {
-    gap: 1rem;
-  }
-}
-
-/* Asegurar que todas las tarjetas tengan la misma altura */
-.carousel-item :deep(.product-card) {
+/* Deep selectors para ProductCard - asegurar altura consistente */
+:deep(.product-card) {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.carousel-item :deep(.product-info) {
+:deep(.product-info) {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-/* Fijar altura del título para mantener consistencia */
-.carousel-item :deep(.product-title) {
-  min-height: 3rem; /* Altura fija para 2 líneas de texto */
+:deep(.product-title) {
+  min-height: 3rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

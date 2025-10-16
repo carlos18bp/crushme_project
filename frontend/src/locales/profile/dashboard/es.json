@@ -1,7 +1,7 @@
 {
-  "welcome": "Hola {'@'}{username} 💖 ¿listo para consentir a una Darling hoy?",
+  "welcome": "Hola {'@'}{username} 💖 ¿listo para consentir a un Crush hoy?",
   "banner": {
-    "title": "¿Lista para consentir a una Darling hoy?",
+    "title": "¿Listo para consentir a un Crush hoy?",
     "button": "Ir a la tienda"
   },
   "gifts": {

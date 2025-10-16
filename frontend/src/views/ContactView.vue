@@ -17,41 +17,41 @@
     <div class="absolute inset-0 z-0 bg-gradient-to-br from-brand-pink-lighter/30 via-brand-purple-light/20 to-brand-blue-light/30"></div>
 
     <!-- Content -->
-    <div class="relative z-10 flex-1 flex items-center justify-center px-4 pt-48 pb-8">
+    <div class="relative z-10 flex-1 flex items-center justify-center px-4 pt-32 md:pt-40 lg:pt-48 pb-8">
       <div class="w-full max-w-5xl">
         <!-- Contact Form Card -->
-        <div class="bg-white/40 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+        <div class="bg-white/40 backdrop-blur-lg rounded-xl md:rounded-2xl shadow-2xl p-4 md:p-6 lg:p-8">
           <!-- Header -->
-          <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-brand-dark font-comfortaa">
+          <div class="flex items-center justify-between mb-4 md:mb-6">
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-brand-dark font-comfortaa">
               {{ $t('contact.title') }}
             </h1>
             <button 
               @click="goBack"
-              class="p-2 hover:bg-brand-pink-light/30 rounded-full transition-colors duration-200"
+              class="p-2 hover:bg-brand-pink-light/30 rounded-full transition-colors duration-200 flex-shrink-0"
               :aria-label="$t('contact.goBack')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-brand-dark">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 md:w-6 md:h-6 text-brand-dark">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
             </button>
           </div>
 
           <!-- Form -->
-          <form @submit.prevent="handleSubmit" class="space-y-3">
+          <form @submit.prevent="handleSubmit" class="space-y-3 md:space-y-4">
             <!-- To Field (Read-only) -->
             <div>
-              <label class="block text-brand-dark font-poppins font-medium text-sm mb-1">
+              <label class="block text-brand-dark font-poppins font-medium text-xs md:text-sm mb-1">
                 {{ $t('contact.for') }}:
               </label>
-              <div class="text-brand-dark font-poppins text-sm bg-white/20 rounded-lg px-3 py-2">
+              <div class="text-brand-dark font-poppins text-xs md:text-sm bg-white/20 rounded-lg px-3 py-2">
                 BuyIt4me (team@buyit4me.com)
               </div>
             </div>
 
             <!-- From Field -->
             <div>
-              <label for="email" class="block text-brand-dark font-poppins font-medium text-sm mb-1">
+              <label for="email" class="block text-brand-dark font-poppins font-medium text-xs md:text-sm mb-1">
                 {{ $t('contact.from') }}:
               </label>
               <input
@@ -60,13 +60,13 @@
                 type="email"
                 required
                 :placeholder="$t('contact.emailPlaceholder')"
-                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
+                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
               />
             </div>
 
             <!-- Name Field -->
             <div>
-              <label for="name" class="block text-brand-dark font-poppins font-medium text-sm mb-1">
+              <label for="name" class="block text-brand-dark font-poppins font-medium text-xs md:text-sm mb-1">
                 {{ $t('contact.name') }}:
               </label>
               <input
@@ -75,13 +75,13 @@
                 type="text"
                 required
                 :placeholder="$t('contact.namePlaceholder')"
-                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
+                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
               />
             </div>
 
             <!-- Phone Field -->
             <div>
-              <label for="phone" class="block text-brand-dark font-poppins font-medium text-sm mb-1">
+              <label for="phone" class="block text-brand-dark font-poppins font-medium text-xs md:text-sm mb-1">
                 {{ $t('contact.number') }}:
               </label>
               <input
@@ -89,13 +89,13 @@
                 v-model="form.phone"
                 type="tel"
                 :placeholder="$t('contact.phonePlaceholder')"
-                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
+                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
               />
             </div>
 
             <!-- Subject Field -->
             <div>
-              <label for="subject" class="block text-brand-dark font-poppins font-medium text-sm mb-1">
+              <label for="subject" class="block text-brand-dark font-poppins font-medium text-xs md:text-sm mb-1">
                 {{ $t('contact.subject') }}:
               </label>
               <input
@@ -104,7 +104,7 @@
                 type="text"
                 required
                 :placeholder="$t('contact.subjectPlaceholder')"
-                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
+                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
               />
             </div>
 
@@ -119,23 +119,23 @@
                 rows="4"
                 required
                 :placeholder="$t('contact.messagePlaceholder')"
-                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200 resize-none"
+                class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200 resize-none"
               ></textarea>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-2">
               <button
                 type="button"
                 @click="goBack"
-                class="px-6 py-2 rounded-full text-sm text-brand-dark font-poppins font-medium hover:bg-white/40 transition-all duration-200"
+                class="w-full sm:w-auto px-6 py-2 rounded-full text-xs md:text-sm text-brand-dark font-poppins font-medium hover:bg-white/40 transition-all duration-200 order-2 sm:order-1"
               >
                 {{ $t('contact.cancel') }}
               </button>
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="px-6 py-2 rounded-full text-sm bg-brand-blue-medium text-white font-poppins font-medium hover:bg-brand-blue-medium/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                class="w-full sm:w-auto px-6 py-2 rounded-full text-xs md:text-sm bg-brand-blue-medium text-white font-poppins font-medium hover:bg-brand-blue-medium/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl order-1 sm:order-2"
               >
                 {{ isSubmitting ? $t('contact.sending') : $t('contact.send') }}
               </button>

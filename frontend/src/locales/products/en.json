@@ -38,7 +38,8 @@
     "addToWishlist": "Add to Wishlist",
     "addToList": "Add to List",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "findMe": "Find me ✨"
   },
   "navigation": {
     "home": "Home",

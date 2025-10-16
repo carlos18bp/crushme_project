@@ -125,39 +125,97 @@ const navigateToProfile = (username) => {
 </script>
 
 <style scoped>
-/* Container */
+/* Container - Mobile First */
 .user-search {
   background: white;
   border-radius: 1rem;
-  padding: 32px;
+  padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Search Container */
+@media (min-width: 640px) {
+  .user-search {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-search {
+    padding: 32px;
+  }
+}
+
+/* Search Container - Mobile First */
 .search-container {
   position: relative;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .search-container {
+    margin-bottom: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .search-container {
+    margin-bottom: 24px;
+  }
 }
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
   pointer-events: none;
+  width: 18px;
+  height: 18px;
+}
+
+@media (min-width: 640px) {
+  .search-icon {
+    left: 14px;
+    width: 19px;
+    height: 19px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .search-icon {
+    left: 16px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 16px 12px 48px;
+  padding: 10px 12px 10px 40px;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   color: #11181E;
   background: white;
   transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .search-input {
+    padding: 11px 14px 11px 44px;
+    border-radius: 11px;
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .search-input {
+    padding: 12px 16px 12px 48px;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+  }
 }
 
 .search-input::placeholder {
@@ -170,22 +228,36 @@ const navigateToProfile = (username) => {
   box-shadow: 0 0 0 3px rgba(199, 125, 255, 0.1);
 }
 
-/* Users List */
+/* Users List - Mobile First */
 .users-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-/* User Item */
+@media (min-width: 640px) {
+  .users-list {
+    gap: 4px;
+  }
+}
+
+/* User Item - Mobile First */
 .user-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .user-item {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+  }
 }
 
 .user-item:hover {
@@ -197,14 +269,28 @@ const navigateToProfile = (username) => {
   border: 1px solid #38bdf8;
 }
 
-/* Avatar */
+/* Avatar - Mobile First */
 .user-avatar {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   background: #f1f5f9;
+}
+
+@media (min-width: 640px) {
+  .user-avatar {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .avatar-img {
@@ -228,54 +314,128 @@ const navigateToProfile = (username) => {
 
 .username {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #11181E;
 }
 
+@media (min-width: 640px) {
+  .username {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .username {
+    font-size: 0.9375rem;
+  }
+}
+
 .user-role {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: #64748b;
 }
 
-/* Crush Label */
+@media (min-width: 640px) {
+  .user-role {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .user-role {
+    font-size: 0.9375rem;
+  }
+}
+
+/* Crush Label - Mobile First */
 .crush-label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: #FF3FD5;
 }
 
+@media (min-width: 640px) {
+  .crush-label {
+    gap: 5px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .crush-label {
+    gap: 6px;
+    font-size: 0.9375rem;
+  }
+}
+
 .crush-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background-color: #FF3FD5;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* Loading State */
+@media (min-width: 1024px) {
+  .crush-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Loading State - Mobile First */
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  gap: 12px;
+  padding: 30px 16px;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .loading-state {
+    padding: 35px 18px;
+    gap: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .loading-state {
+    padding: 40px 20px;
+    gap: 12px;
+  }
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #f3f4f6;
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid #f3f4f6;
   border-top-color: #C77DFF;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+@media (min-width: 640px) {
+  .loading-spinner {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f3f4f6;
+  }
 }
 
 @keyframes spin {
@@ -286,58 +446,122 @@ const navigateToProfile = (username) => {
 
 .loading-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #64748b;
   margin: 0;
 }
 
-/* Empty State */
+@media (min-width: 1024px) {
+  .loading-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Empty State - Mobile First */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  gap: 12px;
+  padding: 30px 16px;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .empty-state {
+    padding: 35px 18px;
+    gap: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .empty-state {
+    padding: 40px 20px;
+    gap: 12px;
+  }
 }
 
 .empty-icon {
   color: #cbd5e1;
   stroke-width: 1.5;
+  width: 40px;
+  height: 40px;
+}
+
+@media (min-width: 640px) {
+  .empty-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .empty-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #94a3b8;
   text-align: center;
   margin: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+@media (min-width: 1024px) {
+  .empty-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Additional responsive tweaks */
+@media (max-width: 480px) {
   .user-search {
-    padding: 24px;
+    padding: 16px;
+  }
+  
+  .search-container {
+    margin-bottom: 12px;
   }
   
   .search-input {
-    font-size: 0.875rem;
+    padding: 9px 10px 9px 36px;
+    font-size: 0.75rem;
+  }
+  
+  .search-icon {
+    left: 10px;
+    width: 16px;
+    height: 16px;
+  }
+  
+  .user-item {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .user-avatar {
+    width: 36px;
+    height: 36px;
   }
   
   .username {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
   
   .crush-label {
-    font-size: 0.875rem;
+    font-size: 0.7rem;
   }
   
   .crush-dot {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
   }
 }
 </style>
+
 
 
 

@@ -160,3 +160,4 @@ const renderFeaturedSection = (categories) => {
 
 ## 🎊 **¡Endpoint Listo para Usar!**
 Este endpoint está integrado en tu aplicación y listo para ser consumido por el frontend. Si necesitas ajustes o más funcionalidades, ¡házmelo saber! 😊
+

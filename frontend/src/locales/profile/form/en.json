@@ -54,14 +54,19 @@
     "remove": "Remove"
   },
   "linktree": {
-    "title": "Linktree",
+    "title": "My Links",
     "subtitle": "Add links to your social media and websites",
     "url": "URL",
-    "urlPlaceholder": "https://example.com",
+    "urlPlaceholder": "example.com",
     "title_field": "Title",
     "titlePlaceholder": "My Website",
     "addLink": "Add Link",
     "removeLink": "Remove Link"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "language": "Language",
+    "languageHelp": "Choose your preferred language for the interface"
   },
   "buttons": {
     "save": "Save Changes",

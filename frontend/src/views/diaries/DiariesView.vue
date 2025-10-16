@@ -4,8 +4,8 @@
     <Navbar />
     
     <!-- Main Content -->
-    <main class="min-h-screen bg-brand-pink-lighter pt-32 pb-16">
-      <div class="container mx-auto px-4">
+    <main class="min-h-screen bg-brand-pink-lighter pt-20 md:pt-28 lg:pt-32 pb-12 md:pb-16">
+      <div class="container mx-auto px-4 md:px-6 lg:px-4">
         <!-- Loading State -->
         <div v-if="crushStore.isLoading" class="loading-container">
           <div class="loading-spinner"></div>
@@ -158,17 +158,33 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  gap: 20px;
+  min-height: 300px;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .loading-container {
+    min-height: 400px;
+    gap: 20px;
+  }
 }
 
 .loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #C77DFF;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #C77DFF;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #C77DFF;
+  }
 }
 
 @keyframes spin {
@@ -178,8 +194,14 @@ onMounted(() => {
 
 .loading-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #6b7280;
+}
+
+@media (min-width: 768px) {
+  .loading-text {
+    font-size: 1rem;
+  }
 }
 
 /* Error State */
@@ -188,28 +210,53 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  gap: 20px;
+  min-height: 300px;
+  gap: 16px;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .error-container {
+    min-height: 400px;
+    gap: 20px;
+    padding: 0;
+  }
 }
 
 .error-text {
   font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #ef4444;
   text-align: center;
+  max-width: 90%;
+}
+
+@media (min-width: 768px) {
+  .error-text {
+    font-size: 1rem;
+    max-width: 100%;
+  }
 }
 
 .retry-button {
-  padding: 12px 32px;
+  padding: 10px 24px;
   background: #C77DFF;
   color: white;
   border: none;
-  border-radius: 24px;
+  border-radius: 20px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .retry-button {
+    padding: 12px 32px;
+    border-radius: 24px;
+    font-size: 0.875rem;
+  }
 }
 
 .retry-button:hover {
@@ -222,48 +269,58 @@ onMounted(() => {
   transform: translateY(0);
 }
 
-/* Diaries Grid - 4 columns layout */
+/* Diaries Grid - Mobile First */
 .diaries-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-
-/* Profile Column - spans 2 columns */
-.profile-column {
-  grid-column: span 2;
-}
-
-/* Other Columns - spans 2 columns */
-.other-columns {
-  grid-column: span 2;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  align-items: stretch;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
+@media (min-width: 768px) {
   .diaries-grid {
-    grid-template-columns: 1fr;
     gap: 20px;
   }
-  
-  .profile-column,
-  .other-columns {
-    grid-column: span 1;
+}
+
+@media (min-width: 1024px) {
+  .diaries-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    align-items: start;
   }
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+/* Profile Column - Mobile first */
+.profile-column {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .profile-column {
+    grid-column: span 2;
   }
-  
-  .diaries-grid {
-    gap: 16px;
+}
+
+/* Other Columns - Mobile first */
+.other-columns {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .other-columns {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .other-columns {
+    grid-column: span 2;
+    gap: 24px;
   }
 }
 </style>

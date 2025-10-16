@@ -1,6 +1,6 @@
 <template>
-  <div class="mb-8">
-    <h1 class="text-3xl font-medium text-gray-900 font-comfortaa">
+  <div class="mb-4 md:mb-6">
+    <h1 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-900 font-comfortaa leading-tight">
       {{ welcomeMessage }}
     </h1>
   </div>

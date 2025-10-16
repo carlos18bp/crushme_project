@@ -1,16 +1,16 @@
 <template>
-  <div class="home-view">
+  <div class="w-full overflow-x-hidden relative">
     <!-- Background Image -->
-    <div class="home-background">
+    <div class="absolute top-0 left-0 right-0 z-0 pointer-events-none">
       <img 
         src="@/assets/backgrounds/hero_bg.png" 
         alt="Home Background" 
-        class="background-image"
+        class="w-full h-auto block"
       />
     </div>
     
     <!-- Content -->
-    <div class="home-content">
+    <div class="relative z-10">
       <!-- Navbar -->
       <Navbar />
       
@@ -93,31 +93,5 @@ const handleCreateWishlist = () => {
 </script>
 
 <style scoped>
-.home-view {
-  width: 100%;
-  overflow-x: hidden;
-  position: relative;
-}
-
-/* Background Image */
-.home-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.background-image {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Content Container */
-.home-content {
-  position: relative;
-  z-index: 1;
-}
+/* No custom styles needed - using Tailwind */
 </style>

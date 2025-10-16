@@ -275,3 +275,4 @@ const fetchGifts = async (type = 'all', page = 1) => {
 5. **Mantener historial** persistente y accesible
 
 **¿Quieres que añada alguna funcionalidad adicional o ajuste específico?**
+

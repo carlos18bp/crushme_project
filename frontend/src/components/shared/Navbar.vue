@@ -1,46 +1,46 @@
 <template>
-  <nav class="navbar-gradient fixed top-0 left-0 right-0 z-[1000] backdrop-blur-[10px] min-h-[60px] px-8 py-2">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-8">
+  <nav class="navbar-gradient fixed top-0 left-0 right-0 z-[1000] backdrop-blur-[10px] min-h-[60px] px-4 md:px-8 py-2">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 md:gap-8">
       <!-- Logo -->
       <router-link :to="`/${i18nStore.locale}`" class="flex items-center no-underline">
         <img 
           src="@/assets/logo/BUY.png" 
           alt="Logo" 
-          class="h-28 w-auto transition-transform duration-300 hover:scale-105"
+          class="h-20 md:h-24 lg:h-28 w-auto transition-transform duration-300 hover:scale-105"
         />
       </router-link>
 
       <!-- Navigation Links -->
-      <ul class="nav-menu flex list-none gap-10 m-0 p-0 flex-1 justify-center" :class="{ 'active': menuOpen }">
+      <ul class="nav-menu hidden md:flex list-none gap-6 lg:gap-10 m-0 p-0 flex-1 justify-center" :class="{ 'active': menuOpen }">
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}`" class="nav-link font-comfortaa text-base lg:text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.home') }}
           </router-link>
         </li>
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}/diaries`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}/diaries`" class="nav-link font-comfortaa text-base lg:text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.diaries') }}
           </router-link>
         </li>
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}/products`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}/products`" class="nav-link font-comfortaa text-base lg:text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.shop') }}
           </router-link>
         </li>
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}/about`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}/about`" class="nav-link font-comfortaa text-base lg:text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.aboutUs') }}
           </router-link>
         </li>
         <li class="m-0">
-          <router-link :to="`/${i18nStore.locale}/contact`" class="nav-link font-comfortaa text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
+          <router-link :to="`/${i18nStore.locale}/contact`" class="nav-link font-comfortaa text-base lg:text-lg font-light text-brand-dark no-underline relative transition-colors duration-300 py-2 uppercase tracking-wider hover:text-brand-pink-dark" @click="closeMenu">
             {{ $t('navbar.contact') }}
           </router-link>
         </li>
       </ul>
 
       <!-- Right Section: Icons -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 md:gap-4">
         <!-- Cart Icon -->
         <button @click="openCart" class="flex items-center justify-center text-brand-dark no-underline transition-all duration-300 p-2 hover:text-brand-pink-dark hover:scale-110 relative" aria-label="Cart">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 stroke-[1.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,7 +63,7 @@
 
         <!-- Mobile Menu Toggle -->
         <button 
-          class="menu-toggle hidden bg-transparent border-none cursor-pointer p-2 z-[1001]" 
+          class="md:hidden bg-transparent border-none cursor-pointer p-2 z-[1001]" 
           @click="toggleMenu"
           aria-label="Toggle menu"
         >
@@ -168,40 +168,30 @@ const handleCheckout = () => {
   transform: rotate(-45deg);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .menu-toggle {
-    display: block !important;
-  }
+/* Responsive Design - Mobile Menu */
+.nav-menu.active {
+  @apply flex;
+  position: fixed;
+  top: 65px;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  background: linear-gradient(180deg, #E9C3CD 0%, rgba(233, 195, 205, 0.9) 70%, transparent 100%);
+  padding: 2rem;
+  gap: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-height: calc(100vh - 65px);
+  overflow-y: auto;
+  z-index: 999;
+}
 
-  .nav-menu {
-    position: fixed;
-    top: 65px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background: linear-gradient(180deg, #E9C3CD 0%, rgba(233, 195, 205, 0.9) 70%, transparent 100%);
-    padding: 2rem;
-    gap: 1.5rem;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    max-height: calc(100vh - 65px);
-    overflow-y: auto;
-  }
+.nav-menu.active li {
+  text-align: center;
+}
 
-  .nav-menu.active {
-    transform: translateX(0);
-  }
-
-  .nav-menu li {
-    text-align: center;
-  }
-
-  .nav-menu .nav-link {
-    font-size: 1.125rem;
-    display: block;
-    padding: 0.75rem 0;
-  }
+.nav-menu.active .nav-link {
+  font-size: 1.125rem;
+  display: block;
+  padding: 0.75rem 0;
 }
 </style>

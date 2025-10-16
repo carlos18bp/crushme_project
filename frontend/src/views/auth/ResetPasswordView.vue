@@ -510,12 +510,3 @@ const handleResetPassword = async () => {
 }
 </style>
 
-<style>
-/* Global body styles for this view */
-body {
-  overflow: hidden !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-</style>

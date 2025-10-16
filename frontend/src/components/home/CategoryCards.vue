@@ -1,27 +1,27 @@
 <template>
-    <div class="min-h-screen bg-white py-20 px-8">
+    <div class="min-h-screen bg-white py-12 md:py-16 lg:py-20 px-4 md:px-8">
       <div class="max-w-[1600px] mx-auto">
         <!-- Título principal -->
-        <h1 class="text-4xl md:text-5xl font-bold mb-12 text-gray-800">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-8 md:mb-12 text-gray-800 font-comfortaa">
           {{ $t('categories.title') }} 🎀
         </h1>
   
         <!-- Loading State -->
-        <div v-if="isLoading" class="flex justify-center items-center py-20">
+        <div v-if="isLoading" class="flex flex-col sm:flex-row justify-center items-center py-12 md:py-20 gap-4">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-          <span class="ml-4 text-gray-600">{{ $t('categories.loading') }}</span>
+          <span class="text-base md:text-lg text-gray-600 font-poppins">{{ $t('categories.loading') }}</span>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="text-center py-20">
-          <p class="text-red-600 mb-4">{{ error }}</p>
-          <button @click="retryLoadCategories" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+        <div v-else-if="error" class="text-center py-12 md:py-20">
+          <p class="text-red-600 mb-4 text-base md:text-lg font-poppins">{{ error }}</p>
+          <button @click="retryLoadCategories" class="bg-purple-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-lg hover:bg-purple-700 transition-colors font-poppins text-sm md:text-base">
             {{ $t('categories.retry') }}
           </button>
         </div>
 
         <!-- Grid de categorías -->
-        <div v-else-if="categories.length > 0" class="grid grid-cols-3 gap-6">
+        <div v-else-if="categories.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <!-- Primera fila: 2 columnas + 1 columna -->
           <div
             v-for="(category, index) in categories"
@@ -30,16 +30,16 @@
             class="bg-white border-4 border-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105"
             :class="getGridClasses(index)"
           >
-            <div class="p-6 pb-4">
-              <h2 class="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+            <div class="p-4 md:p-6 pb-3 md:pb-4">
+              <h2 class="text-xl md:text-2xl font-semibold text-gray-700 flex items-center gap-2 font-comfortaa">
                 {{ category.title }}
               </h2>
             </div>
-            <div class="relative flex justify-end h-64 w-full overflow-hidden bg-gray-100">
+            <div class="relative flex justify-end h-48 sm:h-56 md:h-64 w-full overflow-hidden bg-gray-100">
                 <img
                     :src="category.image"
                     :alt="category.title"
-                    class="h-full max-h-64 object-cover"
+                    class="h-full max-h-48 sm:max-h-56 md:max-h-64 object-cover"
                     @error="handleImageError"
                 />
             </div>
@@ -47,41 +47,15 @@
         </div>
 
         <!-- Empty State -->
-        <div v-else class="text-center py-20">
-          <p class="text-gray-600">{{ $t('categories.noCategories') }}</p>
+        <div v-else class="text-center py-12 md:py-20">
+          <p class="text-gray-600 text-base md:text-lg font-poppins">{{ $t('categories.noCategories') }}</p>
         </div>
       </div>
     </div>
   </template>
 
   <style scoped>
-  /* Responsive Design */
-  @media (max-width: 1200px) {
-    .min-h-screen {
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .min-h-screen {
-      padding: 3rem 1.5rem;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .min-h-screen {
-      padding: 2rem 1rem;
-    }
-
-    h1 {
-      font-size: 2rem;
-    }
-  }
+  /* No custom styles needed - using Tailwind */
   </style>
   
   <script setup>
@@ -167,12 +141,17 @@
   // Función para obtener clases CSS del grid según el índice
   const getGridClasses = (index) => {
     const gridClasses = [
-      'col-span-2', // Primera posición: 2 columnas
-      'col-span-1', // Segunda posición: 1 columna
-      'col-span-1', // Tercera posición: 1 columna
-      'col-span-2'  // Cuarta posición: 2 columnas
+      'sm:col-span-1 lg:col-span-2', // Primera posición: 2 columnas en desktop
+      'sm:col-span-1 lg:col-span-1', // Segunda posición: 1 columna
+      'sm:col-span-1 lg:col-span-1', // Tercera posición: 1 columna
+      'sm:col-span-2 lg:col-span-2'  // Cuarta posición: 2 columnas
     ]
-    return gridClasses[index] || 'col-span-1'
+    return gridClasses[index] || 'sm:col-span-1 lg:col-span-1'
+  }
+  
+  // Función para manejar errores de imagen
+  const handleImageError = (e) => {
+    e.target.src = 'https://via.placeholder.com/400x300/9D51FF/FFFFFF?text=Category'
   }
 
   // Función para reintentar cargar categorías

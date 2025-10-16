@@ -192,16 +192,6 @@ const handleLogin = async () => {
 }
 </script>
 
-<style>
-/* Prevent any scroll globally when this view is active */
-body {
-  overflow: hidden !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-</style>
-
 <style scoped>
 .login-view {
   position: fixed;

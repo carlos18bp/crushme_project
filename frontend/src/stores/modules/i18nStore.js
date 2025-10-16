@@ -188,7 +188,8 @@ export const useI18nStore = defineStore('i18n', {
   state: () => ({
     locale: 'en',
     countryCode: null,
-    isInitialized: false
+    isInitialized: false,
+    detectedLocale: null
   }),
   actions: {
     setLocale(newLocale) {
@@ -202,12 +203,12 @@ export const useI18nStore = defineStore('i18n', {
         
         // Set Spanish for Spanish-speaking countries, English for others
         const detectedLocale = spanishSpeakingCountries.includes(this.countryCode) ? 'es' : 'en'
-        this.setLocale(detectedLocale)
+        this.detectedLocale = detectedLocale
         
         return detectedLocale
       } catch (error) {
         // Fallback to English on error
-        this.setLocale('en')
+        this.detectedLocale = 'en'
         return 'en'
       } finally {
         this.isInitialized = true

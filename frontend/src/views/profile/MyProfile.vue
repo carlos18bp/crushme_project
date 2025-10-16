@@ -1,16 +1,16 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <form @submit.prevent="handleSubmit" class="space-y-10">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <form @submit.prevent="handleSubmit" class="space-y-8 md:space-y-10">
       
       <!-- Shipping info section -->
       <div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6 font-comfortaa">
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 font-comfortaa">
           {{ $t('profile.form.shippingDetails.title') }}
         </h2>
 
-        <div class="space-y-6">
+        <div class="space-y-4 md:space-y-6">
           <!-- First name & Last name -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label for="first_name" class="block text-sm font-medium text-gray-900 mb-2">
                 {{ $t('profile.form.basicInfo.firstName') }} <span class="text-red-500">*</span>
@@ -40,9 +40,9 @@
           </div>
 
           <!-- Work email & Phone -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <label for="email" class="block text-sm font-medium text-gray-900 mb-2">
+              <label for="email" class="block text-xs md:text-sm font-medium text-gray-900 mb-2">
                 {{ $t('profile.form.basicInfo.email') }} <span class="text-red-500">*</span>
               </label>
               <div class="relative">
@@ -63,13 +63,13 @@
             </div>
 
             <div>
-              <label for="phone" class="block text-sm font-medium text-gray-900 mb-2">
+              <label for="phone" class="block text-xs md:text-sm font-medium text-gray-900 mb-2">
                 {{ $t('profile.form.basicInfo.phone') }}
               </label>
-              <div class="flex gap-2">
+              <div class="flex flex-col sm:flex-row gap-2">
                 <select
                   v-model="formData.phoneCode"
-                  class="rounded-lg border border-gray-300 px-3 py-3 text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
+                  class="rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
                 >
                   <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
                     {{ country.flag }} {{ country.dial_code }}
@@ -105,7 +105,7 @@
           </div>
 
           <!-- State & ZIP code -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label for="state" class="block text-sm font-medium text-gray-900 mb-2">
                 {{ $t('profile.form.shippingDetails.state') }}
@@ -209,15 +209,15 @@
 
       <!-- Public profile information section -->
       <div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6 font-comfortaa">
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 font-comfortaa">
           {{ $t('profile.form.publicProfile.title') }}
         </h2>
 
-        <div class="space-y-6">
+        <div class="space-y-4 md:space-y-6">
           <!-- Crush Verification Badge -->
-          <div v-if="profileStore.isCrushVerified" class="mb-6">
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-pink-dark to-pink-600 text-white rounded-full shadow-lg">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <div v-if="profileStore.isCrushVerified" class="mb-4 md:mb-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-brand-pink-dark to-pink-600 text-white rounded-full shadow-lg">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
               </svg>
               <span class="font-bold text-sm">{{ $t('profile.form.crush.verified') || 'CRUSH VERIFICADO' }}</span>
@@ -225,7 +225,7 @@
           </div>
 
           <!-- Crush Verification Section -->
-          <div v-if="!profileStore.isCrushVerified" class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 border border-pink-200">
+          <div v-if="!profileStore.isCrushVerified" class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl md:rounded-2xl p-4 md:p-6 border border-pink-200">
             <!-- Pending Status -->
             <div v-if="profileStore.hasPendingCrushRequest" class="text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
@@ -313,15 +313,15 @@
 
           <!-- Profile & Cover Photos -->
           <div>
-            <label class="block text-sm font-medium text-gray-900 mb-3">
+            <label class="block text-xs md:text-sm font-medium text-gray-900 mb-2 md:mb-3">
               {{ $t('profile.form.publicProfile.photos') || 'Fotos de perfil' }}
             </label>
             
             <!-- Cover Photo -->
-            <div class="relative mb-6">
+            <div class="relative mb-20 md:mb-6">
               <div 
                 @click="$refs.coverImageInput.click()"
-                class="w-full h-48 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden hover:border-brand-pink-dark transition-colors cursor-pointer group relative"
+                class="w-full h-32 md:h-40 lg:h-48 rounded-xl md:rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden hover:border-brand-pink-dark transition-colors cursor-pointer group relative"
                 :class="{ 'bg-gradient-to-r from-brand-pink-lighter via-purple-200 to-blue-200': !coverImagePreview && !profileStore.coverImageUrl }"
               >
                 <!-- Cover Image Preview or Existing -->
@@ -366,11 +366,11 @@
               />
               
               <!-- Profile Picture - Overlapping cover -->
-              <div class="absolute -bottom-16 left-8">
+              <div class="absolute -bottom-14 md:-bottom-16 left-4 md:left-8">
                 <div class="relative">
                   <div 
                     @click="$refs.profilePictureInput.click()"
-                    class="w-32 h-32 rounded-full border-4 border-white shadow-lg flex items-center justify-center cursor-pointer hover:shadow-xl transition-shadow group relative overflow-hidden"
+                    class="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full border-4 border-white shadow-lg flex items-center justify-center cursor-pointer hover:shadow-xl transition-shadow group relative overflow-hidden"
                     :class="{ 'bg-gradient-to-br from-brand-pink-lighter to-purple-200': !profilePicturePreview && !profileStore.profilePictureUrl }"
                   >
                     <!-- Profile Picture Preview or Existing -->
@@ -390,8 +390,8 @@
                   </div>
                   
                   <!-- Camera button -->
-                  <div class="absolute bottom-1 right-1 w-8 h-8 bg-brand-pink-dark rounded-full flex items-center justify-center shadow-md hover:bg-brand-pink-medium transition-colors cursor-pointer">
-                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div class="absolute bottom-0 right-0 md:bottom-1 md:right-1 w-7 h-7 md:w-8 md:h-8 bg-brand-pink-dark rounded-full flex items-center justify-center shadow-md hover:bg-brand-pink-medium transition-colors cursor-pointer">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -426,7 +426,7 @@
             </div>
             
             <!-- Spacer for overlapping profile picture -->
-            <div class="h-20"></div>
+            <div class="h-16 md:h-20"></div>
           </div>
 
           <!-- Username -->
@@ -497,8 +497,8 @@
 
             <!-- Existing gallery photos -->
             <div v-if="existingPhotos.length > 0" class="mb-4">
-              <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('profile.form.gallery.currentPhotos') }}</h4>
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <h4 class="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3">{{ $t('profile.form.gallery.currentPhotos') }}</h4>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                 <div
                   v-for="photo in existingPhotos"
                   :key="photo.id"
@@ -533,8 +533,8 @@
 
             <!-- Uploaded files (new photos to upload) -->
             <div v-if="uploadedFiles.length > 0" class="mt-4">
-              <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('profile.form.gallery.newPhotos') }}</h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <h4 class="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3">{{ $t('profile.form.gallery.newPhotos') }}</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div
                   v-for="(file, index) in uploadedFiles"
                   :key="index"
@@ -608,7 +608,7 @@
               </button>
             </div>
 
-            <div v-for="(link, index) in formData.links" :key="index" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div v-for="(link, index) in formData.links" :key="index" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 text-sm">
                   https://
@@ -643,12 +643,47 @@
         </div>
       </div>
 
-      <!-- Submit button -->
+      <!-- Preferences section -->
       <div>
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-900 mb-4 md:mb-6 font-comfortaa">
+          {{ $t('profile.form.preferences.title') }}
+        </h2>
+
+        <div class="space-y-4 md:space-y-6">
+          <!-- Language Preference -->
+          <div class="max-w-md">
+            <label for="language" class="block text-sm font-medium text-gray-900 mb-2">
+              {{ $t('profile.form.preferences.language') }}
+            </label>
+            <div class="relative">
+              <select
+                id="language"
+                v-model="selectedLanguage"
+                @change="handleLanguageChange"
+                class="block w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors appearance-none cursor-pointer"
+              >
+                <option value="en">🇬🇧 English</option>
+                <option value="es">🇪🇸 Español</option>
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-gray-500">
+              {{ $t('profile.form.preferences.languageHelp') }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <div class="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
         <button
           type="submit"
           :disabled="isLoading"
-          class="px-8 py-3 bg-brand-pink-dark text-white font-medium rounded-full hover:bg-brand-pink-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-comfortaa shadow-md"
+          class="w-full sm:w-auto px-6 md:px-8 py-2.5 md:py-3 bg-brand-pink-dark text-white font-medium text-sm md:text-base rounded-full hover:bg-brand-pink-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-comfortaa shadow-md"
         >
           {{ isLoading ? $t('profile.form.buttons.loading') : $t('profile.form.buttons.save') }}
         </button>
@@ -659,14 +694,21 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProfileStore } from '@/stores/modules/profileStore'
 import { useAuthStore } from '@/stores/modules/authStore'
+import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useAlert } from '@/composables/useAlert'
 import { Country, State } from 'country-state-city'
 
+const router = useRouter()
 const profileStore = useProfileStore()
 const authStore = useAuthStore()
+const i18nStore = useI18nStore()
 const { showSuccess, showError, showConfirm } = useAlert()
+
+// Language preference
+const selectedLanguage = ref(i18nStore.locale)
 
 const isLoading = ref(false)
 const uploadedFiles = ref([])
@@ -983,6 +1025,29 @@ async function handleRemoveCoverImage() {
 
 function getImageUrlWithCacheBusting(url) {
   return profileStore.getImageUrlWithCacheBusting(url)
+}
+
+// ============================================
+// LANGUAGE PREFERENCE HANDLER
+// ============================================
+
+function handleLanguageChange() {
+  const currentRoute = router.currentRoute.value.name
+  const newLocale = selectedLanguage.value
+  
+  // Update the i18n store
+  i18nStore.setLocale(newLocale)
+  
+  // Navigate to the same route but with new locale
+  const routeBaseName = currentRoute.replace(/-en$|-es$/, '')
+  router.push({ name: `${routeBaseName}-${newLocale}` })
+  
+  showSuccess(
+    newLocale === 'en' 
+      ? 'Language changed to English' 
+      : 'Idioma cambiado a Español',
+    '✓'
+  )
 }
 
 // ============================================
