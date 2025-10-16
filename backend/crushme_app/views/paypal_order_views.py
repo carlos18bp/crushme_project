@@ -17,6 +17,10 @@ from ..serializers.order_serializers import OrderDetailSerializer
 from ..services.paypal_service import paypal_service
 from ..services.woocommerce_order_service import woocommerce_order_service
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
 
 def create_paypal_order_data(data_dict):
     """
@@ -38,17 +42,53 @@ def create_paypal_order_data(data_dict):
         customer_name = data_dict.get('customer_name', 'Guest')
         customer_email = data_dict.get('customer_email', '')
 
+        # Log received items for debugging
+        logger.info(f"📦 [PAYPAL] Received {len(items)} items from frontend")
+        for idx, item in enumerate(items):
+            logger.info(f"  Item {idx + 1}: {item}")
+
         # Validate items
         if not items or len(items) == 0:
             from rest_framework.response import Response
             return Response({'error': 'Cart is empty'}, status=400)
 
+        # Filter out empty or invalid items and validate
+        valid_items = []
         for item in items:
+            # Check if item has all required keys
             if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
-                from rest_framework.response import Response
-                return Response({
-                    'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'
-                }, status=400)
+                logger.warning(f"⚠️ Skipping invalid item (missing keys): {item}")
+                continue
+            
+            # Check if values are not empty/null
+            if not item.get('woocommerce_product_id') or not item.get('product_name'):
+                logger.warning(f"⚠️ Skipping item with empty values: {item}")
+                continue
+            
+            # Check if quantity and price are valid numbers
+            try:
+                quantity = int(item['quantity'])
+                unit_price = float(item['unit_price'])
+                
+                if quantity <= 0 or unit_price <= 0:
+                    logger.warning(f"⚠️ Skipping item with invalid quantity/price: {item}")
+                    continue
+                
+                valid_items.append(item)
+            except (ValueError, TypeError) as e:
+                logger.warning(f"⚠️ Skipping item with invalid numeric values: {item} - Error: {e}")
+                continue
+        
+        # Check if we have any valid items after filtering
+        if not valid_items:
+            from rest_framework.response import Response
+            return Response({
+                'error': 'No valid items in cart. All items were filtered out due to invalid data.'
+            }, status=400)
+        
+        # Replace items with valid_items
+        items = valid_items
+        logger.info(f"✅ Validated {len(items)} items for PayPal order")
 
         # Get shipping info
         shipping_info = {
@@ -79,14 +119,21 @@ def create_paypal_order_data(data_dict):
             })
             items_total += float(item['unit_price']) * item['quantity']
 
-        # Total solo incluye productos para PayPal (envío se maneja en WooCommerce)
-        total_amount = items_total
+        # Get shipping cost from request
+        shipping_cost = float(data_dict.get('shipping', 0))
+        
+        # Total DEBE incluir productos + shipping para PayPal
+        total_amount = items_total + shipping_cost
+        
+        # Log para debugging
+        logger.info(f"💰 [PAYPAL] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")
 
         # Create PayPal order
         paypal_result = paypal_service.create_order(
             cart_items=cart_items,
             shipping_info=shipping_info,
-            total_amount=total_amount
+            total_amount=total_amount,
+            shipping_cost=shipping_cost
         )
 
         if paypal_result['success']:
@@ -124,9 +171,6 @@ def create_paypal_order_data(data_dict):
             'error': 'Internal server error',
             'details': str(e)
         }, status=500)
-
-logger = logging.getLogger(__name__)
-User = get_user_model()
 
 
 def send_to_woocommerce_async(order_id, shipping_cost_cents=0):

@@ -179,14 +179,33 @@ export const useCrushStore = defineStore('crush', () => {
   }
 
   /**
-   * Search users by username
-   * Endpoint: GET /api/auth/search/?q={query}&limit={limit}
-   * @param {Object} params - Search parameters
-   * @param {string} params.query - Search query (username)
-   * @param {number} params.limit - Maximum number of results (default: 20, max: 50)
-   * @returns {Promise<Array>} - Array of matching users
+   * Search users by username with shipping cost and profile picture
+   * Endpoint: GET /api/users/search/?q={query}&limit={limit}
+   * @param {string} query - Search query (username)
+   * @param {number} limit - Maximum number of results (default: 5, max: 50)
+   * @returns {Promise<Array>} - Array of matching users with shipping_cost and profile_picture
+   * 
+   * Response format:
+   * {
+   *   success: true,
+   *   count: 2,
+   *   results: [
+   *     { 
+   *       username: "juan123", 
+   *       is_crush: false, 
+   *       shipping_cost: 10500,
+   *       profile_picture: "http://localhost:8000/media/profile_pictures/juan123.jpg"
+   *     },
+   *     { 
+   *       username: "juanita", 
+   *       is_crush: false, 
+   *       shipping_cost: 15000,
+   *       profile_picture: null
+   *     }
+   *   ]
+   * }
    */
-  async function searchUsers(query, limit = 20) {
+  async function searchUsers(query, limit = 5) {
     if (!query || !query.trim()) {
       searchResults.value = [];
       return [];
@@ -196,19 +215,20 @@ export const useCrushStore = defineStore('crush', () => {
     error.value = null;
 
     try {
-      console.log(`🔍 Searching users: "${query}" (limit: ${limit})...`);
+      console.log(`🔍 [SEARCH] Buscando usuarios: "${query}" (limit: ${limit})...`);
       
       // Build URL with query parameters
       const params = new URLSearchParams();
       params.append('q', query.trim());
       params.append('limit', limit);
-      const url = `auth/search/?${params.toString()}`;
+      const url = `users/search/?${params.toString()}`;
       
       const response = await get_request(url);
       
       if (response.data.success) {
         searchResults.value = response.data.results;
-        console.log(`✅ ${response.data.count} users found`);
+        console.log(`✅ [SEARCH] ${response.data.count} usuarios encontrados`);
+        console.log('📦 [SEARCH] Resultados con shipping:', response.data.results);
         return searchResults.value;
       } else {
         throw new Error(response.data.error || 'Search failed');
@@ -216,7 +236,7 @@ export const useCrushStore = defineStore('crush', () => {
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'Error searching users';
       error.value = errorMessage;
-      console.error('❌ Error searching users:', errorMessage);
+      console.error('❌ [SEARCH] Error buscando usuarios:', errorMessage);
       searchResults.value = [];
       throw err;
     } finally {

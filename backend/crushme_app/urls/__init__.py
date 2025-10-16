@@ -13,4 +13,6 @@ urlpatterns = [
     path('favorites/products/', include('crushme_app.urls.favorite_product_urls')),
     path('reviews/', include('crushme_app.urls.review_urls')),
     path('contact/', include('crushme_app.urls.contact_urls')),
+    path('feeds/', include('crushme_app.urls.feed_urls')),
+    path('users/', include('crushme_app.urls.user_search_urls')),
 ]

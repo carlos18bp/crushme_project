@@ -158,14 +158,15 @@ class PayPalService:
                 'error': str(e)
             }
     
-    def create_order(self, cart_items, shipping_info, total_amount):
+    def create_order(self, cart_items, shipping_info, total_amount, shipping_cost=0):
         """
         Create a PayPal order
         
         Args:
             cart_items: List of items from cart
             shipping_info: Dict with shipping address
-            total_amount: Decimal total amount
+            total_amount: Decimal total amount (items + shipping)
+            shipping_cost: Decimal shipping cost
         
         Returns:
             dict: PayPal order response with order_id
@@ -179,7 +180,7 @@ class PayPalService:
             access_token = auth_result['access_token']
             
             # Build order payload
-            payload = self._build_order_payload(cart_items, shipping_info, total_amount)
+            payload = self._build_order_payload(cart_items, shipping_info, total_amount, shipping_cost)
             
             # Create order
             url = f"{self.base_url}/v2/checkout/orders"
@@ -286,9 +287,15 @@ class PayPalService:
                 'error': str(e)
             }
     
-    def _build_order_payload(self, cart_items, shipping_info, total_amount):
+    def _build_order_payload(self, cart_items, shipping_info, total_amount, shipping_cost=0):
         """
-        Build PayPal order payload
+        Build PayPal order payload with shipping included
+        
+        Args:
+            cart_items: List of items from cart
+            shipping_info: Dict with shipping address
+            total_amount: Total amount (items + shipping)
+            shipping_cost: Shipping cost
         """
         # Build purchase units with items
         items = []
@@ -297,7 +304,7 @@ class PayPalService:
                 'name': item['product_name'],
                 'quantity': str(item['quantity']),
                 'unit_amount': {
-                    'currency_code': 'USD',  # Cambiar según tu moneda
+                    'currency_code': 'USD',  # PayPal requiere USD
                     'value': str(item['unit_price'])
                 }
             })
@@ -308,6 +315,24 @@ class PayPalService:
         # Normalize country code for PayPal API
         country_code = self._normalize_country_code(shipping_info.get('country', 'US'))
         
+        # Build breakdown with shipping
+        # NOTA: Los precios de productos YA INCLUYEN IVA del 19% (impuesto incluido en Colombia)
+        # Por lo tanto, NO agregamos 'tax' como campo separado en el breakdown
+        breakdown = {
+            'item_total': {
+                'currency_code': 'USD',
+                'value': str(items_total)  # IVA 19% ya incluido
+            }
+        }
+        
+        # Add shipping to breakdown if present
+        if shipping_cost and shipping_cost > 0:
+            breakdown['shipping'] = {
+                'currency_code': 'USD',
+                'value': str(shipping_cost)
+            }
+            logger.info(f"💰 [PAYPAL PAYLOAD] Including shipping in breakdown: {shipping_cost}")
+        
         payload = {
             'intent': 'CAPTURE',
             'purchase_units': [
@@ -315,12 +340,7 @@ class PayPalService:
                     'amount': {
                         'currency_code': 'USD',
                         'value': str(total_amount),
-                        'breakdown': {
-                            'item_total': {
-                                'currency_code': 'USD',
-                                'value': str(items_total)
-                            }
-                        }
+                        'breakdown': breakdown
                     },
                     'items': items,
                     'shipping': {
@@ -345,6 +365,8 @@ class PayPalService:
                 'cancel_url': f'{settings.FRONTEND_URL}/checkout/cancel'
             }
         }
+        
+        logger.info(f"💰 [PAYPAL PAYLOAD] Total: {total_amount}, Items: {items_total}, Shipping: {shipping_cost}")
         
         return payload
 

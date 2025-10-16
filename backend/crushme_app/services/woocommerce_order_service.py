@@ -136,7 +136,7 @@ class WooCommerceOrderService:
         """
         try:
             # Build WooCommerce order payload
-            payload = self._build_order_payload(order)
+            payload = self._build_order_payload(order, shipping_cost)
             
             # Log request
             logger.info(f"Sending order {order.order_number} to WooCommerce")
@@ -205,10 +205,10 @@ class WooCommerceOrderService:
 
             line_items.append(line_item)
 
-        # Always add additional product (48500) to every order
-        logger.info(f"📦 Adding additional product 48500 (quantity: 1) to order {order.order_number}")
+        # Always add additional product (42351004) to every order
+        logger.info(f"📦 Adding additional product 42351004 (quantity: 1) to order {order.order_number}")
         line_items.append({
-            'product_id': 48500,
+            'product_id': 42351004,
             'quantity': 1
         })
         
@@ -230,10 +230,12 @@ class WooCommerceOrderService:
         shipping = {
             'first_name': first_name,
             'last_name': last_name,
+            'company': '',
             'address_1': order.address_line_1,
+            'address_2': order.address_line_2 if order.address_line_2 else '',
             'city': order.city,
             'state': self._get_state_code(order.state),
-            'postcode': order.zipcode,
+            'postcode': order.zipcode if order.zipcode else '',
             'country': order.country,
             'phone': order.phone
         }
@@ -284,34 +286,43 @@ class WooCommerceOrderService:
         Build Colombian-specific metadata
         Parses address and adds required fields
         """
-        # Parse address
-        parsed = ColombianAddressParser.parse(order.address_line_1)
+        # Parse billing address (fixed store address: "CRA 69C 31 36 SUR ED GRIS PISO 4")
+        billing_parsed = ColombianAddressParser.parse('CRA 69C 31 36 SUR ED GRIS PISO 4')
+        
+        # Parse shipping address (customer address)
+        shipping_parsed = ColombianAddressParser.parse(order.address_line_1)
         
         # Extract neighborhood from address_line_2 or use city
-        neighborhood = order.address_line_2 if order.address_line_2 else order.city
+        shipping_neighborhood = order.address_line_2 if order.address_line_2 else order.city
         
         meta_data = [
-            # Billing metadata (fixed for your store)
-            {'key': 'billing_neighborhood', 'value': 'Centro'},
-            {'key': 'billing_street_1', 'value': 'Calle 50'},
-            {'key': 'billing_street_2', 'value': '45'},
-            {'key': 'billing_street_3', 'value': '23'},
-            {'key': 'billing_type_address', 'value': 'Calle'},
-            {'key': 'billing_type_property', 'value': 'Oficina'},
-            {'key': 'billing_unit_number', 'value': '101'},
+            # Billing metadata (fixed for your store - parsed from "CRA 69C 31 36 SUR ED GRIS PISO 4")
+            {'key': '_billing_neighborhood', 'value': 'Centro'},  # Fixed neighborhood for store
+            {'key': '_billing_street_1', 'value': billing_parsed['street_1']},
+            {'key': '_billing_street_2', 'value': billing_parsed['street_2']},
+            {'key': '_billing_street_3', 'value': billing_parsed['street_3']},
+            {'key': '_billing_type_address', 'value': billing_parsed['type_address'] or 'Carrera'},
+            {'key': '_billing_type_property', 'value': 'Oficina'},
+            {'key': '_billing_unit_number', 'value': ''},
+            
+            # Cédula (empty for now, can be added to Order model later)
+            {'key': '_cedula_', 'value': ''},
+            
+            # VAT exempt
+            {'key': '_is_vat_exempt', 'value': 'no'},
             
             # Shipping metadata (customer - parsed from address)
-            {'key': 'shipping_neighborhood', 'value': neighborhood},
-            {'key': 'shipping_street_1', 'value': parsed['street_1']},
-            {'key': 'shipping_street_2', 'value': parsed['street_2']},
-            {'key': 'shipping_street_3', 'value': parsed['street_3']},
-            {'key': 'shipping_type_address', 'value': parsed['type_address'] or 'Calle'},
-            {'key': 'shipping_type_property', 'value': parsed['type_property'] or 'Casa'},
-            {'key': 'shipping_unit_number', 'value': parsed['unit_number']},
+            {'key': '_shipping_neighborhood', 'value': shipping_neighborhood},
+            {'key': '_shipping_street_1', 'value': shipping_parsed['street_1']},
+            {'key': '_shipping_street_2', 'value': shipping_parsed['street_2']},
+            {'key': '_shipping_street_3', 'value': shipping_parsed['street_3']},
+            {'key': '_shipping_type_address', 'value': shipping_parsed['type_address'] or 'Calle'},
+            {'key': '_shipping_type_property', 'value': shipping_parsed['type_property'] or 'Casa'},
+            {'key': '_shipping_unit_number', 'value': shipping_parsed['unit_number']},
             
-            # Additional fields
-            {'key': 'cedula_', 'value': ''},  # Could be added to Order model later
-            {'key': 'is_vat_exempt', 'value': 'no'}
+            # WooCommerce B2B Sales Agent fields
+            {'key': '_wcb2bsa_sales_agent', 'value': '4372'},
+            {'key': '_wcb2bsa_created_by', 'value': 'customer'}
         ]
         
         return meta_data

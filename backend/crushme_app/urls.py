@@ -30,4 +30,7 @@ urlpatterns = [
     
     # Feed endpoints
     path('feeds/', include('crushme_app.urls.feed_urls')),
+    
+    # User search endpoints (for gift sending)
+    path('users/', include('crushme_app.urls.user_search_urls')),
 ]

@@ -11,8 +11,10 @@ from django.shortcuts import get_object_or_404
 
 from ..models import UserAddress
 from .paypal_order_views import create_paypal_order_data
+import logging
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
@@ -86,14 +88,22 @@ def send_gift(request):
                     'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate total
-        total_amount = sum(float(item['unit_price']) * item['quantity'] for item in items)
+        # Get shipping cost from request
+        shipping_cost = float(request.data.get('shipping', 0))
+        
+        # Calculate total (items + shipping)
+        items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
+        total_amount = items_total + shipping_cost
+        
+        # Log for debugging
+        logger.info(f"🎁 [GIFT] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")
 
         # Prepare PayPal order data using receiver's shipping info
         paypal_data = {
             'customer_email': receiver_user.email,
             'customer_name': receiver_user.get_full_name() or receiver_username,
             'items': items,
+            'shipping': shipping_cost,  # ← AGREGADO: Shipping cost
             'shipping_address': shipping_info['address']['address_line_1'],
             'shipping_city': shipping_info['address']['city'],
             'shipping_state': shipping_info['address']['state'],

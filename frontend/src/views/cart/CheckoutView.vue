@@ -111,17 +111,8 @@
                 <option value="Neiva"></option>
               </datalist>
               <p class="city-shipping-info" v-if="shippingForm.city">
-                <span v-if="shippingForm.city.toLowerCase().includes('medellín') || shippingForm.city.toLowerCase().includes('medellin')">
-                  📦 Envío a Medellín: {{ formatCOP(10500) }}
-                </span>
-                <span v-else-if="shippingForm.city.toLowerCase().includes('san andrés') || 
-                              shippingForm.city.toLowerCase().includes('san andres') ||
-                              shippingForm.city.toLowerCase().includes('santa catalina') ||
-                              shippingForm.city.toLowerCase().includes('providencia')">
-                  📦 Envío a Islas: {{ formatCOP(45000) }}
-                </span>
-                <span v-else>
-                  📦 Envío estándar: {{ formatCOP(15000) }}
+                <span>
+                  📦 Costo de envío: {{ formatCOP(shipping) }}
                 </span>
               </p>
             </div>
@@ -199,7 +190,7 @@
                   class="form-input username-search-input"
                   autocomplete="off"
                   @focus="showUserSearchResults = crushStore.searchResults.length > 0"
-                  @blur="setTimeout(() => showUserSearchResults = false, 200)"
+                  @blur="() => setTimeout(() => showUserSearchResults = false, 200)"
                 >
                 <!-- Search Results Dropdown -->
                 <div v-if="showUserSearchResults && crushStore.searchResults.length > 0" class="username-search-results">
@@ -210,7 +201,7 @@
                     @mousedown="selectUser(user)"
                   >
                     <img
-                      :src="user.profile_picture_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40'"
+                      :src="user.profile_picture || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40'"
                       :alt="user.username"
                       class="search-avatar"
                     >
@@ -320,14 +311,17 @@
               <span>{{ $t('cart.checkout.form.shipping') }}</span>
               <span class="total-value">
                 {{ formatCOP(shipping) }}
-                <span v-if="shippingForm.city" class="shipping-city-note">
+                <span v-if="shippingType === 'gift' && selectedGiftUser" class="shipping-city-note">
+                  ({{ selectedGiftUser.username }})
+                </span>
+                <span v-else-if="shippingForm.city" class="shipping-city-note">
                   ({{ shippingForm.city }})
                 </span>
               </span>
             </div>
             <div class="total-row tax-row">
-              <span>{{ $t('cart.checkout.form.tax') }}</span>
-              <span class="total-value">{{ formatCOP(tax) }}</span>
+              <span>{{ $t('cart.checkout.form.tax') }} <span class="tax-included-badge">(Incluido)</span></span>
+              <span class="total-value tax-included-value">{{ formatCOP(tax) }}</span>
             </div>
           </div>
 
@@ -337,7 +331,7 @@
               <span class="total-label">{{ $t('cart.checkout.form.total') }}</span>
               <span class="total-amount">{{ formatCOP(total) }}</span>
             </div>
-            <p class="tax-note">{{ $t('cart.checkout.form.includesTax', { tax: formatCOP(tax) }) }}</p>
+            <p class="tax-note">✓ IVA (19%) ya incluido en el precio: {{ formatCOP(tax) }}</p>
           </div>
         </div>
       </div>
@@ -352,6 +346,7 @@ import { useAuthStore } from '@/stores/modules/authStore.js';
 import { useCrushStore } from '@/stores/modules/crushStore.js';
 import { useI18nStore } from '@/stores/modules/i18nStore';
 import { usePaymentStore } from '@/stores/modules/paymentStore.js';
+import { useProductStore } from '@/stores/modules/productStore.js';
 import { useRouter } from 'vue-router';
 import { useAlert } from '@/composables/useAlert.js';
 import { Country, State } from 'country-state-city';
@@ -363,6 +358,7 @@ const authStore = useAuthStore();
 const crushStore = useCrushStore();
 const i18nStore = useI18nStore();
 const paymentStore = usePaymentStore();
+const productStore = useProductStore();
 const { showSuccess, showError, showLoading, closeAlert } = useAlert();
 
 // Get all countries with flags
@@ -399,9 +395,15 @@ const discountCode = ref('');
 const paypalError = ref('');
 const paypalScriptLoaded = ref(false);
 
+// ⭐ Producto de dropshipping (recargo oculto)
+const DROPSHIPPING_PRODUCT_ID = 48500;
+const dropshippingProduct = ref(null);
+const isLoadingDropshipping = ref(false);
+
 // ⭐ User search functionality for gift shipping
 const usernameSearchQuery = ref('');
 const showUserSearchResults = ref(false);
+const selectedGiftUser = ref(null); // ⭐ Usuario seleccionado completo (con shipping_cost)
 let usernameSearchTimeout = null;
 
 // Computed property for available states - Only Colombia for national shipping
@@ -431,10 +433,27 @@ const searchUsers = async (query) => {
 
 // ⭐ Select user from search results
 const selectUser = (user) => {
-  shippingForm.value.username = `@${user.username}`;
-  usernameSearchQuery.value = `@${user.username}`;
+  console.log('👤 [SELECT USER] Usuario seleccionado:', user);
+  
+  // Guardar usuario completo con shipping_cost
+  selectedGiftUser.value = user;
+  
+  // Ocultar resultados y limpiar búsqueda ANTES de actualizar el query
+  // Esto previene que el watch vuelva a disparar la búsqueda
   showUserSearchResults.value = false;
   crushStore.clearSearch();
+  
+  // Limpiar el timeout de búsqueda
+  if (usernameSearchTimeout) {
+    clearTimeout(usernameSearchTimeout);
+    usernameSearchTimeout = null;
+  }
+  
+  // Actualizar campos del formulario
+  shippingForm.value.username = `@${user.username}`;
+  usernameSearchQuery.value = `@${user.username}`;
+  
+  console.log('💰 [SELECT USER] Costo de envío del usuario:', user.shipping_cost);
 };
 
 // ⭐ Watch username input for search and sync with shippingForm
@@ -451,6 +470,13 @@ watch(usernameSearchQuery, (newQuery) => {
   if (!newQuery.trim()) {
     crushStore.clearSearch();
     showUserSearchResults.value = false;
+    selectedGiftUser.value = null; // Limpiar usuario seleccionado
+    return;
+  }
+
+  // No buscar si ya hay un usuario seleccionado y el query coincide
+  if (selectedGiftUser.value && newQuery === `@${selectedGiftUser.value.username}`) {
+    console.log('⏭️ [WATCH] Usuario ya seleccionado, no buscar de nuevo');
     return;
   }
 
@@ -466,6 +492,7 @@ watch(shippingType, (newType) => {
   if (newType !== 'gift') {
     usernameSearchQuery.value = '';
     showUserSearchResults.value = false;
+    selectedGiftUser.value = null; // Limpiar usuario seleccionado
     crushStore.clearSearch();
   }
 });
@@ -476,6 +503,37 @@ watch(() => shippingForm.value.username, (newUsername) => {
     usernameSearchQuery.value = newUsername;
   }
 });
+
+/**
+ * ⭐ Cargar producto de dropshipping (recargo)
+ * Este producto siempre se consulta y se agrega a la orden
+ * pero NO se muestra al cliente en la lista de productos
+ */
+const loadDropshippingProduct = async () => {
+  isLoadingDropshipping.value = true;
+  
+  try {
+    console.log(`📦 [DROPSHIPPING] Consultando producto ${DROPSHIPPING_PRODUCT_ID}...`);
+    
+    const result = await productStore.fetchWooProduct(DROPSHIPPING_PRODUCT_ID);
+    
+    if (result.success && result.data) {
+      dropshippingProduct.value = result.data;
+      console.log('✅ [DROPSHIPPING] Producto cargado:', {
+        id: result.data.id,
+        name: result.data.name,
+        price: result.data.price
+      });
+    } else {
+      console.error('❌ [DROPSHIPPING] Error al cargar producto:', result.error);
+      // No mostramos error al usuario porque es un proceso interno
+    }
+  } catch (error) {
+    console.error('❌ [DROPSHIPPING] Error inesperado:', error);
+  } finally {
+    isLoadingDropshipping.value = false;
+  }
+};
 
 // Calculate totals
 const subtotal = computed(() => cartStore.totalPrice);
@@ -520,6 +578,23 @@ const createRegularOrder = async () => {
     attributes: item.attributes || null
   }));
 
+  // ⭐ Agregar producto de dropshipping (recargo oculto)
+  if (dropshippingProduct.value) {
+    items.push({
+      woocommerce_product_id: dropshippingProduct.value.id,
+      woocommerce_variation_id: null,
+      product_name: dropshippingProduct.value.name,
+      quantity: 1,
+      unit_price: parseFloat(dropshippingProduct.value.price),
+      attributes: null
+    });
+    console.log('📦 [DROPSHIPPING] Producto agregado a items:', {
+      id: dropshippingProduct.value.id,
+      name: dropshippingProduct.value.name,
+      price: dropshippingProduct.value.price
+    });
+  }
+
   console.log('📦 [REGULAR] Items del carrito:', items);
 
   // Preparar datos completos para el backend
@@ -534,10 +609,17 @@ const createRegularOrder = async () => {
     shipping_country: countryName,
     phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
     notes: shippingForm.value.additionalDetails || '',
-    shipping: shipping.value // ⭐ Agregar costo de envío calculado
+    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
+    total: total.value // ⭐ Total calculado (para validación en backend)
   };
 
   console.log('📤 [REGULAR] Enviando datos completos al backend:', orderData);
+  console.log('💰 [REGULAR] Desglose:', {
+    subtotal: subtotal.value,
+    shipping: baseShipping.value,
+    dropshipping: dropshippingProduct.value?.price || 0,
+    total: total.value
+  });
 
   // Crear orden en el backend
   const result = await paymentStore.createPayPalOrder(orderData);
@@ -548,6 +630,19 @@ const createRegularOrder = async () => {
   }
 
   console.log('✅ [REGULAR] Orden creada en backend:', result.paypal_order_id);
+  console.log('⚠️ [REGULAR] Respuesta del backend:', result);
+  
+  // ⭐ Verificar que el backend esté usando el total correcto
+  if (result.data && result.data.total) {
+    console.log('💰 [REGULAR] Total en PayPal según backend:', result.data.total);
+    if (result.data.total !== total.value) {
+      console.error('❌ [REGULAR] DISCREPANCIA DE TOTAL!', {
+        frontend: total.value,
+        backend: result.data.total,
+        diferencia: total.value - result.data.total
+      });
+    }
+  }
 
   return result.paypal_order_id;
 };
@@ -578,6 +673,23 @@ const createGiftOrder = async () => {
     attributes: item.attributes || null
   }));
 
+  // ⭐ Agregar producto de dropshipping (recargo oculto)
+  if (dropshippingProduct.value) {
+    items.push({
+      woocommerce_product_id: dropshippingProduct.value.id,
+      woocommerce_variation_id: null,
+      product_name: dropshippingProduct.value.name,
+      quantity: 1,
+      unit_price: parseFloat(dropshippingProduct.value.price),
+      attributes: null
+    });
+    console.log('📦 [DROPSHIPPING] Producto agregado a items de regalo:', {
+      id: dropshippingProduct.value.id,
+      name: dropshippingProduct.value.name,
+      price: dropshippingProduct.value.price
+    });
+  }
+
   console.log('🎁 [GIFT] Items del regalo:', items);
 
   // Preparar datos del regalo
@@ -586,10 +698,18 @@ const createGiftOrder = async () => {
     sender_username: authStore.isLoggedIn ? authStore.username : null,
     receiver_username: shippingForm.value.username.replace('@', ''), // Remover @ si existe
     items: items,
-    gift_message: shippingForm.value.note || ''
+    gift_message: shippingForm.value.note || '',
+    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
+    total: total.value // ⭐ Total calculado (para validación en backend)
   };
 
   console.log('🎁 [GIFT] Datos del regalo:', giftData);
+  console.log('💰 [GIFT] Desglose:', {
+    subtotal: subtotal.value,
+    shipping: baseShipping.value,
+    dropshipping: dropshippingProduct.value?.price || 0,
+    total: total.value
+  });
 
   // Enviar regalo
   const result = await paymentStore.sendGift(giftData);
@@ -637,6 +757,23 @@ const captureGiftPayment = async (paypalOrderId) => {
     attributes: item.attributes || null
   }));
 
+  // ⭐ Agregar producto de dropshipping (recargo oculto)
+  if (dropshippingProduct.value) {
+    items.push({
+      woocommerce_product_id: dropshippingProduct.value.id,
+      woocommerce_variation_id: null,
+      product_name: dropshippingProduct.value.name,
+      quantity: 1,
+      unit_price: parseFloat(dropshippingProduct.value.price),
+      attributes: null
+    });
+    console.log('📦 [DROPSHIPPING] Producto agregado a captura de regalo:', {
+      id: dropshippingProduct.value.id,
+      name: dropshippingProduct.value.name,
+      price: dropshippingProduct.value.price
+    });
+  }
+
   console.log('🎁 [GIFT] Items del regalo para captura:', items);
 
   // Preparar datos de captura para regalo
@@ -647,10 +784,12 @@ const captureGiftPayment = async (paypalOrderId) => {
     receiver_username: shippingForm.value.username.replace('@', ''), // Remover @ si existe
     items: items,
     gift_message: shippingForm.value.note || '',
-    shipping: shipping.value // ⭐ Agregar costo de envío calculado
+    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
+    total: total.value // ⭐ Total calculado (para validación en backend)
   };
 
   console.log('🎁 [GIFT] Datos de captura de regalo:', captureData);
+  console.log('💰 [GIFT] Total a cobrar:', total.value);
 
   // El backend maneja la captura automáticamente para regalos
   // Pero necesitamos llamar al endpoint de captura estándar con datos del destinatario
@@ -718,6 +857,23 @@ const captureRegularPayment = async (paypalOrderId) => {
     attributes: item.attributes || null
   }));
 
+  // ⭐ Agregar producto de dropshipping (recargo oculto)
+  if (dropshippingProduct.value) {
+    items.push({
+      woocommerce_product_id: dropshippingProduct.value.id,
+      woocommerce_variation_id: null,
+      product_name: dropshippingProduct.value.name,
+      quantity: 1,
+      unit_price: parseFloat(dropshippingProduct.value.price),
+      attributes: null
+    });
+    console.log('📦 [DROPSHIPPING] Producto agregado a captura regular:', {
+      id: dropshippingProduct.value.id,
+      name: dropshippingProduct.value.name,
+      price: dropshippingProduct.value.price
+    });
+  }
+
   // Preparar datos completos de captura
   const captureData = {
     paypal_order_id: paypalOrderId,
@@ -731,10 +887,12 @@ const captureRegularPayment = async (paypalOrderId) => {
     shipping_country: countryName,
     phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
     notes: shippingForm.value.additionalDetails || '',
-    shipping: shipping.value // ⭐ Agregar costo de envío calculado
+    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
+    total: total.value // ⭐ Total calculado (para validación en backend)
   };
 
   console.log('📦 [REGULAR] Datos de captura:', captureData);
+  console.log('💰 [REGULAR] Total a cobrar:', total.value);
 
   // Capturar el pago en el backend
   const result = await paymentStore.capturePayPalOrder(paypalOrderId, captureData);
@@ -783,23 +941,32 @@ const captureRegularPayment = async (paypalOrderId) => {
   }, 1000);
 };
 
-const shipping = computed(() => {
-  // ⭐ Cálculo de envío según ciudad colombiana
-  const ciudad = (shippingForm.value.city || '').toLowerCase().trim();
-  
-  // Validar que haya ciudad seleccionada
-  if (!ciudad) {
-    return 15000; // Tarifa por defecto si no hay ciudad
+/**
+ * ⭐ Cálculo del costo de envío BASE (sin recargo)
+ * Este es el valor real que se envía al backend
+ */
+const baseShipping = computed(() => {
+  // ⭐ Si es modo regalo y hay usuario seleccionado, usar su shipping_cost
+  if (shippingType.value === 'gift' && selectedGiftUser.value && selectedGiftUser.value.shipping_cost) {
+    const cost = parseFloat(selectedGiftUser.value.shipping_cost);
+    console.log(`📦 [SHIPPING] Usando costo del usuario destinatario: ${cost}`);
+    return cost;
   }
   
-  // Aplicar tarifas según la ciudad
+  // ⭐ Si es modo "para mí", calcular según ciudad
+  const ciudad = (shippingForm.value.city || '').toLowerCase().trim();
+  
+  if (!ciudad) {
+    return 15000;
+  }
+  
   switch (ciudad) {
     case 'medellín':
-    case 'medellin': // Sin tilde también
+    case 'medellin':
       return 10500;
       
     case 'san andrés isla':
-    case 'san andres isla': // Sin tilde
+    case 'san andres isla':
     case 'san andrés':
     case 'san andres':
     case 'santa catalina':
@@ -807,17 +974,52 @@ const shipping = computed(() => {
       return 45000;
       
     default:
-      return 15000; // Tarifa estándar para otras ciudades
+      return 15000;
   }
 });
 
-const tax = computed(() => {
-  // 19% de impuesto sobre el subtotal
-  return subtotal.value * 0.19;
+/**
+ * ⭐ Cálculo del envío MOSTRADO al cliente
+ * Incluye el costo base + el recargo de dropshipping
+ */
+const shipping = computed(() => {
+  let total = baseShipping.value;
+  
+  // Agregar recargo de dropshipping si está disponible
+  if (dropshippingProduct.value && dropshippingProduct.value.price) {
+    const dropshippingPrice = parseFloat(dropshippingProduct.value.price);
+    total += dropshippingPrice;
+    console.log(`📦 [DROPSHIPPING] Shipping mostrado: ${baseShipping.value} + ${dropshippingPrice} = ${total}`);
+  }
+  
+  return total;
 });
 
+/**
+ * ⭐ Cálculo del IVA (19%)
+ * El IVA ya está INCLUIDO en los precios de los productos
+ * Este cálculo es solo informativo para mostrar al cliente
+ */
+const tax = computed(() => {
+  // Calcular el IVA que ya está incluido en el subtotal
+  // Fórmula: IVA = Subtotal - (Subtotal / 1.19)
+  // O simplificado: IVA = Subtotal * (0.19 / 1.19)
+  return subtotal.value * (0.19 / 1.19);
+});
+
+/**
+ * ⭐ Total de la orden
+ * Subtotal (ya incluye IVA) + Shipping (con recargo incluido)
+ */
 const total = computed(() => {
-  return subtotal.value + shipping.value + tax.value;
+  const calculatedTotal = subtotal.value + shipping.value;
+  console.log('💰 [TOTAL] Cálculo:', {
+    subtotal: subtotal.value,
+    shipping: shipping.value,
+    tax_included: tax.value,
+    total: calculatedTotal
+  });
+  return calculatedTotal;
 });
 
 // PayPal Integration Functions
@@ -921,7 +1123,13 @@ const initPayPalButtons = () => {
       createOrder: async (data, actions) => {
         console.log('💳 [PAYPAL] Creando orden...');
         console.log('📦 [PAYPAL] Items del carrito:', cartStore.items);
-        console.log('💰 [PAYPAL] Total:', total.value);
+        console.log('💰 [PAYPAL] Desglose de totales:', {
+          subtotal: subtotal.value,
+          baseShipping: baseShipping.value,
+          shippingMostrado: shipping.value,
+          taxIncluido: tax.value,
+          total: total.value
+        });
 
         try {
           // Validar que haya items en el carrito
@@ -1032,6 +1240,10 @@ onMounted(async () => {
     return;
   }
 
+  // ⭐ Cargar producto de dropshipping (recargo)
+  // Este producto siempre se consulta al inicio
+  await loadDropshippingProduct();
+
   // Cargar e inicializar PayPal
   try {
     await loadPayPalScript();
@@ -1062,6 +1274,7 @@ onBeforeUnmount(() => {
   if (usernameSearchTimeout) {
     clearTimeout(usernameSearchTimeout);
   }
+  selectedGiftUser.value = null;
   crushStore.clearSearch();
 });
 </script>
@@ -1892,8 +2105,25 @@ onBeforeUnmount(() => {
 
 .tax-note {
   font-size: 0.85rem;
-  color: #999;
+  color: #059669;
   margin: 0;
+  font-weight: 500;
+}
+
+/* Tax Included Badge */
+.tax-included-badge {
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 500;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.tax-included-value {
+  color: #059669 !important;
+  font-style: italic;
 }
 
 /* Shipping City Note */

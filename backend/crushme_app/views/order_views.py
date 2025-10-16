@@ -68,8 +68,11 @@ def create_order(request):
             order = serializer.save()
             logger.info(f"✅ Order {order.order_number} created locally")
             
+            # Get shipping cost from request (optional)
+            shipping_cost = int(request.data.get('shipping', 0))
+            
             # Send order to WooCommerce
-            wc_result = woocommerce_order_service.send_order(order)
+            wc_result = woocommerce_order_service.send_order(order, shipping_cost=shipping_cost)
             
             # Prepare response
             detail_serializer = OrderDetailSerializer(order)
