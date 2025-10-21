@@ -198,7 +198,10 @@ export const useI18nStore = defineStore('i18n', {
     },
     async detectUserLanguage() {
       try {
-        const response = await axios.get('https://ipapi.co/json/')
+        // Add timeout to prevent hanging
+        const response = await axios.get('https://ipapi.co/json/', {
+          timeout: 3000 // 3 seconds timeout
+        })
         this.countryCode = response.data.country_code
         
         // Set Spanish for Spanish-speaking countries, English for others
@@ -207,6 +210,7 @@ export const useI18nStore = defineStore('i18n', {
         
         return detectedLocale
       } catch (error) {
+        console.warn('Failed to detect user language, using default:', error.message)
         // Fallback to English on error
         this.detectedLocale = 'en'
         return 'en'

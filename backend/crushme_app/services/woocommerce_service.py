@@ -129,17 +129,18 @@ class WooCommerceService:
         
         return result
     
-    def get_product_by_id(self, product_id):
+    def get_product_by_id(self, product_id, params=None):
         """
         Get a specific product by ID
         
         Args:
             product_id (int): Product ID
+            params (dict, optional): Additional query parameters (e.g., {'fields': 'id,name,stock_status'})
         
         Returns:
             dict: API response with product data
         """
-        return self._make_request(f'products/{product_id}')
+        return self._make_request(f'products/{product_id}', params)
     
     def get_category_by_id(self, category_id):
         """

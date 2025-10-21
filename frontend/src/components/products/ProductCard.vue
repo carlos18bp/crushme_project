@@ -61,26 +61,35 @@
             <!-- Botón único para modo regalo -->
             <button 
               @click.stop="handleBuyAsGift"
-              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              :disabled="isOutOfStock || cartStore.isUpdating || isCheckingStock"
               class="btn-gift text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 whitespace-nowrap flex-1"
               style="background-color: #DA9DFF;">
-              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyAsGift') || 'Buy as Gift') }}
+              <span v-if="isCheckingStock">⏳</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
+              <span v-else>{{ $t('products.product.buyAsGift') || 'Buy as Gift' }}</span>
             </button>
           </div>
           <div v-else class="product-buttons flex gap-2 md:gap-2.5 w-full">
             <button 
               @click.stop="handleBuyNow"
-              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              :disabled="isOutOfStock || cartStore.isUpdating || isCheckingStock"
               class="btn-buy text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
               style="background-color: #DA9DFF;">
-              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.buyNow') || 'Buy now') }}
+              <span v-if="isCheckingStock">⏳</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
+              <span v-else>{{ $t('products.product.buyNow') || 'Buy now' }}</span>
             </button>
             <button 
               @click.stop="handleAddToCart"
-              :disabled="product.stock_status === 'outofstock' || cartStore.isUpdating"
+              :disabled="isOutOfStock || cartStore.isUpdating || isCheckingStock"
               class="btn-cart text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
               style="background-color: #DA9DFF;">
-              {{ cartStore.isUpdating ? ($t('products.product.adding') || 'Adding...') : ($t('products.product.addToCart') || 'Add to cart') }}
+              <span v-if="isCheckingStock">⏳</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
+              <span v-else>{{ $t('products.product.addToCart') || 'Add to cart' }}</span>
             </button>
           </div>
         </template>
@@ -107,7 +116,7 @@ import { useAuthStore } from '@/stores/modules/authStore'
 import { useProfileStore } from '@/stores/modules/profileStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
-import { getFormattedProductPrice, getProductPrice } from '@/utils/priceHelper.js'
+import { get_request } from '@/services/request_http.js'
 
 // Importar iconos SVG como URLs
 import HeartCheckIcon from '@/assets/icons/heart/check.svg?url'
@@ -161,20 +170,64 @@ const showWishlistSelector = ref(false)
 const isFavorited = ref(props.isInFavorites)
 const isTogglingFavorite = ref(false)
 
-// Computed: Precio formateado del producto (extrae de short_description)
+// ⭐ NUEVO: Stock verification state
+const isCheckingStock = ref(false)
+const isOutOfStock = ref(false)
+
+// Computed: Precio formateado del producto (usa campo price directamente)
 const displayPrice = computed(() => {
-  return getFormattedProductPrice(props.product)
+  const price = parseFloat(props.product.price) || 0
+  return `$${price.toLocaleString('es-CO')}`
 })
 
 // Computed: Precio numérico (para cálculos)
 const numericPrice = computed(() => {
-  return getProductPrice(props.product)
+  return parseFloat(props.product.price) || 0
 })
 
 // Watch for changes in isInFavorites prop
 watch(() => props.isInFavorites, (newValue) => {
   isFavorited.value = newValue
 })
+
+// ⭐ NUEVO: Verificar stock en tiempo real antes de agregar al carrito
+const checkStockBeforeAction = async (productId) => {
+  if (isCheckingStock.value) return { available: false, checking: true }
+  
+  isCheckingStock.value = true
+  
+  try {
+    console.log(`📦 [ProductCard] Verificando stock para producto ${productId}...`)
+    const response = await get_request(`products/woocommerce/products/${productId}/stock/`)
+    
+    if (response.data.success) {
+      const stock = response.data.stock
+      console.log('✅ [ProductCard] Stock verificado:', {
+        status: stock.status,
+        quantity: stock.quantity,
+        available: stock.available
+      })
+      
+      if (!stock.available || stock.status === 'outofstock') {
+        isOutOfStock.value = true
+        return { available: false, stock }
+      }
+      
+      isOutOfStock.value = false
+      return { available: true, stock }
+    }
+    
+    // Si la respuesta no es exitosa, asumir que no hay stock por seguridad
+    return { available: false }
+    
+  } catch (err) {
+    console.error('❌ [ProductCard] Error verificando stock:', err)
+    // En caso de error, permitir continuar (fallback al stock del producto)
+    return { available: props.product.stock_status === 'instock' }
+  } finally {
+    isCheckingStock.value = false
+  }
+}
 
 // Methods
 const handleToggleWishlist = async () => {
@@ -233,12 +286,20 @@ const handleCreateWishlist = () => {
   router.push({ name: `ProfileWishlist-${i18nStore.locale}` })
 }
 
-const handleBuyNow = () => {
+const handleBuyNow = async () => {
   console.log('🔵 [ProductCard] handleBuyNow clicked for product:', props.product.id)
   
   // Si es un producto variable, redirigir al detalle
   if (props.product.type === 'variable') {
     emit('navigate-to-product', props.product.id)
+    return
+  }
+  
+  // ⭐ NUEVO: Verificar stock antes de agregar al carrito
+  const stockCheck = await checkStockBeforeAction(props.product.id)
+  
+  if (!stockCheck.available) {
+    console.warn('⚠️ [ProductCard] Producto sin stock, no se puede comprar')
     return
   }
   
@@ -249,7 +310,7 @@ const handleBuyNow = () => {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status,
+      stock_status: stockCheck.stock?.status || props.product.stock_status,
       variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
@@ -264,7 +325,7 @@ const handleBuyNow = () => {
   }
 }
 
-const handleAddToCart = () => {
+const handleAddToCart = async () => {
   console.log('🟢 [ProductCard] handleAddToCart clicked for product:', props.product.id)
   
   // Si es un producto variable, redirigir al detalle
@@ -273,12 +334,20 @@ const handleAddToCart = () => {
     return
   }
   
+  // ⭐ NUEVO: Verificar stock antes de agregar al carrito
+  const stockCheck = await checkStockBeforeAction(props.product.id)
+  
+  if (!stockCheck.available) {
+    console.warn('⚠️ [ProductCard] Producto sin stock, no se puede agregar al carrito')
+    return
+  }
+  
   try {
     const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status,
+      stock_status: stockCheck.stock?.status || props.product.stock_status,
       variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
@@ -293,12 +362,20 @@ const handleAddToCart = () => {
   }
 }
 
-const handleBuyAsGift = () => {
+const handleBuyAsGift = async () => {
   console.log('🎁 [ProductCard] handleBuyAsGift clicked for product:', props.product.id)
   
   // Si es un producto variable, redirigir al detalle
   if (props.product.type === 'variable') {
     emit('navigate-to-product', props.product.id)
+    return
+  }
+  
+  // ⭐ NUEVO: Verificar stock antes de agregar al carrito
+  const stockCheck = await checkStockBeforeAction(props.product.id)
+  
+  if (!stockCheck.available) {
+    console.warn('⚠️ [ProductCard] Producto sin stock, no se puede comprar como regalo')
     return
   }
   
@@ -308,7 +385,7 @@ const handleBuyAsGift = () => {
       name: props.product.name,
       price: numericPrice.value,
       image: props.product.images && props.product.images.length > 0 ? props.product.images[0].src : null,
-      stock_status: props.product.stock_status,
+      stock_status: stockCheck.stock?.status || props.product.stock_status,
       variation_id: null // Los productos desde la lista no tienen variación seleccionada
     })
     
@@ -356,7 +433,7 @@ const handleBuyAsGift = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  background: #ffffff;
 }
 
 .product-actions {
@@ -484,4 +561,5 @@ const handleBuyAsGift = () => {
     transform: none;
   }
 }
+
 </style>

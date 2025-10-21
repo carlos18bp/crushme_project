@@ -100,8 +100,8 @@ class User(AbstractUser):
     
     # Use email as the unique identifier for authentication
     email = models.EmailField(unique=True, verbose_name="Email Address")
-    first_name = models.CharField(max_length=60, verbose_name="First Name")
-    last_name = models.CharField(max_length=60, verbose_name="Last Name")
+    first_name = models.CharField(max_length=60, blank=True, null=True, verbose_name="First Name")
+    last_name = models.CharField(max_length=60, blank=True, null=True, verbose_name="Last Name")
     
     # Additional profile fields
     phone = models.CharField(

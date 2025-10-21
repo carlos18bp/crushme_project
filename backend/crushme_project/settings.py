@@ -197,15 +197,25 @@ STORAGES = {
     },
 }
 
-# Email configuration - Siempre usa SMTP para envíos reales
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtpout.secureserver.net'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = 'support@chrushme.com.co'
-EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
-DEFAULT_FROM_EMAIL = 'CrushMe Support <support@chrushme.com.co>'
+# Email configuration
+# Set USE_REAL_EMAIL = True to send real emails in development
+# Set USE_REAL_EMAIL = False to print emails to console (faster for testing)
+USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
+
+if DEBUG and not USE_REAL_EMAIL:
+    # Development: Print emails to console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # Production or development with real emails
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtpout.secureserver.net'
+    EMAIL_PORT = 465
+    EMAIL_USE_SSL = True
+    EMAIL_USE_TLS = False
+    EMAIL_HOST_USER = 'support@chrushme.com.co'
+    EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
+
+DEFAULT_FROM_EMAIL = 'CrushMe Support <support@crushme.com.co>'
 
 # Google OAuth2 settings
 GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production

@@ -154,7 +154,7 @@
                 <!-- Action Buttons -->
                 <button 
                   @click="addToCart" 
-                  :disabled="product.stock_status === 'outofstock' || isAddingToCart"
+                  :disabled="!isStockAvailable || isAddingToCart"
                   class="add-to-cart-btn"
                   :class="{ 'success': addToCartSuccess }"
                 >
@@ -164,7 +164,7 @@
                 </button>
                 <button 
                   @click="handleAddToWishlist" 
-                  :disabled="product.stock_status === 'outofstock'"
+                  :disabled="!isStockAvailable"
                   class="add-to-wishlist-btn"
                 >
                   {{ $t('productDetail.addToWishlist') }}
@@ -221,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProductStore } from '@/stores/modules/productStore'
@@ -230,6 +230,7 @@ import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useReviewStore } from '@/stores/modules/reviewStore'
 import { getFormattedProductPrice, getProductPrice, isSimpleProduct } from '@/utils/priceHelper.js'
+import { get_request } from '@/services/request_http.js'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
 import FAQ from '@/components/shared/FAQ.vue'
@@ -266,6 +267,11 @@ const thumbnailScrollPosition = ref(0)
 const maxVisibleThumbnails = ref(5)
 const thumbnailList = ref(null)
 const showWishlistSelector = ref(false)
+
+// ⭐ NUEVO: Stock en tiempo real
+const realTimeStock = ref(null)
+const isCheckingStock = ref(false)
+const stockCheckInterval = ref(null)
 
 // Computed properties
 const productId = computed(() => route.params.id)
@@ -367,19 +373,54 @@ const isProductVariable = computed(() => {
 // ⭐ NUEVO: Variación actualmente seleccionada (del store o primera por defecto)
 const currentVariation = computed(() => productStore.wooCurrentVariation)
 
-// ⭐ NUEVO: Atributos que generan variaciones (variation: true)
+// ⭐ NUEVO: Atributos que generan variaciones
+// Ahora el backend incluye 'attributes' con las opciones disponibles
 const variationAttributes = computed(() => {
   if (!product.value?.attributes) return []
   
-  return product.value.attributes.filter(attr => attr.variation === true)
+  // El backend ya retorna los atributos correctos para productos variables
+  // Invertir el orden de los atributos
+  return product.value.attributes.map(attr => ({
+    id: attr.slug || attr.name,
+    name: attr.name,
+    slug: attr.slug,
+    options: attr.options || [],
+    variation: true
+  })).reverse()
+})
+
+// ⭐ NUEVO: Variaciones disponibles del producto (viene del backend)
+const availableVariations = computed(() => {
+  return product.value?.available_variations || []
 })
 
 // ⭐ NUEVO: Imágenes a mostrar (variación o producto base)
 const displayImages = computed(() => {
-  // Si es producto variable y hay variación seleccionada con imagen, usar esa
-  if (isProductVariable.value && currentVariation.value?.image?.src) {
-    console.log('🖼️ [ProductDetail] Usando imagen de variación')
-    return [currentVariation.value.image]
+  // Si es producto variable y hay variación seleccionada
+  if (isProductVariable.value && currentVariation.value) {
+    // Prioridad 1: Si la variación tiene múltiples imágenes (del detalle completo)
+    if (currentVariation.value.images && currentVariation.value.images.length > 0) {
+      console.log('🖼️ [ProductDetail] Usando imágenes múltiples de variación:', currentVariation.value.images.length)
+      return currentVariation.value.images
+    }
+    
+    // Prioridad 2: Si la variación tiene una sola imagen
+    if (currentVariation.value.image) {
+      console.log('🖼️ [ProductDetail] Usando imagen única de variación:', currentVariation.value.image)
+      
+      // La imagen puede venir como string (URL) o como objeto {src: URL}
+      const imageSrc = typeof currentVariation.value.image === 'string' 
+        ? currentVariation.value.image 
+        : currentVariation.value.image.src
+      
+      if (imageSrc) {
+        return [{
+          src: imageSrc,
+          thumbnail: imageSrc,
+          alt: product.value?.name || 'Product variation'
+        }]
+      }
+    }
   }
   
   // Si no, usar imágenes del producto base
@@ -391,41 +432,65 @@ const displayImages = computed(() => {
 const displayPrice = computed(() => {
   if (!product.value) return '$0'
   
-  // Para productos simples: extraer precio de short_description
-  if (isProductSimple.value) {
-    const extractedPrice = getFormattedProductPrice(product.value)
-    console.log(`💰 [ProductDetail] Producto simple - Precio extraído: ${extractedPrice}`)
-    return extractedPrice
+  // Para productos variables: usar precio de la variación seleccionada
+  if (isProductVariable.value && currentVariation.value?.price) {
+    const price = parseFloat(currentVariation.value.price)
+    console.log(`💰 [ProductDetail] Variación seleccionada - Precio: $${price}`)
+    return `$${price.toLocaleString('es-CO')}`
   }
   
-  // Para productos variables: usar variación si está seleccionada
-  if (isProductVariable.value && currentVariation.value) {
-    const variationPrice = getFormattedProductPrice(currentVariation.value)
-    console.log(`💰 [ProductDetail] Variación seleccionada - Precio: ${variationPrice}`)
-    return variationPrice
-  }
-  
-  // Fallback: precio base del producto
-  console.log(`💰 [ProductDetail] Producto variable sin variación - Usando precio base: $${product.value.price}`)
-  return `$${product.value.price}`
+  // Para todos los demás casos (simples y fallback): usar campo price directamente
+  const price = parseFloat(product.value.price) || 0
+  console.log(`💰 [ProductDetail] Precio directo: $${price}`)
+  return `$${price.toLocaleString('es-CO')}`
 })
 
 // ⭐ Computed: Precio numérico del producto o variación (para cálculos)
 const numericPrice = computed(() => {
   if (!product.value) return 0
   
-  // Para productos simples: extraer precio de short_description
-  if (isProductSimple.value) {
-    return getProductPrice(product.value) || 0
+  // Para productos variables: usar precio de la variación seleccionada
+  if (isProductVariable.value && currentVariation.value?.price) {
+    return parseFloat(currentVariation.value.price) || 0
   }
   
-  // Para productos variables: usar variación si está seleccionada
-  if (isProductVariable.value && currentVariation.value) {
-    return getProductPrice(currentVariation.value) || 0
-  }
-  
-  // Fallback: usar product.price
+  // Para todos los demás casos: usar campo price directamente
   return parseFloat(product.value.price) || 0
+})
+
+// ⭐ NUEVO: Computed para verificar disponibilidad de stock en tiempo real
+const isStockAvailable = computed(() => {
+  // Para productos variables, verificar stock de la variación seleccionada
+  if (isProductVariable.value) {
+    // Si hay variación seleccionada, verificar su stock
+    if (currentVariation.value) {
+      return currentVariation.value.stock_status === 'instock' && 
+             (currentVariation.value.stock_quantity === null || currentVariation.value.stock_quantity > 0)
+    }
+    
+    // Si no hay variación seleccionada, buscar en available_variations
+    if (availableVariations.value.length > 0) {
+      const matchingVariation = findMatchingVariationFromSelected()
+      if (matchingVariation) {
+        return matchingVariation.in_stock && matchingVariation.stock_quantity > 0
+      }
+    }
+    
+    // Sin variación seleccionada, deshabilitar
+    return false
+  }
+  
+  // Para productos simples: usar stock en tiempo real
+  if (realTimeStock.value && !isProductVariable.value) {
+    return realTimeStock.value.available && realTimeStock.value.status === 'instock'
+  }
+  
+  // Fallback: usar stock del producto
+  if (product.value) {
+    return product.value.stock_status === 'instock' && product.value.in_stock
+  }
+  
+  return false
 })
 
 // ⭐ LIMPIADO: Removed old availableColors and availableSizes computed properties
@@ -487,23 +552,23 @@ const loadVariations = async () => {
 const loadVariation = async (variationId) => {
   if (!product.value) return
   
-  console.log(`🔄 Cargando variación ${variationId}`)
+  console.log(`🔄 Cargando detalle completo de variación ${variationId}`)
   
   try {
     const result = await productStore.fetchWooProductVariation(product.value.id, variationId)
     
     if (result.success && result.data) {
-      console.log(`✅ Variación ${variationId} cargada`)
+      console.log(`✅ Variación ${variationId} cargada con detalle completo:`, {
+        id: result.data.id,
+        price: result.data.price,
+        stock_quantity: result.data.stock_quantity,
+        stock_status: result.data.stock_status,
+        image: result.data.image,
+        attributes: result.data.attributes
+      })
       
-      // ⭐ Inicializar selectedAttributes con los atributos de esta variación
-      if (result.data.attributes && result.data.attributes.length > 0) {
-        const newSelectedAttributes = {}
-        result.data.attributes.forEach(attr => {
-          newSelectedAttributes[attr.name] = attr.option
-          console.log(`🎯 Atributo inicializado: "${attr.name}" = "${attr.option}"`)
-        })
-        selectedAttributes.value = newSelectedAttributes
-      }
+      // El store ya actualizó wooCurrentVariation.value
+      // Los computed properties (displayPrice, displayImages, isStockAvailable) se actualizan automáticamente
       
       // Reset del índice de imagen cuando cambia la variación
       selectedImageIndex.value = 0
@@ -535,7 +600,118 @@ const selectVariationByAttributes = async (selectedOptions) => {
   }
 }
 
+// ⭐ NUEVO: Verificar stock en tiempo real
+const checkRealTimeStock = async () => {
+  if (!productId.value || isCheckingStock.value) return
+  
+  // ⭐ Si es producto variable, NO consultar stock del padre
+  // El stock se maneja por variación individual
+  if (isProductVariable.value) {
+    console.log('📦 Producto variable detectado - stock se maneja por variación')
+    realTimeStock.value = {
+      status: 'variable',
+      requires_variation_selection: true,
+      available: true // Disponible si hay variaciones
+    }
+    return
+  }
+  
+  isCheckingStock.value = true
+  
+  try {
+    console.log(`📦 Consultando stock en tiempo real para producto ${productId.value}...`)
+    const response = await get_request(`products/woocommerce/products/${productId.value}/stock/`)
+    
+    if (response.data.success) {
+      realTimeStock.value = response.data.stock
+      console.log('✅ Stock actualizado:', {
+        status: realTimeStock.value.status,
+        quantity: realTimeStock.value.quantity,
+        available: realTimeStock.value.available,
+        source: response.data.source
+      })
+      
+      // Actualizar también el producto en el store si es necesario
+      if (product.value && !isProductVariable.value) {
+        product.value.stock_status = realTimeStock.value.status
+        product.value.stock_quantity = realTimeStock.value.quantity
+        product.value.in_stock = realTimeStock.value.in_stock
+      }
+    }
+  } catch (err) {
+    console.error('❌ Error consultando stock en tiempo real:', err)
+    // Usar stock del producto como fallback
+    if (product.value) {
+      realTimeStock.value = {
+        status: product.value.stock_status,
+        quantity: product.value.stock_quantity,
+        manage_stock: product.value.manage_stock,
+        in_stock: product.value.in_stock,
+        available: product.value.stock_status === 'instock'
+      }
+    }
+  } finally {
+    isCheckingStock.value = false
+  }
+}
+
+// ⭐ NUEVO: Iniciar polling de stock cada 30 segundos
+const startStockPolling = () => {
+  // Limpiar intervalo anterior si existe
+  if (stockCheckInterval.value) {
+    clearInterval(stockCheckInterval.value)
+  }
+  
+  // Consultar stock cada 30 segundos
+  stockCheckInterval.value = setInterval(() => {
+    checkRealTimeStock()
+  }, 30000) // 30 segundos
+  
+  console.log('⏰ Polling de stock iniciado (cada 30 segundos)')
+}
+
+// ⭐ NUEVO: Detener polling de stock
+const stopStockPolling = () => {
+  if (stockCheckInterval.value) {
+    clearInterval(stockCheckInterval.value)
+    stockCheckInterval.value = null
+    console.log('⏰ Polling de stock detenido')
+  }
+}
+
 // Methods
+// ⭐ NUEVO: Preseleccionar la primera variación disponible
+const preselectFirstVariation = async () => {
+  if (!isProductVariable.value || availableVariations.value.length === 0) {
+    return
+  }
+  
+  console.log('🎯 Preseleccionando primera variación...')
+  
+  // Obtener la primera variación
+  const firstVariation = availableVariations.value[0]
+  
+  // Preseleccionar los atributos de la primera variación
+  selectedAttributes.value = { ...firstVariation.attributes }
+  
+  console.log('📋 Atributos preseleccionados:', selectedAttributes.value)
+  
+  // ⭐ PASO 1: Actualizar inmediatamente con datos de available_variations (rápido)
+  productStore.setWooCurrentVariation({
+    id: firstVariation.id,
+    price: firstVariation.price,
+    stock_status: firstVariation.in_stock ? 'instock' : 'outofstock',
+    stock_quantity: firstVariation.stock_quantity,
+    attributes: firstVariation.attributes,
+    image: firstVariation.image || null
+  })
+  
+  console.log(`✅ Primera variación preseleccionada: ID ${firstVariation.id}, Precio: $${firstVariation.price}`)
+  
+  // ⭐ PASO 2: Cargar detalle completo de la variación desde el backend
+  await loadVariation(firstVariation.id)
+}
+
 const loadProduct = async () => {
   if (!productId.value) return
   
@@ -546,10 +722,20 @@ const loadProduct = async () => {
     if (result.success) {
       console.log('✅ Producto cargado:', result.data.name)
       
-      // ⭐ Si es producto variable, cargar variaciones automáticamente
+      // ⭐ Si es producto variable, el backend ya incluye available_variations
       if (result.data.type === 'variable') {
-        await loadVariations()
+        console.log(`📦 Producto variable con ${result.data.variations_count} variaciones`)
+        console.log('✅ available_variations ya incluidas:', result.data.available_variations?.length || 0)
+        
+        // ⭐ NUEVO: Preseleccionar la primera variación automáticamente
+        preselectFirstVariation()
       }
+      
+      // ⭐ NUEVO: Consultar stock en tiempo real después de cargar el producto
+      await checkRealTimeStock()
+      
+      // ⭐ NUEVO: Iniciar polling de stock
+      startStockPolling()
     } else {
       console.error('❌ Error cargando producto:', result.error)
     }
@@ -585,6 +771,42 @@ const updateThumbnailScroll = () => {
   }
 }
 
+// ⭐ NUEVO: Buscar variación que coincida con atributos seleccionados (usando available_variations)
+const findMatchingVariationFromSelected = () => {
+  if (!isProductVariable.value || availableVariations.value.length === 0) {
+    console.warn('⚠️ No hay producto variable o no hay variaciones disponibles')
+    return null
+  }
+  
+  console.log('🔍 Buscando variación con atributos seleccionados:', selectedAttributes.value)
+  console.log('📦 Variaciones disponibles:', availableVariations.value)
+  
+  // Buscar variación que coincida con TODOS los atributos seleccionados
+  const match = availableVariations.value.find(variation => {
+    console.log(`🔎 Comparando con variación ${variation.id}:`, variation.attributes)
+    
+    const matches = Object.keys(selectedAttributes.value).every(attrName => {
+      const selectedValue = selectedAttributes.value[attrName]
+      const variationValue = variation.attributes[attrName]
+      
+      console.log(`  - Atributo "${attrName}": seleccionado="${selectedValue}", variación="${variationValue}", match=${variationValue === selectedValue}`)
+      
+      return variationValue === selectedValue
+    })
+    
+    console.log(`  → Variación ${variation.id} ${matches ? '✅ COINCIDE' : '❌ NO coincide'}`)
+    return matches
+  })
+  
+  if (match) {
+    console.log('✅ Variación encontrada:', match.id)
+  } else {
+    console.error('❌ No se encontró variación que coincida con:', selectedAttributes.value)
+  }
+  
+  return match
+}
+
 const selectAttribute = async (attributeName, option) => {
   // Crear nuevo objeto para asegurar reactividad
   selectedAttributes.value = {
@@ -593,10 +815,34 @@ const selectAttribute = async (attributeName, option) => {
   }
   
   console.log(`🎯 Atributo seleccionado: ${attributeName} = ${option}`)
+  console.log('📋 Atributos seleccionados:', selectedAttributes.value)
   
-  // ⭐ Si es producto variable, buscar y cargar la variación correspondiente
+  // ⭐ Si es producto variable, buscar variación en available_variations
   if (isProductVariable.value) {
-    await selectVariationByAttributes(selectedAttributes.value)
+    const matchingVariation = findMatchingVariationFromSelected()
+    
+    if (matchingVariation) {
+      console.log('✅ Variación encontrada en available_variations:', matchingVariation.id)
+      console.log('💰 Precio de variación:', matchingVariation.price)
+      console.log('🖼️ Imagen de variación:', matchingVariation.image)
+      
+      // ⭐ PASO 1: Actualizar inmediatamente con datos de available_variations (rápido)
+      productStore.setWooCurrentVariation({
+        id: matchingVariation.id,
+        price: matchingVariation.price,
+        stock_status: matchingVariation.in_stock ? 'instock' : 'outofstock',
+        stock_quantity: matchingVariation.stock_quantity,
+        attributes: matchingVariation.attributes,
+        image: matchingVariation.image || null
+      })
+      
+      // ⭐ PASO 2: Cargar detalle completo de la variación desde el backend
+      // Esto trae más información (imágenes adicionales, dimensiones, etc.)
+      await loadVariation(matchingVariation.id)
+    } else {
+      console.warn('⚠️ No se encontró variación con esos atributos')
+      productStore.setWooCurrentVariation(null)
+    }
   }
 }
 
@@ -715,6 +961,11 @@ onMounted(() => {
   loadProduct()
 })
 
+// ⭐ NUEVO: Limpiar polling cuando se desmonte el componente
+onBeforeUnmount(() => {
+  stopStockPolling()
+})
+
 // ⭐ NUEVO: Watch para inicializar atributos de variación con primera variación (solo productos variables)
 watch(currentVariation, (newVariation) => {
   // Si hay variación nueva, inicializar atributos seleccionados
@@ -730,6 +981,28 @@ watch(currentVariation, (newVariation) => {
     
     // Reemplazar el objeto completo para asegurar reactividad
     selectedAttributes.value = newSelectedAttributes
+  }
+})
+
+// ⭐ NUEVO: Watch para cambios en productId (navegación entre productos)
+watch(productId, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    console.log(`🔄 Cambio de producto detectado: ${oldId} → ${newId}`)
+    
+    // Detener polling anterior
+    stopStockPolling()
+    
+    // Limpiar stock anterior
+    realTimeStock.value = null
+    
+    // Limpiar atributos seleccionados
+    selectedAttributes.value = {}
+    
+    // Limpiar variación actual
+    productStore.setWooCurrentVariation(null)
+    
+    // Cargar nuevo producto
+    loadProduct()
   }
 })
 
@@ -1322,6 +1595,7 @@ watch(product, (newProduct, oldProduct) => {
   }
 }
 
+
 /* Description - Mobile First */
 .product-description {
   color: #6b7280;
@@ -1656,6 +1930,16 @@ watch(product, (newProduct, oldProduct) => {
 
 .add-to-cart-btn.success:hover {
   background-color: #c084fc; /* Brand purple hover */
+}
+
+.add-to-cart-btn.out-of-stock {
+  background-color: #ef4444;
+  cursor: not-allowed;
+}
+
+.add-to-cart-btn.out-of-stock:hover {
+  background-color: #dc2626;
+  transform: none;
 }
 
 .loading-text {

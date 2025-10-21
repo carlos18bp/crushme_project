@@ -14,8 +14,11 @@ app.use(pinia);
 app.use(router);
 app.use(i18n);
 
-// Initialize i18n before mounting the app
+// Initialize i18n in background (non-blocking)
 const i18nStore = useI18nStore();
-i18nStore.initializeIfNeeded().then(() => {
-  app.mount('#app');
+i18nStore.initializeIfNeeded().catch(error => {
+  console.warn('Language detection failed, using default:', error);
 });
+
+// Mount app immediately
+app.mount('#app');

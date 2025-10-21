@@ -441,14 +441,15 @@ def capture_paypal_order(request):
                 "variation_id": 5679  // Optional - for product variations
             }
         ],
-        "shipping_address": "Carrera 80 #50-25 Apto 301",
+        "shipping_address": "Carrera 80 #50-25",
+        "shipping_address_line_2": "Apto 301",  // Optional - Additional address details
         "shipping_city": "Medellín",
         "shipping_state": "Antioquia",
         "shipping_postal_code": "050031",
         "shipping_country": "CO",
         "phone_number": "+57 300 1234567",
         "shipping": 15000,  // ← Costo de envío en pesos colombianos (opcional)
-        "notes": "Optional notes",
+        "notes": "Optional notes or additional delivery instructions",
         "gift_message": "¡Feliz cumpleaños! Espero que te guste este regalo ❤️"
     }
     
@@ -524,6 +525,7 @@ def capture_paypal_order(request):
             name=customer_name,
             total=order_total_with_shipping,
             address_line_1=request.data.get('shipping_address', ''),
+            address_line_2=request.data.get('shipping_address_line_2', ''),  # Capture address_line_2 from frontend
             city=request.data.get('shipping_city', ''),
             state=request.data.get('shipping_state', ''),
             zipcode=request.data.get('shipping_postal_code', ''),

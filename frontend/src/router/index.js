@@ -254,8 +254,13 @@ routes.forEach(route => {
 router.beforeEach(async (to, from, next) => {
   const i18nStore = useI18nStore();
   
-  // Ensure language detection has run at least once
-  await i18nStore.initializeIfNeeded();
+  // Try to initialize if needed, but don't block navigation if it fails
+  if (!i18nStore.isInitialized) {
+    // Fire and forget - don't await
+    i18nStore.initializeIfNeeded().catch(err => {
+      console.warn('Language detection failed, using default:', err);
+    });
+  }
   
   // Extract language from URL
   const urlLang = to.path.split('/')[1];

@@ -37,11 +37,15 @@
             </div>
             <div class="relative flex justify-end h-48 sm:h-56 md:h-64 w-full overflow-hidden bg-gray-100">
                 <img
+                    v-if="category.image"
                     :src="category.image"
                     :alt="category.title"
                     class="h-full max-h-48 sm:max-h-56 md:max-h-64 object-cover"
                     @error="handleImageError"
                 />
+                <div v-else class="flex items-center justify-center w-full h-full bg-gradient-to-br from-purple-100 to-pink-100">
+                  <span class="text-6xl">{{ category.icon }}</span>
+                </div>
             </div>
           </div>
         </div>
@@ -78,10 +82,20 @@
 
   // Mapear temas a formato de categorías con imágenes reales del backend
   const categories = computed(() => {
+    console.log('🔍 [CategoryCards] themes.value:', themes.value)
+    
     return themes.value.slice(0, 4).map(theme => {
-      // Usar imagen real del backend si está disponible, sino fallback a placeholder
-      const imageUrl = theme.first_product_image ||
-                      `https://via.placeholder.com/400x300/${getThemeColor(theme.theme)}/FFFFFF?text=${encodeURIComponent(theme.name)}`;
+      console.log('🔍 [CategoryCards] Procesando theme:', {
+        name: theme.name,
+        theme: theme.theme,
+        first_product_image: theme.first_product_image,
+        hasImage: !!theme.first_product_image
+      })
+      
+      // Usar SOLO la imagen real del backend (sin fallback)
+      const imageUrl = theme.first_product_image;
+
+      console.log('🔍 [CategoryCards] imageUrl final:', imageUrl)
 
       return {
         id: theme.theme,
@@ -92,18 +106,6 @@
       }
     })
   })
-
-  // Función para obtener colores para cada tema
-  const getThemeColor = (themeSlug) => {
-    const colors = {
-      'juguetes': 'FF69B4',
-      'lenceria': '4A6FA5',
-      'accesorios': 'E9C3CD',
-      'ropa-interior': 'DDA0DD',
-      'default': '9D51FF'
-    }
-    return colors[themeSlug] || colors.default
-  }
 
   // Función para manejar clic en categoría
   const handleCategoryClick = async (category) => {
@@ -151,7 +153,9 @@
   
   // Función para manejar errores de imagen
   const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/400x300/9D51FF/FFFFFF?text=Category'
+    console.error('❌ Error cargando imagen:', e.target.src)
+    // Ocultar la imagen si falla la carga
+    e.target.style.display = 'none'
   }
 
   // Función para reintentar cargar categorías

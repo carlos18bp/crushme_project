@@ -156,6 +156,7 @@ class WooCommerceOrderService:
             if response.status_code in [200, 201]:
                 wc_order = response.json()
                 logger.info(f"✅ Order {order.order_number} created in WooCommerce with ID: {wc_order.get('id')}")
+                
                 return {
                     'success': True,
                     'woocommerce_order_id': wc_order.get('id'),
@@ -164,6 +165,7 @@ class WooCommerceOrderService:
                 }
             else:
                 logger.error(f"❌ WooCommerce order creation failed: {response.status_code} - {response.text}")
+                
                 return {
                     'success': False,
                     'error': f"API returned status {response.status_code}",
@@ -187,12 +189,30 @@ class WooCommerceOrderService:
             order: Order model instance
             shipping_cost: Optional shipping cost in Colombian pesos
         """
-        # Split name into first_name and last_name
-        name_parts = order.name.split(' ', 1)
-        first_name = name_parts[0] if name_parts else ''
-        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        # Determine shipping recipient based on order type
+        if order.is_gift and order.receiver_username:
+            # For gift orders, get receiver's shipping info from their profile
+            shipping_name, shipping_phone, shipping_address = self._get_receiver_shipping_info(order.receiver_username)
+        else:
+            # For normal orders, use order's shipping info
+            shipping_name = order.name
+            shipping_phone = order.phone
+            shipping_address = {
+                'address_line_1': order.address_line_1,
+                'address_line_2': order.address_line_2 if order.address_line_2 else '',
+                'city': order.city,
+                'state': order.state,
+                'zipcode': order.zipcode if order.zipcode else '',
+                'country': order.country,
+                'additional_details': order.notes if order.notes else ''  # Use notes as additional details for normal orders
+            }
         
-        # Build line items
+        # Split shipping name into first_name and last_name
+        name_parts = shipping_name.split(' ', 1)
+        shipping_first_name = name_parts[0] if name_parts else ''
+        shipping_last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Build line items (only from actual order items, no additional products)
         line_items = []
         for item in order.items.all():
             line_item = {
@@ -204,13 +224,6 @@ class WooCommerceOrderService:
                 line_item['variation_id'] = item.woocommerce_variation_id
 
             line_items.append(line_item)
-
-        # Always add additional product (42351004) to every order
-        logger.info(f"📦 Adding additional product 42351004 (quantity: 1) to order {order.order_number}")
-        line_items.append({
-            'product_id': 42351004,
-            'quantity': 1
-        })
         
         # Fixed billing (your store info)
         billing = {
@@ -226,18 +239,26 @@ class WooCommerceOrderService:
             'phone': '3123902346'
         }
         
-        # Build shipping (customer info)
+        # Build shipping (recipient info - either customer or gift receiver)
+        # Combine address_line_2 and additional_details if both exist
+        address_2_combined = shipping_address['address_line_2']
+        if shipping_address.get('additional_details'):
+            if address_2_combined:
+                address_2_combined += ' - ' + shipping_address['additional_details']
+            else:
+                address_2_combined = shipping_address['additional_details']
+        
         shipping = {
-            'first_name': first_name,
-            'last_name': last_name,
+            'first_name': shipping_first_name,
+            'last_name': shipping_last_name,
             'company': '',
-            'address_1': order.address_line_1,
-            'address_2': order.address_line_2 if order.address_line_2 else '',
-            'city': order.city,
-            'state': self._get_state_code(order.state),
-            'postcode': order.zipcode if order.zipcode else '',
-            'country': order.country,
-            'phone': order.phone
+            'address_1': shipping_address['address_line_1'],
+            'address_2': address_2_combined,
+            'city': shipping_address['city'],
+            'state': self._get_state_code(shipping_address['state']),
+            'postcode': shipping_address['zipcode'],
+            'country': shipping_address['country'],
+            'phone': shipping_phone
         }
         
         # Base payload
@@ -260,7 +281,10 @@ class WooCommerceOrderService:
             'customer_note': customer_note
         }
 
-        # Add shipping information
+        # Always add shipping address (recipient info)
+        payload['shipping'] = shipping
+        
+        # Add shipping cost if provided
         if shipping_cost and shipping_cost > 0:
             # Use shipping cost directly (frontend sends Colombian pesos)
             payload['shipping_lines'] = [
@@ -271,29 +295,30 @@ class WooCommerceOrderService:
                 }
             ]
             logger.info(f"📦 Added shipping_lines: {shipping_cost} for order {order.order_number}")
-        else:
-            # Keep shipping address if no shipping cost (backward compatibility)
-            payload['shipping'] = shipping
         
         # Add country-specific metadata
-        if order.country == 'CO':
-            payload['meta_data'] = self._build_colombian_metadata(order)
+        if shipping_address['country'] == 'CO':
+            payload['meta_data'] = self._build_colombian_metadata(order, shipping_address)
         
         return payload
     
-    def _build_colombian_metadata(self, order):
+    def _build_colombian_metadata(self, order, shipping_address):
         """
         Build Colombian-specific metadata
         Parses address and adds required fields
+        
+        Args:
+            order: Order model instance
+            shipping_address: Dictionary with shipping address info (recipient's address)
         """
         # Parse billing address (fixed store address: "CRA 69C 31 36 SUR ED GRIS PISO 4")
         billing_parsed = ColombianAddressParser.parse('CRA 69C 31 36 SUR ED GRIS PISO 4')
         
-        # Parse shipping address (customer address)
-        shipping_parsed = ColombianAddressParser.parse(order.address_line_1)
+        # Parse shipping address (recipient's address - either customer or gift receiver)
+        shipping_parsed = ColombianAddressParser.parse(shipping_address['address_line_1'])
         
         # Extract neighborhood from address_line_2 or use city
-        shipping_neighborhood = order.address_line_2 if order.address_line_2 else order.city
+        shipping_neighborhood = shipping_address['address_line_2'] if shipping_address['address_line_2'] else shipping_address['city']
         
         meta_data = [
             # Billing metadata (fixed for your store - parsed from "CRA 69C 31 36 SUR ED GRIS PISO 4")
@@ -326,6 +351,75 @@ class WooCommerceOrderService:
         ]
         
         return meta_data
+    
+    def _get_receiver_shipping_info(self, receiver_username):
+        """
+        Get shipping information for gift receiver from their user profile
+        
+        Args:
+            receiver_username: Username of the gift receiver
+            
+        Returns:
+            tuple: (name, phone, shipping_address_dict)
+        """
+        from django.contrib.auth import get_user_model
+        
+        User = get_user_model()
+        
+        try:
+            receiver = User.objects.get(username=receiver_username)
+            
+            # Get receiver's name
+            receiver_name = receiver.get_full_name() or receiver.username
+            
+            # Get receiver's phone (from profile)
+            receiver_phone = receiver.phone or ''
+            
+            # Try to get receiver's default shipping address from UserAddress model
+            default_address = receiver.addresses.filter(is_default_shipping=True).first()
+            
+            if not default_address:
+                # If no default, get the most recent address
+                default_address = receiver.addresses.order_by('-created_at').first()
+            
+            if default_address:
+                shipping_address = {
+                    'address_line_1': default_address.address_line_1,
+                    'address_line_2': default_address.address_line_2 or '',
+                    'city': default_address.city,
+                    'state': default_address.state,
+                    'zipcode': default_address.zip_code,
+                    'country': default_address.country,
+                    'additional_details': default_address.additional_details or ''
+                }
+                logger.info(f"🎁 Retrieved shipping address for gift receiver: {receiver_username}")
+            else:
+                # No address found for receiver
+                logger.warning(f"⚠️ No address found for gift receiver {receiver_username}, using empty address")
+                shipping_address = {
+                    'address_line_1': '',
+                    'address_line_2': '',
+                    'city': '',
+                    'state': '',
+                    'zipcode': '',
+                    'country': 'CO',
+                    'additional_details': ''
+                }
+            
+            return receiver_name, receiver_phone, shipping_address
+            
+        except User.DoesNotExist:
+            logger.warning(f"⚠️ Gift receiver {receiver_username} not found, using empty address as fallback")
+            # Fallback to empty/default values if receiver not found
+            return receiver_username, '', {
+                'address_line_1': '',
+                'address_line_2': '',
+                'city': '',
+                'state': '',
+                'zipcode': '',
+                'country': 'CO',
+                'additional_details': ''
+            }
     
     def _get_state_code(self, state_name):
         """

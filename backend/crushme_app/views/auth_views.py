@@ -78,9 +78,12 @@ def signup(request):
             
         except Exception as e:
             # If email fails, delete the user and return error
+            import traceback
+            print(f"Email sending error: {str(e)}")
+            print(traceback.format_exc())
             user.delete()
             return Response({
-                'error': 'Failed to send verification email. Please try again.'
+                'error': f'Failed to send verification email: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

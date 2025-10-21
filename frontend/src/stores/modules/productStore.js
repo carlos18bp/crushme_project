@@ -696,6 +696,14 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
+   * ⭐ NUEVO: Set current variation manually
+   * @param {Object} variation - Variation object
+   */
+  function setWooCurrentVariation(variation) {
+    wooCurrentVariation.value = variation;
+  }
+
+  /**
    * Get WooCommerce product by ID from current products
    * @param {number} productId - WooCommerce product ID
    */
@@ -1183,6 +1191,7 @@ export const useProductStore = defineStore('product', () => {
     clearWooCategory,
     clearWooCurrentProduct,
     clearWooVariations, // ⭐ NUEVO: Limpiar variaciones
+    setWooCurrentVariation, // ⭐ NUEVO: Setear variación actual
     clearWooError,
     clearFeaturedCategories, // ⭐ NUEVO: Limpiar categorías destacadas
     setWooLoading,

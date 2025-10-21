@@ -15,7 +15,10 @@ from .models import (
     User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser,
     Product, Cart, CartItem, 
     Order, OrderItem, WishList, WishListItem, FavoriteWishList,
-    Review, Feed, FavoriteProduct
+    Review, Feed, FavoriteProduct,
+    WooCommerceCategory, WooCommerceProduct, WooCommerceProductImage,
+    WooCommerceProductVariation, ProductSyncLog,
+    TranslatedContent, CategoryPriceMargin, DefaultPriceMargin
 )
 
 # AttachmentsAdminMixin handles the gallery management automatically
@@ -741,6 +744,461 @@ class FeedAdmin(admin.ModelAdmin):
 
 
 # ===========================
+# WOOCOMMERCE MODELS ADMIN
+# ===========================
+
+@admin.register(WooCommerceCategory)
+class WooCommerceCategoryAdmin(admin.ModelAdmin):
+    """Admin for WooCommerce categories"""
+    list_display = ('wc_id', 'name', 'slug', 'product_count', 'parent_name', 'synced_at')
+    list_filter = ('synced_at', 'wc_parent_id')
+    search_fields = ('name', 'slug', 'wc_id')
+    readonly_fields = ('wc_id', 'synced_at', 'created_at')
+    ordering = ('display_order', 'name')
+    
+    fieldsets = (
+        ('WooCommerce Info', {
+            'fields': ('wc_id', 'name', 'slug', 'description')
+        }),
+        ('Hierarchy', {
+            'fields': ('wc_parent_id', 'parent')
+        }),
+        ('Stats', {
+            'fields': ('product_count', 'display_order')
+        }),
+        ('Image', {
+            'fields': ('image_url',)
+        }),
+        ('Timestamps', {
+            'fields': ('synced_at', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def parent_name(self, obj):
+        """Display parent category name"""
+        if obj.parent:
+            return obj.parent.name
+        return "—"
+    parent_name.short_description = 'Parent'
+    parent_name.admin_order_field = 'parent__name'
+
+
+class WooCommerceProductImageInline(admin.TabularInline):
+    """Inline admin for product images"""
+    model = WooCommerceProductImage
+    extra = 0
+    readonly_fields = ('wc_id', 'image_preview', 'synced_at')
+    fields = ('position', 'image_preview', 'src', 'name', 'alt')
+    
+    def image_preview(self, obj):
+        """Display image preview"""
+        if obj.src:
+            return format_html(
+                '<img src="{}" width="60" height="60" style="object-fit: cover;" />',
+                obj.src
+            )
+        return "No image"
+    image_preview.short_description = 'Preview'
+
+
+@admin.register(WooCommerceProduct)
+class WooCommerceProductAdmin(admin.ModelAdmin):
+    """Admin for WooCommerce products"""
+    list_display = (
+        'wc_id', 'name_truncated', 'product_type', 'price', 
+        'stock_status_display', 'stock_quantity', 'status', 'synced_at'
+    )
+    list_filter = ('product_type', 'status', 'stock_status', 'on_sale', 'featured', 'synced_at')
+    search_fields = ('name', 'wc_id', 'slug')
+    readonly_fields = (
+        'wc_id', 'slug', 'permalink', 'date_created_wc', 
+        'date_modified_wc', 'synced_at', 'created_at', 'primary_image_preview'
+    )
+    ordering = ('-date_created_wc',)
+    filter_horizontal = ('categories',)
+    
+    fieldsets = (
+        ('WooCommerce Info', {
+            'fields': ('wc_id', 'name', 'slug', 'permalink', 'product_type', 'status')
+        }),
+        ('Descriptions', {
+            'fields': ('short_description', 'description'),
+            'classes': ('collapse',)
+        }),
+        ('Pricing', {
+            'fields': ('price', 'regular_price', 'sale_price', 'on_sale')
+        }),
+        ('Stock', {
+            'fields': ('stock_status', 'stock_quantity', 'manage_stock')
+        }),
+        ('Categories', {
+            'fields': ('categories',)
+        }),
+        ('Attributes & Variations', {
+            'fields': ('attributes', 'default_attributes'),
+            'classes': ('collapse',)
+        }),
+        ('Dimensions', {
+            'fields': ('weight', 'length', 'width', 'height'),
+            'classes': ('collapse',)
+        }),
+        ('Rating & Sales', {
+            'fields': ('average_rating', 'rating_count', 'total_sales', 'featured')
+        }),
+        ('Images', {
+            'fields': ('primary_image_preview',)
+        }),
+        ('Timestamps', {
+            'fields': ('date_created_wc', 'date_modified_wc', 'synced_at', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    inlines = [WooCommerceProductImageInline]
+    
+    def name_truncated(self, obj):
+        """Display truncated product name"""
+        return obj.name[:50] + '...' if len(obj.name) > 50 else obj.name
+    name_truncated.short_description = 'Product Name'
+    name_truncated.admin_order_field = 'name'
+    
+    def stock_status_display(self, obj):
+        """Display stock status with color"""
+        colors = {
+            'instock': 'green',
+            'outofstock': 'red',
+            'onbackorder': 'orange',
+        }
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            colors.get(obj.stock_status, 'gray'), obj.stock_status.upper()
+        )
+    stock_status_display.short_description = 'Stock Status'
+    stock_status_display.admin_order_field = 'stock_status'
+    
+    def primary_image_preview(self, obj):
+        """Display primary image"""
+        primary = obj.primary_image
+        if primary and primary.src:
+            return format_html(
+                '<img src="{}" width="150" height="150" style="object-fit: cover;" />',
+                primary.src
+            )
+        return "No image"
+    primary_image_preview.short_description = 'Primary Image'
+
+
+@admin.register(WooCommerceProductVariation)
+class WooCommerceProductVariationAdmin(admin.ModelAdmin):
+    """Admin for product variations"""
+    list_display = (
+        'wc_id', 'product_name', 'attribute_description', 
+        'price', 'stock_status_display', 'stock_quantity', 'synced_at'
+    )
+    list_filter = ('status', 'stock_status', 'synced_at')
+    search_fields = ('wc_id', 'product__name', 'attributes')
+    readonly_fields = (
+        'wc_id', 'wc_product_id', 'permalink', 'attributes',
+        'date_created_wc', 'date_modified_wc', 'synced_at', 'created_at',
+        'image_preview'
+    )
+    ordering = ('-synced_at',)
+    
+    fieldsets = (
+        ('WooCommerce Info', {
+            'fields': ('wc_id', 'wc_product_id', 'product', 'permalink', 'status')
+        }),
+        ('Variation Attributes', {
+            'fields': ('attributes',)
+        }),
+        ('Pricing', {
+            'fields': ('price', 'regular_price', 'sale_price', 'on_sale')
+        }),
+        ('Stock', {
+            'fields': ('stock_status', 'stock_quantity', 'manage_stock')
+        }),
+        ('Dimensions', {
+            'fields': ('weight', 'length', 'width', 'height'),
+            'classes': ('collapse',)
+        }),
+        ('Image', {
+            'fields': ('image_url', 'image_preview')
+        }),
+        ('Timestamps', {
+            'fields': ('date_created_wc', 'date_modified_wc', 'synced_at', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def product_name(self, obj):
+        """Display parent product name"""
+        return obj.product.name[:40] + '...' if len(obj.product.name) > 40 else obj.product.name
+    product_name.short_description = 'Product'
+    product_name.admin_order_field = 'product__name'
+    
+    def attribute_description(self, obj):
+        """Display variation attributes"""
+        return obj.get_attribute_description()
+    attribute_description.short_description = 'Attributes'
+    
+    def stock_status_display(self, obj):
+        """Display stock status with color"""
+        colors = {
+            'instock': 'green',
+            'outofstock': 'red',
+            'onbackorder': 'orange',
+        }
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            colors.get(obj.stock_status, 'gray'), obj.stock_status.upper()
+        )
+    stock_status_display.short_description = 'Stock'
+    stock_status_display.admin_order_field = 'stock_status'
+    
+    def image_preview(self, obj):
+        """Display variation image"""
+        if obj.image_url:
+            return format_html(
+                '<img src="{}" width="100" height="100" style="object-fit: cover;" />',
+                obj.image_url
+            )
+        return "No image"
+    image_preview.short_description = 'Image'
+
+
+@admin.register(ProductSyncLog)
+class ProductSyncLogAdmin(admin.ModelAdmin):
+    """Admin for sync logs"""
+    list_display = (
+        'started_at', 'sync_type', 'status_display', 
+        'categories_synced', 'products_synced', 'variations_synced',
+        'errors_count', 'duration_display'
+    )
+    list_filter = ('sync_type', 'status', 'started_at')
+    search_fields = ('error_details',)
+    readonly_fields = (
+        'sync_type', 'status', 'categories_synced', 'products_synced',
+        'variations_synced', 'images_synced', 'errors_count', 'error_details',
+        'started_at', 'completed_at', 'duration_seconds'
+    )
+    ordering = ('-started_at',)
+    
+    fieldsets = (
+        ('Sync Info', {
+            'fields': ('sync_type', 'status', 'started_at', 'completed_at', 'duration_seconds')
+        }),
+        ('Statistics', {
+            'fields': ('categories_synced', 'products_synced', 'variations_synced', 'images_synced')
+        }),
+        ('Errors', {
+            'fields': ('errors_count', 'error_details'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def status_display(self, obj):
+        """Display status with color"""
+        colors = {
+            'started': 'blue',
+            'success': 'green',
+            'failed': 'red',
+            'partial': 'orange',
+        }
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            colors.get(obj.status, 'gray'), obj.get_status_display().upper()
+        )
+    status_display.short_description = 'Status'
+    status_display.admin_order_field = 'status'
+    
+    def duration_display(self, obj):
+        """Display duration in human-readable format"""
+        if obj.duration_seconds:
+            minutes, seconds = divmod(obj.duration_seconds, 60)
+            if minutes > 0:
+                return f"{minutes}m {seconds}s"
+            return f"{seconds}s"
+        return "—"
+    duration_display.short_description = 'Duration'
+    duration_display.admin_order_field = 'duration_seconds'
+
+
+# ===========================
+# TRANSLATION & PRICE MODELS ADMIN
+# ===========================
+
+@admin.register(TranslatedContent)
+class TranslatedContentAdmin(admin.ModelAdmin):
+    """Admin for translated content cache"""
+    list_display = (
+        'content_type', 'object_id', 'target_language',
+        'source_text_preview', 'translated_text_preview',
+        'is_verified', 'updated_at'
+    )
+    list_filter = ('content_type', 'target_language', 'is_verified', 'translation_engine')
+    search_fields = ('object_id', 'source_text', 'translated_text')
+    readonly_fields = ('created_at', 'updated_at')
+    ordering = ('-updated_at',)
+    
+    fieldsets = (
+        ('Content Info', {
+            'fields': ('content_type', 'object_id')
+        }),
+        ('Languages', {
+            'fields': ('source_language', 'target_language')
+        }),
+        ('Content', {
+            'fields': ('source_text', 'translated_text')
+        }),
+        ('Metadata', {
+            'fields': ('translation_engine', 'is_verified', 'created_at', 'updated_at')
+        }),
+    )
+    
+    def source_text_preview(self, obj):
+        """Display truncated source text"""
+        text = obj.source_text[:80] + '...' if len(obj.source_text) > 80 else obj.source_text
+        return text
+    source_text_preview.short_description = 'Source Text'
+    
+    def translated_text_preview(self, obj):
+        """Display truncated translated text"""
+        text = obj.translated_text[:80] + '...' if len(obj.translated_text) > 80 else obj.translated_text
+        return text
+    translated_text_preview.short_description = 'Translated Text'
+
+
+@admin.register(CategoryPriceMargin)
+class CategoryPriceMarginAdmin(admin.ModelAdmin):
+    """Admin for category price margins"""
+    list_display = (
+        'category_name', 'margin_display', 'products_count', 'is_active', 'updated_at'
+    )
+    list_filter = ('is_active', 'use_fixed_multiplier')
+    search_fields = ('category__name', 'notes')
+    readonly_fields = ('created_at', 'updated_at', 'products_count')
+    ordering = ('category__name',)
+    actions = ['activate_margins', 'deactivate_margins', 'apply_20_percent', 'apply_30_percent', 'apply_40_percent']
+    
+    fieldsets = (
+        ('Category', {
+            'fields': ('category',)
+        }),
+        ('Margin Configuration', {
+            'fields': ('margin_percentage', 'use_fixed_multiplier', 'fixed_multiplier'),
+            'description': 'Configure profit margin for this category. Example: 30% margin means selling price = cost × 1.30'
+        }),
+        ('Status', {
+            'fields': ('is_active', 'notes')
+        }),
+        ('Statistics', {
+            'fields': ('products_count',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def category_name(self, obj):
+        """Display category name"""
+        return obj.category.name
+    category_name.short_description = 'Category'
+    category_name.admin_order_field = 'category__name'
+    
+    def products_count(self, obj):
+        """Count products in this category"""
+        count = obj.category.products.filter(status='publish').count()
+        return format_html(
+            '<span style="color: #666;">{} products</span>',
+            count
+        )
+    products_count.short_description = 'Products'
+    
+    def margin_display(self, obj):
+        """Display margin configuration"""
+        if obj.use_fixed_multiplier:
+            return format_html(
+                '<span style="color: blue; font-weight: bold;">x{}</span>',
+                obj.fixed_multiplier
+            )
+        return format_html(
+            '<span style="color: green; font-weight: bold;">+{}%</span>',
+            obj.margin_percentage
+        )
+    margin_display.short_description = 'Margin'
+    
+    # Admin actions
+    def activate_margins(self, request, queryset):
+        """Activate selected margins"""
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} margins activated successfully.')
+    activate_margins.short_description = 'Activate selected margins'
+    
+    def deactivate_margins(self, request, queryset):
+        """Deactivate selected margins"""
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} margins deactivated successfully.')
+    deactivate_margins.short_description = 'Deactivate selected margins'
+    
+    def apply_20_percent(self, request, queryset):
+        """Apply 20 percent margin to selected categories"""
+        updated = queryset.update(margin_percentage=20, use_fixed_multiplier=False, is_active=True)
+        self.message_user(request, f'20% margin applied to {updated} categories.')
+    apply_20_percent.short_description = 'Apply 20 percent margin'
+    
+    def apply_30_percent(self, request, queryset):
+        """Apply 30 percent margin to selected categories"""
+        updated = queryset.update(margin_percentage=30, use_fixed_multiplier=False, is_active=True)
+        self.message_user(request, f'30% margin applied to {updated} categories.')
+    apply_30_percent.short_description = 'Apply 30 percent margin'
+    
+    def apply_40_percent(self, request, queryset):
+        """Apply 40 percent margin to selected categories"""
+        updated = queryset.update(margin_percentage=40, use_fixed_multiplier=False, is_active=True)
+        self.message_user(request, f'40% margin applied to {updated} categories.')
+    apply_40_percent.short_description = 'Apply 40 percent margin'
+
+
+@admin.register(DefaultPriceMargin)
+class DefaultPriceMarginAdmin(admin.ModelAdmin):
+    """Admin for default price margin"""
+    list_display = (
+        'margin_display', 'is_active', 'updated_at'
+    )
+    list_filter = ('is_active', 'use_fixed_multiplier')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Default Margin Configuration', {
+            'fields': ('margin_percentage', 'use_fixed_multiplier', 'fixed_multiplier')
+        }),
+        ('Status', {
+            'fields': ('is_active', 'notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def margin_display(self, obj):
+        """Display margin configuration"""
+        if obj.use_fixed_multiplier:
+            return format_html(
+                '<span style="color: blue; font-weight: bold;">x{}</span>',
+                obj.fixed_multiplier
+            )
+        return format_html(
+            '<span style="color: green; font-weight: bold;">+{}%</span>',
+            obj.margin_percentage
+        )
+    margin_display.short_description = 'Default Margin'
+
+
+# ===========================
 # ADMIN SITE CUSTOMIZATION
 # ===========================
 
@@ -767,6 +1225,22 @@ class CrushMeAdminSite(admin.AdminSite):
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
                     if model['object_name'] in ['User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser', 'Feed']
+                ]
+            },
+            {
+                'name': _('WooCommerce Products'),
+                'app_label': 'woocommerce_management',
+                'models': [
+                    model for model in app_dict.get('crushme_app', {}).get('models', [])
+                    if model['object_name'] in [
+                        'WooCommerceCategory', 
+                        'WooCommerceProduct', 
+                        'WooCommerceProductVariation',
+                        'CategoryPriceMargin',
+                        'DefaultPriceMargin',
+                        'TranslatedContent',
+                        'ProductSyncLog'
+                    ]
                 ]
             },
             {
@@ -840,3 +1314,14 @@ admin_site.register(WishList, WishListAdmin)
 # WishListItem is managed through WishListAdmin inline
 admin_site.register(FavoriteWishList, FavoriteWishListAdmin)
 admin_site.register(Review, ReviewAdmin)
+
+# WooCommerce models
+admin_site.register(WooCommerceCategory, WooCommerceCategoryAdmin)
+admin_site.register(WooCommerceProduct, WooCommerceProductAdmin)
+admin_site.register(WooCommerceProductVariation, WooCommerceProductVariationAdmin)
+admin_site.register(ProductSyncLog, ProductSyncLogAdmin)
+admin_site.register(TranslatedContent, TranslatedContentAdmin)
+
+# Price Margin models (IMPORTANT!)
+admin_site.register(CategoryPriceMargin, CategoryPriceMarginAdmin)
+admin_site.register(DefaultPriceMargin, DefaultPriceMarginAdmin)

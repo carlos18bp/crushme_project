@@ -20,7 +20,7 @@
             <router-link :to="`/${i18nStore.locale}`" class="inline-block mb-4 md:mb-6">
               <img 
                 src="@/assets/logo/BUY.png" 
-                alt="BuyItForMe Logo" 
+                alt="CrushMe Logo" 
                 class="h-32 md:h-40 lg:h-48 w-auto transition-transform duration-300 hover:scale-105 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] hover:drop-shadow-[0_6px_12px_rgba(236,72,153,0.4)]"
               />
             </router-link>

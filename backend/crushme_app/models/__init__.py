@@ -8,6 +8,18 @@ from .review import Review
 from .contact import Contact
 from .feed import Feed
 from .favorite_product import FavoriteProduct
+from .woocommerce_models import (
+    WooCommerceCategory,
+    WooCommerceProduct,
+    WooCommerceProductImage,
+    WooCommerceProductVariation,
+    ProductSyncLog
+)
+from .translation_models import (
+    TranslatedContent,
+    CategoryPriceMargin,
+    DefaultPriceMargin
+)
 
 __all__ = [
     'User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser',
@@ -18,5 +30,13 @@ __all__ = [
     'Review',
     'Contact',
     'Feed',
-    'FavoriteProduct'
+    'FavoriteProduct',
+    'WooCommerceCategory',
+    'WooCommerceProduct',
+    'WooCommerceProductImage',
+    'WooCommerceProductVariation',
+    'ProductSyncLog',
+    'TranslatedContent',
+    'CategoryPriceMargin',
+    'DefaultPriceMargin',
 ]

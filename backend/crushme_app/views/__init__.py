@@ -5,3 +5,4 @@ from .cart_views import *
 from .order_views import *
 from .wishlist_views import *
 from .review_views import *
+from .woocommerce_local_views import *
