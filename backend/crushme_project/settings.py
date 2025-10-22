@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-n@6c1wwji_s(xko^a!p75$obp5y$(a3hvh9^qixhva755#)otg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'crushme.com', 'www.crushme.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'crushme.com.co', 'www.crushme.com.co']
 
 # Cache Configuration
 # IMPORTANT: Use Redis in production for webhook data persistence across workers
@@ -62,10 +62,20 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "https://crushme.com.co",
+    "https://www.crushme.com.co",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "https://crushme.com.co",
+    "https://www.crushme.com.co",
+]
+
+# Configuraciones adicionales de CORS para desarrollo
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow popups and iframes for payment gateways (PayPal, Wompi)
@@ -129,8 +139,16 @@ WSGI_APPLICATION = 'crushme_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'crushme',
+        'USER': 'crushme_user',
+        'PASSWORD': 'CrushM3_S3cur3_P@ss2025!',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
