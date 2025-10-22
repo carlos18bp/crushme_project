@@ -35,31 +35,29 @@ export async function debugGeoLocation() {
     console.error('❌ Error accediendo a stores:', error)
   }
   
-  // 3. Consultar ipapi.co directamente
-  console.log('🌍 Consultando ipapi.co...')
+  // 3. Consultar API de geolocalización directamente
+  console.log('🌍 Consultando API de geolocalización...')
   try {
-    const response = await fetch('https://ipapi.co/json/')
+    const response = await fetch('http://ip-api.com/json/')
     const data = await response.json()
-    console.log('✅ Respuesta de ipapi.co:', {
-      country: data.country_name,
-      country_code: data.country_code,
+    console.log('✅ Respuesta de ip-api.com:', {
+      country: data.country,
+      countryCode: data.countryCode,
       city: data.city,
-      region: data.region,
-      ip: data.ip,
-      org: data.org
+      region: data.regionName,
+      ip: data.query,
+      isp: data.isp
     })
     
     // Verificar qué debería ser
-    const shouldBeCOP = data.country_code === 'CO'
-    const shouldBeSpanish = ['AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GQ',
-      'GT', 'HN', 'MX', 'NI', 'PA', 'PY', 'PE', 'ES', 'UY', 'VE'].includes(data.country_code)
+    const shouldBeCOP = data.countryCode === 'CO'
     
     console.log('🎯 Configuración esperada:')
     console.log('  - Currency:', shouldBeCOP ? 'COP' : 'USD')
-    console.log('  - Idioma:', shouldBeSpanish ? 'es' : 'en')
+    console.log('  - Idioma: Basado en navegador (navigator.language)')
     
   } catch (error) {
-    console.error('❌ Error consultando ipapi.co:', error)
+    console.error('❌ Error consultando API de geolocalización:', error)
   }
   
   console.log('🔍 ===== FIN DEBUG =====')

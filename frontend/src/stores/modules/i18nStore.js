@@ -220,15 +220,17 @@ export const useI18nStore = defineStore('i18n', {
         
         // MÉTODO 2: Detectar país por IP (OPCIONAL, para referencia)
         try {
-          const response = await axios.get('https://ipapi.co/json/', {
+          // Usar ip-api.com (sin restricciones CORS, gratis, sin registro)
+          const response = await axios.get('http://ip-api.com/json/', {
             timeout: 3000
           })
           
-          this.countryCode = response.data.country_code
+          // ip-api.com usa "countryCode" en lugar de "country_code"
+          this.countryCode = response.data.countryCode
           
           console.log('🌍 [i18nStore] País detectado por IP:', {
-            country: response.data.country_name,
-            country_code: response.data.country_code,
+            country: response.data.country,
+            countryCode: response.data.countryCode,
             city: response.data.city
           })
         } catch (ipError) {
@@ -282,6 +284,10 @@ export const useI18nStore = defineStore('i18n', {
         await this.detectUserLanguage()
       } else {
         console.log('✅ [i18nStore] Ya está inicializado, usando idioma actual:', this.locale)
+        // IMPORTANTE: Sincronizar con i18n.global.locale aunque ya esté inicializado
+        // Esto asegura que el i18n de Vue tenga el valor correcto del store
+        this.setLocale(this.locale)
+        console.log('🔄 [i18nStore] i18n.global.locale sincronizado:', i18n.global.locale.value)
       }
     }
   },

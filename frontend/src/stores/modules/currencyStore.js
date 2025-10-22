@@ -106,20 +106,22 @@ export const useCurrencyStore = defineStore('currency', () => {
     }
 
     try {
-      console.log('🌍 [currencyStore] Consultando ipapi.co para detectar país...');
-      const response = await axios.get('https://ipapi.co/json/', {
+      console.log('🌍 [currencyStore] Consultando API de geolocalización...');
+      // Usar ip-api.com (sin restricciones CORS, gratis, sin registro)
+      const response = await axios.get('http://ip-api.com/json/', {
         timeout: 5000 // 5 seconds timeout (aumentado para producción)
       });
       
-      console.log('🌍 [currencyStore] Respuesta de ipapi.co:', {
-        country: response.data.country_name,
-        country_code: response.data.country_code,
+      console.log('🌍 [currencyStore] Respuesta de API:', {
+        country: response.data.country,
+        countryCode: response.data.countryCode,
         city: response.data.city,
-        ip: response.data.ip,
+        ip: response.data.query,
         fullResponse: response.data
       })
       
-      const countryCode = response.data.country_code;
+      // ip-api.com usa "countryCode" en lugar de "country_code"
+      const countryCode = response.data.countryCode;
       detectedCountry.value = countryCode;
       
       // COP for Colombia, USD for all other countries
