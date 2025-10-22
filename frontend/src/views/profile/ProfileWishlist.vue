@@ -301,7 +301,25 @@ const copyWishlistLink = async (wishlist) => {
 }
 
 const buyWishlist = (wishlist) => {
-  alert('Buy wishlist functionality coming soon!')
+  // Get username from searched user or current auth user
+  const username = searchedUser.value?.username || authStore.user?.username
+  
+  if (!username) {
+    console.error('No username available for wishlist purchase')
+    return
+  }
+  
+  router.push({
+    name: `Checkout-${i18nStore.locale}`,
+    query: {
+      giftMode: 'true',
+      username: username,
+      wishlistId: wishlist.id,
+      wishlistName: wishlist.name
+    }
+  })
+  
+  console.log('🎁 Navigating to checkout for wishlist:', wishlist.name)
 }
 
 const removeProduct = async (wishlistId, woocommerceProductId) => {

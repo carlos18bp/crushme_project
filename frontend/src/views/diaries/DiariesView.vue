@@ -80,7 +80,7 @@ const profileData = computed(() => {
     username: `@${crush.username}`,
     biography: crush.about || t('diaries.publicProfile.defaultBiography'),
     links: crush.links?.map(link => ({
-      label: link.platform,
+      label: link.title || link.platform,
       color: '#C77DFF',
       url: link.url
     })) || [],

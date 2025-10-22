@@ -115,6 +115,7 @@ import { useCartStore } from '@/stores/modules/cartStore.js'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useProfileStore } from '@/stores/modules/profileStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useCurrencyStore } from '@/stores/modules/currencyStore'
 import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
 import { get_request } from '@/services/request_http.js'
 
@@ -164,6 +165,7 @@ const cartStore = useCartStore()
 const authStore = useAuthStore()
 const profileStore = useProfileStore()
 const i18nStore = useI18nStore()
+const currencyStore = useCurrencyStore()
 
 // Local state
 const showWishlistSelector = ref(false)
@@ -174,15 +176,16 @@ const isTogglingFavorite = ref(false)
 const isCheckingStock = ref(false)
 const isOutOfStock = ref(false)
 
-// Computed: Precio formateado del producto (usa campo price directamente)
+// Computed: Precio formateado del producto usando currencyStore
 const displayPrice = computed(() => {
-  const price = parseFloat(props.product.price) || 0
-  return `$${price.toLocaleString('es-CO')}`
+  // Backend envía converted_price con el precio ya convertido
+  const price = parseFloat(props.product.converted_price || props.product.price) || 0
+  return currencyStore.formatPrice(price)
 })
 
 // Computed: Precio numérico (para cálculos)
 const numericPrice = computed(() => {
-  return parseFloat(props.product.price) || 0
+  return parseFloat(props.product.converted_price || props.product.price) || 0
 })
 
 // Watch for changes in isInFavorites prop

@@ -288,13 +288,22 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
                 'error': 'Wishlist not found'
             }, status=status.HTTP_404_NOT_FOUND)
         
+        # Get currency from request (set by CurrencyMiddleware)
+        currency = getattr(request, 'currency', 'COP')
+        
         # Enriquecer con datos frescos de WooCommerce
         wishlist = enrich_wishlist_with_woocommerce_data(wishlist)
         
         detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
+        wishlist_data = detail_serializer.data
+        
+        # Convert prices in wishlist data
+        from ..utils.price_helpers import convert_price_fields
+        wishlist_data = convert_price_fields(wishlist_data, currency)
         
         return Response({
-            'wishlist': detail_serializer.data
+            'wishlist': wishlist_data,
+            'currency': currency.upper()
         }, status=status.HTTP_200_OK)
         
     except WishList.DoesNotExist:

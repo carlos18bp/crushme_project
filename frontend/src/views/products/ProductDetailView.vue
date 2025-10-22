@@ -96,11 +96,23 @@
               
               <!-- Price -->
               <div class="product-price">
-                <span class="current-price">{{ displayPrice }}</span>
-                <span v-if="product.on_sale && product.regular_price !== product.price" class="regular-price">
-                  ${{ product.regular_price }}
-                </span>
-                <span v-if="product.on_sale" class="sale-badge">{{ $t('productDetail.saleBadge') }}</span>
+                <!-- Si hay variación seleccionada, usar sus precios -->
+                <template v-if="isProductVariable && currentVariation">
+                  <span v-if="currentVariation.on_sale" class="sale-badge">{{ $t('productDetail.saleBadge') || 'SALE' }}</span>
+                  <span class="current-price">{{ displayPrice }}</span>
+                  <span v-if="currentVariation.on_sale && currentVariation.regular_price" class="regular-price">
+                    ${{ parseFloat(currentVariation.converted_regular_price || currentVariation.regular_price).toLocaleString('es-CO') }}
+                  </span>
+                </template>
+                
+                <!-- Si es producto simple o variable sin variación seleccionada -->
+                <template v-else>
+                  <span v-if="product.on_sale" class="sale-badge">{{ $t('productDetail.saleBadge') || 'SALE' }}</span>
+                  <span class="current-price">{{ displayPrice }}</span>
+                  <span v-if="product.on_sale && product.regular_price" class="regular-price">
+                    ${{ parseFloat(product.converted_regular_price || product.regular_price).toLocaleString('es-CO') }}
+                  </span>
+                </template>
               </div>
               
               <!-- Description (solo si no hay short_description o si es diferente) -->
@@ -229,7 +241,6 @@ import { useCartStore } from '@/stores/modules/cartStore'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useReviewStore } from '@/stores/modules/reviewStore'
-import { getFormattedProductPrice, getProductPrice, isSimpleProduct } from '@/utils/priceHelper.js'
 import { get_request } from '@/services/request_http.js'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -362,7 +373,7 @@ const showFullDescription = computed(() => {
 
 // ⭐ Computed: Determinar si el producto es simple o variable
 const isProductSimple = computed(() => {
-  return product.value && isSimpleProduct(product.value)
+  return product.value && product.value.type === 'simple'
 })
 
 // ⭐ NUEVO: Computed para determinar si es producto variable
@@ -432,17 +443,22 @@ const displayImages = computed(() => {
 const displayPrice = computed(() => {
   if (!product.value) return '$0'
   
+  let priceToShow = 0
+  let isOnSale = false
+  
   // Para productos variables: usar precio de la variación seleccionada
-  if (isProductVariable.value && currentVariation.value?.price) {
-    const price = parseFloat(currentVariation.value.price)
-    console.log(`💰 [ProductDetail] Variación seleccionada - Precio: $${price}`)
-    return `$${price.toLocaleString('es-CO')}`
+  if (isProductVariable.value && currentVariation.value) {
+    priceToShow = parseFloat(currentVariation.value.converted_price || currentVariation.value.price) || 0
+    isOnSale = currentVariation.value.on_sale || false
+    console.log(`💰 [ProductDetail] Variación - Precio: $${priceToShow}, En oferta: ${isOnSale}`)
+  } else {
+    // Para productos simples: usar converted_price del backend
+    priceToShow = parseFloat(product.value.converted_price || product.value.price) || 0
+    isOnSale = product.value.on_sale || false
+    console.log(`💰 [ProductDetail] Producto - Precio: $${priceToShow}, En oferta: ${isOnSale}`)
   }
   
-  // Para todos los demás casos (simples y fallback): usar campo price directamente
-  const price = parseFloat(product.value.price) || 0
-  console.log(`💰 [ProductDetail] Precio directo: $${price}`)
-  return `$${price.toLocaleString('es-CO')}`
+  return `$${priceToShow.toLocaleString('es-CO')}`
 })
 
 // ⭐ Computed: Precio numérico del producto o variación (para cálculos)
@@ -451,11 +467,11 @@ const numericPrice = computed(() => {
   
   // Para productos variables: usar precio de la variación seleccionada
   if (isProductVariable.value && currentVariation.value?.price) {
-    return parseFloat(currentVariation.value.price) || 0
+    return parseFloat(currentVariation.value.converted_price || currentVariation.value.price) || 0
   }
   
-  // Para todos los demás casos: usar campo price directamente
-  return parseFloat(product.value.price) || 0
+  // Para todos los demás casos: usar converted_price del backend
+  return parseFloat(product.value.converted_price || product.value.price) || 0
 })
 
 // ⭐ NUEVO: Computed para verificar disponibilidad de stock en tiempo real

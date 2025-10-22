@@ -9,6 +9,7 @@ from ..models import (
     CategoryPriceMargin,
     DefaultPriceMargin
 )
+from .currency_converter import CurrencyConverter
 
 
 def get_translated_product(product, target_language='en'):
@@ -116,15 +117,16 @@ def get_translated_category(category, target_language='en'):
     }
 
 
-def calculate_product_price(product):
+def calculate_product_price(product, target_currency='COP'):
     """
-    Calculate product price with category margin.
+    Calculate product price with category margin and currency conversion.
     
     Args:
         product: WooCommerceProduct instance with base price
+        target_currency: Target currency code ('COP' or 'USD')
         
     Returns:
-        dict: Price information with margin applied
+        dict: Price information with margin applied and converted
     """
     base_price = product.price
     base_regular_price = product.regular_price
@@ -162,26 +164,30 @@ def calculate_product_price(product):
         final_price = margin.calculate_price(base_price)
         final_regular_price = margin.calculate_price(base_regular_price) if base_regular_price else None
         final_sale_price = margin.calculate_price(base_sale_price) if base_sale_price else None
-        
-        return {
-            'price': round(final_price, 2),
-            'regular_price': round(final_regular_price, 2) if final_regular_price else None,
-            'sale_price': round(final_sale_price, 2) if final_sale_price else None,
-            'margin_applied': str(margin),
-            'on_sale': product.on_sale
-        }
+    else:
+        # No margin configured, use original prices
+        final_price = float(base_price)
+        final_regular_price = float(base_regular_price) if base_regular_price else None
+        final_sale_price = float(base_sale_price) if base_sale_price else None
     
-    # No margin configured, return original prices
+    # Convert to target currency
+    converted_price = CurrencyConverter.convert_price(final_price, target_currency)
+    converted_regular_price = CurrencyConverter.convert_price(final_regular_price, target_currency) if final_regular_price else None
+    converted_sale_price = CurrencyConverter.convert_price(final_sale_price, target_currency) if final_sale_price else None
+    
     return {
-        'price': float(base_price),
-        'regular_price': float(base_regular_price) if base_regular_price else None,
-        'sale_price': float(base_sale_price) if base_sale_price else None,
-        'margin_applied': None,
+        'price': round(converted_price, 2) if converted_price else None,
+        'regular_price': round(converted_regular_price, 2) if converted_regular_price else None,
+        'sale_price': round(converted_sale_price, 2) if converted_sale_price else None,
+        'converted_price': round(converted_price, 2) if converted_price else None,
+        'converted_regular_price': round(converted_regular_price, 2) if converted_regular_price else None,
+        'margin_applied': str(margin) if margin else None,
+        'currency': target_currency,
         'on_sale': product.on_sale
     }
 
 
-def get_product_full_data(product, target_language='en', include_stock=True):
+def get_product_full_data(product, target_language='en', include_stock=True, target_currency='COP'):
     """
     Get complete product data with translations, prices with margin, and optionally fresh stock.
     
@@ -189,6 +195,7 @@ def get_product_full_data(product, target_language='en', include_stock=True):
         product: WooCommerceProduct instance or wc_id
         target_language: Language for translations
         include_stock: If True, fetch fresh stock from WooCommerce (slower)
+        target_currency: Target currency code ('COP' or 'USD')
         
     Returns:
         dict: Complete product data
@@ -200,8 +207,8 @@ def get_product_full_data(product, target_language='en', include_stock=True):
     # Get translations
     translated = get_translated_product(product, target_language)
     
-    # Calculate prices with margin
-    prices = calculate_product_price(product)
+    # Calculate prices with margin and currency conversion
+    prices = calculate_product_price(product, target_currency)
     
     # Get categories with translations
     categories = []
@@ -261,6 +268,17 @@ def get_product_full_data(product, target_language='en', include_stock=True):
         # Get margin info to apply to variations
         margin_applied = prices.get('margin_applied')
         
+        # Extract margin percentage from string (e.g., "Default: +15%" -> 15)
+        margin_percentage = None
+        if margin_applied:
+            try:
+                import re
+                match = re.search(r'[+-]?(\d+(?:\.\d+)?)', str(margin_applied))
+                if match:
+                    margin_percentage = float(match.group(1))
+            except (ValueError, AttributeError):
+                margin_percentage = None
+        
         # Get all unique attributes and their options
         attributes_map = {}
         variations_summary = []
@@ -274,9 +292,12 @@ def get_product_full_data(product, target_language='en', include_stock=True):
             
             # Apply margin to variation price (inherit from product parent)
             variation_price = float(variation.price) if variation.price else None
-            if variation_price and margin_applied:
-                margin_multiplier = 1 + (float(margin_applied) / 100)
+            if variation_price and margin_percentage:
+                margin_multiplier = 1 + (margin_percentage / 100)
                 variation_price = round(variation_price * margin_multiplier, 2)
+            
+            # Convert variation price to target currency
+            converted_variation_price = CurrencyConverter.convert_price(variation_price, target_currency) if variation_price else None
             
             # Add variation summary (id + attributes for quick lookup)
             variations_summary.append({
@@ -284,7 +305,8 @@ def get_product_full_data(product, target_language='en', include_stock=True):
                 'attributes': variation.attributes,
                 'in_stock': variation.stock_status == 'instock',
                 'stock_quantity': variation.stock_quantity,
-                'price': variation_price
+                'price': round(converted_variation_price, 2) if converted_variation_price else None,
+                'converted_price': round(converted_variation_price, 2) if converted_variation_price else None
             })
         
         # Convert attributes to list format
@@ -306,7 +328,7 @@ def get_product_full_data(product, target_language='en', include_stock=True):
     return data
 
 
-def get_products_list(queryset, target_language='en', include_stock=False):
+def get_products_list(queryset, target_language='en', include_stock=False, target_currency='COP'):
     """
     Get list of products with translations and prices.
     Optimized for list views (no full descriptions).
@@ -315,6 +337,7 @@ def get_products_list(queryset, target_language='en', include_stock=False):
         queryset: WooCommerceProduct queryset
         target_language: Language for translations
         include_stock: Include stock info (makes it slower)
+        target_currency: Target currency code ('COP' or 'USD')
         
     Returns:
         list: List of product data
@@ -343,8 +366,8 @@ def get_products_list(queryset, target_language='en', include_stock=False):
         except TranslatedContent.DoesNotExist:
             short_description = product.short_description
         
-        # Calculate prices
-        prices = calculate_product_price(product)
+        # Calculate prices with currency conversion
+        prices = calculate_product_price(product, target_currency)
         
         # Get primary image (single URL for simple display)
         primary_image = product.primary_image
@@ -385,6 +408,9 @@ def get_products_list(queryset, target_language='en', include_stock=False):
             'price': prices['price'],
             'regular_price': prices['regular_price'],
             'sale_price': prices['sale_price'],
+            'converted_price': prices.get('converted_price'),
+            'converted_regular_price': prices.get('converted_regular_price'),
+            'currency': prices.get('currency', target_currency),
             'on_sale': prices['on_sale'],
             'image': image_url,  # Primary image URL (for backward compatibility)
             'images': images_data,  # Full images array in WooCommerce format

@@ -282,7 +282,7 @@
                 <span>{{ item.quantity }}</span>
               </div>
               <div class="product-price">
-                {{ formatCOP(item.price * item.quantity) }}
+                {{ formatPrice(item.price * item.quantity) }}
               </div>
             </div>
           </div>
@@ -305,12 +305,12 @@
           <div class="totals-section">
             <div class="total-row">
               <span>{{ $t('cart.checkout.form.subtotal') }}</span>
-              <span class="total-value">{{ formatCOP(subtotal) }}</span>
+              <span class="total-value">{{ formatPrice(subtotal) }}</span>
             </div>
             <div class="total-row">
               <span>{{ $t('cart.checkout.form.shipping') }}</span>
               <span class="total-value">
-                {{ formatCOP(shipping) }}
+                {{ formatPrice(shipping) }}
                 <span v-if="shippingType === 'gift' && selectedGiftUser" class="shipping-city-note">
                   ({{ selectedGiftUser.username }})
                 </span>
@@ -321,7 +321,7 @@
             </div>
             <div class="total-row tax-row">
               <span>{{ $t('cart.checkout.form.tax') }} <span class="tax-included-badge">(Incluido)</span></span>
-              <span class="total-value tax-included-value">{{ formatCOP(tax) }}</span>
+              <span class="total-value tax-included-value">{{ formatPrice(tax) }}</span>
             </div>
           </div>
 
@@ -329,9 +329,9 @@
           <div class="final-total">
             <div class="total-row">
               <span class="total-label">{{ $t('cart.checkout.form.total') }}</span>
-              <span class="total-amount">{{ formatCOP(total) }}</span>
+              <span class="total-amount">{{ formatPrice(total) }}</span>
             </div>
-            <p class="tax-note">✓ IVA (19%) ya incluido en el precio: {{ formatCOP(tax) }}</p>
+            <p class="tax-note">{{ $t('cart.checkout.form.taxIncluded', { tax: formatPrice(tax) }) }}</p>
           </div>
         </div>
       </div>
@@ -350,9 +350,25 @@ import { useProductStore } from '@/stores/modules/productStore.js';
 import { useRouter } from 'vue-router';
 import { useAlert } from '@/composables/useAlert.js';
 import { Country, State } from 'country-state-city';
-import { formatCOP } from '@/utils/priceHelper.js';
+import { useCurrencyStore } from '@/stores/modules/currencyStore.js';
 
 const router = useRouter();
+const currencyStore = useCurrencyStore();
+
+// ⭐ Helper para formatear precios usando currencyStore (maneja COP y USD automáticamente)
+const formatPrice = (price) => {
+  return currencyStore.formatPrice(price);
+};
+
+// ⭐ Helper para convertir precios de COP a la moneda actual
+// Tasa de cambio aproximada: 1 USD = 4000 COP
+const convertFromCOP = (copPrice) => {
+  if (currencyStore.currentCurrency === 'USD') {
+    return Math.round((copPrice / 4000) * 100) / 100; // Redondear a 2 decimales
+  }
+  return copPrice; // Si es COP, devolver el mismo valor
+};
+
 const cartStore = useCartStore();
 const authStore = useAuthStore();
 const crushStore = useCrushStore();
@@ -405,6 +421,10 @@ const usernameSearchQuery = ref('');
 const showUserSearchResults = ref(false);
 const selectedGiftUser = ref(null); // ⭐ Usuario seleccionado completo (con shipping_cost)
 let usernameSearchTimeout = null;
+
+// ⭐ Wishlist data from query params
+const wishlistId = ref(null);
+const wishlistName = ref(null);
 
 // Computed property for available states - Only Colombia for national shipping
 const availableStates = computed(() => {
@@ -700,7 +720,11 @@ const createGiftOrder = async () => {
     items: items,
     gift_message: shippingForm.value.note || '',
     shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value // ⭐ Total calculado (para validación en backend)
+    total: total.value, // ⭐ Total calculado (para validación en backend)
+    // ⭐ Wishlist data (if coming from wishlist)
+    is_from_wishlist: wishlistId.value !== null,
+    wishlist_id: wishlistId.value,
+    wishlist_name: wishlistName.value
   };
 
   console.log('🎁 [GIFT] Datos del regalo:', giftData);
@@ -785,7 +809,11 @@ const captureGiftPayment = async (paypalOrderId) => {
     items: items,
     gift_message: shippingForm.value.note || '',
     shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value // ⭐ Total calculado (para validación en backend)
+    total: total.value, // ⭐ Total calculado (para validación en backend)
+    // ⭐ Wishlist data (if coming from wishlist)
+    is_from_wishlist: wishlistId.value !== null,
+    wishlist_id: wishlistId.value,
+    wishlist_name: wishlistName.value
   };
 
   console.log('🎁 [GIFT] Datos de captura de regalo:', captureData);
@@ -949,21 +977,23 @@ const baseShipping = computed(() => {
   // ⭐ Si es modo regalo y hay usuario seleccionado, usar su shipping_cost
   if (shippingType.value === 'gift' && selectedGiftUser.value && selectedGiftUser.value.shipping_cost) {
     const cost = parseFloat(selectedGiftUser.value.shipping_cost);
-    console.log(`📦 [SHIPPING] Usando costo del usuario destinatario: ${cost}`);
-    return cost;
+    // ⭐ Convertir el shipping_cost si viene en COP y el currency actual es USD
+    const convertedCost = convertFromCOP(cost);
+    console.log(`📦 [SHIPPING] Costo del usuario destinatario: ${cost} COP → ${convertedCost} ${currencyStore.currentCurrency}`);
+    return convertedCost;
   }
   
   // ⭐ Si es modo "para mí", calcular según ciudad
   const ciudad = (shippingForm.value.city || '').toLowerCase().trim();
   
   if (!ciudad) {
-    return 15000;
+    return convertFromCOP(15000); // ~$3.75 USD
   }
   
   switch (ciudad) {
     case 'medellín':
     case 'medellin':
-      return 10500;
+      return convertFromCOP(10500); // ~$2.63 USD
       
     case 'san andrés isla':
     case 'san andres isla':
@@ -971,10 +1001,10 @@ const baseShipping = computed(() => {
     case 'san andres':
     case 'santa catalina':
     case 'providencia':
-      return 45000;
+      return convertFromCOP(45000); // ~$11.25 USD
       
     default:
-      return 15000;
+      return convertFromCOP(15000); // ~$3.75 USD
   }
 });
 
@@ -1238,6 +1268,55 @@ onMounted(async () => {
   if (cartStore.isEmpty) {
     router.push({ name: `Cart-${i18nStore.locale}` });
     return;
+  }
+
+  // ⭐ Read query params for wishlist purchase
+  const route = router.currentRoute.value;
+  if (route.query.giftMode === 'true') {
+    shippingType.value = 'gift';
+    
+    if (route.query.username) {
+      const username = route.query.username;
+      const formattedUsername = username.startsWith('@') ? username : `@${username}`;
+      shippingForm.value.username = formattedUsername;
+      usernameSearchQuery.value = formattedUsername;
+      
+      // ⭐ Buscar el usuario automáticamente para obtener su shipping_cost
+      try {
+        const cleanUsername = username.replace('@', '').trim();
+        console.log('🔍 [CHECKOUT] Buscando usuario automáticamente:', cleanUsername);
+        
+        await crushStore.searchUsers(cleanUsername, 5);
+        
+        // Si encontramos resultados, seleccionar el primero que coincida exactamente
+        if (crushStore.searchResults.length > 0) {
+          const exactMatch = crushStore.searchResults.find(
+            user => user.username.toLowerCase() === cleanUsername.toLowerCase()
+          );
+          
+          if (exactMatch) {
+            console.log('✅ [CHECKOUT] Usuario encontrado automáticamente:', exactMatch);
+            // Seleccionar el usuario automáticamente
+            selectUser(exactMatch);
+          } else {
+            console.warn('⚠️ [CHECKOUT] No se encontró coincidencia exacta para:', cleanUsername);
+          }
+        } else {
+          console.warn('⚠️ [CHECKOUT] No se encontraron resultados para:', cleanUsername);
+        }
+      } catch (error) {
+        console.error('❌ [CHECKOUT] Error al buscar usuario automáticamente:', error);
+      }
+    }
+    
+    if (route.query.wishlistId) {
+      wishlistId.value = parseInt(route.query.wishlistId);
+      wishlistName.value = route.query.wishlistName || null;
+      console.log('🎁 [WISHLIST] Compra desde wishlist:', {
+        id: wishlistId.value,
+        name: wishlistName.value
+      });
+    }
   }
 
   // ⭐ Cargar producto de dropshipping (recargo)

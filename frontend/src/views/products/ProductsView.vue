@@ -552,8 +552,8 @@ const addToCart = async (product) => {
   console.log('🛒 Agregando al carrito desde ProductsView:', product.name)
   
   try {
-    // Usar el precio directamente del campo price
-    const productPrice = parseFloat(product.price) || 0
+    // Backend envía converted_price con el precio ya convertido
+    const productPrice = parseFloat(product.converted_price || product.price) || 0
     
     // Preparar opciones del producto
     const options = {

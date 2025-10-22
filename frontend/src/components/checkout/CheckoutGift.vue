@@ -90,7 +90,7 @@
 import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '@/stores/modules/authStore.js';
 import { useCrushStore } from '@/stores/modules/crushStore.js';
-import { formatCOP } from '@/utils/priceHelper.js';
+import { useCurrencyStore } from '@/stores/modules/currencyStore.js';
 
 const props = defineProps({
   modelValue: {
@@ -111,11 +111,15 @@ const emit = defineEmits(['update:modelValue', 'user-selected', 'shipping-change
 
 const authStore = useAuthStore();
 const crushStore = useCrushStore();
+const currencyStore = useCurrencyStore();
 
 const searchQuery = ref('');
 const showResults = ref(false);
 const selectedUserShipping = ref(0);
 let searchTimeout = null;
+
+// Helper para formatear precios usando currencyStore
+const formatCOP = (price) => currencyStore.formatPrice(price);
 
 const form = computed({
   get: () => props.modelValue,

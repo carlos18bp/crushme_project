@@ -185,6 +185,21 @@ const routes = [
     }
   },
   
+  // ⭐ Wishlist direct checkout routes (with and without language prefix)
+  {
+    path: '/@:username/:wishlistId',
+    name: 'WishlistCheckout',
+    component: () => import('@/views/wishlist/WishlistCheckoutRedirect.vue'),
+    props: true
+  },
+  // Localized versions for each language
+  ...availableLanguages.map(lang => ({
+    path: `/${lang}/@:username/:wishlistId`,
+    name: `WishlistCheckout-${lang}`,
+    component: () => import('@/views/wishlist/WishlistCheckoutRedirect.vue'),
+    props: true
+  })),
+  
   // Routes for each language
   ...baseRoutes.map(route => {
     // Skip the catch-all route, we'll add it at the end

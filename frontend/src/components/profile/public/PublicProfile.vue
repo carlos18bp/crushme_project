@@ -111,18 +111,33 @@
             class="wishlist-card border-2 border-gray-900 rounded-2xl overflow-hidden"
           >
             <div class="p-6">
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ wishlist.name }}</h3>
-                  <p class="text-sm text-gray-600 mb-2">{{ wishlist.description || $t('diaries.publicProfile.noDescription') }}</p>
-                  <p class="text-xs text-gray-500">
-                    {{ wishlist.total_items }} {{ $t('diaries.publicProfile.wishlistItems') }} · ${{ formatPrice(wishlist.total_value) }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-2 ml-4">
+              <!-- Header con título, botones y flecha en la misma línea -->
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 flex-shrink-0">{{ wishlist.name }}</h3>
+                
+                <div class="flex items-center gap-2 ml-auto">
+                  <!-- Wishlist Actions -->
+                  <button 
+                    @click="copyWishlistLink(wishlist)"
+                    class="wishlist-action-btn copy-btn"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    Copy wishlist link
+                  </button>
+                  <button 
+                    @click="buyWishlist(wishlist)"
+                    class="wishlist-action-btn buy-btn"
+                  >
+                    Buy my wishlist
+                  </button>
+                  
+                  <!-- Toggle button -->
                   <button 
                     @click="toggleWishlist(wishlist.id)" 
-                    class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    class="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
                   >
                     <svg 
                       class="w-5 h-5 text-gray-600 transition-transform" 
@@ -135,6 +150,14 @@
                     </svg>
                   </button>
                 </div>
+              </div>
+              
+              <!-- Description y detalles -->
+              <div>
+                <p class="text-sm text-gray-600 mb-2">{{ wishlist.description || $t('diaries.publicProfile.noDescription') }}</p>
+                <p class="text-xs text-gray-500">
+                  {{ wishlist.total_items }} {{ $t('diaries.publicProfile.wishlistItems') }} · ${{ formatPrice(wishlist.total_value) }}
+                </p>
               </div>
             </div>
 
@@ -322,6 +345,39 @@ const copyProfileLink = async () => {
     } catch (fallbackError) {
       console.error('❌ Fallback también falló:', fallbackError)
     }
+  }
+}
+
+// Buy entire wishlist - Navigate to checkout with wishlist data
+const buyWishlist = (wishlist) => {
+  const username = profile.value.username?.replace('@', '') || route.params.username
+  
+  router.push({
+    name: `Checkout-${i18nStore.locale}`,
+    query: {
+      giftMode: 'true',
+      username: username,
+      wishlistId: wishlist.id,
+      wishlistName: wishlist.name
+    }
+  })
+  
+  console.log('🎁 Navigating to checkout for wishlist:', wishlist.name)
+}
+
+// Copy wishlist link to clipboard
+const copyWishlistLink = async (wishlist) => {
+  try {
+    // Use public_url from backend if available, otherwise construct it
+    const wishlistUrl = wishlist.public_url || `${window.location.origin}${wishlist.shareable_path}`
+    
+    await navigator.clipboard.writeText(wishlistUrl)
+    console.log('✅ Wishlist link copied:', wishlistUrl)
+    
+    // Optional: Show toast notification
+    alert('Wishlist link copied to clipboard!')
+  } catch (error) {
+    console.error('❌ Error copying wishlist link:', error)
   }
 }
 </script>
@@ -733,6 +789,55 @@ const copyProfileLink = async () => {
   background: rgba(255, 63, 213, 0.2);
 }
 
+/* Wishlist Action Buttons */
+.wishlist-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 24px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.wishlist-action-btn.copy-btn {
+  background: rgba(199, 125, 255, 0.2);
+  color: #9333ea;
+  border: 1px solid rgba(199, 125, 255, 0.3);
+}
+
+.wishlist-action-btn.copy-btn:hover {
+  background: rgba(199, 125, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(199, 125, 255, 0.3);
+}
+
+.wishlist-action-btn.buy-btn {
+  background: #C77DFF;
+  color: white;
+  border: 1px solid #C77DFF;
+}
+
+.wishlist-action-btn.buy-btn:hover {
+  background: #a855f7;
+  border-color: #a855f7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(199, 125, 255, 0.4);
+}
+
+.wishlist-action-btn:active {
+  transform: translateY(0);
+}
+
+.wishlist-action-btn svg {
+  flex-shrink: 0;
+}
+
 /* Share Button Responsive */
 @media (max-width: 480px) {
   .share-button .share-text {
@@ -745,6 +850,11 @@ const copyProfileLink = async () => {
     width: 40px;
     height: 40px;
     justify-content: center;
+  }
+  
+  .wishlist-action-btn {
+    font-size: 0.8125rem;
+    padding: 8px 16px;
   }
 }
 </style>

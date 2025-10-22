@@ -92,13 +92,14 @@
       "tax": "Tax (19%)",
       "total": "Total",
       "includesTax": "Includes {tax} in taxes",
+      "taxIncluded": "✓ VAT (19%) already included in price: {tax}",
       "placeholders": {
         "email": "you{'@'}example.com",
         "searchUser": "Search user...",
         "note": "Whisper something sweet (or keep it a surprise 😊)"
       },
       "help": {
-        "username": "{'@'}LovelyFan92 This is how your Crush will recognize you as the sender 💕"
+        "username": "This is how your Crush will recognize you as the sender 💕"
       }
     }
   }

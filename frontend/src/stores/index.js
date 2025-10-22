@@ -11,6 +11,7 @@ export { useOrderStore } from './modules/orderStore.js';
 export { useWishlistStore } from './modules/wishlistStore.js';
 export { useReviewStore } from './modules/reviewStore.js';
 export { useCrushStore } from './modules/crushStore.js';
+export { useCurrencyStore } from './modules/currencyStore.js';
 
 /**
  * Convenience function to initialize all stores

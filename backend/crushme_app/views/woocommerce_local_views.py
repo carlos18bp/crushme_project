@@ -66,11 +66,15 @@ def get_woocommerce_products_local(request):
         end = start + per_page
         products_page = queryset[start:end]
         
-        # Convertir a lista optimizada con traducciones
+        # Get currency from request (set by CurrencyMiddleware)
+        target_currency = getattr(request, 'currency', 'COP')
+        
+        # Convertir a lista optimizada con traducciones y conversión de moneda
         products_data = get_products_list(
             queryset=products_page,
             target_language=target_lang,
-            include_stock=False  # Stock se consulta aparte cuando se necesita
+            include_stock=False,  # Stock se consulta aparte cuando se necesita
+            target_currency=target_currency
         )
         
         # Calcular paginación
@@ -123,22 +127,96 @@ def get_woocommerce_product_detail_local(request, product_id):
     """
     try:
         target_lang = get_language_from_request(request)
+        target_currency = getattr(request, 'currency', 'COP')
         # Por defecto, SÍ consultar stock real en detalle del producto
         real_time_stock = request.query_params.get('real_time_stock', 'true').lower() == 'true'
         
         # Obtener el objeto producto
         product = WooCommerceProduct.objects.filter(wc_id=product_id).first()
-        if not product:
-            return Response({
-                'error': 'Producto no encontrado',
-                'product_id': product_id
-            }, status=status.HTTP_404_NOT_FOUND)
         
-        # Obtener producto completo con traducciones (siempre usa datos locales primero)
+        # Si el producto no existe localmente, intentar obtenerlo de WooCommerce (dropshipping)
+        if not product:
+            logger.warning(f"⚠️ Product {product_id} not found locally, fetching from WooCommerce...")
+            
+            try:
+                from ..services.woocommerce_service import woocommerce_service
+                from ..utils.currency_converter import CurrencyConverter
+                
+                # Obtener producto de WooCommerce
+                wc_result = woocommerce_service.get_product_by_id(product_id)
+                
+                if not wc_result.get('success'):
+                    return Response({
+                        'error': 'Producto no encontrado en WooCommerce',
+                        'product_id': product_id,
+                        'details': wc_result.get('error')
+                    }, status=status.HTTP_404_NOT_FOUND)
+                
+                wc_product = wc_result.get('data', {})
+                
+                # Construir respuesta básica desde datos de WooCommerce
+                # Aplicar margen si existe (usar default margin)
+                from ..models import DefaultPriceMargin
+                default_margin = DefaultPriceMargin.get_active()
+                
+                base_price = float(wc_product.get('price', 0))
+                if default_margin and base_price > 0:
+                    margin_multiplier = 1 + (default_margin.margin_percentage / 100)
+                    final_price = round(base_price * margin_multiplier, 2)
+                    margin_applied = f"Default: +{default_margin.margin_percentage:.2f}%"
+                else:
+                    final_price = base_price
+                    margin_applied = None
+                
+                # Convertir a moneda solicitada
+                final_price = CurrencyConverter.convert_price(final_price, target_currency)
+                
+                product_data = {
+                    'id': wc_product.get('id'),
+                    'name': wc_product.get('name'),
+                    'slug': wc_product.get('slug'),
+                    'type': wc_product.get('type'),
+                    'description': wc_product.get('description', ''),
+                    'short_description': wc_product.get('short_description', ''),
+                    'price': final_price,
+                    'regular_price': final_price,
+                    'sale_price': None,
+                    'converted_price': final_price,
+                    'converted_regular_price': final_price,
+                    'currency': target_currency,
+                    'on_sale': False,
+                    'stock_status': wc_product.get('stock_status', 'instock'),
+                    'stock_quantity': wc_product.get('stock_quantity'),
+                    'in_stock': wc_product.get('stock_status') == 'instock',
+                    'images': wc_product.get('images', []),
+                    'categories': wc_product.get('categories', []),
+                    'is_dropshipping': True,  # Indicador de que es dropshipping
+                    'margin_applied': margin_applied,
+                    'source': 'woocommerce_direct'  # Indicador de origen
+                }
+                
+                logger.info(f"✅ Dropshipping product {product_id} fetched from WooCommerce")
+                
+                return Response({
+                    'success': True,
+                    'data': product_data,
+                    'source': 'woocommerce_direct'
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as e:
+                logger.error(f"❌ Error fetching dropshipping product {product_id}: {str(e)}")
+                return Response({
+                    'error': 'Producto no encontrado',
+                    'product_id': product_id,
+                    'details': str(e)
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Obtener producto completo con traducciones y conversión de moneda
         product_data = get_product_full_data(
             product=product_id,
             target_language=target_lang,
-            include_stock=False  # Siempre false aquí, lo consultamos aparte
+            include_stock=False,  # Siempre false aquí, lo consultamos aparte
+            target_currency=target_currency
         )
         
         # Si se requiere stock en tiempo real, consultarlo de WooCommerce
@@ -496,20 +574,41 @@ def get_product_variation_detail_local(request, product_id, variation_id):
         from ..utils.translation_helpers import get_translated_product, calculate_product_price
         product_translated = get_translated_product(product, target_lang)
         
+        # Get currency from request
+        target_currency = getattr(request, 'currency', 'COP')
+        
         # Calcular margen del producto padre (se aplica a la variación)
         # Las variaciones heredan el margen de la categoría del producto padre
-        margin_info = calculate_product_price(product)
+        margin_info = calculate_product_price(product, target_currency)
         
         # Aplicar el margen a los precios de la variación
         def apply_margin_to_variation_price(base_price, margin_info):
             """Aplica el mismo margen del producto padre al precio de la variación"""
-            if not base_price or not margin_info.get('margin_applied'):
-                return float(base_price) if base_price else None
+            if not base_price:
+                return None
             
-            # Si hay margen, aplicarlo de la misma manera
-            margin_percentage = margin_info['margin_applied']
-            margin_multiplier = 1 + (float(margin_percentage) / 100)
-            return round(float(base_price) * margin_multiplier, 2)
+            # Extract margin percentage from string (e.g., "Aceites Para Masajes: +30.00%" -> 30.0)
+            margin_percentage = None
+            if margin_info.get('margin_applied'):
+                try:
+                    import re
+                    match = re.search(r'[+-]?(\d+(?:\.\d+)?)', str(margin_info['margin_applied']))
+                    if match:
+                        margin_percentage = float(match.group(1))
+                except (ValueError, AttributeError):
+                    margin_percentage = None
+            
+            # Apply margin if exists
+            if margin_percentage:
+                margin_multiplier = 1 + (margin_percentage / 100)
+                final_price = round(float(base_price) * margin_multiplier, 2)
+            else:
+                final_price = float(base_price)
+            
+            # Convert to target currency
+            from ..utils.currency_converter import CurrencyConverter
+            converted_price = CurrencyConverter.convert_price(final_price, target_currency)
+            return round(converted_price, 2) if converted_price else None
         
         # Obtener categorías del producto padre (traducidas)
         categories = []
@@ -548,6 +647,10 @@ def get_product_variation_detail_local(request, product_id, variation_id):
             })
         
         # Construir respuesta completa con datos locales
+        converted_price = apply_margin_to_variation_price(variation.price, margin_info)
+        converted_regular_price = apply_margin_to_variation_price(variation.regular_price, margin_info)
+        converted_sale_price = apply_margin_to_variation_price(variation.sale_price, margin_info)
+        
         variation_data = {
             'id': variation.wc_id,
             'product_id': variation.wc_product_id,
@@ -556,9 +659,12 @@ def get_product_variation_detail_local(request, product_id, variation_id):
             'permalink': variation.permalink,
             'description': product_translated['description'],  # Del producto padre
             'short_description': product_translated['short_description'],  # Del producto padre
-            'price': apply_margin_to_variation_price(variation.price, margin_info),
-            'regular_price': apply_margin_to_variation_price(variation.regular_price, margin_info),
-            'sale_price': apply_margin_to_variation_price(variation.sale_price, margin_info),
+            'price': converted_price,
+            'regular_price': converted_regular_price,
+            'sale_price': converted_sale_price,
+            'converted_price': converted_price,
+            'converted_regular_price': converted_regular_price,
+            'currency': target_currency,
             'on_sale': variation.on_sale,
             'margin_applied': margin_info.get('margin_applied'),  # Indicador del margen aplicado
             'stock_status': variation.stock_status,

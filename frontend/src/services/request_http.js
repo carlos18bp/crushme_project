@@ -5,6 +5,7 @@
  */
 import axios from "axios";
 import { useI18nStore } from '@/stores/modules/i18nStore';
+import { useCurrencyStore } from '@/stores/modules/currencyStore';
 
 /**
  * Get current language from i18n store
@@ -19,6 +20,20 @@ function getCurrentLanguage() {
     // If Pinia is not initialized yet, default to 'en'
     console.warn("Could not access i18n store, defaulting to 'en':", error);
     return 'en';
+  }
+}
+
+/**
+ * Get current currency from currency store
+ * @returns {string} - Current currency code (COP/USD)
+ */
+function getCurrentCurrency() {
+  try {
+    const currencyStore = useCurrencyStore();
+    return currencyStore?.currentCurrency || 'USD';
+  } catch (error) {
+    console.warn("Could not access currency store, defaulting to 'USD':", error);
+    return 'USD';
   }
 }
 
@@ -96,6 +111,7 @@ export function isAuthenticated() {
 async function makeRequest(method, url, params = {}, config = {}) {
   const startTime = performance.now();
   const currentLanguage = getCurrentLanguage();
+  const currentCurrency = getCurrentCurrency();
   
   // For GET requests, add language as query parameter
   let fullUrl = `/api/${url}`;
@@ -104,7 +120,7 @@ async function makeRequest(method, url, params = {}, config = {}) {
     fullUrl = `/api/${url}${separator}lang=${currentLanguage}`;
   }
   
-  console.log(`🌐 → HTTP ${method} ${fullUrl}`);
+  console.log(`🌐 → HTTP ${method} ${fullUrl} [${currentCurrency}]`);
   
   const csrfToken = getCookie("csrftoken");
   const token = getJWTToken();
@@ -116,6 +132,7 @@ async function makeRequest(method, url, params = {}, config = {}) {
     ...(!isFormData && { "Content-Type": "application/json" }), // Solo para JSON
     "X-CSRFToken": csrfToken,
     "Accept-Language": currentLanguage, // Add language header for all requests
+    "X-Currency": currentCurrency, // Add currency header for price conversion
     ...(token && { "Authorization": `Bearer ${token}` }),
     ...config.headers
   };
@@ -173,7 +190,8 @@ async function makeRequest(method, url, params = {}, config = {}) {
           // Retry original request with new token
           const newHeaders = {
             ...headers,
-            "Authorization": `Bearer ${newAccessToken}`
+            "Authorization": `Bearer ${newAccessToken}`,
+            "X-Currency": currentCurrency
           };
           
           const retryConfig = { ...requestConfig, headers: newHeaders };

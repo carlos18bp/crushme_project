@@ -157,7 +157,7 @@
 <script setup>
 import { computed } from 'vue';
 import { State } from 'country-state-city';
-import { formatCOP } from '@/utils/priceHelper.js';
+import { useCurrencyStore } from '@/stores/modules/currencyStore.js';
 
 const props = defineProps({
   modelValue: {
@@ -171,6 +171,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'city-change']);
+
+const currencyStore = useCurrencyStore();
+
+// Helper para formatear precios usando currencyStore
+const formatCOP = (price) => currencyStore.formatPrice(price);
 
 const form = computed({
   get: () => props.modelValue,
