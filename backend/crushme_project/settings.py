@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-n@6c1wwji_s(xko^a!p75$obp5y$(a3hvh9^qixhva755#)otg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'crushme.com', 'www.crushme.com']
 
 
 # Application definition
@@ -158,6 +158,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+<<<<<<< HEAD
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
@@ -165,6 +166,15 @@ STATICFILES_DIRS = [
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+=======
+# Directory where collectstatic will collect static files for deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Additional locations of static files (for development)
+STATICFILES_DIRS = [
+    # Add any additional static directories here if needed
+]
+>>>>>>> 2c9c144 (release: v1.0)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

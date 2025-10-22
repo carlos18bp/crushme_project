@@ -17,6 +17,27 @@ export default defineConfig({
     // PayPal client ID
     'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'),
   },
+  
+  // Configuración para build
+  build: {
+    outDir: '../backend/static/frontend',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'index.js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'index.css'
+          }
+          return assetInfo.name
+        }
+      }
+    }
+  },
+  
+  // Base URL para los assets en producción
+  base: '/static/frontend/',
+  
   server: {
     port: 5173,
     proxy: {
