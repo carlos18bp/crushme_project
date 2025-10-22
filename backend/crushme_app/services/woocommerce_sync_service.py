@@ -3,7 +3,7 @@ WooCommerce Synchronization Service
 Syncs products, categories, and variations from WooCommerce to local database
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, is_naive
@@ -372,7 +372,7 @@ class WooCommerceSyncService:
         if date_created_str:
             date_created = parse_datetime(date_created_str)
             if date_created and is_naive(date_created):
-                date_created = make_aware(date_created, timezone=timezone.utc)
+                date_created = make_aware(date_created, timezone=dt_timezone.utc)
         else:
             date_created = None
         
@@ -380,7 +380,7 @@ class WooCommerceSyncService:
         if date_modified_str:
             date_modified = parse_datetime(date_modified_str)
             if date_modified and is_naive(date_modified):
-                date_modified = make_aware(date_modified, timezone=timezone.utc)
+                date_modified = make_aware(date_modified, timezone=dt_timezone.utc)
         else:
             date_modified = None
         
