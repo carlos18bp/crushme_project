@@ -176,11 +176,11 @@ def calculate_product_price(product, target_currency='COP'):
     converted_sale_price = CurrencyConverter.convert_price(final_sale_price, target_currency) if final_sale_price else None
     
     return {
-        'price': round(converted_price, 2) if converted_price else None,
-        'regular_price': round(converted_regular_price, 2) if converted_regular_price else None,
-        'sale_price': round(converted_sale_price, 2) if converted_sale_price else None,
-        'converted_price': round(converted_price, 2) if converted_price else None,
-        'converted_regular_price': round(converted_regular_price, 2) if converted_regular_price else None,
+        'price': converted_price,
+        'regular_price': converted_regular_price,
+        'sale_price': converted_sale_price,
+        'converted_price': converted_price,
+        'converted_regular_price': converted_regular_price,
         'margin_applied': str(margin) if margin else None,
         'currency': target_currency,
         'on_sale': product.on_sale
@@ -305,8 +305,8 @@ def get_product_full_data(product, target_language='en', include_stock=True, tar
                 'attributes': variation.attributes,
                 'in_stock': variation.stock_status == 'instock',
                 'stock_quantity': variation.stock_quantity,
-                'price': round(converted_variation_price, 2) if converted_variation_price else None,
-                'converted_price': round(converted_variation_price, 2) if converted_variation_price else None
+                'price': converted_variation_price,
+                'converted_price': converted_variation_price
             })
         
         # Convert attributes to list format

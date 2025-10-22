@@ -108,11 +108,20 @@ def add_woocommerce_product_to_wishlist(request, wishlist_id):
         )
         
         if created:
+            # Get currency from request (set by CurrencyMiddleware)
+            currency = getattr(request, 'currency', 'COP')
+            
             detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
+            wishlist_data = detail_serializer.data
+            
+            # Convert prices to target currency
+            from ..utils.price_helpers import convert_price_fields
+            wishlist_data = convert_price_fields(wishlist_data, currency)
             
             return Response({
                 'message': f'Added {product_data.get("name")} to {wishlist.name}',
-                'wishlist': detail_serializer.data
+                'wishlist': wishlist_data,
+                'currency': currency.upper()
             }, status=status.HTTP_200_OK)
         else:
             return Response({
@@ -144,11 +153,20 @@ def remove_woocommerce_product_from_wishlist(request, wishlist_id, woocommerce_p
         product_name = item.get_product_name()
         item.delete()
         
+        # Get currency from request (set by CurrencyMiddleware)
+        currency = getattr(request, 'currency', 'COP')
+        
         detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
+        wishlist_data = detail_serializer.data
+        
+        # Convert prices to target currency
+        from ..utils.price_helpers import convert_price_fields
+        wishlist_data = convert_price_fields(wishlist_data, currency)
         
         return Response({
             'message': f'Removed {product_name} from {wishlist.name}',
-            'wishlist': detail_serializer.data
+            'wishlist': wishlist_data,
+            'currency': currency.upper()
         }, status=status.HTTP_200_OK)
     except WishListItem.DoesNotExist:
         return Response({
@@ -185,13 +203,22 @@ def refresh_wishlist_products(request, wishlist_id):
             else:
                 failed_count += 1
     
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
     detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
+    wishlist_data = detail_serializer.data
+    
+    # Convert prices to target currency
+    from ..utils.price_helpers import convert_price_fields
+    wishlist_data = convert_price_fields(wishlist_data, currency)
     
     return Response({
         'message': f'Refreshed {updated_count} products ({failed_count} failed)',
         'updated_count': updated_count,
         'failed_count': failed_count,
-        'wishlist': detail_serializer.data
+        'wishlist': wishlist_data,
+        'currency': currency.upper()
     }, status=status.HTTP_200_OK)
 
 

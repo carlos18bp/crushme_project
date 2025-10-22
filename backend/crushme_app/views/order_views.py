@@ -395,8 +395,11 @@ def get_gift_orders(request):
 
     # Serialize orders with enriched product data and conditional shipping info
     serializer = OrderPrivateSerializer(paginated_orders, many=True, context={'request': request})
-
-    return Response({
+    
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
+    response_data = {
         'orders': serializer.data,
         'pagination': {
             'current_page': page,
@@ -417,7 +420,13 @@ def get_gift_orders(request):
             'sent_gifts_count': user.sent_gifts_count,
             'received_gifts_count': user.received_gifts.count()
         }
-    }, status=status.HTTP_200_OK)
+    }
+    
+    # Convert prices to target currency
+    from ..utils.price_helpers import convert_price_fields
+    response_data = convert_price_fields(response_data, currency)
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -453,6 +462,9 @@ def get_user_purchase_history(request):
     # Serialize orders with enriched product data and conditional shipping info
     serializer = OrderPrivateSerializer(paginated_purchases, many=True, context={'request': request})
 
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
     # Debug logging para ver respuesta al frontend
     response_data = {
         'purchases': serializer.data,
@@ -470,9 +482,13 @@ def get_user_purchase_history(request):
             'gift_purchases': user.purchase_history.filter(is_gift=True).count(),
             'sent_gifts_count': user.sent_gifts_count,
             'received_gifts_count': user.received_gifts.count(),
-            'total_spent': str(sum(order.total for order in user.purchase_history.all()))
+            'total_spent': float(sum(order.total for order in user.purchase_history.all()))
         }
     }
+    
+    # Convert prices to target currency
+    from ..utils.price_helpers import convert_price_fields
+    response_data = convert_price_fields(response_data, currency)
 
     return Response(response_data, status=status.HTTP_200_OK)
 

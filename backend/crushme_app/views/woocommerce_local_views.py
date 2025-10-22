@@ -416,6 +416,7 @@ def get_trending_products_local(request):
     """
     try:
         target_lang = get_language_from_request(request)
+        target_currency = getattr(request, 'currency', 'COP')
         
         # Obtener productos publicados ordenados por rating y reviews
         queryset = WooCommerceProduct.objects.filter(
@@ -426,13 +427,15 @@ def get_trending_products_local(request):
         products_data = get_products_list(
             queryset=queryset,
             target_language=target_lang,
-            include_stock=False
+            include_stock=False,
+            target_currency=target_currency
         )
         
         return Response({
             'success': True,
             'data': products_data,
             'count': len(products_data),
+            'currency': target_currency,
             'source': 'local_db'
         }, status=status.HTTP_200_OK)
         
@@ -608,7 +611,7 @@ def get_product_variation_detail_local(request, product_id, variation_id):
             # Convert to target currency
             from ..utils.currency_converter import CurrencyConverter
             converted_price = CurrencyConverter.convert_price(final_price, target_currency)
-            return round(converted_price, 2) if converted_price else None
+            return converted_price
         
         # Obtener categorías del producto padre (traducidas)
         categories = []

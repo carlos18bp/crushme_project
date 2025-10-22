@@ -26,11 +26,20 @@ def get_cart(request):
     """
     cart, created = Cart.objects.get_or_create(user=request.user)
     
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
     serializer = CartSerializer(cart, context={'request': request})
+    cart_data = serializer.data
+    
+    # Convert prices to target currency
+    from ..utils.price_helpers import convert_cart_response
+    cart_data = convert_cart_response(cart_data, currency)
     
     return Response({
-        'cart': serializer.data,
-        'is_new_cart': created
+        'cart': cart_data,
+        'is_new_cart': created,
+        'currency': currency.upper()
     }, status=status.HTTP_200_OK)
 
 
@@ -40,12 +49,21 @@ def get_cart_summary(request):
     """
     Get lightweight cart summary (for header/navigation)
     """
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
     try:
         cart = Cart.objects.get(user=request.user)
         serializer = CartSummarySerializer(cart)
+        summary_data = serializer.data
+        
+        # Convert prices to target currency
+        from ..utils.price_helpers import convert_cart_response
+        summary_data = convert_cart_response(summary_data, currency)
         
         return Response({
-            'cart_summary': serializer.data
+            'cart_summary': summary_data,
+            'currency': currency.upper()
         }, status=status.HTTP_200_OK)
     
     except Cart.DoesNotExist:
@@ -53,8 +71,9 @@ def get_cart_summary(request):
             'cart_summary': {
                 'id': None,
                 'total_items': 0,
-                'total_price': '0.00',
-                'items_count': 0
+                'total_price': 0 if currency == 'COP' else 0.00,
+                'items_count': 0,
+                'currency': currency.upper()
             }
         }, status=status.HTTP_200_OK)
 
@@ -97,22 +116,31 @@ def add_to_cart(request):
                 product_image=product_image
             )
             
-            # Return lightweight response
-            return Response({
+            # Get currency from request (set by CurrencyMiddleware)
+            currency = getattr(request, 'currency', 'COP')
+            
+            # Prepare response data
+            response_data = {
                 'message': f'Added {quantity} x {product_name} to cart',
                 'item': {
                     'id': cart_item.id,
                     'product_id': product_id,
                     'product_name': product_name,
                     'quantity': cart_item.quantity,
-                    'unit_price': str(cart_item.unit_price),
-                    'subtotal': str(cart_item.subtotal)
+                    'unit_price': float(cart_item.unit_price),
+                    'subtotal': float(cart_item.subtotal)
                 },
                 'cart_summary': {
                     'total_items': cart.total_items,
-                    'total_price': str(cart.total_price)
+                    'total_price': float(cart.total_price)
                 }
-            }, status=status.HTTP_200_OK)
+            }
+            
+            # Convert prices to target currency
+            from ..utils.price_helpers import convert_price_fields
+            response_data = convert_price_fields(response_data, currency)
+            
+            return Response(response_data, status=status.HTTP_200_OK)
             
     except Exception as e:
         return Response({
@@ -209,6 +237,9 @@ def clear_cart(request):
     """
     Remove all items from user's cart
     """
+    # Get currency from request (set by CurrencyMiddleware)
+    currency = getattr(request, 'currency', 'COP')
+    
     try:
         cart = Cart.objects.get(user=request.user)
         items_count = cart.items.count()
@@ -216,10 +247,16 @@ def clear_cart(request):
         
         # Return updated (empty) cart
         cart_serializer = CartSerializer(cart, context={'request': request})
+        cart_data = cart_serializer.data
+        
+        # Convert prices to target currency
+        from ..utils.price_helpers import convert_cart_response
+        cart_data = convert_cart_response(cart_data, currency)
         
         return Response({
             'message': f'Cleared {items_count} items from cart',
-            'cart': cart_serializer.data
+            'cart': cart_data,
+            'currency': currency.upper()
         }, status=status.HTTP_200_OK)
     
     except Cart.DoesNotExist:
@@ -229,8 +266,9 @@ def clear_cart(request):
                 'id': None,
                 'items': [],
                 'total_items': 0,
-                'total_price': '0.00',
-                'is_empty': True
+                'total_price': 0 if currency == 'COP' else 0.00,
+                'is_empty': True,
+                'currency': currency.upper()
             }
         }, status=status.HTTP_200_OK)
 
@@ -264,14 +302,24 @@ def validate_cart_for_checkout(request):
                 'issues': validation_errors
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response({
+        # Get currency from request (set by CurrencyMiddleware)
+        currency = getattr(request, 'currency', 'COP')
+        
+        # Prepare response data
+        response_data = {
             'message': 'Cart is valid for checkout',
             'cart_summary': {
                 'total_items': cart.total_items,
-                'total_price': str(cart.total_price),
+                'total_price': float(cart.total_price),
                 'items_count': cart.items.count()
             }
-        }, status=status.HTTP_200_OK)
+        }
+        
+        # Convert prices to target currency
+        from ..utils.price_helpers import convert_price_fields
+        response_data = convert_price_fields(response_data, currency)
+        
+        return Response(response_data, status=status.HTTP_200_OK)
     
     return Response({
         'error': 'Cart validation failed',

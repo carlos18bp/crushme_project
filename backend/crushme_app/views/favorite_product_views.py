@@ -71,12 +71,21 @@ def add_favorite_product(request):
         )
         
         if created:
+            # Get currency from request (set by CurrencyMiddleware)
+            currency = getattr(request, 'currency', 'COP')
+            
             serializer = FavoriteProductSerializer(favorite)
-            return Response({
+            response_data = {
                 'success': True,
                 'message': 'Producto agregado a favoritos exitosamente',
                 'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
+            }
+            
+            # Convert prices to target currency
+            from ..utils.price_helpers import convert_price_fields
+            response_data = convert_price_fields(response_data, currency)
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
         else:
             return Response({
                 'success': False,
@@ -169,10 +178,13 @@ def get_favorite_products(request):
                         f"Error refreshing product {favorite.woocommerce_product_id}: {str(e)}"
                     )
         
+        # Get currency from request (set by CurrencyMiddleware)
+        currency = getattr(request, 'currency', 'COP')
+        
         # Serialize with full product data
         serializer = FavoriteProductListSerializer(favorites, many=True)
         
-        return Response({
+        response_data = {
             'success': True,
             'message': 'Favoritos obtenidos exitosamente',
             'data': serializer.data,
@@ -180,7 +192,13 @@ def get_favorite_products(request):
                 'total_favorites': favorites.count(),
                 'products_refreshed': updated_count
             }
-        }, status=status.HTTP_200_OK)
+        }
+        
+        # Convert prices to target currency
+        from ..utils.price_helpers import convert_price_fields
+        response_data = convert_price_fields(response_data, currency)
+        
+        return Response(response_data, status=status.HTTP_200_OK)
     
     except Exception as e:
         logger.error(f"Error getting favorite products: {str(e)}")

@@ -120,7 +120,9 @@ async function makeRequest(method, url, params = {}, config = {}) {
     fullUrl = `/api/${url}${separator}lang=${currentLanguage}`;
   }
   
-  console.log(`🌐 → HTTP ${method} ${fullUrl} [${currentCurrency}]`);
+  // 📊 Log detallado de headers enviados al backend
+  console.log(`🌐 → ${method} ${fullUrl}`);
+  console.log(`   📍 Headers: Accept-Language: ${currentLanguage} | X-Currency: ${currentCurrency}`);
   
   const csrfToken = getCookie("csrftoken");
   const token = getJWTToken();
@@ -167,13 +169,15 @@ async function makeRequest(method, url, params = {}, config = {}) {
 
     const responseTime = performance.now() - startTime;
     const responseSize = JSON.stringify(response.data).length;
-    console.log(`🌐 ← HTTP ${method} ${fullUrl} (${responseTime.toFixed(0)}ms, ${responseSize} bytes, status: ${response.status})`);
+    console.log(`🌐 ← ${response.status} ${method} ${fullUrl}`);
+    console.log(`   ⏱️  ${responseTime.toFixed(0)}ms | ${(responseSize / 1024).toFixed(2)}KB`);
 
     return response;
     
   } catch (error) {
     const errorTime = performance.now() - startTime;
-    console.error(`🌐 ✗ HTTP ${method} ${fullUrl} ERROR (${errorTime.toFixed(0)}ms):`, error.message);
+    console.error(`🌐 ✗ ${method} ${fullUrl}`);
+    console.error(`   ❌ Error (${errorTime.toFixed(0)}ms): ${error.message}`);
     
     // Handle 401 errors (token expired) with automatic refresh
     if (error.response?.status === 401 && token) {

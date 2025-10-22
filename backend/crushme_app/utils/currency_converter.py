@@ -102,7 +102,7 @@ class CurrencyConverter:
             target_currency: Target currency code ('COP' or 'USD')
             
         Returns:
-            float: Converted price, or original if target is COP
+            float/int: Converted price (int for COP, float for USD)
         """
         if price is None:
             return None
@@ -110,17 +110,17 @@ class CurrencyConverter:
         target_currency = target_currency.upper()
         
         if target_currency == 'COP':
-            # Return as-is (already in COP)
-            return float(price)
+            # Return as integer (no decimals in Colombian pesos)
+            return int(round(float(price)))
         
         elif target_currency == 'USD':
-            # Convert to USD
+            # Convert to USD (keep 2 decimals)
             return cls.convert_cop_to_usd(price)
         
         else:
             # Unknown currency, return as-is
             logger.warning(f"Unknown currency: {target_currency}, returning COP price")
-            return float(price)
+            return int(round(float(price)))
     
     @classmethod
     def get_current_rate_info(cls):
