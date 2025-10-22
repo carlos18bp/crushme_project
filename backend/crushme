@@ -1,0 +1,58 @@
+server {
+    server_name crushme.com.co www.crushme.com.co;
+
+    location = /favicon.ico { 
+        access_log off; 
+        log_not_found off; 
+    }
+    
+    location /static/ {
+        alias /home/ryzepeck/webapps/crushme_project/backend/static/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location /media/ {
+        alias /home/ryzepeck/webapps/crushme_project/backend/media/;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    location / {
+        proxy_pass http://unix:/run/gunicorn.sock;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        
+        # Increase timeouts for long-running requests
+        proxy_connect_timeout 600s;
+        proxy_send_timeout 600s;
+        proxy_read_timeout 600s;
+    }
+
+    # Increase client body size for file uploads
+    client_max_body_size 100M;
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/crushme.com.co/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/crushme.com.co/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = www.crushme.com.co) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    if ($host = crushme.com.co) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    server_name crushme.com.co www.crushme.com.co;
+    return 404; # managed by Certbot
+}
