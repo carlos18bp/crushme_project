@@ -78,11 +78,17 @@
                                     <h3 class="font-comfortaa font-medium text-gray-900 text-sm leading-tight">
                                       {{ item.name || $t('cart.labels.product') }}
                                     </h3>
-                                    <p class="ml-4 font-poppins font-semibold text-gray-900">${{ (item.price * item.quantity).toFixed(2) }}</p>
+                                    <div class="ml-4 flex items-baseline gap-1">
+                                      <p class="font-poppins font-semibold text-gray-900">${{ (item.price * item.quantity).toFixed(2) }}</p>
+                                      <span class="text-xs text-gray-500">{{ currencyStore.currentCurrency }}</span>
+                                    </div>
                                   </div>
-                                  <p class="mt-1 text-xs font-poppins text-gray-500">
-                                    ${{ item.price?.toFixed(2) || '0.00' }}
-                                  </p>
+                                  <div class="mt-1 flex items-baseline gap-1">
+                                    <p class="text-xs font-poppins text-gray-500">
+                                      ${{ item.price?.toFixed(2) || '0.00' }}
+                                    </p>
+                                    <span class="text-xs text-gray-400">{{ currencyStore.currentCurrency }}</span>
+                                  </div>
                                 </div>
                                 
                                 <div class="flex items-center justify-between mt-3">
@@ -126,7 +132,10 @@
                       <!-- Subtotal -->
                       <div class="flex justify-between font-poppins text-lg font-medium text-gray-900 mb-1">
                         <p>{{ $t('cart.subtotal') }}</p>
-                        <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
+                        <div class="flex items-baseline gap-1">
+                          <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
+                          <span class="text-sm text-gray-500">{{ currencyStore.currentCurrency }}</span>
+                        </div>
                       </div>
                       
                       <!-- Shipping -->
@@ -138,7 +147,10 @@
                       <!-- Total -->
                       <div class="flex justify-between font-poppins text-xl font-semibold text-gray-900 border-t border-gray-200 pt-3 mb-4">
                         <p>{{ $t('cart.total') }}</p>
-                        <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
+                        <div class="flex items-baseline gap-1">
+                          <p>${{ cartStore.totalPrice.toFixed(2) }}</p>
+                          <span class="text-sm text-gray-500">{{ currencyStore.currentCurrency }}</span>
+                        </div>
                       </div>
 
                       <!-- Checkout button -->
@@ -186,6 +198,7 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useCartStore } from '@/stores/modules/cartStore.js'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useCurrencyStore } from '@/stores/modules/currencyStore'
 
 // Props
 const props = defineProps({
@@ -203,6 +216,7 @@ const { t } = useI18n()
 const router = useRouter()
 const cartStore = useCartStore()
 const i18nStore = useI18nStore()
+const currencyStore = useCurrencyStore()
 
 // State
 const open = ref(props.isOpen)

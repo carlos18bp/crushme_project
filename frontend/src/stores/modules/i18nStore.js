@@ -197,31 +197,91 @@ export const useI18nStore = defineStore('i18n', {
       i18n.global.locale.value = newLocale
     },
     async detectUserLanguage() {
+      console.log('🌍 [i18nStore] Iniciando detección de idioma...')
+      
       try {
-        // Add timeout to prevent hanging
-        const response = await axios.get('https://ipapi.co/json/', {
-          timeout: 3000 // 3 seconds timeout
-        })
-        this.countryCode = response.data.country_code
+        // MÉTODO 1: Detectar idioma del navegador (MÁS PRECISO Y RÁPIDO)
+        const browserLanguage = navigator.language || navigator.userLanguage
+        console.log('🌐 [i18nStore] Idioma del navegador:', browserLanguage)
         
-        // Set Spanish for Spanish-speaking countries, English for others
-        const detectedLocale = spanishSpeakingCountries.includes(this.countryCode) ? 'es' : 'en'
+        // Extraer código de idioma (ej: "es-CO" → "es", "en-US" → "en")
+        const languageCode = browserLanguage.split('-')[0].toLowerCase()
+        
+        // Determinar si es español
+        const isSpanish = languageCode === 'es'
+        const detectedLocale = isSpanish ? 'es' : 'en'
+        
+        console.log('🌐 [i18nStore] Idioma detectado del navegador:', {
+          browserLanguage: browserLanguage,
+          languageCode: languageCode,
+          isSpanish: isSpanish,
+          detectedLocale: detectedLocale
+        })
+        
+        // MÉTODO 2: Detectar país por IP (OPCIONAL, para referencia)
+        try {
+          const response = await axios.get('https://ipapi.co/json/', {
+            timeout: 3000
+          })
+          
+          this.countryCode = response.data.country_code
+          
+          console.log('🌍 [i18nStore] País detectado por IP:', {
+            country: response.data.country_name,
+            country_code: response.data.country_code,
+            city: response.data.city
+          })
+        } catch (ipError) {
+          console.warn('⚠️ [i18nStore] No se pudo detectar país por IP (no crítico):', ipError.message)
+          this.countryCode = null
+        }
+        
+        // Usar idioma del navegador (más confiable)
         this.detectedLocale = detectedLocale
+        this.setLocale(detectedLocale)
+        
+        console.log('✅ [i18nStore] Idioma configurado:', detectedLocale)
         
         return detectedLocale
       } catch (error) {
-        console.warn('Failed to detect user language, using default:', error.message)
-        // Fallback to English on error
-        this.detectedLocale = 'en'
-        return 'en'
+        console.error('❌ [i18nStore] Error detectando idioma:', {
+          message: error.message
+        })
+        // Fallback: intentar con idioma del navegador
+        const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase()
+        const fallbackLocale = browserLang === 'es' ? 'es' : 'en'
+        
+        this.detectedLocale = fallbackLocale
+        this.setLocale(fallbackLocale)
+        
+        console.log('⚠️ [i18nStore] Usando fallback del navegador:', fallbackLocale)
+        return fallbackLocale
       } finally {
         this.isInitialized = true
+        console.log('🌍 [i18nStore] Detección de idioma finalizada. isInitialized:', this.isInitialized)
       }
     },
     // Initialize language detection when Pinia is available
     async initializeIfNeeded() {
+      console.log('🔄 [i18nStore] initializeIfNeeded llamado. Estado:', {
+        isInitialized: this.isInitialized,
+        locale: this.locale,
+        detectedLocale: this.detectedLocale,
+        countryCode: this.countryCode
+      })
+      
+      // Si ya está inicializado pero no tiene detectedLocale, significa que se guardó antes de la detección
+      // En ese caso, forzar re-detección
+      if (this.isInitialized && !this.detectedLocale) {
+        console.log('⚠️ [i18nStore] Inicializado pero sin detectedLocale, forzando re-detección...')
+        this.isInitialized = false
+      }
+      
       if (!this.isInitialized) {
+        console.log('🔄 [i18nStore] No está inicializado, detectando idioma...')
         await this.detectUserLanguage()
+      } else {
+        console.log('✅ [i18nStore] Ya está inicializado, usando idioma actual:', this.locale)
       }
     }
   },

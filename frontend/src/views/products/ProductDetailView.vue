@@ -99,7 +99,10 @@
                 <!-- Si hay variación seleccionada, usar sus precios -->
                 <template v-if="isProductVariable && currentVariation">
                   <span v-if="currentVariation.on_sale" class="sale-badge">{{ $t('productDetail.saleBadge') || 'SALE' }}</span>
-                  <span class="current-price">{{ displayPrice }}</span>
+                  <div class="flex items-baseline gap-2">
+                    <span class="current-price">{{ displayPrice }}</span>
+                    <span class="text-sm text-gray-500 font-poppins">{{ currencyStore.currentCurrency }}</span>
+                  </div>
                   <span v-if="currentVariation.on_sale && currentVariation.regular_price" class="regular-price">
                     ${{ parseFloat(currentVariation.converted_regular_price || currentVariation.regular_price).toLocaleString('es-CO') }}
                   </span>
@@ -108,7 +111,10 @@
                 <!-- Si es producto simple o variable sin variación seleccionada -->
                 <template v-else>
                   <span v-if="product.on_sale" class="sale-badge">{{ $t('productDetail.saleBadge') || 'SALE' }}</span>
-                  <span class="current-price">{{ displayPrice }}</span>
+                  <div class="flex items-baseline gap-2">
+                    <span class="current-price">{{ displayPrice }}</span>
+                    <span class="text-sm text-gray-500 font-poppins">{{ currencyStore.currentCurrency }}</span>
+                  </div>
                   <span v-if="product.on_sale && product.regular_price" class="regular-price">
                     ${{ parseFloat(product.converted_regular_price || product.regular_price).toLocaleString('es-CO') }}
                   </span>
@@ -241,6 +247,7 @@ import { useCartStore } from '@/stores/modules/cartStore'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useReviewStore } from '@/stores/modules/reviewStore'
+import { useCurrencyStore } from '@/stores/modules/currencyStore'
 import { get_request } from '@/services/request_http.js'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -266,6 +273,7 @@ const cartStore = useCartStore()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const reviewStore = useReviewStore()
+const currencyStore = useCurrencyStore()
 
 // Reactive data
 const selectedImageIndex = ref(0)

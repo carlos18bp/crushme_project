@@ -50,9 +50,12 @@
           <span v-if="product.type === 'variable'" class="product-price text-lg md:text-xl font-medium text-brand-pink-dark font-poppins italic cursor-pointer hover:text-brand-pink transition-colors" @click="$emit('navigate-to-product', product.id)">
             {{ $t('products.product.findMe') || 'Find me ✨' }}
           </span>
-          <span v-else class="product-price text-xl md:text-2xl font-medium text-gray-900 font-poppins">
-            {{ displayPrice }}
-          </span>
+          <div v-else class="flex items-baseline gap-1">
+            <span class="product-price text-xl md:text-2xl font-medium text-gray-900 font-poppins">
+              {{ displayPrice }}
+            </span>
+            <span class="text-xs text-gray-500 font-poppins">{{ currencyStore.currentCurrency }}</span>
+          </div>
         </div>
         
         <!-- Botones de acción (solo para productos NO variables) -->
