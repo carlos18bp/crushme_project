@@ -15,6 +15,27 @@ export default defineConfig({
     'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify(process.env.VITE_PAYPAL_CLIENT_ID),
     'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify(process.env.VITE_WOMPI_PUBLIC_KEY || 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR'),
   },
+  
+  // Configuración para build
+  build: {
+    outDir: '../backend/static/frontend',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'index.js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'index.css'
+          }
+          return assetInfo.name
+        }
+      }
+    }
+  },
+  
+  // Base URL para los assets en producción
+  base: '/static/frontend/',
+  
   server: {
     port: 5173,
     proxy: {
