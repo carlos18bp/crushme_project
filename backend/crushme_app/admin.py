@@ -15,7 +15,7 @@ from .models import (
     User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser,
     Product, Cart, CartItem, 
     Order, OrderItem, WishList, WishListItem, FavoriteWishList,
-    Review, Feed, FavoriteProduct,
+    Review, Feed, FavoriteProduct, DiscountCode,
     WooCommerceCategory, WooCommerceProduct, WooCommerceProductImage,
     WooCommerceProductVariation, ProductSyncLog,
     TranslatedContent, CategoryPriceMargin, DefaultPriceMargin
@@ -1199,6 +1199,68 @@ class DefaultPriceMarginAdmin(admin.ModelAdmin):
 
 
 # ===========================
+# DISCOUNT CODE ADMIN
+# ===========================
+
+@admin.register(DiscountCode)
+class DiscountCodeAdmin(admin.ModelAdmin):
+    """Admin for discount codes"""
+    list_display = (
+        'code', 'discount_percentage_display', 'is_active_display', 
+        'usage_display', 'created_at'
+    )
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('code',)
+    readonly_fields = ('times_used', 'created_at', 'updated_at')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Discount Information', {
+            'fields': ('code', 'discount_percentage', 'is_active')
+        }),
+        ('Usage Limits', {
+            'fields': ('max_uses', 'times_used')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def discount_percentage_display(self, obj):
+        """Display discount percentage with color"""
+        return format_html(
+            '<span style="color: #28a745; font-weight: bold;">{}%</span>',
+            obj.discount_percentage
+        )
+    discount_percentage_display.short_description = 'Discount'
+    discount_percentage_display.admin_order_field = 'discount_percentage'
+    
+    def is_active_display(self, obj):
+        """Display active status with color"""
+        if obj.is_active:
+            return format_html('<span style="color: green;">✓ Active</span>')
+        return format_html('<span style="color: red;">✗ Inactive</span>')
+    is_active_display.short_description = 'Status'
+    is_active_display.admin_order_field = 'is_active'
+    
+    def usage_display(self, obj):
+        """Display usage statistics"""
+        if obj.max_uses:
+            percentage = (obj.times_used / obj.max_uses) * 100
+            color = '#28a745' if percentage < 80 else '#ffc107' if percentage < 100 else '#dc3545'
+            return format_html(
+                '<span style="color: {};">{} / {} ({}%)</span>',
+                color, obj.times_used, obj.max_uses, int(percentage)
+            )
+        return format_html(
+            '<span style="color: #17a2b8;">{} (Unlimited)</span>',
+            obj.times_used
+        )
+    usage_display.short_description = 'Usage'
+
+
+# ===========================
 # ADMIN SITE CUSTOMIZATION
 # ===========================
 
@@ -1264,7 +1326,7 @@ class CrushMeAdminSite(admin.AdminSite):
                 'app_label': 'order_management',
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['Order', 'OrderItem']
+                    if model['object_name'] in ['Order', 'OrderItem', 'DiscountCode']
                 ]
             },
             {
@@ -1325,3 +1387,6 @@ admin_site.register(TranslatedContent, TranslatedContentAdmin)
 # Price Margin models (IMPORTANT!)
 admin_site.register(CategoryPriceMargin, CategoryPriceMarginAdmin)
 admin_site.register(DefaultPriceMargin, DefaultPriceMarginAdmin)
+
+# Discount Code
+admin_site.register(DiscountCode, DiscountCodeAdmin)

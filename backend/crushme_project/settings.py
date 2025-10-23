@@ -48,72 +48,22 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
-]
-
-# Configuraciones adicionales de CORS para desarrollo
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # Solo en desarrollo, usar False en producción
-
-# Headers permitidos para CORS
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'x-currency',
-]
-
-# Métodos HTTP permitidos
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-
-"""
-Authentication methods used, JWT (JSON Web Token) Authentication: JWT is an 
-open standard that defines a compact and secure way to transmit information 
-between parties as a JSON object.
-"""
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
-
-AUTH_USER_MODEL = 'crushme_app.User'
-
-# Set TTL to JWT
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-}
 
 ROOT_URLCONF = 'crushme_project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -170,60 +120,92 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Custom User Model
+AUTH_USER_MODEL = 'crushme_app.User'
 
-# Storage configuration for easy_thumbnails
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# JWT settings
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
     },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
     },
-    "easy_thumbnails.storage.ThumbnailFileSystemStorage": {
-        "BACKEND": "easy_thumbnails.storage.ThumbnailFileSystemStorage",
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'crushme_app': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
-# Email configuration
-# Set USE_REAL_EMAIL = True to send real emails in development
-# Set USE_REAL_EMAIL = False to print emails to console (faster for testing)
-USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
-
-if DEBUG and not USE_REAL_EMAIL:
-    # Development: Print emails to console
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    # Production or development with real emails
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtpout.secureserver.net'
-    EMAIL_PORT = 465
-    EMAIL_USE_SSL = True
-    EMAIL_USE_TLS = False
-    EMAIL_HOST_USER = 'support@chrushme.com.co'
-    EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
-
-DEFAULT_FROM_EMAIL = 'CrushMe Support <support@crushme.com.co>'
-
-# Google OAuth2 settings
-GOOGLE_OAUTH2_CLIENT_ID = 'your-google-client-id'  # Change this in production
+# Thumbnail settings
+THUMBNAIL_ALIASES = {
+    '': {
+        'avatar': {'size': (200, 200), 'crop': True},
+        'small': {'size': (100, 100), 'crop': True},
+    },
+}
 
 # WooCommerce API settings
-# TODO: Mover estas credenciales a variables de entorno en producción
 WOOCOMMERCE_CONSUMER_KEY = 'ck_75db39323bb52ffb84e19a0ea4633fe46da8512f'
 WOOCOMMERCE_CONSUMER_SECRET = 'cs_5b78adcd4f49a287fb155c255b5a62cee13207cc'
 WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
@@ -233,6 +215,16 @@ WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
 PAYPAL_CLIENT_ID = 'AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'
 PAYPAL_CLIENT_SECRET = 'ELvYzKUvkuEGopUV0XLg3RGIf9irlT5qWgks7ddZXkbjIBj7z0icmM3aH9YQjspAu9TaovpR54RsOTgb'
 PAYPAL_MODE = 'sandbox'  # Cambiar a 'live' en producción
+
+# Wompi API settings (Colombian payment gateway - COP only)
+# TODO: Mover estas credenciales a variables de entorno en producción
+# Obtener credenciales en: https://comercios.wompi.co/
+WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR')
+WOMPI_PRIVATE_KEY = os.environ.get('WOMPI_PRIVATE_KEY', 'prv_test_KfwGaDHAt9QikBRArROhTFbUFobB8dnn')
+WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', 'test_events_yfttSa6ec6puxj8Ld6YTzbzdqY4w47gk')
+WOMPI_INTEGRITY_KEY = os.environ.get('WOMPI_INTEGRITY_KEY', 'test_integrity_Zjk5ESr4C6fLn2vH3JA8G2MPTqHIsPy1')  # Para firmar transacciones
+WOMPI_BASE_URL = 'https://sandbox.wompi.co/v1'  # Sandbox URL para testing
+WOMPI_ENVIRONMENT = 'test'  # 'test' o 'production'
 
 # Production/Development environment flag
 # Set to True in production, False in development

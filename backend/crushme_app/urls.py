@@ -25,6 +25,9 @@ urlpatterns = [
     # Favorite products endpoints
     path('favorites/products/', include('crushme_app.urls.favorite_product_urls')),
     
+    # Review endpoints
+    path('reviews/', include('crushme_app.urls.review_urls')),
+    
     # Contact endpoints
     path('contact/', include('crushme_app.urls.contact_urls')),
     
@@ -33,4 +36,7 @@ urlpatterns = [
     
     # User search endpoints (for gift sending)
     path('users/', include('crushme_app.urls.user_search_urls')),
+    
+    # Discount code endpoints
+    path('discounts/', include('crushme_app.urls.discount_urls')),
 ]

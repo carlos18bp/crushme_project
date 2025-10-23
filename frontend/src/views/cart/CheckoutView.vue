@@ -112,7 +112,7 @@
               </datalist>
               <p class="city-shipping-info" v-if="shippingForm.city">
                 <span>
-                  📦 Costo de envío: {{ formatCOP(shipping) }}
+                  📦 Costo de envío: {{ formatPrice(shipping) }}
                 </span>
               </p>
             </div>
@@ -229,13 +229,22 @@
             </div>
           </template>
 
-          <div class="form-group">
-            <h3 class="payment-title">{{ $t('cart.checkout.form.paymentMethod') }}</h3>
-            <p class="payment-subtitle">{{ $t('cart.checkout.form.selectPaymentMethod') }}</p>
-            
-            <!-- PayPal Button Container -->
-            <div id="paypal-button-container" class="paypal-container"></div>
-            <p v-if="paypalError" class="payment-error">{{ paypalError }}</p>
+          <!-- Continue to Payment Button -->
+          <div class="form-group payment-button-section">
+            <button 
+              @click="proceedToPayment" 
+              :disabled="!isFormValid"
+              class="continue-payment-btn"
+            >
+              {{ isFormValid ? (currencyStore.currentCurrency === 'COP' ? 'Pagar con Wompi →' : 'Continuar al pago →') : 'Completa todos los campos obligatorios' }}
+            </button>
+            <p v-if="formError" class="payment-error">{{ formError }}</p>
+          </div>
+
+          <!-- PayPal Buttons Section (USD only) -->
+          <div v-if="showPayPalButtons && currencyStore.currentCurrency === 'USD'" id="paypal-section" class="paypal-section">
+            <h3 class="paypal-title">Completa tu pago con PayPal</h3>
+            <div id="paypal-button-container"></div>
           </div>
         </div>
       </div>
@@ -289,23 +298,54 @@
 
           <!-- Discount Code -->
           <div class="discount-section">
-            <h3 class="discount-title">Discount code</h3>
-            <div class="discount-input">
+            <h3 class="discount-title">Código de descuento</h3>
+            
+            <!-- Input y botón de validación -->
+            <div v-if="!discountData" class="discount-input">
               <input 
                 type="text" 
                 v-model="discountCode"
-                placeholder="Enter your discount code"
+                placeholder="Ingresa tu código"
                 class="form-input"
+                :disabled="isValidatingDiscount"
+                @keyup.enter="validateDiscountCode"
               >
-              <button class="validate-btn">Validate</button>
+              <button 
+                @click="validateDiscountCode" 
+                :disabled="isValidatingDiscount || !discountCode.trim()"
+                class="validate-btn"
+              >
+                {{ isValidatingDiscount ? 'Validando...' : 'Validar' }}
+              </button>
             </div>
+
+            <!-- Código aplicado -->
+            <div v-if="discountData" class="discount-applied">
+              <div class="discount-applied-content">
+                <span class="discount-code-badge">{{ discountData.code }}</span>
+                <span class="discount-percentage">-{{ discountData.discount_percentage }}%</span>
+              </div>
+              <button @click="removeDiscount" class="remove-discount-btn" title="Remover descuento">
+                ✕
+              </button>
+            </div>
+
+            <!-- Error de validación -->
+            <p v-if="discountError && !discountData" class="discount-error">{{ discountError }}</p>
           </div>
 
           <!-- Totals -->
           <div class="totals-section">
             <div class="total-row">
               <span>{{ $t('cart.checkout.form.subtotal') }}</span>
-              <span class="total-value">{{ formatPrice(subtotal) }}</span>
+              <div class="subtotal-values">
+                <!-- Subtotal original tachado si hay descuento -->
+                <span v-if="discountData" class="original-subtotal">{{ formatPrice(subtotal) }}</span>
+                <!-- Nuevo subtotal (o subtotal normal si no hay descuento) -->
+                <span class="total-value" :class="{ 'discounted-subtotal': discountData }">
+                  {{ formatPrice(subtotalAfterDiscount) }}
+                </span>
+              </div>
             </div>
             <div class="total-row">
               <span>{{ $t('cart.checkout.form.shipping') }}</span>
@@ -319,6 +359,15 @@
                 </span>
               </span>
             </div>
+            
+            <!-- Badge de descuento aplicado -->
+            <div v-if="discountData" class="total-row discount-row">
+              <span class="discount-label">
+                🎉 Descuento {{ discountData.code }} (-{{ discountData.discount_percentage }}%)
+              </span>
+              <span class="total-value discount-value">-{{ formatPrice(discountAmount) }}</span>
+            </div>
+            
             <div class="total-row tax-row">
               <span>{{ $t('cart.checkout.form.tax') }} <span class="tax-included-badge">(Incluido)</span></span>
               <span class="total-value tax-included-value">{{ formatPrice(tax) }}</span>
@@ -408,7 +457,13 @@ const shippingForm = ref({
 });
 
 const discountCode = ref('');
-const paypalError = ref('');
+const discountData = ref(null); // Datos del descuento validado
+const discountError = ref('');
+const isValidatingDiscount = ref(false);
+const formError = ref('');
+
+// ⭐ PayPal state
+const showPayPalButtons = ref(false);
 const paypalScriptLoaded = ref(false);
 
 // ⭐ Producto de dropshipping (recargo oculto)
@@ -558,415 +613,452 @@ const loadDropshippingProduct = async () => {
 // Calculate totals
 const subtotal = computed(() => cartStore.totalPrice);
 
-// ⭐ Funciones auxiliares para creación de órdenes
-const createRegularOrder = async () => {
-  console.log('📦 [REGULAR] Creando orden regular...');
-
-  // Validar que los campos obligatorios estén completos
-  if (!shippingForm.value.email || !shippingForm.value.fullName ||
-      !shippingForm.value.address1 || !shippingForm.value.city ||
-      !shippingForm.value.state || !shippingForm.value.zipCode ||
-      !shippingForm.value.phone) {
-    paypalError.value = 'Por favor completa todos los campos obligatorios antes de proceder al pago.';
-
-    await showError(
-      'Por favor completa todos los campos obligatorios:\n\n' +
-      '• Email\n' +
-      '• Nombre completo\n' +
-      '• Dirección\n' +
-      '• Ciudad\n' +
-      '• Estado/Provincia\n' +
-      '• Código Postal\n' +
-      '• Teléfono',
-      '⚠️ Campos Incompletos'
+/**
+ * ⭐ Validación del formulario
+ */
+const isFormValid = computed(() => {
+  // Si es modo "para mí", validar campos completos
+  if (shippingType.value === 'me') {
+    const valid = !!(
+      shippingForm.value.email &&
+      shippingForm.value.fullName &&
+      shippingForm.value.address1 &&
+      shippingForm.value.city &&
+      shippingForm.value.state &&
+      shippingForm.value.zipCode &&
+      shippingForm.value.phone
     );
-
-    throw new Error('Incomplete shipping information');
-  }
-
-  // Obtener nombre del país a partir del isoCode
-  const selectedCountry = countries.find(c => c.isoCode === shippingForm.value.country);
-  const countryName = selectedCountry ? selectedCountry.name : shippingForm.value.country;
-
-  // Preparar items del carrito
-  const items = cartStore.items.map(item => ({
-    woocommerce_product_id: item.product_id || item.id,
-    woocommerce_variation_id: item.variation_id || null,
-    product_name: item.name,
-    quantity: item.quantity,
-    unit_price: parseFloat(item.price),
-    attributes: item.attributes || null
-  }));
-
-  // ⭐ Agregar producto de dropshipping (recargo oculto)
-  if (dropshippingProduct.value) {
-    items.push({
-      woocommerce_product_id: dropshippingProduct.value.id,
-      woocommerce_variation_id: null,
-      product_name: dropshippingProduct.value.name,
-      quantity: 1,
-      unit_price: parseFloat(dropshippingProduct.value.price),
-      attributes: null
-    });
-    console.log('📦 [DROPSHIPPING] Producto agregado a items:', {
-      id: dropshippingProduct.value.id,
-      name: dropshippingProduct.value.name,
-      price: dropshippingProduct.value.price
-    });
-  }
-
-  console.log('📦 [REGULAR] Items del carrito:', items);
-
-  // Preparar datos completos para el backend
-  const orderData = {
-    items: items,
-    customer_email: shippingForm.value.email,
-    customer_name: shippingForm.value.fullName,
-    shipping_address: shippingForm.value.address1,
-    shipping_city: shippingForm.value.city,
-    shipping_state: shippingForm.value.state,
-    shipping_postal_code: shippingForm.value.zipCode,
-    shipping_country: countryName,
-    phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
-    notes: shippingForm.value.additionalDetails || '',
-    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value // ⭐ Total calculado (para validación en backend)
-  };
-
-  console.log('📤 [REGULAR] Enviando datos completos al backend:', orderData);
-  console.log('💰 [REGULAR] Desglose:', {
-    subtotal: subtotal.value,
-    shipping: baseShipping.value,
-    dropshipping: dropshippingProduct.value?.price || 0,
-    total: total.value
-  });
-
-  // Crear orden en el backend
-  const result = await paymentStore.createPayPalOrder(orderData);
-
-  if (!result.success) {
-    paypalError.value = result.error || 'Error al crear la orden.';
-    throw new Error(result.error);
-  }
-
-  console.log('✅ [REGULAR] Orden creada en backend:', result.paypal_order_id);
-  console.log('⚠️ [REGULAR] Respuesta del backend:', result);
-  
-  // ⭐ Verificar que el backend esté usando el total correcto
-  if (result.data && result.data.total) {
-    console.log('💰 [REGULAR] Total en PayPal según backend:', result.data.total);
-    if (result.data.total !== total.value) {
-      console.error('❌ [REGULAR] DISCREPANCIA DE TOTAL!', {
-        frontend: total.value,
-        backend: result.data.total,
-        diferencia: total.value - result.data.total
+    
+    // Debug: mostrar qué campos faltan
+    if (!valid) {
+      console.log('🔍 [VALIDATION] Campos faltantes:', {
+        email: !!shippingForm.value.email,
+        fullName: !!shippingForm.value.fullName,
+        address1: !!shippingForm.value.address1,
+        city: !!shippingForm.value.city,
+        state: !!shippingForm.value.state,
+        zipCode: !!shippingForm.value.zipCode,
+        phone: !!shippingForm.value.phone
       });
     }
+    
+    return valid;
   }
+  
+  // Si es modo regalo, solo validar email y username
+  if (shippingType.value === 'gift') {
+    return !!(
+      shippingForm.value.email &&
+      shippingForm.value.username
+    );
+  }
+  
+  return false;
+});
 
-  return result.paypal_order_id;
+/**
+ * ⭐ Preparar datos de orden y continuar al pago
+ */
+const proceedToPayment = async () => {
+  formError.value = '';
+
+  try {
+    console.log('📦 [CHECKOUT] Preparando datos para pago...');
+
+    // Validar que el formulario esté completo
+    if (!isFormValid.value) {
+      formError.value = 'Por favor completa todos los campos obligatorios';
+      await showError(
+        'Completa todos los campos obligatorios antes de continuar.',
+        '⚠️ Campos Incompletos'
+      );
+      return;
+    }
+
+    // Validar que haya items en el carrito
+    if (!cartStore.items || cartStore.items.length === 0) {
+      formError.value = 'El carrito está vacío';
+      await showError('Tu carrito está vacío.', '🛒 Carrito Vacío');
+      return;
+    }
+
+    // Obtener nombre del país
+    const selectedCountry = countries.find(c => c.isoCode === shippingForm.value.country);
+    const countryName = selectedCountry ? selectedCountry.name : shippingForm.value.country;
+
+    // Preparar items del carrito
+    const items = cartStore.items.map(item => ({
+      woocommerce_product_id: item.product_id || item.id,
+      woocommerce_variation_id: item.variation_id || null,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit_price: parseFloat(item.price),
+      attributes: item.attributes || null
+    }));
+
+    // ⭐ Agregar producto de dropshipping (recargo oculto)
+    if (dropshippingProduct.value) {
+      items.push({
+        woocommerce_product_id: dropshippingProduct.value.id,
+        woocommerce_variation_id: null,
+        product_name: dropshippingProduct.value.name,
+        quantity: 1,
+        unit_price: parseFloat(dropshippingProduct.value.price),
+        attributes: null
+      });
+      console.log('📦 [DROPSHIPPING] Producto agregado a items');
+    }
+
+    // Preparar datos de orden según el tipo de envío
+    let orderData;
+
+    if (shippingType.value === 'gift') {
+      // Orden de regalo
+      orderData = {
+        items: items,
+        customer_email: shippingForm.value.email,
+        customer_name: isUserAuthenticated.value 
+          ? `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim() || authStore.username
+          : shippingForm.value.email,
+        receiver_username: shippingForm.value.username.replace('@', ''),
+        gift_message: shippingForm.value.note || '',
+        is_gift: true,
+        shipping: baseShipping.value,
+        total: total.value,
+        // Incluir wishlist data si existe
+        is_from_wishlist: !!wishlistId.value,
+        wishlist_id: wishlistId.value || null,
+        wishlist_name: wishlistName.value || null,
+        // Datos de envío del destinatario (si están disponibles)
+        shipping_address: selectedGiftUser.value?.address || 'Dirección del destinatario',
+        shipping_city: selectedGiftUser.value?.city || 'Ciudad',
+        shipping_state: selectedGiftUser.value?.state || 'Departamento',
+        shipping_postal_code: selectedGiftUser.value?.postal_code || '00000',
+        shipping_country: countryName,
+        phone_number: selectedGiftUser.value?.phone || '+57 300 0000000'
+      };
+
+      // Si hay un usuario autenticado, agregar como sender
+      if (isUserAuthenticated.value) {
+        orderData.sender_username = authStore.username;
+      }
+
+    } else {
+      // Orden regular
+      orderData = {
+        items: items,
+        customer_email: shippingForm.value.email,
+        customer_name: shippingForm.value.fullName,
+        shipping_address: shippingForm.value.address1,
+        shipping_address_line_2: shippingForm.value.address2 || '',
+        shipping_city: shippingForm.value.city,
+        shipping_state: shippingForm.value.state,
+        shipping_postal_code: shippingForm.value.zipCode,
+        shipping_country: countryName,
+        phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
+        notes: shippingForm.value.additionalDetails || '',
+        shipping: baseShipping.value,
+        total: total.value
+      };
+    }
+
+    console.log('📤 [CHECKOUT] Datos de orden preparados:', orderData);
+
+    // Procesar pago según la moneda
+    if (currencyStore.currentCurrency === 'COP') {
+      // Wompi para COP
+      await processWompiPayment(orderData);
+    } else {
+      // PayPal para USD - guardar datos y mostrar botón
+      sessionStorage.setItem('checkout_order_data', JSON.stringify(orderData));
+      showPayPalButtons.value = true;
+      
+      // Scroll al botón de PayPal
+      setTimeout(() => {
+        const paypalSection = document.getElementById('paypal-section');
+        if (paypalSection) {
+          paypalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+
+  } catch (error) {
+    console.error('❌ [CHECKOUT] Error al preparar datos:', error);
+    formError.value = 'Error al preparar la orden';
+    await showError('Error al preparar la orden.', '❌ Error');
+  }
 };
 
-const createGiftOrder = async () => {
-  console.log('🎁 [GIFT] Creando orden de regalo...');
-
-  // Validar campos específicos para regalo
-  if (!shippingForm.value.email) {
-    paypalError.value = 'El email es obligatorio para enviar regalos.';
-    await showError('Por favor ingresa tu email para enviar el regalo.', '📧 Email Requerido');
-    throw new Error('Email required for gift');
+/**
+ * ⭐ Procesar pago con Wompi (COP)
+ */
+const processWompiPayment = async (orderData) => {
+  try {
+    showLoading('Creando transacción...', '💳 Wompi');
+    
+    console.log('💳 [WOMPI] Iniciando pago...', orderData);
+    
+    const result = await paymentStore.createWompiTransaction(orderData);
+    
+    closeAlert();
+    
+    if (!result.success) {
+      formError.value = result.error || 'Error al crear transacción en Wompi';
+      await showError(formError.value, '❌ Error en Wompi');
+      return;
+    }
+    
+    console.log('✅ [WOMPI] Transacción creada:', result.data);
+    
+    // Guardar datos para confirmar después
+    localStorage.setItem('wompi_transaction_id', result.data.transaction_id);
+    localStorage.setItem('wompi_order_data', JSON.stringify(orderData));
+    
+    // Redirigir a Wompi checkout
+    window.location.href = result.data.payment_url;
+    
+  } catch (error) {
+    closeAlert();
+    console.error('❌ [WOMPI] Error inesperado:', error);
+    formError.value = 'Error al procesar el pago con Wompi';
+    await showError(formError.value, '❌ Error');
   }
+};
 
-  if (!shippingForm.value.username) {
-    paypalError.value = 'Selecciona un usuario destinatario para el regalo.';
-    await showError('Por favor selecciona el usuario que recibirá el regalo.', '👤 Usuario Requerido');
-    throw new Error('Username required for gift');
-  }
+/**
+ * ⭐ Cargar SDK de PayPal (USD)
+ */
+const loadPayPalScript = async () => {
+  return new Promise(async (resolve, reject) => {
+    if (window.paypal) {
+      console.log('💳 [PAYPAL] SDK ya está cargado');
+      paypalScriptLoaded.value = true;
+      resolve();
+      return;
+    }
 
-  // Preparar items del carrito para regalo
-  const items = cartStore.items.map(item => ({
-    woocommerce_product_id: item.product_id || item.id,
-    woocommerce_variation_id: item.variation_id || null,
-    product_name: item.name,
-    quantity: item.quantity,
-    unit_price: parseFloat(item.price),
-    attributes: item.attributes || null
-  }));
+    const existingScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        console.log('💳 [PAYPAL] SDK cargado desde script existente');
+        paypalScriptLoaded.value = true;
+        resolve();
+      });
+      return;
+    }
 
-  // ⭐ Agregar producto de dropshipping (recargo oculto)
-  if (dropshippingProduct.value) {
-    items.push({
-      woocommerce_product_id: dropshippingProduct.value.id,
-      woocommerce_variation_id: null,
-      product_name: dropshippingProduct.value.name,
-      quantity: 1,
-      unit_price: parseFloat(dropshippingProduct.value.price),
-      attributes: null
-    });
-    console.log('📦 [DROPSHIPPING] Producto agregado a items de regalo:', {
-      id: dropshippingProduct.value.id,
-      name: dropshippingProduct.value.name,
-      price: dropshippingProduct.value.price
-    });
-  }
+    console.log('💳 [PAYPAL] Obteniendo configuración...');
+    
+    const configResult = await paymentStore.fetchPayPalConfig();
+    
+    if (!configResult.success) {
+      console.error('❌ [PAYPAL] Error al obtener configuración');
+      reject(new Error(configResult.error));
+      return;
+    }
 
-  console.log('🎁 [GIFT] Items del regalo:', items);
-
-  // Preparar datos del regalo
-  const giftData = {
-    customer_email: shippingForm.value.email,
-    sender_username: authStore.isLoggedIn ? authStore.username : null,
-    receiver_username: shippingForm.value.username.replace('@', ''), // Remover @ si existe
-    items: items,
-    gift_message: shippingForm.value.note || '',
-    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value, // ⭐ Total calculado (para validación en backend)
-    // ⭐ Wishlist data (if coming from wishlist)
-    is_from_wishlist: wishlistId.value !== null,
-    wishlist_id: wishlistId.value,
-    wishlist_name: wishlistName.value
-  };
-
-  console.log('🎁 [GIFT] Datos del regalo:', giftData);
-  console.log('💰 [GIFT] Desglose:', {
-    subtotal: subtotal.value,
-    shipping: baseShipping.value,
-    dropshipping: dropshippingProduct.value?.price || 0,
-    total: total.value
+    const config = configResult.data;
+    console.log('💳 [PAYPAL] Cargando SDK...');
+    
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${config.client_id}&buyer-country=US&currency=${config.currency}&components=buttons&enable-funding=venmo,paylater,card`;
+    script.setAttribute('data-sdk-integration-source', 'developer-studio');
+    
+    script.onload = () => {
+      console.log('✅ [PAYPAL] SDK cargado exitosamente');
+      paypalScriptLoaded.value = true;
+      resolve();
+    };
+    
+    script.onerror = (error) => {
+      console.error('❌ [PAYPAL] Error al cargar SDK:', error);
+      reject(error);
+    };
+    
+    document.head.appendChild(script);
   });
+};
 
-  // Enviar regalo
-  const result = await paymentStore.sendGift(giftData);
+/**
+ * ⭐ Inicializar botones de PayPal
+ */
+const initPayPalButtons = () => {
+  if (!window.paypal) {
+    console.error('❌ [PAYPAL] SDK no está disponible');
+    return;
+  }
 
-  if (!result.success) {
-    paypalError.value = result.error || 'Error al enviar el regalo.';
+  const container = document.getElementById('paypal-button-container');
+  if (!container) {
+    console.error('❌ [PAYPAL] Contenedor no encontrado');
+    return;
+  }
 
-    // Mostrar error específico según el tipo
-    if (result.error.includes('not found')) {
-      await showError(
-        'El usuario destinatario no fue encontrado. Verifica el nombre de usuario.',
-        '❌ Usuario No Encontrado'
+  container.innerHTML = '';
+
+  const orderDataStr = sessionStorage.getItem('checkout_order_data');
+  if (!orderDataStr) {
+    console.error('❌ [PAYPAL] No hay datos de orden');
+    return;
+  }
+
+  const orderData = JSON.parse(orderDataStr);
+
+  window.paypal.Buttons({
+    style: {
+      layout: 'vertical',
+      color: 'gold',
+      shape: 'rect',
+      label: 'paypal'
+    },
+
+    createOrder: async (data, actions) => {
+      console.log('💳 [PAYPAL] Creando orden...');
+      
+      try {
+        // Si es regalo, usar endpoint de gifts
+        if (orderData.is_gift) {
+          const result = await paymentStore.sendGift(orderData);
+          if (!result.success) throw new Error(result.error);
+          return result.paypal_order_id;
+        }
+
+        // Si no es regalo, usar flujo normal
+        const result = await paymentStore.createPayPalOrder(orderData);
+        if (!result.success) throw new Error(result.error);
+        return result.paypal_order_id;
+
+      } catch (error) {
+        console.error('❌ [PAYPAL] Error al crear orden:', error);
+        await showError(error.message || 'Error al crear orden', '❌ Error');
+        throw error;
+      }
+    },
+
+    onApprove: async (data, actions) => {
+      console.log('✅ [PAYPAL] Pago aprobado');
+
+      try {
+        showLoading('Procesando tu pago...', '💳 Procesando');
+
+        const captureData = {
+          paypal_order_id: data.orderID,
+          ...orderData
+        };
+
+        const result = await paymentStore.capturePayPalOrder(data.orderID, captureData);
+
+        closeAlert();
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        console.log('✅ [PAYPAL] Pago procesado exitosamente');
+
+        await showSuccess(
+          `Tu orden ha sido creada exitosamente.\n\n` +
+          `📋 Orden: ${result.order.order_number}\n` +
+          `💰 Total: $${result.order.total}\n\n` +
+          `Recibirás un email de confirmación pronto.`,
+          '🎉 ¡Pago Exitoso!',
+          { timer: 8000 }
+        );
+
+        // Limpiar datos
+        sessionStorage.removeItem('checkout_order_data');
+        cartStore.clearCart();
+        paymentStore.clearPaymentState();
+
+        // Redirigir al home
+        setTimeout(() => {
+          router.push({ name: `Home-${i18nStore.locale}` });
+        }, 1000);
+
+      } catch (error) {
+        console.error('❌ [PAYPAL] Error al capturar pago:', error);
+        closeAlert();
+        await showError(error.message || 'Error al procesar el pago', '❌ Error');
+      }
+    },
+
+    onCancel: (data) => {
+      console.log('⚠️ [PAYPAL] Pago cancelado');
+      showError('Has cancelado el proceso de pago.', '⚠️ Pago Cancelado', { timer: 5000 });
+    },
+
+    onError: (err) => {
+      console.error('❌ [PAYPAL] Error:', err);
+      showError('Hubo un error con PayPal. Por favor intenta de nuevo.', '❌ Error en PayPal');
+    }
+  }).render('#paypal-button-container');
+};
+
+/**
+ * ⭐ Validar código de descuento
+ */
+const validateDiscountCode = async () => {
+  if (!discountCode.value || !discountCode.value.trim()) {
+    discountError.value = 'Por favor ingresa un código de descuento';
+    return;
+  }
+
+  isValidatingDiscount.value = true;
+  discountError.value = '';
+
+  try {
+    console.log('🎟️ [DISCOUNT] Validando código:', discountCode.value);
+
+    const result = await paymentStore.validateDiscountCode(discountCode.value.trim().toUpperCase());
+
+    console.log('🎟️ [DISCOUNT] Respuesta:', result);
+
+    if (result.success && result.data.exists && result.data.is_valid) {
+      // Código válido
+      discountData.value = {
+        code: result.data.code,
+        discount_percentage: parseFloat(result.data.discount_percentage)
+      };
+      
+      await showSuccess(
+        `¡Código aplicado! Descuento del ${result.data.discount_percentage}%`,
+        '🎉 Descuento Aplicado'
       );
-    } else if (result.error.includes('shipping information')) {
-      await showError(
-        'El usuario destinatario no tiene información completa de envío registrada.',
-        '❌ Información de Envío Incompleta'
-      );
+      
+      console.log('✅ [DISCOUNT] Descuento aplicado:', discountData.value);
     } else {
+      // Código no válido
+      discountData.value = null;
+      discountError.value = result.data?.message || result.error || 'Código de descuento no válido';
+      
       await showError(
-        result.error || 'Hubo un problema al enviar el regalo.',
-        '❌ Error al Enviar Regalo'
+        result.data?.message || result.error || 'El código ingresado no es válido o ha expirado',
+        '❌ Código Inválido'
       );
     }
 
-    throw new Error(result.error);
+  } catch (error) {
+    console.error('❌ [DISCOUNT] Error al validar:', error);
+    discountData.value = null;
+    discountError.value = 'Error al validar el código';
+    
+    await showError(
+      'Hubo un error al validar el código. Por favor intenta de nuevo.',
+      '❌ Error'
+    );
+  } finally {
+    isValidatingDiscount.value = false;
   }
-
-  console.log('✅ [GIFT] Regalo enviado exitosamente:', result.paypal_order_id);
-
-  return result.paypal_order_id;
 };
 
-// ⭐ Funciones auxiliares para captura de pagos
-const captureGiftPayment = async (paypalOrderId) => {
-  console.log('🎁 [GIFT] Capturando pago de regalo...');
-
-  // Preparar items del carrito para regalo
-  const items = cartStore.items.map(item => ({
-    woocommerce_product_id: item.product_id || item.id,
-    woocommerce_variation_id: item.variation_id || null,
-    product_name: item.name,
-    quantity: item.quantity,
-    unit_price: parseFloat(item.price),
-    attributes: item.attributes || null
-  }));
-
-  // ⭐ Agregar producto de dropshipping (recargo oculto)
-  if (dropshippingProduct.value) {
-    items.push({
-      woocommerce_product_id: dropshippingProduct.value.id,
-      woocommerce_variation_id: null,
-      product_name: dropshippingProduct.value.name,
-      quantity: 1,
-      unit_price: parseFloat(dropshippingProduct.value.price),
-      attributes: null
-    });
-    console.log('📦 [DROPSHIPPING] Producto agregado a captura de regalo:', {
-      id: dropshippingProduct.value.id,
-      name: dropshippingProduct.value.name,
-      price: dropshippingProduct.value.price
-    });
-  }
-
-  console.log('🎁 [GIFT] Items del regalo para captura:', items);
-
-  // Preparar datos de captura para regalo
-  const captureData = {
-    paypal_order_id: paypalOrderId,
-    customer_email: shippingForm.value.email,
-    sender_username: authStore.isLoggedIn ? authStore.username : null,
-    receiver_username: shippingForm.value.username.replace('@', ''), // Remover @ si existe
-    items: items,
-    gift_message: shippingForm.value.note || '',
-    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value, // ⭐ Total calculado (para validación en backend)
-    // ⭐ Wishlist data (if coming from wishlist)
-    is_from_wishlist: wishlistId.value !== null,
-    wishlist_id: wishlistId.value,
-    wishlist_name: wishlistName.value
-  };
-
-  console.log('🎁 [GIFT] Datos de captura de regalo:', captureData);
-  console.log('💰 [GIFT] Total a cobrar:', total.value);
-
-  // El backend maneja la captura automáticamente para regalos
-  // Pero necesitamos llamar al endpoint de captura estándar con datos del destinatario
-  const result = await paymentStore.capturePayPalOrder(paypalOrderId, captureData);
-
-  // Cerrar loading
-  closeAlert();
-
-  if (!result.success) {
-    paypalError.value = result.error || 'Error al procesar el pago del regalo.';
-
-    await showError(
-      result.error || 'Hubo un problema al procesar el pago del regalo.',
-      '❌ Error en el Pago del Regalo'
-    );
-
-    throw new Error(result.error);
-  }
-
-  console.log('✅ [GIFT] Pago de regalo procesado exitosamente');
-  console.log('📦 [GIFT] Orden creada:', result.order);
-
-  // Mostrar mensaje de éxito con detalles del regalo
-  await showSuccess(
-    `¡Tu regalo ha sido enviado exitosamente!\n\n` +
-    `🎁 Destinatario: ${result.order.customer_name || 'Usuario'}\n` +
-    `📦 Productos: ${result.order.items_count} artículo(s)\n` +
-    `💰 Total: $${result.order.total}\n` +
-    `📋 Orden: ${result.order.order_number}\n\n` +
-    `El destinatario recibirá una notificación y sus productos serán enviados a su dirección registrada.`,
-    '🎉 ¡Regalo Enviado!',
-    { timer: 8000 }
-  );
-
-  console.log('🧹 [GIFT] Limpiando carrito y estado...');
-
-  // Limpiar carrito
-  cartStore.clearCart();
-
-  // Limpiar estado de pago
-  paymentStore.clearPaymentState();
-
-  console.log('🔄 [GIFT] Redirigiendo al home...');
-
-  // Pequeño delay para asegurar que la alerta se muestre antes de redirigir
-  setTimeout(() => {
-    router.push({ name: `Home-${i18nStore.locale}` });
-  }, 1000);
-};
-
-const captureRegularPayment = async (paypalOrderId) => {
-  console.log('📦 [REGULAR] Capturando pago regular...');
-
-  // Obtener nombre del país a partir del isoCode
-  const selectedCountry = countries.find(c => c.isoCode === shippingForm.value.country);
-  const countryName = selectedCountry ? selectedCountry.name : shippingForm.value.country;
-
-  // Preparar items del carrito
-  const items = cartStore.items.map(item => ({
-    woocommerce_product_id: item.product_id || item.id,
-    woocommerce_variation_id: item.variation_id || null,
-    product_name: item.name,
-    quantity: item.quantity,
-    unit_price: parseFloat(item.price),
-    attributes: item.attributes || null
-  }));
-
-  // ⭐ Agregar producto de dropshipping (recargo oculto)
-  if (dropshippingProduct.value) {
-    items.push({
-      woocommerce_product_id: dropshippingProduct.value.id,
-      woocommerce_variation_id: null,
-      product_name: dropshippingProduct.value.name,
-      quantity: 1,
-      unit_price: parseFloat(dropshippingProduct.value.price),
-      attributes: null
-    });
-    console.log('📦 [DROPSHIPPING] Producto agregado a captura regular:', {
-      id: dropshippingProduct.value.id,
-      name: dropshippingProduct.value.name,
-      price: dropshippingProduct.value.price
-    });
-  }
-
-  // Preparar datos completos de captura
-  const captureData = {
-    paypal_order_id: paypalOrderId,
-    items: items,
-    customer_email: shippingForm.value.email,
-    customer_name: shippingForm.value.fullName,
-    shipping_address: shippingForm.value.address1,
-    shipping_city: shippingForm.value.city,
-    shipping_state: shippingForm.value.state,
-    shipping_postal_code: shippingForm.value.zipCode,
-    shipping_country: countryName,
-    phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
-    notes: shippingForm.value.additionalDetails || '',
-    shipping: baseShipping.value, // ⭐ Enviar costo de envío BASE (sin recargo)
-    total: total.value // ⭐ Total calculado (para validación en backend)
-  };
-
-  console.log('📦 [REGULAR] Datos de captura:', captureData);
-  console.log('💰 [REGULAR] Total a cobrar:', total.value);
-
-  // Capturar el pago en el backend
-  const result = await paymentStore.capturePayPalOrder(paypalOrderId, captureData);
-
-  // Cerrar loading
-  closeAlert();
-
-  if (!result.success) {
-    paypalError.value = result.error || 'Error al procesar el pago.';
-
-    await showError(
-      result.error || 'Hubo un problema al procesar tu pago. Por favor contacta a soporte.',
-      '❌ Error en el Pago'
-    );
-
-    throw new Error(result.error);
-  }
-
-  console.log('✅ [REGULAR] Pago procesado exitosamente');
-  console.log('📦 [REGULAR] Orden creada:', result.order);
-
-  // Mostrar mensaje de éxito con detalles de la orden
-  await showSuccess(
-    `Tu orden ha sido creada exitosamente.\n\n` +
-    `📋 Orden: ${result.order.order_number}\n` +
-    `💰 Total: $${result.order.total}\n` +
-    `📦 Estado: ${result.order.status_display}\n\n` +
-    `Recibirás un email de confirmación pronto.`,
-    '🎉 ¡Pago Exitoso!',
-    { timer: 8000 }
-  );
-
-  console.log('🧹 [REGULAR] Limpiando carrito y estado...');
-
-  // Limpiar carrito
-  cartStore.clearCart();
-
-  // Limpiar estado de pago
-  paymentStore.clearPaymentState();
-
-  console.log('🔄 [REGULAR] Redirigiendo al home...');
-
-  // Pequeño delay para asegurar que la alerta se muestre antes de redirigir
-  setTimeout(() => {
-    router.push({ name: `Home-${i18nStore.locale}` });
-  }, 1000);
+/**
+ * ⭐ Remover código de descuento
+ */
+const removeDiscount = () => {
+  discountData.value = null;
+  discountCode.value = '';
+  discountError.value = '';
+  console.log('🗑️ [DISCOUNT] Descuento removido');
 };
 
 /**
@@ -1029,235 +1121,55 @@ const shipping = computed(() => {
  * ⭐ Cálculo del IVA (19%)
  * El IVA ya está INCLUIDO en los precios de los productos
  * Este cálculo es solo informativo para mostrar al cliente
+ * Se calcula sobre el subtotal CON descuento aplicado
  */
 const tax = computed(() => {
-  // Calcular el IVA que ya está incluido en el subtotal
+  // Calcular el IVA que ya está incluido en el subtotal (con descuento si aplica)
   // Fórmula: IVA = Subtotal - (Subtotal / 1.19)
   // O simplificado: IVA = Subtotal * (0.19 / 1.19)
-  return subtotal.value * (0.19 / 1.19);
+  return subtotalAfterDiscount.value * (0.19 / 1.19);
+});
+
+/**
+ * ⭐ Monto del descuento aplicado
+ * Se aplica solo al subtotal, NO al shipping
+ */
+const discountAmount = computed(() => {
+  if (!discountData.value) return 0;
+  
+  const discount = (subtotal.value * discountData.value.discount_percentage) / 100;
+  console.log('🎟️ [DISCOUNT] Monto calculado:', {
+    subtotal: subtotal.value,
+    percentage: discountData.value.discount_percentage,
+    discount: discount
+  });
+  
+  return discount;
+});
+
+/**
+ * ⭐ Subtotal después del descuento
+ */
+const subtotalAfterDiscount = computed(() => {
+  return subtotal.value - discountAmount.value;
 });
 
 /**
  * ⭐ Total de la orden
- * Subtotal (ya incluye IVA) + Shipping (con recargo incluido)
+ * Subtotal (con descuento si aplica) + Shipping (sin descuento)
  */
 const total = computed(() => {
-  const calculatedTotal = subtotal.value + shipping.value;
+  const calculatedTotal = subtotalAfterDiscount.value + shipping.value;
   console.log('💰 [TOTAL] Cálculo:', {
     subtotal: subtotal.value,
+    discount: discountAmount.value,
+    subtotal_after_discount: subtotalAfterDiscount.value,
     shipping: shipping.value,
     tax_included: tax.value,
     total: calculatedTotal
   });
   return calculatedTotal;
 });
-
-// PayPal Integration Functions
-/**
- * Carga el SDK de PayPal dinámicamente
- */
-const loadPayPalScript = async () => {
-  return new Promise(async (resolve, reject) => {
-    // Verificar si ya existe el script
-    if (window.paypal) {
-      console.log('💳 [PAYPAL] SDK ya está cargado');
-      paypalScriptLoaded.value = true;
-      resolve();
-      return;
-    }
-
-    // Verificar si el script ya está en el DOM
-    const existingScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
-    if (existingScript) {
-      existingScript.addEventListener('load', () => {
-        console.log('💳 [PAYPAL] SDK cargado desde script existente');
-        paypalScriptLoaded.value = true;
-        resolve();
-      });
-      return;
-    }
-
-    console.log('💳 [PAYPAL] Obteniendo configuración de PayPal...');
-    
-    // Obtener configuración de PayPal desde el backend
-    const configResult = await paymentStore.fetchPayPalConfig();
-    
-    if (!configResult.success) {
-      console.error('❌ [PAYPAL] Error al obtener configuración');
-      paypalError.value = 'Error al obtener configuración de PayPal. Por favor recarga la página.';
-      reject(new Error(configResult.error));
-      return;
-    }
-
-    const config = configResult.data;
-    console.log('💳 [PAYPAL] Cargando SDK con configuración del backend...');
-    
-    const script = document.createElement('script');
-    
-    // Configurar el script según la documentación de PayPal usando config del backend
-    script.src = `https://www.paypal.com/sdk/js?client-id=${config.client_id}&buyer-country=US&currency=${config.currency}&components=buttons&enable-funding=venmo,paylater,card`;
-    script.setAttribute('data-sdk-integration-source', 'developer-studio');
-    
-    script.onload = () => {
-      console.log('✅ [PAYPAL] SDK cargado exitosamente');
-      console.log('💳 [PAYPAL] Configuración:', {
-        currency: config.currency,
-        mode: config.mode
-      });
-      paypalScriptLoaded.value = true;
-      resolve();
-    };
-    
-    script.onerror = (error) => {
-      console.error('❌ [PAYPAL] Error al cargar SDK:', error);
-      paypalError.value = 'Error al cargar PayPal. Por favor recarga la página.';
-      reject(error);
-    };
-    
-    document.head.appendChild(script);
-  });
-};
-
-/**
- * Inicializa los botones de PayPal
- */
-const initPayPalButtons = () => {
-  if (!window.paypal) {
-    console.error('❌ [PAYPAL] SDK no está disponible');
-    paypalError.value = 'PayPal no está disponible. Por favor recarga la página.';
-    return;
-  }
-
-  const container = document.getElementById('paypal-button-container');
-  if (!container) {
-    console.error('❌ [PAYPAL] Contenedor no encontrado');
-    return;
-  }
-
-  // Limpiar contenedor si ya tiene botones
-  container.innerHTML = '';
-
-  console.log('💳 [PAYPAL] Renderizando botones...');
-
-  try {
-    window.paypal.Buttons({
-      // Estilo de los botones
-      style: {
-        layout: 'vertical',
-        color: 'gold',
-        shape: 'rect',
-        label: 'paypal'
-      },
-
-      // Crear orden
-      createOrder: async (data, actions) => {
-        console.log('💳 [PAYPAL] Creando orden...');
-        console.log('📦 [PAYPAL] Items del carrito:', cartStore.items);
-        console.log('💰 [PAYPAL] Desglose de totales:', {
-          subtotal: subtotal.value,
-          baseShipping: baseShipping.value,
-          shippingMostrado: shipping.value,
-          taxIncluido: tax.value,
-          total: total.value
-        });
-
-        try {
-          // Validar que haya items en el carrito
-          if (!cartStore.items || cartStore.items.length === 0) {
-            paypalError.value = 'El carrito está vacío. Agrega productos antes de proceder al pago.';
-
-            await showError(
-              'Tu carrito está vacío. Por favor agrega productos antes de proceder al pago.',
-              '🛒 Carrito Vacío'
-            );
-
-            throw new Error('Cart is empty');
-          }
-
-          // ⭐ Si es envío como regalo, usar endpoint especial
-          if (shippingType.value === 'gift') {
-            return await createGiftOrder();
-          }
-
-          // ⭐ Si es envío normal, usar flujo estándar
-          return await createRegularOrder();
-
-        } catch (error) {
-          console.error('❌ [PAYPAL] Error al crear orden:', error);
-          throw error;
-        }
-      },
-
-      // Aprobar pago
-      onApprove: async (data, actions) => {
-        console.log('✅ [PAYPAL] Pago aprobado por el usuario');
-        console.log('📋 [PAYPAL] Order ID:', data.orderID);
-
-        try {
-          // Mostrar loading mientras procesamos el pago
-          showLoading('Procesando tu pago...', '💳 Procesando Pago');
-
-          // ⭐ Si es envío como regalo, usar flujo especial
-          if (shippingType.value === 'gift') {
-            await captureGiftPayment(data.orderID);
-          } else {
-            // ⭐ Si es envío normal, usar flujo estándar
-            await captureRegularPayment(data.orderID);
-          }
-
-        } catch (error) {
-          console.error('❌ [PAYPAL] Error al capturar pago:', error);
-
-          // Asegurarse de cerrar loading si hay error
-          closeAlert();
-
-          if (!paypalError.value) {
-            paypalError.value = 'Error al procesar el pago. Por favor contacta a soporte.';
-
-            // Mostrar error si no se mostró antes
-            await showError(
-              'Hubo un problema inesperado al procesar tu pago. Por favor intenta de nuevo o contacta a soporte.',
-              '❌ Error en el Pago'
-            );
-          }
-        }
-      },
-
-      // Cancelar
-      onCancel: (data) => {
-        console.log('⚠️ [PAYPAL] Pago cancelado por el usuario');
-        paypalError.value = 'Pago cancelado. Puedes intentar de nuevo cuando quieras.';
-        
-        // Mostrar alerta de cancelación
-        showError(
-          'Has cancelado el proceso de pago. Puedes intentar de nuevo cuando quieras.',
-          '⚠️ Pago Cancelado',
-          { 
-            confirmButtonText: 'Entendido',
-            timer: 5000 
-          }
-        );
-      },
-
-      // Error
-      onError: (err) => {
-        console.error('❌ [PAYPAL] Error en el proceso:', err);
-        paypalError.value = 'Ocurrió un error con PayPal. Por favor intenta de nuevo.';
-        
-        // Mostrar alerta de error
-        showError(
-          'Hubo un problema con PayPal. Por favor verifica tu conexión e intenta de nuevo.',
-          '❌ Error de PayPal'
-        );
-      }
-    }).render('#paypal-button-container');
-
-    console.log('✅ [PAYPAL] Botones renderizados exitosamente');
-  } catch (error) {
-    console.error('❌ [PAYPAL] Error al renderizar botones:', error);
-    paypalError.value = 'Error al cargar los botones de PayPal.';
-  }
-};
 
 // Initialize cart on mount
 onMounted(async () => {
@@ -1322,33 +1234,25 @@ onMounted(async () => {
   // ⭐ Cargar producto de dropshipping (recargo)
   // Este producto siempre se consulta al inicio
   await loadDropshippingProduct();
+});
 
-  // Cargar e inicializar PayPal
-  try {
-    await loadPayPalScript();
-    // Esperar un momento para que el DOM se actualice
-    setTimeout(() => {
-      initPayPalButtons();
-    }, 100);
-  } catch (error) {
-    console.error('❌ [PAYPAL] Error al inicializar PayPal:', error);
-    
-    // Mostrar error de inicialización
-    await showError(
-      'No se pudo cargar el sistema de pagos de PayPal. Por favor recarga la página e intenta de nuevo.',
-      '❌ Error al Cargar PayPal'
-    );
+// Watch para cargar PayPal cuando se muestre
+watch(showPayPalButtons, async (newValue) => {
+  if (newValue && currencyStore.currentCurrency === 'USD') {
+    try {
+      await loadPayPalScript();
+      setTimeout(() => {
+        initPayPalButtons();
+      }, 100);
+    } catch (error) {
+      console.error('❌ [PAYPAL] Error al inicializar:', error);
+      await showError('No se pudo cargar PayPal.', '❌ Error');
+    }
   }
 });
 
 // Cleanup on unmount
 onBeforeUnmount(() => {
-  // Limpiar el contenedor de PayPal
-  const container = document.getElementById('paypal-button-container');
-  if (container) {
-    container.innerHTML = '';
-  }
-
   // Limpiar búsqueda de usuarios
   if (usernameSearchTimeout) {
     clearTimeout(usernameSearchTimeout);
@@ -1361,7 +1265,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .checkout-view {
   min-height: 100vh;
-  background: linear-gradient(135deg, #e8f0f7 0%, #f5e6f0 50%, #e8f0f7 100%);
+  background: var(--color-brand-pink-lighter);
   padding: 2rem 1rem;
 }
 
@@ -1509,11 +1413,11 @@ onBeforeUnmount(() => {
 .form-input {
   width: 100%;
   padding: 0.75rem 0.875rem;
-  border: 1px solid #e0e0e0;
+  border: 2px solid var(--color-brand-pink-light);
   border-radius: 10px;
   font-size: 0.875rem;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: white;
 }
 
 @media (min-width: 640px) {
@@ -1532,9 +1436,8 @@ onBeforeUnmount(() => {
 
 .form-input:focus {
   outline: none;
-  border-color: #6366f1;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--color-brand-purple-light);
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
 }
 
 .form-input::placeholder {
@@ -1565,20 +1468,20 @@ onBeforeUnmount(() => {
 .form-textarea {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 1px solid #e0e0e0;
+  border: 2px solid var(--color-brand-pink-light);
   border-radius: 12px;
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
-  background: #fafafa;
+  background: white;
   transition: all 0.3s ease;
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: var(--color-brand-purple-light);
   background: white;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
 }
 
 /* Gift form styles */
@@ -1788,19 +1691,45 @@ onBeforeUnmount(() => {
   margin-bottom: 1.5rem;
 }
 
-.paypal-container {
-  margin-top: 1rem;
-  min-height: 150px;
+/* Payment Button Section */
+.payment-button-section {
+  margin-top: 2rem;
+}
+
+.continue-payment-btn {
   width: 100%;
+  background: var(--color-brand-purple-light);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.4);
+}
+
+.continue-payment-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(218, 157, 255, 0.5);
+  opacity: 0.9;
+}
+
+.continue-payment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+  box-shadow: none;
 }
 
 .payment-error {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
-  background-color: #fee;
-  border: 1px solid #fcc;
-  border-radius: 8px;
-  color: #c33;
+  background-color: rgba(191, 94, 129, 0.1);
+  border: 2px solid var(--color-brand-pink-dark);
+  border-radius: 12px;
+  color: var(--color-brand-pink-dark);
   font-size: 0.9rem;
   text-align: center;
 }
@@ -2080,7 +2009,7 @@ onBeforeUnmount(() => {
 
 .validate-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  background: var(--color-brand-purple-light);
   color: white;
   border: none;
   border-radius: 10px;
@@ -2107,9 +2036,70 @@ onBeforeUnmount(() => {
   }
 }
 
-.validate-btn:hover {
+.validate-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.4);
+  opacity: 0.9;
+}
+
+.validate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Discount Applied */
+.discount-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--color-brand-pink-lighter);
+  border: 2px solid var(--color-brand-pink-light);
+  border-radius: 12px;
+}
+
+.discount-applied-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.discount-code-badge {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-brand-purple-light);
+  background: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-brand-pink-light);
+}
+
+.discount-percentage {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-brand-pink);
+}
+
+.remove-discount-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-brand-pink-dark);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.remove-discount-btn:hover {
+  background: var(--color-brand-pink-light);
+  color: var(--color-brand-dark);
+}
+
+.discount-error {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-brand-pink-dark);
 }
 
 /* Totals Section */
@@ -2134,6 +2124,41 @@ onBeforeUnmount(() => {
 .tax-row {
   padding-bottom: 1.5rem;
   border-bottom: 2px solid #f0f0f0;
+}
+
+.discount-row {
+  color: var(--color-brand-pink);
+}
+
+.discount-label {
+  font-weight: 600;
+  color: var(--color-brand-pink);
+}
+
+.discount-value {
+  font-weight: 700;
+  color: var(--color-brand-pink);
+}
+
+/* Subtotal con descuento */
+.subtotal-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.original-subtotal {
+  font-size: 0.875rem;
+  color: #999;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.discounted-subtotal {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-brand-pink);
 }
 
 /* Final Total */
@@ -2290,5 +2315,29 @@ onBeforeUnmount(() => {
   .payment-subtitle {
     font-size: 0.9rem;
   }
+}
+
+/* PayPal Section */
+.paypal-section {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  border: 2px solid var(--color-brand-pink-light);
+  box-shadow: 0 4px 12px rgba(191, 94, 129, 0.1);
+}
+
+.paypal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: 'Comfortaa', cursive;
+}
+
+#paypal-button-container {
+  max-width: 500px;
+  margin: 0 auto;
 }
 </style>

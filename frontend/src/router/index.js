@@ -90,6 +90,11 @@ const baseRoutes = [
     name: 'Checkout',
     component: () => import('@/views/cart/CheckoutView.vue')
   },
+  {
+    path: '/checkout/wompi/success',
+    name: 'WompiSuccess',
+    component: () => import('@/views/cart/WompiSuccess.vue')
+  },
 
   
   // User profile routes (protected) - with layout and children

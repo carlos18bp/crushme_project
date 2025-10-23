@@ -12,6 +12,7 @@ import {
 export const usePaymentStore = defineStore('payment', () => {
   // State
   const paypalConfig = ref(null);
+  const wompiConfig = ref(null);
   const currentOrder = ref(null);
   const paymentStatus = ref(null);
   const isLoading = ref(false);
@@ -177,6 +178,135 @@ export const usePaymentStore = defineStore('payment', () => {
   }
 
   /**
+   * Obtener configuración de Wompi
+   * GET /api/orders/wompi/config/
+   */
+  async function fetchWompiConfig() {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await get_request('orders/wompi/config/');
+      
+      wompiConfig.value = {
+        public_key: response.data.public_key,
+        currency: response.data.currency,
+        environment: response.data.environment
+      };
+
+      return { 
+        success: true, 
+        data: wompiConfig.value 
+      };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Failed to fetch Wompi configuration';
+      return { 
+        success: false, 
+        error: error.value 
+      };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /**
+   * Crear transacción Wompi
+   * POST /api/orders/wompi/create/
+   * @param {Object} orderData - Datos de la orden
+   */
+  async function createWompiTransaction(orderData) {
+    isProcessing.value = true;
+    error.value = null;
+
+    try {
+      console.log('💳 [WOMPI] Creando transacción...', orderData);
+      
+      const response = await create_request('orders/wompi/create/', orderData);
+      
+      const transactionData = {
+        transaction_id: response.data.transaction_id || response.data.id,
+        payment_url: response.data.payment_url || response.data.url,
+        reference: response.data.reference,
+        total: response.data.total,
+        amount_in_cents: response.data.amount_in_cents,
+        items_count: response.data.items_count
+      };
+
+      currentOrder.value = transactionData;
+
+      console.log('✅ [WOMPI] Transacción creada:', transactionData);
+
+      return { 
+        success: true, 
+        data: transactionData
+      };
+    } catch (err) {
+      console.error('❌ [WOMPI] Error creando transacción:', err);
+      error.value = err.response?.data?.error || 'Failed to create Wompi transaction';
+
+      return { 
+        success: false, 
+        error: error.value,
+        details: err.response?.data?.details
+      };
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  /**
+   * Confirmar pago Wompi y crear orden
+   * POST /api/orders/wompi/confirm/
+   * @param {string} transactionId - ID de la transacción de Wompi
+   * @param {Object} confirmData - Datos completos de la orden
+   */
+  async function confirmWompiPayment(transactionId, confirmData) {
+    isProcessing.value = true;
+    error.value = null;
+
+    try {
+      console.log('✅ [WOMPI] Confirmando pago...', { transactionId, confirmData });
+      
+      const dataToSend = {
+        transaction_id: transactionId,
+        ...confirmData
+      };
+
+      const response = await create_request('orders/wompi/confirm/', dataToSend);
+
+      const confirmResult = {
+        order: response.data.order,
+        payment: response.data.payment,
+        woocommerce_integration: response.data.woocommerce_integration
+      };
+
+      currentOrder.value = confirmResult.order;
+      paymentStatus.value = confirmResult.payment.status;
+
+      console.log('✅ [WOMPI] Pago confirmado:', confirmResult);
+
+      return {
+        success: true,
+        data: confirmResult,
+        order: confirmResult.order,
+        payment: confirmResult.payment
+      };
+    } catch (err) {
+      console.error('❌ [WOMPI] Error confirmando pago:', err);
+      error.value = err.response?.data?.error || 'Failed to confirm Wompi payment';
+
+      return {
+        success: false,
+        error: error.value,
+        details: err.response?.data?.details,
+        status: err.response?.data?.status
+      };
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  /**
    * Limpiar estado de pago
    */
   function clearPaymentState() {
@@ -190,6 +320,41 @@ export const usePaymentStore = defineStore('payment', () => {
    */
   function clearError() {
     error.value = null;
+  }
+
+  /**
+   * Validar código de descuento
+   * POST /api/discounts/validate/
+   */
+  async function validateDiscountCode(code) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      console.log('🎟️ [PAYMENT STORE] Validando código de descuento:', code);
+
+      const response = await create_request('discounts/validate/', {
+        code: code
+      });
+
+      console.log('🎟️ [PAYMENT STORE] Respuesta de validación:', response.data);
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (err) {
+      console.error('❌ [PAYMENT STORE] Error validando código:', err);
+      error.value = err.response?.data?.error || 'Failed to validate discount code';
+
+      return {
+        success: false,
+        error: error.value,
+        data: err.response?.data
+      };
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   /**
@@ -209,6 +374,7 @@ export const usePaymentStore = defineStore('payment', () => {
   return {
     // State
     paypalConfig,
+    wompiConfig,
     currentOrder,
     paymentStatus,
     isLoading,
@@ -220,11 +386,21 @@ export const usePaymentStore = defineStore('payment', () => {
     isPaymentComplete,
     paypalClientId,
     
-    // Actions
+    // Actions - PayPal
     fetchPayPalConfig,
     createPayPalOrder,
     capturePayPalOrder,
     sendGift,
+    
+    // Actions - Wompi
+    fetchWompiConfig,
+    createWompiTransaction,
+    confirmWompiPayment,
+    
+    // Actions - Discounts
+    validateDiscountCode,
+    
+    // Actions - Common
     clearPaymentState,
     clearError,
     getPaymentState
