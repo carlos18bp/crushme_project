@@ -16,6 +16,7 @@ from ..models import Order, OrderItem
 from ..serializers.order_serializers import OrderDetailSerializer
 from ..services.paypal_service import paypal_service
 from ..services.woocommerce_order_service import woocommerce_order_service
+from ..services.email_service import email_service
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -558,7 +559,58 @@ def capture_paypal_order(request):
         logger.info(f"✅ Order {order.order_number} created locally")
 
         # STEP 4: Update user history and gift tracking
-        _update_user_history_and_gifts(order, receiver_username if 'receiver_username' in locals() else None)
+        receiver_username_value = gift_data.get('receiver_username', request.data.get('receiver_username'))
+        _update_user_history_and_gifts(order, receiver_username_value)
+        
+        # STEP 4.5: Send email notifications
+        try:
+            # Prepare items for email
+            email_items = []
+            for item in items:
+                email_items.append({
+                    'name': item['product_name'],
+                    'quantity': item['quantity']
+                })
+            
+            # Send order confirmation to purchaser
+            email_service.send_order_confirmation(
+                to_email=customer_email,
+                order_number=order.order_number,
+                total=total_amount,
+                items=email_items,
+                user_name=customer_name
+            )
+            logger.info(f"📧 Order confirmation email sent to {customer_email}")
+            
+            # If it's a gift, send notifications
+            if order.is_gift and receiver_username_value:
+                try:
+                    receiver_user = User.objects.get(username=receiver_username_value)
+                    
+                    # Send gift received notification to receiver
+                    email_service.send_gift_received_notification(
+                        to_email=receiver_user.email,
+                        sender_name=customer_name,
+                        gift_message=order.gift_message or '',
+                        order_number=order.order_number,
+                        user_name=receiver_user.get_full_name() or receiver_user.username
+                    )
+                    logger.info(f"📧 Gift received notification sent to {receiver_user.email}")
+                    
+                    # Send gift sent confirmation to sender
+                    email_service.send_gift_sent_confirmation(
+                        to_email=customer_email,
+                        receiver_name=receiver_user.get_full_name() or receiver_user.username,
+                        order_number=order.order_number,
+                        user_name=customer_name
+                    )
+                    logger.info(f"📧 Gift sent confirmation sent to {customer_email}")
+                    
+                except User.DoesNotExist:
+                    logger.warning(f"⚠️ Receiver user {receiver_username_value} not found for gift notifications")
+        except Exception as e:
+            logger.error(f"❌ Error sending email notifications: {str(e)}")
+            # Don't fail the order if email fails
 
         # STEP 5: Send order to WooCommerce in background (non-blocking)
         # This prevents timeout issues - WooCommerce sync can take time

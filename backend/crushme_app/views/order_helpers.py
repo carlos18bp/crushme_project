@@ -11,6 +11,7 @@ import threading
 
 from ..models import Order, OrderItem
 from ..serializers.order_serializers import OrderDetailSerializer
+from ..services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -127,6 +128,56 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
         from .paypal_order_views import _update_user_history_and_gifts
         receiver_username = gift_data.get('receiver_username', request_data.get('receiver_username'))
         _update_user_history_and_gifts(order, receiver_username)
+        
+        # STEP 5.5: Send email notifications
+        try:
+            # Prepare items for email
+            email_items = []
+            for item in items:
+                email_items.append({
+                    'name': item['product_name'],
+                    'quantity': item['quantity']
+                })
+            
+            # Send order confirmation to purchaser
+            email_service.send_order_confirmation(
+                to_email=customer_email,
+                order_number=order.order_number,
+                total=total_amount,
+                items=email_items,
+                user_name=customer_name
+            )
+            logger.info(f"📧 Order confirmation email sent to {customer_email}")
+            
+            # If it's a gift, send notifications
+            if order.is_gift and receiver_username:
+                try:
+                    receiver_user = User.objects.get(username=receiver_username)
+                    
+                    # Send gift received notification to receiver
+                    email_service.send_gift_received_notification(
+                        to_email=receiver_user.email,
+                        sender_name=customer_name,
+                        gift_message=order.gift_message or '',
+                        order_number=order.order_number,
+                        user_name=receiver_user.get_full_name() or receiver_user.username
+                    )
+                    logger.info(f"📧 Gift received notification sent to {receiver_user.email}")
+                    
+                    # Send gift sent confirmation to sender
+                    email_service.send_gift_sent_confirmation(
+                        to_email=customer_email,
+                        receiver_name=receiver_user.get_full_name() or receiver_user.username,
+                        order_number=order.order_number,
+                        user_name=customer_name
+                    )
+                    logger.info(f"📧 Gift sent confirmation sent to {customer_email}")
+                    
+                except User.DoesNotExist:
+                    logger.warning(f"⚠️ Receiver user {receiver_username} not found for gift notifications")
+        except Exception as e:
+            logger.error(f"❌ Error sending email notifications: {str(e)}")
+            # Don't fail the order if email fails
         
         # STEP 6: Send order to WooCommerce in background (non-blocking)
         from .paypal_order_views import send_to_woocommerce_async

@@ -6,7 +6,6 @@ Handles user registration, login, password management, and profile updates
 import secrets
 import random
 from rest_framework import status
-from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
 from django.conf import settings
@@ -15,11 +14,13 @@ from django.contrib.auth.models import update_last_login
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..models import User, PasswordCode
 from ..utils import generate_auth_tokens
+from ..services.email_service import email_service
+from ..services.translation_service import get_language_from_request
 from ..serializers.user_serializers import (
     UserSerializer, UserRegistrationSerializer, UserLoginSerializer,
     EmailVerificationSerializer, SendPasscodeSerializer, PasswordResetSerializer, 
@@ -29,6 +30,7 @@ from ..serializers.user_serializers import (
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def signup(request):
     """
     Handle user registration - Step 1: Create user and send verification email.
@@ -60,15 +62,20 @@ def signup(request):
             code_type='email_verification'
         )
         
-        # Send verification email
+        # Send verification email using email service
         try:
-            send_mail(
-                subject='Verify your email - CrushMe',
-                message=f'Your verification code is: {verification_code}\n\nThis code will expire in 5 minutes.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+            # Get language from request
+            lang = get_language_from_request(request)
+            
+            email_sent = email_service.send_verification_code(
+                to_email=user.email,
+                code=verification_code,
+                username=user.username,
+                lang=lang
             )
+            
+            if not email_sent:
+                raise Exception("Email service returned False")
             
             return Response({
                 'message': 'Registration successful. Please check your email for verification code.',
@@ -90,6 +97,7 @@ def signup(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_email(request):
     """
     Handle email verification - Step 2: Verify code and activate user account.
@@ -136,6 +144,7 @@ def verify_email(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def resend_verification_code(request):
     """
     Resend verification code to user's email.
@@ -177,15 +186,20 @@ def resend_verification_code(request):
         code_type='email_verification'
     )
     
-    # Send verification email
+    # Send verification email using email service
     try:
-        send_mail(
-            subject='Verify your email - CrushMe',
-            message=f'Your new verification code is: {verification_code}\n\nThis code will expire in 5 minutes.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
+        # Get language from request
+        lang = get_language_from_request(request)
+        
+        email_sent = email_service.send_verification_code(
+            to_email=user.email,
+            code=verification_code,
+            username=user.username,
+            lang=lang
         )
+        
+        if not email_sent:
+            raise Exception("Email service returned False")
         
         return Response({
             'message': 'New verification code sent to your email.'
@@ -198,6 +212,7 @@ def resend_verification_code(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login(request):
     """
     Handle user login with email and password.
@@ -237,6 +252,7 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def google_login(request):
     """
     Handle user login via Google data.
@@ -426,6 +442,7 @@ def update_password(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def forgot_password(request):
     """
     Handle password recovery by sending a 4-digit reset code to user's email.
@@ -467,15 +484,20 @@ def forgot_password(request):
         code_type='password_reset'
     )
 
-    # Send email with the reset code
+    # Send email with the reset code using email service
     try:
-        send_mail(
-            subject='Password Reset - CrushMe',
-            message=f'Your password reset code is: {reset_code}\n\nThis code will expire in 5 minutes.\n\nIf you did not request this, please ignore this email.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
+        # Get language from request
+        lang = get_language_from_request(request)
+        
+        email_sent = email_service.send_password_reset_code(
+            to_email=email,
+            code=reset_code,
+            username=user.username,
+            lang=lang
         )
+        
+        if not email_sent:
+            raise Exception("Email service returned False")
         
         return Response({
             'message': 'Password reset code sent to your email.'
@@ -488,6 +510,7 @@ def forgot_password(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def reset_password(request):
     """
     Verify the 4-digit reset code and set new password.
@@ -525,6 +548,7 @@ def reset_password(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def guest_checkout(request):
     """
     Handle guest checkout by creating a guest user and address.
@@ -580,6 +604,7 @@ def get_user_profile(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def check_username_availability(request):
     """
     Check if a username is available for registration.
@@ -609,6 +634,7 @@ def check_username_availability(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def check_guest_user(request):
     """
     Check if there's a guest user with the provided email for registration conversion.
@@ -731,6 +757,7 @@ def cancel_crush_request(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_crush_public_profile(request, username):
     """
     Get public profile information for any user by username.
@@ -873,6 +900,7 @@ def search_users(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def list_crushes(request):
     """
     Get list of all verified Crushes.
@@ -939,6 +967,7 @@ def list_crushes(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_random_crushes(request):
     """
     Get 7 random verified Crushes for discovery/carousel display.

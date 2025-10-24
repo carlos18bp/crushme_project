@@ -160,8 +160,15 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email settings - GoDaddy SMTP Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtpout.secureserver.net'  # GoDaddy SMTP server
+EMAIL_PORT = 465  # SSL port for GoDaddy
+EMAIL_USE_SSL = True  # GoDaddy uses SSL instead of TLS
+EMAIL_HOST_USER = 'support@crushme.com.co'
+EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
+DEFAULT_FROM_EMAIL = 'CrushMe Support <support@crushme.com.co>'
+SERVER_EMAIL = 'support@crushme.com.co'  # For error emails
 
 # Logging configuration
 LOGGING = {
