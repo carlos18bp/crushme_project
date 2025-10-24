@@ -22,8 +22,8 @@
           <!-- Sidebar Component -->
           <ProfileSidebar ref="sidebarRef" />
 
-          <!-- Main Content Area (router-view) -->
-          <main class="flex-1 overflow-y-auto flex flex-col">
+          <!-- Main Content Area (router-view) with margin for fixed sidebar -->
+          <main class="flex-1 overflow-y-auto flex flex-col lg:ml-80">
             <!-- Mobile Header -->
             <ProfileMobileHeader 
               :title="$t('profileSidebar.profile')" 

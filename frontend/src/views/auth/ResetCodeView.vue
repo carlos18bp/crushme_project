@@ -97,6 +97,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useAuthStore } from '@/stores/modules/authStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
@@ -104,6 +105,7 @@ const route = useRoute()
 const { t } = useI18n()
 const i18nStore = useI18nStore()
 const authStore = useAuthStore()
+const { showError, showSuccess } = useAlert()
 
 // Reactive form data
 const code = reactive(['', '', '', ''])
@@ -179,12 +181,12 @@ const handleVerification = async () => {
   const codeString = code.join('')
   
   if (codeString.length !== 4) {
-    alert(t('resetCode.validation.codeLength'))
+    showError(t('resetCode.validation.codeLength'))
     return
   }
   
   if (!/^\d{4}$/.test(codeString)) {
-    alert(t('resetCode.validation.codeRequired'))
+    showError(t('resetCode.validation.codeRequired'))
     return
   }
   
@@ -209,7 +211,7 @@ const resendCode = async () => {
     const result = await authStore.forgotPassword(email.value)
     
     if (result.success) {
-      alert(t('resetCode.resendSuccess'))
+      showSuccess(t('resetCode.resendSuccess'))
       
       // Start cooldown
       resendCooldown.value = 60
@@ -220,12 +222,12 @@ const resendCode = async () => {
         }
       }, 1000)
     } else {
-      alert(t('resetCode.errors.resendFailed') + result.error)
+      showError(t('resetCode.errors.resendFailed') + result.error)
     }
     
   } catch (error) {
     console.error('Resend code failed:', error)
-    alert(t('resetCode.errors.resendFailed') + (error.message || 'Unknown error'))
+    showError(t('resetCode.errors.resendFailed') + (error.message || 'Unknown error'))
   } finally {
     isResending.value = false
   }
@@ -265,8 +267,8 @@ const resendCode = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
+  background: linear-gradient(135deg, rgba(250, 243, 243, 0.3) 0%, rgba(218, 157, 255, 0.2) 50%, rgba(164, 193, 208, 0.3) 100%);
+  backdrop-filter: blur(8px);
 }
 
 .reset-code-container {
@@ -333,8 +335,8 @@ const resendCode = async () => {
 
 .code-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
 }
 
@@ -344,7 +346,7 @@ const resendCode = async () => {
 
 .submit-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
@@ -360,8 +362,9 @@ const resendCode = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {
@@ -389,7 +392,7 @@ const resendCode = async () => {
 .resend-btn {
   background: none;
   border: none;
-  color: #667eea;
+  color: #DA9DFF;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -400,7 +403,7 @@ const resendCode = async () => {
 }
 
 .resend-btn:hover:not(:disabled) {
-  color: #5a67d8;
+  color: #BF5E81;
 }
 
 .resend-btn:disabled {

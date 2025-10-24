@@ -125,6 +125,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useAuthStore } from '@/stores/modules/authStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
@@ -132,6 +133,7 @@ const route = useRoute()
 const { t } = useI18n()
 const i18nStore = useI18nStore()
 const authStore = useAuthStore()
+const { showError, showSuccess } = useAlert()
 
 // Get params from query
 const email = ref(route.query.email || '')
@@ -191,22 +193,22 @@ const getPasswordStrengthWidth = () => {
 // Form validation
 const validateForm = () => {
   if (!form.newPassword || !form.confirmPassword) {
-    alert(t('resetPassword.validation.fillAllFields'))
+    showError(t('resetPassword.validation.fillAllFields'))
     return false
   }
   
   if (form.newPassword.length < 8) {
-    alert(t('resetPassword.validation.passwordLength'))
+    showError(t('resetPassword.validation.passwordLength'))
     return false
   }
   
   if (form.newPassword !== form.confirmPassword) {
-    alert(t('resetPassword.validation.passwordsMatch'))
+    showError(t('resetPassword.validation.passwordsMatch'))
     return false
   }
   
   if (passwordStrength.value < 3) {
-    alert(t('resetPassword.validation.passwordStrength'))
+    showError(t('resetPassword.validation.passwordStrength'))
     return false
   }
   
@@ -253,12 +255,12 @@ const handleResetPassword = async () => {
         errorMessage += 'Error desconocido'
       }
       
-      alert(errorMessage)
+      showError(errorMessage)
     }
     
   } catch (error) {
     console.error('Password reset failed:', error)
-    alert(t('resetPassword.errors.updateFailed') + (error.message || 'Unknown error'))
+    showError(t('resetPassword.errors.updateFailed') + (error.message || 'Unknown error'))
   } finally {
     isLoading.value = false
   }
@@ -298,8 +300,8 @@ const handleResetPassword = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(2px);
+  background: linear-gradient(135deg, rgba(250, 243, 243, 0.3) 0%, rgba(218, 157, 255, 0.2) 50%, rgba(164, 193, 208, 0.3) 100%);
+  backdrop-filter: blur(8px);
 }
 
 .reset-password-container {
@@ -366,8 +368,8 @@ const handleResetPassword = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
 }
 
@@ -440,7 +442,7 @@ const handleResetPassword = async () => {
 
 .submit-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
@@ -456,8 +458,9 @@ const handleResetPassword = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 20px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {

@@ -125,12 +125,14 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
+const { showError } = useAlert()
 
 // Reactive form data
 const form = reactive({
@@ -154,7 +156,7 @@ const handleLogin = async () => {
   try {
     // Validate form
     if (!form.email || !form.password) {
-      alert(t('login.validation.fillAllFields'))
+      showError(t('login.validation.fillAllFields'))
       return
     }
 
@@ -180,12 +182,12 @@ const handleLogin = async () => {
       })
     } else {
       // Handle login error
-      alert(t('login.errors.loginFailed') + result.error)
+      showError(t('login.errors.loginFailed') + result.error)
     }
 
   } catch (error) {
     console.error('Login error:', error)
-    alert(t('login.errors.loginFailed') + (error.message || 'Error desconocido'))
+    showError(t('login.errors.loginFailed') + (error.message || 'Error desconocido'))
   } finally {
     isLoading.value = false
   }
@@ -301,8 +303,8 @@ const handleLogin = async () => {
 }
 
 .form-input:focus {
-  border-color: #406582;
-  box-shadow: 0 0 0 3px rgba(64, 101, 130, 0.1);
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
 }
 
@@ -330,8 +332,8 @@ const handleLogin = async () => {
 }
 
 .password-toggle:hover {
-  color: #406582;
-  background: rgba(64, 101, 130, 0.1);
+  color: #DA9DFF;
+  background: rgba(218, 157, 255, 0.1);
 }
 
 /* Form Options */
@@ -351,7 +353,7 @@ const handleLogin = async () => {
 
 .checkbox {
   margin-right: 0.5rem;
-  accent-color: #406582;
+  accent-color: #DA9DFF;
 }
 
 .checkbox-text {
@@ -376,7 +378,7 @@ const handleLogin = async () => {
 .submit-btn {
   width: 100%;
   padding: 1rem;
-  background: #406582;
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
@@ -393,9 +395,9 @@ const handleLogin = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #2D4A5F;
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(64, 101, 130, 0.3);
+  box-shadow: 0 8px 16px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {

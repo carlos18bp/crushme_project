@@ -9,15 +9,16 @@ from django.contrib.auth import get_user_model
 import logging
 import threading
 
-from ..models import Order, OrderItem
+from ..models import Order, OrderItem, Feed
 from ..serializers.order_serializers import OrderDetailSerializer
 from ..services.email_service import email_service
+from ..services.translation_service import get_language_from_request
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def process_order_after_payment(request_data, payment_info, payment_provider='paypal'):
+def process_order_after_payment(request_data, payment_info, payment_provider='paypal', lang='es'):
     """
     Process order creation after successful payment capture
     This is the COMMON FLOW that runs after payment is captured (PayPal, Wompi, etc.)
@@ -32,6 +33,7 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                 'payer_name': 'John Doe'
             }
         payment_provider: String identifying payment provider ('paypal', 'wompi')
+        lang: Language code ('es' or 'en') for feed messages
     
     Returns:
         Response object with order data or error
@@ -145,9 +147,20 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                 order_number=order.order_number,
                 total=total_amount,
                 items=email_items,
-                user_name=customer_name
+                username=user.username,
+                lang=lang
             )
             logger.info(f"📧 Order confirmation email sent to {customer_email}")
+            
+            # Create feed entry for order confirmation
+            try:
+                Feed.create_feed_entry(
+                    user=user,
+                    action='order_confirmation',
+                    lang=lang
+                )
+            except Exception as feed_error:
+                logger.error(f"Feed creation error: {str(feed_error)}")
             
             # If it's a gift, send notifications
             if order.is_gift and receiver_username:
@@ -157,21 +170,45 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                     # Send gift received notification to receiver
                     email_service.send_gift_received_notification(
                         to_email=receiver_user.email,
-                        sender_name=customer_name,
+                        sender_username=user.username,
                         gift_message=order.gift_message or '',
                         order_number=order.order_number,
-                        user_name=receiver_user.get_full_name() or receiver_user.username
+                        username=receiver_user.username,
+                        lang=lang
                     )
                     logger.info(f"📧 Gift received notification sent to {receiver_user.email}")
+                    
+                    # Create feed entry for gift received
+                    try:
+                        Feed.create_feed_entry(
+                            user=receiver_user,
+                            action='gift_received',
+                            lang=lang,
+                            sender_username=user.username
+                        )
+                    except Exception as feed_error:
+                        logger.error(f"Feed creation error: {str(feed_error)}")
                     
                     # Send gift sent confirmation to sender
                     email_service.send_gift_sent_confirmation(
                         to_email=customer_email,
-                        receiver_name=receiver_user.get_full_name() or receiver_user.username,
+                        receiver_username=receiver_user.username,
                         order_number=order.order_number,
-                        user_name=customer_name
+                        username=user.username,
+                        lang=lang
                     )
                     logger.info(f"📧 Gift sent confirmation sent to {customer_email}")
+                    
+                    # Create feed entry for gift sent
+                    try:
+                        Feed.create_feed_entry(
+                            user=user,
+                            action='gift_sent',
+                            lang=lang,
+                            receiver_username=receiver_user.username
+                        )
+                    except Exception as feed_error:
+                        logger.error(f"Feed creation error: {str(feed_error)}")
                     
                 except User.DoesNotExist:
                     logger.warning(f"⚠️ Receiver user {receiver_username} not found for gift notifications")

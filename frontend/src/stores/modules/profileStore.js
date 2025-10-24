@@ -892,6 +892,59 @@ export const useProfileStore = defineStore('profile', () => {
   const hasFavorites = computed(() => favoriteProducts.value.length > 0);
   const totalFavorites = computed(() => favoriteProducts.value.length);
 
+  // ============================================
+  // FEED SECTION
+  // ============================================
+
+  // State for feed
+  const feedItems = ref([]);
+  const isLoadingFeed = ref(false);
+  const feedPagination = ref({
+    count: 0,
+    next: null,
+    previous: null
+  });
+
+  /**
+   * Fetch user's feed items
+   * @returns {Promise<Object>} Result object with success status
+   */
+  async function fetchMyFeed() {
+    if (!isAuthenticated()) {
+      error.value = 'Usuario no autenticado';
+      return { success: false, error: error.value };
+    }
+
+    isLoadingFeed.value = true;
+    error.value = null;
+
+    try {
+      const response = await get_request('feeds/my-feeds/');
+      
+      feedItems.value = response.data.results || [];
+      feedPagination.value = {
+        count: response.data.count,
+        next: response.data.next,
+        previous: response.data.previous
+      };
+      
+      return { 
+        success: true, 
+        data: feedItems.value,
+        pagination: feedPagination.value
+      };
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Error al obtener el feed';
+      return { success: false, error: error.value };
+    } finally {
+      isLoadingFeed.value = false;
+    }
+  }
+
+  // Computed for feed
+  const hasFeedItems = computed(() => feedItems.value.length > 0);
+  const totalFeedItems = computed(() => feedItems.value.length);
+
   return {
     // State
     profile,
@@ -963,7 +1016,19 @@ export const useProfileStore = defineStore('profile', () => {
     checkProductFavoriteStatus,
     isProductInFavorites,
     refreshAllFavoriteProducts,
-    clearAllFavorites
+    clearAllFavorites,
+    
+    // Feed state
+    feedItems,
+    isLoadingFeed,
+    feedPagination,
+    
+    // Feed getters
+    hasFeedItems,
+    totalFeedItems,
+    
+    // Feed actions
+    fetchMyFeed
   };
 });
 

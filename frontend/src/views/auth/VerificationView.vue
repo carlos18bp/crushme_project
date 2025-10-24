@@ -73,18 +73,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useAuthStore } from '@/stores/modules/authStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
-const i18nStore = useI18nStore()
 const { t } = useI18n()
+const i18nStore = useI18nStore()
+const authStore = useAuthStore()
+const { showError, showSuccess } = useAlert()
 
 // Code input refs
 const codeInputs = ref([])
@@ -160,12 +162,12 @@ const handlePaste = (event) => {
 
 const validateCode = () => {
   if (!isCodeComplete.value) {
-    alert(t('verification.validation.codeRequired'))
+    showError(t('verification.validation.codeRequired'))
     return false
   }
   
   if (verificationCode.value.length !== 4) {
-    alert(t('verification.validation.codeLength'))
+    showError(t('verification.validation.codeLength'))
     return false
   }
   
@@ -216,7 +218,7 @@ const handleVerification = async () => {
         errorMessage += result.error
       }
       
-      alert(errorMessage)
+      showError(errorMessage)
       
       // Clear the code inputs on error
       codeDigits.forEach((_, index) => {
@@ -227,7 +229,7 @@ const handleVerification = async () => {
 
   } catch (error) {
     console.error('Verification error:', error)
-    alert(t('verification.errors.verificationFailed') + (error.message || 'Error desconocido'))
+    showError(t('verification.errors.verificationFailed') + (error.message || 'Error desconocido'))
     
     // Clear the code inputs on error
     codeDigits.forEach((_, index) => {
@@ -251,17 +253,17 @@ const handleResend = async () => {
     const result = await authStore.resendVerificationCode(email)
     
     if (result.success) {
-      alert(t('verification.resendSuccess'))
+      showSuccess(t('verification.resendSuccess'))
       
       // Start cooldown
       startResendCooldown()
     } else {
-      alert(t('verification.errors.resendFailed') + result.error)
+      showError(t('verification.errors.resendFailed') + result.error)
     }
     
   } catch (error) {
     console.error('Resend error:', error)
-    alert(t('verification.errors.resendFailed') + (error.message || 'Error desconocido'))
+    showError(t('verification.errors.resendFailed') + (error.message || 'Error desconocido'))
   } finally {
     isResending.value = false
   }
@@ -416,8 +418,9 @@ onUnmounted(() => {
 }
 
 .code-input:focus {
-  border-color: #406582;
-  box-shadow: 0 0 0 3px rgba(64, 101, 130, 0.1);
+  outline: none;
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
   transform: scale(1.05);
 }
@@ -430,47 +433,30 @@ onUnmounted(() => {
 /* Submit Button */
 .submit-btn {
   width: 100%;
-  padding: 1rem;
-  background: #406582;
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
-  font-family: 'Comfortaa', cursive;
-  font-weight: 600;
+  padding: 1rem;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #2D4A5F;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(64, 101, 130, 0.3);
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 /* Resend Section */
@@ -488,23 +474,24 @@ onUnmounted(() => {
   margin-right: 0.5rem;
 }
 
-.resend-link {
+.resend-btn {
   background: none;
   border: none;
-  color: #BF5E81;
-  font-family: 'Comfortaa', cursive;
-  font-weight: 600;
+  color: #DA9DFF;
   font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   text-decoration: underline;
+  transition: color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
-.resend-link:hover:not(:disabled) {
-  color: #D689A2;
+.resend-btn:hover:not(:disabled) {
+  color: #BF5E81;
 }
 
-.resend-link:disabled {
+.resend-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

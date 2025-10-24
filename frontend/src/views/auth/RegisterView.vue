@@ -165,12 +165,14 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
+const { showError } = useAlert()
 
 // Reactive form data
 const form = reactive({
@@ -197,32 +199,32 @@ const toggleConfirmPassword = () => {
 const validateForm = () => {
   // Check all fields are filled
   if (!form.username || !form.email || !form.password || !form.confirmPassword) {
-    alert(t('signup.validation.fillAllFields'))
+    showError(t('signup.validation.fillAllFields'))
     return false
   }
 
   // Check username
   if (form.username.trim().length < 3) {
-    alert(t('signup.validation.usernameRequired'))
+    showError(t('signup.validation.usernameRequired'))
     return false
   }
 
   // Check email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(form.email)) {
-    alert(t('signup.validation.validEmail'))
+    showError(t('signup.validation.validEmail'))
     return false
   }
 
   // Check password length
   if (form.password.length < 8) {
-    alert(t('signup.validation.passwordLength'))
+    showError(t('signup.validation.passwordLength'))
     return false
   }
 
   // Check passwords match
   if (form.password !== form.confirmPassword) {
-    alert(t('signup.validation.passwordsMatch'))
+    showError(t('signup.validation.passwordsMatch'))
     return false
   }
 
@@ -268,12 +270,12 @@ const handleSignup = async () => {
         errorMessage += 'Error desconocido'
       }
       
-      alert(errorMessage)
+      showError(errorMessage)
     }
 
   } catch (error) {
     console.error('Signup error:', error)
-    alert(t('signup.errors.signupFailed') + (error.message || 'Error desconocido'))
+    showError(t('signup.errors.signupFailed') + (error.message || 'Error desconocido'))
   } finally {
     isLoading.value = false
   }
@@ -389,8 +391,8 @@ const handleSignup = async () => {
 }
 
 .form-input:focus {
-  border-color: #406582;
-  box-shadow: 0 0 0 3px rgba(64, 101, 130, 0.1);
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
 }
 
@@ -418,21 +420,21 @@ const handleSignup = async () => {
 }
 
 .password-toggle:hover {
-  color: #406582;
-  background: rgba(64, 101, 130, 0.1);
+  color: #DA9DFF;
+  background: rgba(218, 157, 255, 0.1);
 }
 
 /* Submit Button */
 .submit-btn {
   width: 100%;
-  padding: 0.875rem;
-  background: #406582;
+  padding: 1rem;
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
   font-family: 'Comfortaa', cursive;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 0.5rem;
@@ -443,9 +445,9 @@ const handleSignup = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #2D4A5F;
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(64, 101, 130, 0.3);
+  box-shadow: 0 8px 16px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {

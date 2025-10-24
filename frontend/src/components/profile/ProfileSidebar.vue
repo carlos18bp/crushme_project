@@ -119,7 +119,7 @@
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <div class="hidden lg:flex lg:w-80 lg:flex-col border-r border-gray-200/50 bg-white/20 backdrop-blur-lg">
+    <div class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-80 lg:flex-col border-r border-gray-200/50 bg-white/20 backdrop-blur-lg">
       <!-- Sidebar component for desktop -->
       <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 py-8">
         <!-- User Profile Section -->
@@ -198,6 +198,7 @@ import { useI18n } from 'vue-i18n'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useAuthStore } from '@/stores/modules/authStore'
+import { useProfileStore } from '@/stores/modules/profileStore'
 import {
   HomeIcon,
   UserIcon,
@@ -206,13 +207,15 @@ import {
   HeartIcon,
   ClockIcon,
   ShoppingBagIcon,
-  ArrowLeftOnRectangleIcon
+  ArrowLeftOnRectangleIcon,
+  BookOpenIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
 const i18nStore = useI18nStore()
 const authStore = useAuthStore()
+const profileStore = useProfileStore()
 const { t } = useI18n()
 const sidebarOpen = ref(false)
 
@@ -231,9 +234,9 @@ const handleLogout = async () => {
   router.push({ name: `Home-${i18nStore.locale}` })
 }
 
-// Computed property for user profile image
+// Computed property for user profile image from profileStore (updates in real-time)
 const userProfileImage = computed(() => {
-  return authStore.user?.profile_picture_url || null
+  return profileStore.profilePictureUrl || authStore.user?.profile_picture_url || null
 })
 
 const navigation = computed(() => [
@@ -242,6 +245,12 @@ const navigation = computed(() => [
     to: { name: `Profile-${i18nStore.locale}` },
     icon: HomeIcon, 
     current: route.name === `Profile-${i18nStore.locale}`
+  },
+  { 
+    name: t('profileSidebar.diaries'),
+    to: { name: `Diaries-${i18nStore.locale}` }, 
+    icon: BookOpenIcon, 
+    current: route.name === `Diaries-${i18nStore.locale}` || route.name === `DiariesUser-${i18nStore.locale}`
   },
   { 
     name: t('profileSidebar.shop'),

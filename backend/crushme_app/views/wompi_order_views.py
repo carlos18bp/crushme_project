@@ -261,11 +261,16 @@ def confirm_wompi_payment(request):
             'payer_name': request.data.get('customer_name', 'Guest')
         }
         
+        # Get language from request
+        from ..services.translation_service import get_language_from_request
+        lang = get_language_from_request(request)
+        
         # Call common order processing function
         return process_order_after_payment(
             request_data=dict(request.data),
             payment_info=payment_info,
-            payment_provider='wompi'
+            payment_provider='wompi',
+            lang=lang
         )
     
     except Exception as e:

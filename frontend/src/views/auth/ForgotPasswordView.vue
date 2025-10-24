@@ -67,12 +67,14 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import { useAlert } from '@/composables/useAlert'
 import LanguageSelector from '@/components/shared/LanguageSelector.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
+const { showError } = useAlert()
 
 // Reactive form data
 const form = reactive({
@@ -86,14 +88,14 @@ const isLoading = ref(false)
 const validateForm = () => {
   // Check email is provided
   if (!form.email) {
-    alert(t('forgotPassword.validation.emailRequired'))
+    showError(t('forgotPassword.validation.emailRequired'))
     return false
   }
 
   // Check email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(form.email)) {
-    alert(t('forgotPassword.validation.validEmail'))
+    showError(t('forgotPassword.validation.validEmail'))
     return false
   }
 
@@ -132,12 +134,12 @@ const handleForgotPassword = async () => {
         errorMessage += result.error
       }
       
-      alert(errorMessage)
+      showError(errorMessage)
     }
 
   } catch (error) {
     console.error('Forgot password error:', error)
-    alert(t('forgotPassword.errors.sendFailed') + (error.message || 'Error desconocido'))
+    showError(t('forgotPassword.errors.sendFailed') + (error.message || 'Error desconocido'))
   } finally {
     isLoading.value = false
   }
@@ -262,8 +264,8 @@ const handleForgotPassword = async () => {
 }
 
 .form-input:focus {
-  border-color: #406582;
-  box-shadow: 0 0 0 3px rgba(64, 101, 130, 0.1);
+  border-color: #DA9DFF;
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
   background: white;
 }
 
@@ -271,7 +273,7 @@ const handleForgotPassword = async () => {
 .submit-btn {
   width: 100%;
   padding: 1rem;
-  background: #406582;
+  background: #DA9DFF;
   color: white;
   border: none;
   border-radius: 12px;
@@ -288,9 +290,9 @@ const handleForgotPassword = async () => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #2D4A5F;
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(64, 101, 130, 0.3);
+  box-shadow: 0 8px 16px rgba(218, 157, 255, 0.4);
 }
 
 .submit-btn:disabled {

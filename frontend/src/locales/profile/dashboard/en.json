@@ -16,7 +16,9 @@
     "history": "History"
   },
   "feed": {
-    "title": "Feed"
+    "title": "Feed",
+    "loading": "Loading your feed...",
+    "empty": "No activity yet. Start by exploring Diaries!"
   }
 }
 

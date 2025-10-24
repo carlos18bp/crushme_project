@@ -17,7 +17,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from ..models import User, PasswordCode
+from ..models import User, PasswordCode, Feed
 from ..utils import generate_auth_tokens
 from ..services.email_service import email_service
 from ..services.translation_service import get_language_from_request
@@ -76,6 +76,17 @@ def signup(request):
             
             if not email_sent:
                 raise Exception("Email service returned False")
+            
+            # Create feed entry for signup
+            try:
+                Feed.create_feed_entry(
+                    user=user,
+                    action='signup',
+                    lang=lang
+                )
+            except Exception as feed_error:
+                # Log but don't fail the signup if feed creation fails
+                print(f"Feed creation error: {str(feed_error)}")
             
             return Response({
                 'message': 'Registration successful. Please check your email for verification code.',
@@ -525,6 +536,11 @@ def reset_password(request):
         Response: A Response object with a success message if the password reset is successful,
                   or an error message if the code is invalid or expired.
     """
+    # Log request data for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"🔐 [RESET PASSWORD] Request data: {request.data}")
+    
     serializer = PasswordResetSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -540,10 +556,23 @@ def reset_password(request):
         password_code.used = True
         password_code.save()
         
+        # Create feed entry for password reset
+        try:
+            lang = get_language_from_request(request)
+            Feed.create_feed_entry(
+                user=user,
+                action='password_reset',
+                lang=lang
+            )
+        except Exception as feed_error:
+            print(f"Feed creation error: {str(feed_error)}")
+        
         return Response({
             'message': 'Password reset successful. You can now login with your new password.'
         }, status=status.HTTP_200_OK)
     
+    # Log validation errors
+    logger.error(f"🔐 [RESET PASSWORD] Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
