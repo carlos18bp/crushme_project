@@ -38,6 +38,9 @@ def signup(request):
     This view processes POST requests to register a new user with email, username, 
     and password. The user is created but inactive until email verification.
     A 4-digit verification code is sent to their email.
+    
+    If a user with the same email exists but hasn't verified their email (email_verified=False),
+    their data (username, password) will be updated and a new verification code will be sent.
 
     Args:
         request (Request): The HTTP request object containing user data.
@@ -46,6 +49,88 @@ def signup(request):
         Response: A Response object with success message if registration is successful,
                   or an error message if the registration fails.
     """
+    email = request.data.get('email')
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    # Check if user exists with this email
+    existing_user = None
+    try:
+        existing_user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        pass
+    
+    # If user exists and email is already verified, reject registration
+    if existing_user and existing_user.email_verified:
+        return Response({
+            'error': 'A user with this email is already registered and verified. Please login.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # If user exists but email NOT verified, update their data and resend code
+    if existing_user and not existing_user.email_verified:
+        print(f"📧 Usuario inactivo encontrado: {email}. Actualizando datos y reenviando código...")
+        
+        # Check if new username is already taken by another user
+        if username and username != existing_user.username:
+            if User.objects.filter(username__iexact=username).exclude(id=existing_user.id).exists():
+                return Response({
+                    'error': 'This username is already taken by another user.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            existing_user.username = username
+        
+        # Update password if provided
+        if password:
+            existing_user.set_password(password)
+        
+        existing_user.save()
+        
+        # Mark previous verification codes as used
+        PasswordCode.objects.filter(
+            user=existing_user,
+            code_type='email_verification',
+            used=False
+        ).update(used=True)
+        
+        # Generate new verification code
+        verification_code = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+        
+        # Save new verification code
+        PasswordCode.objects.create(
+            user=existing_user,
+            code=verification_code,
+            code_type='email_verification'
+        )
+        
+        # Send verification email
+        try:
+            lang = get_language_from_request(request)
+            
+            email_sent = email_service.send_verification_code(
+                to_email=existing_user.email,
+                code=verification_code,
+                username=existing_user.username,
+                lang=lang
+            )
+            
+            if not email_sent:
+                raise Exception("Email service returned False")
+            
+            return Response({
+                'message': 'Your registration data has been updated. Please check your email for a new verification code.',
+                'email': existing_user.email,
+                'requires_verification': True,
+                'updated': True
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            import traceback
+            print(f"Email sending error: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': f'Failed to send verification email: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    # New user registration flow
     serializer = UserRegistrationSerializer(data=request.data)
     
     if serializer.is_valid():

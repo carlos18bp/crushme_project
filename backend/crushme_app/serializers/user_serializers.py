@@ -81,15 +81,26 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         ]
     
     def validate_email(self, value):
-        """Check if email is already registered"""
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+        """
+        Check if email is already registered AND verified.
+        Note: The view handles the case of unverified users (email_verified=False)
+        by updating their data instead of creating a new user.
+        """
+        user = User.objects.filter(email=value).first()
+        if user and user.email_verified:
+            raise serializers.ValidationError("A user with this email is already registered and verified.")
         return value
     
     def validate_username(self, value):
-        """Check if username is unique (case-insensitive)"""
-        if value and User.objects.filter(username__iexact=value).exists():
-            raise serializers.ValidationError("A user with this username already exists.")
+        """
+        Check if username is unique (case-insensitive).
+        Note: The view handles username updates for unverified users.
+        """
+        if value:
+            # Check if username exists for a verified user
+            existing = User.objects.filter(username__iexact=value).first()
+            if existing and existing.email_verified:
+                raise serializers.ValidationError("A user with this username already exists.")
         return value
     
     def validate(self, attrs):
