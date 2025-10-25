@@ -274,6 +274,18 @@ routes.forEach(route => {
 router.beforeEach(async (to, from, next) => {
   const i18nStore = useI18nStore();
   
+  // Always detect browser language on each navigation
+  const browserLanguage = navigator.language || navigator.userLanguage;
+  const browserLangCode = browserLanguage.split('-')[0].toLowerCase();
+  const browserPreferredLang = browserLangCode === 'es' ? 'es' : 'en';
+  
+  console.log('🔍 [Router] Navegación detectada:', {
+    to: to.path,
+    browserLanguage,
+    browserPreferredLang,
+    currentStoreLang: i18nStore.locale
+  });
+  
   // Try to initialize if needed, but don't block navigation if it fails
   if (!i18nStore.isInitialized) {
     // Fire and forget - don't await
@@ -293,14 +305,32 @@ router.beforeEach(async (to, from, next) => {
   
   // Check if it's a valid language route
   if (!availableLanguages.includes(urlLang)) {
-    // If no language prefix, redirect to detected or current language
-    const targetLang = i18nStore.detectedLocale || i18nStore.locale || 'en';
-    next(`/${targetLang}${to.path}`);
+    // If no language prefix, redirect to browser preferred language
+    console.log('🔀 [Router] No language in URL, redirecting to:', browserPreferredLang);
+    next(`/${browserPreferredLang}${to.path}`);
     return;
   }
   
-  // Set language from URL (URL takes priority)
+  // ⭐ IMPORTANTE: Si el idioma de la URL no coincide con la preferencia del navegador, redirigir
+  if (urlLang !== browserPreferredLang) {
+    console.log('🔀 [Router] URL language mismatch. Redirecting from', urlLang, 'to', browserPreferredLang);
+    
+    // Construir nueva ruta con el idioma correcto
+    const newPath = to.path.replace(`/${urlLang}`, `/${browserPreferredLang}`);
+    
+    // Preservar query params y hash
+    next({
+      path: newPath,
+      query: to.query,
+      hash: to.hash,
+      replace: true // Usar replace para no agregar al historial
+    });
+    return;
+  }
+  
+  // Set language from URL (solo si coincide con la preferencia del navegador)
   if (urlLang !== i18nStore.locale) {
+    console.log('🌐 [Router] Actualizando idioma del store a:', urlLang);
     i18nStore.setLocale(urlLang);
   }
   

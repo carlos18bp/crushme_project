@@ -66,7 +66,8 @@ export const useCurrencyStore = defineStore('currency', () => {
   }
 
   /**
-   * Auto-detect currency based on user's country via IP geolocation
+   * Auto-detect currency based on user's country via backend geolocation API
+   * Uses MaxMind GeoLite2 database for fast, reliable IP-based detection
    * COP for Colombia (CO), USD for all other countries
    */
   async function detectCurrency() {
@@ -106,34 +107,35 @@ export const useCurrencyStore = defineStore('currency', () => {
     }
 
     try {
-      console.log('🌍 [currencyStore] Consultando API de geolocalización...');
-      // Usar ip-api.com (sin restricciones CORS, gratis, sin registro)
-      const response = await axios.get('http://ip-api.com/json/', {
-        timeout: 5000 // 5 seconds timeout (aumentado para producción)
+      console.log('🌍 [currencyStore] Consultando backend geolocation API...');
+      
+      // ✅ Use backend geolocation API (fast, no rate limits, no CORS issues)
+      const response = await axios.get('/api/geolocation/me/', {
+        timeout: 3000 // 3 seconds timeout
       });
       
-      console.log('🌍 [currencyStore] Respuesta de API:', {
-        country: response.data.country,
-        countryCode: response.data.countryCode,
-        city: response.data.city,
-        ip: response.data.query,
+      console.log('🌍 [currencyStore] Respuesta del backend:', {
+        ip: response.data.ip,
+        country_code: response.data.country_code,
+        is_colombia: response.data.is_colombia,
+        recommended_currency: response.data.recommended_currency,
         fullResponse: response.data
       })
       
-      // ip-api.com usa "countryCode" en lugar de "country_code"
-      const countryCode = response.data.countryCode;
-      detectedCountry.value = countryCode;
+      // Backend returns recommended_currency directly (COP or USD)
+      const countryCode = response.data.country_code;
+      const recommendedCurrency = response.data.recommended_currency;
       
-      // COP for Colombia, USD for all other countries
-      const detectedCurrency = countryCode === 'CO' ? 'COP' : 'USD';
+      detectedCountry.value = countryCode;
       
       console.log('🌍 [currencyStore] Currency detectada:', {
         countryCode: countryCode,
-        isColombia: countryCode === 'CO',
-        detectedCurrency: detectedCurrency
+        isColombia: response.data.is_colombia,
+        recommendedCurrency: recommendedCurrency
       });
       
-      setCurrency(detectedCurrency);
+      // Use the recommended currency from backend
+      setCurrency(recommendedCurrency);
       isInitialized.value = true;
       
       console.log('✅ [currencyStore] Currency configurada:', {
@@ -142,7 +144,7 @@ export const useCurrencyStore = defineStore('currency', () => {
         isInitialized: isInitialized.value
       })
       
-      return detectedCurrency;
+      return recommendedCurrency;
     } catch (error) {
       console.error('❌ [currencyStore] Error detectando currency:', {
         message: error.message,

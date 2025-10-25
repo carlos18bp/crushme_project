@@ -916,6 +916,7 @@ def get_crush_public_profile(request, username):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_random_crush(request):
     """
     Get a random verified Crush user profile.
@@ -954,6 +955,7 @@ def get_random_crush(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def search_users(request):
     """
     Search for users by username.

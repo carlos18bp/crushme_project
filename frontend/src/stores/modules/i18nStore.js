@@ -193,8 +193,19 @@ export const useI18nStore = defineStore('i18n', {
   }),
   actions: {
     setLocale(newLocale) {
+      console.log('🌐 [i18nStore] setLocale llamado con:', newLocale)
       this.locale = newLocale
       i18n.global.locale.value = newLocale
+      
+      // También actualizar detectedLocale para mantener consistencia
+      // Esto es importante cuando el usuario cambia manualmente el idioma
+      this.detectedLocale = newLocale
+      
+      console.log('✅ [i18nStore] Idioma actualizado:', {
+        locale: this.locale,
+        detectedLocale: this.detectedLocale,
+        i18nGlobalLocale: i18n.global.locale.value
+      })
     },
     async detectUserLanguage() {
       console.log('🌍 [i18nStore] Iniciando detección de idioma...')
@@ -220,18 +231,17 @@ export const useI18nStore = defineStore('i18n', {
         
         // MÉTODO 2: Detectar país por IP (OPCIONAL, para referencia)
         try {
-          // Usar ip-api.com (sin restricciones CORS, gratis, sin registro)
-          const response = await axios.get('http://ip-api.com/json/', {
+          // ✅ Use backend geolocation API (fast, no rate limits, no CORS issues)
+          const response = await axios.get('/api/geolocation/me/', {
             timeout: 3000
           })
           
-          // ip-api.com usa "countryCode" en lugar de "country_code"
-          this.countryCode = response.data.countryCode
+          this.countryCode = response.data.country_code
           
           console.log('🌍 [i18nStore] País detectado por IP:', {
-            country: response.data.country,
-            countryCode: response.data.countryCode,
-            city: response.data.city
+            ip: response.data.ip,
+            country_code: response.data.country_code,
+            is_colombia: response.data.is_colombia
           })
         } catch (ipError) {
           console.warn('⚠️ [i18nStore] No se pudo detectar país por IP (no crítico):', ipError.message)

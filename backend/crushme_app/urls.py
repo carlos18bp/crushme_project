@@ -39,4 +39,7 @@ urlpatterns = [
     
     # Discount code endpoints
     path('discounts/', include('crushme_app.urls.discount_urls')),
+    
+    # Geolocation endpoints
+    path('geolocation/', include('crushme_app.urls.geolocation_urls')),
 ]

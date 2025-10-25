@@ -1,3 +1,4 @@
+
 """
 User authentication serializers for CrushMe e-commerce application
 Based on signin_signon_feature repository implementation

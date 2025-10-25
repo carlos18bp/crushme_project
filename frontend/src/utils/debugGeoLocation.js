@@ -35,29 +35,25 @@ export async function debugGeoLocation() {
     console.error('❌ Error accediendo a stores:', error)
   }
   
-  // 3. Consultar API de geolocalización directamente
-  console.log('🌍 Consultando API de geolocalización...')
+  // 3. Consultar backend geolocation API directamente
+  console.log('🌍 Consultando backend geolocation API...')
   try {
-    const response = await fetch('http://ip-api.com/json/')
+    const response = await fetch('/api/geolocation/me/')
     const data = await response.json()
-    console.log('✅ Respuesta de ip-api.com:', {
-      country: data.country,
-      countryCode: data.countryCode,
-      city: data.city,
-      region: data.regionName,
-      ip: data.query,
-      isp: data.isp
+    console.log('✅ Respuesta del backend:', {
+      ip: data.ip,
+      country_code: data.country_code,
+      is_colombia: data.is_colombia,
+      recommended_currency: data.recommended_currency
     })
     
-    // Verificar qué debería ser
-    const shouldBeCOP = data.countryCode === 'CO'
-    
     console.log('🎯 Configuración esperada:')
-    console.log('  - Currency:', shouldBeCOP ? 'COP' : 'USD')
+    console.log('  - Currency:', data.recommended_currency)
     console.log('  - Idioma: Basado en navegador (navigator.language)')
+    console.log('  - Es Colombia:', data.is_colombia)
     
   } catch (error) {
-    console.error('❌ Error consultando API de geolocalización:', error)
+    console.error('❌ Error consultando backend geolocation API:', error)
   }
   
   console.log('🔍 ===== FIN DEBUG =====')
