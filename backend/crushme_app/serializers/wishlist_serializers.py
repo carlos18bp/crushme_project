@@ -35,20 +35,58 @@ class WishListItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_product_name(self, obj):
-        """Get product name from cache"""
-        return obj.get_product_name()
+        """Get product name from local DB or fallback to cache"""
+        # Try to get from local DB first
+        from ..models.woocommerce_models import WooCommerceProduct
+        try:
+            wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
+            return wc_product.name
+        except WooCommerceProduct.DoesNotExist:
+            # Fallback to cache
+            return obj.get_product_name()
     
     def get_product_price(self, obj):
-        """Get product price from cache"""
-        return obj.get_product_price()
+        """Get product price from local DB (in COP) or fallback to cache"""
+        # Try to get from local DB first (prices are in COP)
+        from ..models.woocommerce_models import WooCommerceProduct
+        try:
+            wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
+            # Return price in COP (will be converted later)
+            return float(wc_product.price) if wc_product.price else 0.0
+        except WooCommerceProduct.DoesNotExist:
+            # Fallback to cache
+            return obj.get_product_price()
     
     def get_product_image(self, obj):
-        """Get product image URL from cache"""
-        return obj.get_product_image()
+        """Get product image URL from local DB or fallback to cache"""
+        # Try to get from local DB first
+        from ..models.woocommerce_models import WooCommerceProduct
+        try:
+            wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
+            primary_image = wc_product.primary_image
+            return primary_image.src if primary_image else None
+        except WooCommerceProduct.DoesNotExist:
+            # Fallback to cache
+            return obj.get_product_image()
     
     def get_product_info(self, obj):
-        """Get full cached product data"""
-        return obj.product_data if obj.product_data else None
+        """Get full product data from local DB or fallback to cache"""
+        # Try to get from local DB first
+        from ..models.woocommerce_models import WooCommerceProduct
+        try:
+            wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
+            return {
+                'name': wc_product.name,
+                'price': float(wc_product.price) if wc_product.price else 0.0,
+                'regular_price': float(wc_product.regular_price) if wc_product.regular_price else 0.0,
+                'sale_price': float(wc_product.sale_price) if wc_product.sale_price else 0.0,
+                'stock_status': wc_product.stock_status,
+                'stock_quantity': wc_product.stock_quantity,
+                'on_sale': wc_product.on_sale,
+            }
+        except WooCommerceProduct.DoesNotExist:
+            # Fallback to cache
+            return obj.product_data if obj.product_data else None
     
     def to_representation(self, instance):
         """Translate WooCommerce product fields, user notes, and convert prices"""
@@ -91,10 +129,16 @@ class WishListItemSerializer(serializers.ModelSerializer):
             # Convert product_price field
             if representation.get('product_price') is not None:
                 from ..utils.currency_converter import CurrencyConverter
+                import logging
+                logger = logging.getLogger(__name__)
                 try:
                     price_value = float(representation['product_price'])
-                    representation['product_price'] = CurrencyConverter.convert_price(price_value, currency)
-                except (ValueError, TypeError):
+                    logger.info(f"🔍 Converting product_price: {price_value} COP to {currency}")
+                    converted_price = CurrencyConverter.convert_price(price_value, currency)
+                    logger.info(f"✅ Converted product_price: {converted_price} {currency}")
+                    representation['product_price'] = converted_price
+                except (ValueError, TypeError) as e:
+                    logger.error(f"❌ Failed to convert price: {e}")
                     pass  # Keep original if conversion fails
         
         return representation
@@ -125,19 +169,33 @@ class WishListItemCreateSerializer(serializers.ModelSerializer):
 
 class WishListListSerializer(serializers.ModelSerializer):
     """
-    Lightweight serializer for wishlist lists
+    Lightweight serializer for wishlist lists (for authenticated user's own wishlists)
+    Includes items with converted prices
     """
+    items = WishListItemSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     total_items = serializers.ReadOnlyField()
-    total_value = serializers.ReadOnlyField()
+    total_value = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+    public_url = serializers.ReadOnlyField()
+    shareable_path = serializers.ReadOnlyField()
     
     class Meta:
         model = WishList
         fields = [
             'id', 'name', 'description', 'user', 'is_active', 'is_public',
-            'total_items', 'total_value', 'is_favorited', 'created_at'
+            'total_items', 'total_value', 'items', 'is_favorited', 'public_url', 'shareable_path', 'created_at'
         ]
+    
+    def get_total_value(self, obj):
+        """Calculate total value from item prices and convert to target currency"""
+        total_cop = obj.total_value
+        request = self.context.get('request')
+        if request:
+            currency = getattr(request, 'currency', 'COP')
+            from ..utils.currency_converter import CurrencyConverter
+            return CurrencyConverter.convert_price(total_cop, currency)
+        return total_cop
     
     def get_is_favorited(self, obj):
         """Check if current user has favorited this wishlist"""
@@ -150,9 +208,44 @@ class WishListListSerializer(serializers.ModelSerializer):
         return False
 
 
+class WishListPublicListSerializer(serializers.ModelSerializer):
+    """
+    Public serializer for wishlist lists (NO sensitive user data like full_name)
+    Used for public endpoints like GET wishlists/user/{username}/
+    Includes items with converted prices
+    """
+    items = WishListItemSerializer(many=True, read_only=True)
+    user_username = serializers.SerializerMethodField()
+    total_items = serializers.ReadOnlyField()
+    total_value = serializers.SerializerMethodField()
+    public_url = serializers.ReadOnlyField()
+    shareable_path = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = WishList
+        fields = [
+            'id', 'name', 'description', 'user_username', 'is_active', 'is_public',
+            'total_items', 'total_value', 'items', 'public_url', 'shareable_path', 'created_at'
+        ]
+    
+    def get_user_username(self, obj):
+        """Get username or fallback to email prefix (NO full_name for privacy)"""
+        return obj.user.username or obj.user.email.split('@')[0]
+    
+    def get_total_value(self, obj):
+        """Calculate total value from item prices and convert to target currency"""
+        total_cop = obj.total_value
+        request = self.context.get('request')
+        if request:
+            currency = getattr(request, 'currency', 'COP')
+            from ..utils.currency_converter import CurrencyConverter
+            return CurrencyConverter.convert_price(total_cop, currency)
+        return total_cop
+
+
 class WishListDetailSerializer(serializers.ModelSerializer):
     """
-    Detailed serializer for individual wishlist views
+    Detailed serializer for individual wishlist views (authenticated user's own wishlist)
     """
     items = WishListItemSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
@@ -198,10 +291,14 @@ class WishListDetailSerializer(serializers.ModelSerializer):
         return FavoriteWishList.get_wishlist_favorites_count(obj)
     
     def get_total_value(self, obj):
-        """Calculate total value from item prices (will be converted later)"""
-        # Return the model's total_value which is in COP
-        # The conversion will happen in to_representation via convert_price_fields
-        return obj.total_value
+        """Calculate total value from item prices and convert to target currency"""
+        total_cop = obj.total_value
+        request = self.context.get('request')
+        if request:
+            currency = getattr(request, 'currency', 'COP')
+            from ..utils.currency_converter import CurrencyConverter
+            return CurrencyConverter.convert_price(total_cop, currency)
+        return total_cop
     
     def to_representation(self, instance):
         """Translate wishlist name and description"""
@@ -272,14 +369,16 @@ class WishListCreateUpdateSerializer(serializers.ModelSerializer):
 
 class WishListPublicSerializer(serializers.ModelSerializer):
     """
-    Serializer for public wishlist access (via UUID link)
-    Limited information for privacy
+    Serializer for public wishlist access (via UUID link or username)
+    Limited information for privacy - NO full_name exposed
     """
     items = WishListItemSerializer(many=True, read_only=True)
-    user_name = serializers.SerializerMethodField()
+    user_username = serializers.SerializerMethodField()
     total_items = serializers.ReadOnlyField()
-    total_value = serializers.ReadOnlyField()
+    total_value = serializers.SerializerMethodField()
     favorites_count = serializers.SerializerMethodField()
+    public_url = serializers.ReadOnlyField()
+    shareable_path = serializers.ReadOnlyField()
     shipping_name = serializers.ReadOnlyField()
     shipping_address = serializers.ReadOnlyField()
     shipping_phone = serializers.ReadOnlyField()
@@ -288,15 +387,26 @@ class WishListPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
         fields = [
-            'id', 'name', 'description', 'user_name', 'items',
+            'id', 'name', 'description', 'user_username', 'items',
             'total_items', 'total_value', 'favorites_count',
+            'public_url', 'shareable_path',
             'shipping_name', 'shipping_address', 'shipping_phone', 'shipping_email',
             'created_at'
         ]
     
-    def get_user_name(self, obj):
-        """Get user's display name for public view"""
-        return obj.user.get_full_name() or obj.user.email.split('@')[0]
+    def get_user_username(self, obj):
+        """Get username for public view (NO full_name for privacy)"""
+        return obj.user.username or obj.user.email.split('@')[0]
+    
+    def get_total_value(self, obj):
+        """Calculate total value from item prices and convert to target currency"""
+        total_cop = obj.total_value
+        request = self.context.get('request')
+        if request:
+            currency = getattr(request, 'currency', 'COP')
+            from ..utils.currency_converter import CurrencyConverter
+            return CurrencyConverter.convert_price(total_cop, currency)
+        return total_cop
     
     def get_favorites_count(self, obj):
         """Get number of users who favorited this wishlist"""

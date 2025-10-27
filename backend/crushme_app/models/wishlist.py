@@ -90,16 +90,23 @@ class WishList(models.Model):
     
     @property
     def total_value(self):
-        """Calculate total value of all items in wishlist"""
+        """Calculate total value of all items in wishlist (in COP)"""
+        from .woocommerce_models import WooCommerceProduct
         total = 0
         for item in self.items.all():
-            # Try WooCommerce product data first
-            price = item.get_product_price()
-            if price > 0:
-                total += price
-            # Fallback to legacy product if exists
-            elif item.product and hasattr(item.product, 'price'):
-                total += float(item.product.price)
+            # Try to get price from local DB first (prices are in COP)
+            try:
+                wc_product = WooCommerceProduct.objects.get(wc_id=item.woocommerce_product_id)
+                if wc_product.price:
+                    total += float(wc_product.price)
+            except WooCommerceProduct.DoesNotExist:
+                # Fallback to cached product data
+                price = item.get_product_price()
+                if price > 0:
+                    total += price
+                # Fallback to legacy product if exists
+                elif item.product and hasattr(item.product, 'price'):
+                    total += float(item.product.price)
         return total
     
     @property

@@ -5,10 +5,10 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-            {{ searchedUser ? `@${searchedUser.username}${$t('profile.wishlist.usersWishlists')}` : $t('profile.wishlist.myWishlists') }}
+            {{ searchedUser ? `@${searchedUser.username} ${$t('profile.wishlist.usersWishlists')}` : $t('profile.wishlist.myWishlists') }}
           </h1>
           <p v-if="searchedUser" class="text-xs md:text-sm text-gray-600 mt-1">
-            {{ searchedUser.fullName }} · {{ searchedUser.totalWishlists }} {{ searchedUser.totalWishlists !== 1 ? $t('profile.wishlist.publicWishlistsPlural') : $t('profile.wishlist.publicWishlists') }}
+            {{ searchedUser.totalWishlists }} {{ searchedUser.totalWishlists !== 1 ? $t('profile.wishlist.publicWishlistsPlural') : $t('profile.wishlist.publicWishlists') }}
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2 md:gap-3">
@@ -74,11 +74,11 @@
                 </p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
-                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :disabled="copyingId === wishlist.id" class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap disabled:opacity-50">
+                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :disabled="copyingId === wishlist.id" class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap disabled:opacity-50">
                   <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                   <span class="hidden sm:inline">{{ copyingId === wishlist.id ? $t('profile.wishlist.copied') : $t('profile.wishlist.copyWishlistLink') }}</span>
                 </button>
-                <button @click="buyWishlist(wishlist)" class="px-3 md:px-4 py-1.5 md:py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs font-medium hover:bg-brand-pink-medium hover:text-white transition-colors whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
+                <button @click="buyWishlist(wishlist)" class="px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
                 <button @click="toggleWishlist(wishlist.id)" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <svg class="w-5 h-5 text-gray-600 transition-transform" :class="{ 'rotate-180': expandedWishlists.includes(wishlist.id) }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -236,6 +236,13 @@ const toggleWishlist = async (id) => {
         }
         
         if (result.success) {
+          console.log('📦 [WISHLIST DETAILS] Backend response:', {
+            wishlist_id: id,
+            total_items: result.data.total_items,
+            currency: result.data.currency,
+            items: result.data.items,
+            first_item_example: result.data.items?.[0]
+          })
           loadedWishlistDetails.value[id] = result.data
         }
       } catch (err) {
@@ -262,14 +269,34 @@ const getWishlistProducts = (wishlistId) => {
 // Format product data for ProductCard component
 const formatProductForCard = (item) => {
   // item.product_info contiene toda la info actualizada de WooCommerce
-  return {
+  // IMPORTANTE: Spread product_info primero, luego sobrescribir con product_price
+  
+  console.log('🔍 [WISHLIST ITEM] Raw data from backend:', {
+    product_name: item.product_name,
+    product_price: item.product_price,
+    product_info_price: item.product_info?.price,
+    product_info_converted_price: item.product_info?.converted_price,
+    full_item: item
+  })
+  
+  const formattedProduct = {
+    ...item.product_info,
     id: item.woocommerce_product_id,
     name: item.product_name,
-    price: item.product_price,
+    price: item.product_price,  // Este es el precio ya convertido por el backend
+    converted_price: item.product_price,  // ProductCard busca converted_price primero
     images: item.product_info?.images || [{ src: item.product_image }],
-    stock_status: item.product_info?.stock_status || 'instock',
-    ...item.product_info
+    stock_status: item.product_info?.stock_status || 'instock'
   }
+  
+  console.log('✅ [WISHLIST ITEM] Formatted for ProductCard:', {
+    name: formattedProduct.name,
+    price: formattedProduct.price,
+    converted_price: formattedProduct.converted_price,
+    product_info_price: item.product_info?.price
+  })
+  
+  return formattedProduct
 }
 
 const navigateToProduct = (productId) => {
@@ -301,25 +328,33 @@ const copyWishlistLink = async (wishlist) => {
 }
 
 const buyWishlist = (wishlist) => {
-  // Get username from searched user or current auth user
-  const username = searchedUser.value?.username || authStore.user?.username
+  // Extract the path from public_url or construct it manually
+  let wishlistPath = ''
   
-  if (!username) {
-    console.error('No username available for wishlist purchase')
-    return
+  if (wishlist.public_url) {
+    // Extract path from full URL (e.g., "http://localhost:5173/@cerrotico/4" -> "/@cerrotico/4")
+    try {
+      const url = new URL(wishlist.public_url)
+      wishlistPath = url.pathname
+    } catch (e) {
+      // If it's not a valid URL, assume it's already a path
+      wishlistPath = wishlist.public_url
+    }
+  } else {
+    // Fallback: construct path manually
+    const username = searchedUser.value?.username || wishlist.user_username
+    if (!username) {
+      console.error('No username available for wishlist purchase')
+      return
+    }
+    wishlistPath = `/@${username}/${wishlist.id}`
   }
   
-  router.push({
-    name: `Checkout-${i18nStore.locale}`,
-    query: {
-      giftMode: 'true',
-      username: username,
-      wishlistId: wishlist.id,
-      wishlistName: wishlist.name
-    }
-  })
+  console.log('🎁 Navigating to wishlist checkout:', wishlistPath)
   
-  console.log('🎁 Navigating to checkout for wishlist:', wishlist.name)
+  // Open in new tab
+  const fullUrl = window.location.origin + wishlistPath
+  window.open(fullUrl, '_blank')
 }
 
 const removeProduct = async (wishlistId, woocommerceProductId) => {
@@ -390,6 +425,23 @@ onMounted(async () => {
 <style scoped>
 .wishlist-card {
   background: rgba(255, 63, 213, 0.2);
+}
+
+/* Brand colors */
+.bg-brand-purple-light {
+  background-color: var(--color-brand-purple-light);
+}
+
+.text-brand-pink-medium {
+  color: var(--color-brand-pink-medium);
+}
+
+.border-brand-pink-medium {
+  border-color: var(--color-brand-pink-medium);
+}
+
+.hover\:bg-brand-pink-medium:hover {
+  background-color: var(--color-brand-pink-medium);
 }
 </style>
 

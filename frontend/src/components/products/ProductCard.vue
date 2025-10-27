@@ -183,6 +183,16 @@ const isOutOfStock = ref(false)
 const displayPrice = computed(() => {
   // Backend envía converted_price con el precio ya convertido
   const price = parseFloat(props.product.converted_price || props.product.price) || 0
+  
+  console.log('💰 [PRODUCT CARD] Displaying price:', {
+    product_name: props.product.name,
+    converted_price: props.product.converted_price,
+    price: props.product.price,
+    final_price: price,
+    formatted: currencyStore.formatPrice(price),
+    currency: currencyStore.currentCurrency
+  })
+  
   return currencyStore.formatPrice(price)
 })
 
