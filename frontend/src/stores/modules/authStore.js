@@ -45,9 +45,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Login user with email and password
+   * Login user with username and password
    * @param {Object} credentials - Login credentials
-   * @param {string} credentials.email - User email
+   * @param {string} credentials.username - Username
    * @param {string} credentials.password - User password
    */
   async function login(credentials) {

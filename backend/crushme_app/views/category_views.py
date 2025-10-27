@@ -164,7 +164,11 @@ def organize_categories_by_theme(categories):
             if cat_id in category_map:
                 cat = category_map[cat_id]
                 
-                # Buscar subcategorías si las tiene
+                # Filtrar categorías sin productos
+                if cat.get('count', 0) == 0:
+                    continue
+                
+                # Buscar subcategorías si las tiene (solo las que tienen productos)
                 subcategories = [
                     {
                         'id': sub['id'],
@@ -172,7 +176,7 @@ def organize_categories_by_theme(categories):
                         'slug': sub['slug'],
                         'count': sub['count']
                     }
-                    for sub in categories if sub['parent'] == cat_id
+                    for sub in categories if sub['parent'] == cat_id and sub.get('count', 0) > 0
                 ]
                 
                 theme_data['categories'].append({
@@ -445,31 +449,38 @@ def get_category_stats(request, category_id):
 def get_random_featured_categories(request):
     """
     Obtener 4 categorías aleatorias de las categorías principales con la imagen del primer producto.
+    Solo retorna categorías que tienen productos con imágenes.
 
     Devuelve:
-    - 4 categorías seleccionadas aleatoriamente de las principales.
+    - Hasta 4 categorías seleccionadas aleatoriamente de las principales.
     - Para cada categoría: nombre, slug, ID y la imagen del primer producto disponible.
     - El slug se puede usar para consultar el endpoint existente: /api/products/category/?category=<slug>
     """
     try:
         # Definir las categorías principales (igual que en organize_categories_by_theme)
         main_themes = [
-            {'name': 'Juguetes', 'slug': 'juguetes', 'icon': '🎮', 'main_categories': [134]},
-            {'name': 'Lencería', 'slug': 'lenceria', 'icon': '👗', 'main_categories': [246, 352]},
-            {'name': 'Lubricantes y Cosmética', 'slug': 'lubricantes', 'icon': '💧', 'main_categories': [136]},
-            {'name': 'Bondage', 'slug': 'bondage', 'icon': '⛓️', 'main_categories': [137]},
-            {'name': 'Bienestar Sexual', 'slug': 'bienestar', 'icon': '🌿', 'main_categories': [531]},
-            {'name': 'Marcas', 'slug': 'marcas', 'icon': '🏷️', 'main_categories': [546, 539, 550]},
-            {'name': 'Ofertas y Descuentos', 'slug': 'ofertas', 'icon': '💰', 'main_categories': [695]}
+            {'name': 'Juguetes', 'slug': 'juguetes', 'icon': '', 'main_categories': [134]},
+            {'name': 'Lencería', 'slug': 'lenceria', 'icon': '', 'main_categories': [246, 352]},
+            {'name': 'Lubricantes y Cosmética', 'slug': 'lubricantes', 'icon': '', 'main_categories': [136]},
+            {'name': 'Bondage', 'slug': 'bondage', 'icon': '', 'main_categories': [137]},
+            {'name': 'Bienestar Sexual', 'slug': 'bienestar', 'icon': '', 'main_categories': [531]},
+            {'name': 'Marcas', 'slug': 'marcas', 'icon': '', 'main_categories': [546, 539, 550]},
+            {'name': 'Ofertas y Descuentos', 'slug': 'ofertas', 'icon': '', 'main_categories': [695]}
         ]
 
-        # Seleccionar 4 categorías aleatorias
+        # Mezclar aleatoriamente todas las categorías
         import random
-        selected_themes = random.sample(main_themes, min(4, len(main_themes)))
+        shuffled_themes = main_themes.copy()
+        random.shuffle(shuffled_themes)
 
         featured_categories = []
 
-        for theme in selected_themes:
+        # Intentar obtener 4 categorías con imagen
+        for theme in shuffled_themes:
+            # Si ya tenemos 4, detener
+            if len(featured_categories) >= 4:
+                break
+                
             # Obtener productos de la primera categoría principal de este tema
             category_id = theme['main_categories'][0]
             products_result = woocommerce_service.get_products(category_id=category_id, per_page=1, page=1)
@@ -482,16 +493,18 @@ def get_random_featured_categories(request):
                 if images:
                     first_product_image = images[0].get('src', '')  # URL de la imagen principal
 
-            # Construir el objeto de la categoría
-            category_data = {
-                'name': theme['name'],
-                'slug': theme['slug'],  # Este slug se usa para el endpoint existente
-                'icon': theme['icon'],
-                'category_id': category_id,  # ID de la categoría en WooCommerce
-                'first_product_image': first_product_image  # Imagen del primer producto
-            }
+            # Solo agregar si tiene imagen
+            if first_product_image:
+                # Construir el objeto de la categoría
+                category_data = {
+                    'name': theme['name'],
+                    'slug': theme['slug'],  # Este slug se usa para el endpoint existente
+                    'icon': theme['icon'],
+                    'category_id': category_id,  # ID de la categoría en WooCommerce
+                    'first_product_image': first_product_image  # Imagen del primer producto
+                }
 
-            featured_categories.append(category_data)
+                featured_categories.append(category_data)
 
         # Traducir nombres si es necesario (reutilizando la lógica existente)
         translator = create_translator_from_request(request)
@@ -501,7 +514,7 @@ def get_random_featured_categories(request):
 
         return Response({
             'success': True,
-            'message': '4 categorías destacadas obtenidas exitosamente',
+            'message': f'{len(featured_categories)} categorías destacadas obtenidas exitosamente',
             'data': featured_categories,
             'total_selected': len(featured_categories)
         }, status=status.HTTP_200_OK)
@@ -510,6 +523,5 @@ def get_random_featured_categories(request):
         logger.error(f"Error obteniendo categorías destacadas: {str(e)}")
         return Response({
             'success': False,
-            'error': 'Error interno del servidor',
-            'details': str(e)
+            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

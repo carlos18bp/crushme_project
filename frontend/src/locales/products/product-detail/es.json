@@ -12,9 +12,12 @@
   "saleBadge": "¡Oferta!",
   "selectColor": "Seleccionar Color",
   "selectSize": "Elegir Talla",
+  "buyNow": "Comprar ahora",
   "addToCart": "Añadir al carrito",
   "addedToCart": "Añadido al carrito",
   "addToWishlist": "Añadir a mis favoritos",
+  "addToFavorites": "Añadir a favoritos",
+  "removeFromFavorites": "Quitar de favoritos",
   "stock": {
     "inStock": "En Stock",
     "outOfStock": "Agotado"

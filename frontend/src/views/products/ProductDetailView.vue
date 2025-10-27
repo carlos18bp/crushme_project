@@ -76,8 +76,22 @@
             
             <!-- Right Side: Product Information -->
             <div class="product-info">
-              <!-- Product Title -->
-              <h1 class="product-title">{{ product.name }}</h1>
+              <!-- Product Title with Favorite Button -->
+              <div class="flex items-center justify-between gap-4 mb-4">
+                <h1 class="product-title flex-1">{{ product.name }}</h1>
+                <button 
+                  @click="handleToggleFavorite" 
+                  :disabled="isTogglingFavorite"
+                  class="favorite-icon-btn-header"
+                  :title="isFavorited ? $t('productDetail.removeFromFavorites') : $t('productDetail.addToFavorites')"
+                >
+                  <img 
+                    :src="isFavorited ? HeartCheckIcon : HeartNoCheckIcon" 
+                    alt="Favorite icon"
+                    class="w-6 h-6"
+                  />
+                </button>
+              </div>
               
               <!-- Reviews (Real data or hardcoded fallback) -->
               <div class="product-reviews">
@@ -165,23 +179,26 @@
                 </div>
                 
                 <!-- Action Buttons -->
-                <button 
-                  @click="addToCart" 
-                  :disabled="!isStockAvailable || isAddingToCart"
-                  class="add-to-cart-btn"
-                  :class="{ 'success': addToCartSuccess }"
-                >
-                  <span v-if="isAddingToCart" class="loading-text">⏳</span>
-                  <span v-else-if="addToCartSuccess">✓ {{ $t('productDetail.addedToCart') }}</span>
-                  <span v-else>{{ $t('productDetail.addToCart') }}</span>
-                </button>
-                <button 
-                  @click="handleAddToWishlist" 
-                  :disabled="!isStockAvailable"
-                  class="add-to-wishlist-btn"
-                >
-                  {{ $t('productDetail.addToWishlist') }}
-                </button>
+                <div class="action-buttons-row">
+                  <button 
+                    @click="buyNow" 
+                    :disabled="!isStockAvailable || isAddingToCart"
+                    class="buy-now-btn"
+                  >
+                    <span v-if="isAddingToCart" class="loading-text">⏳</span>
+                    <span v-else>{{ $t('productDetail.buyNow') }}</span>
+                  </button>
+                  <button 
+                    @click="addToCart" 
+                    :disabled="!isStockAvailable || isAddingToCart"
+                    class="add-to-cart-btn"
+                    :class="{ 'success': addToCartSuccess }"
+                  >
+                    <span v-if="isAddingToCart" class="loading-text">⏳</span>
+                    <span v-else-if="addToCartSuccess">✓ {{ $t('productDetail.addedToCart') }}</span>
+                    <span v-else class="whitespace-nowrap">{{ $t('productDetail.addToCart') }}</span>
+                  </button>
+                </div>
               </div>
               
               <!-- Wishlist Selector Modal -->
@@ -243,6 +260,7 @@ import { useAuthStore } from '@/stores/modules/authStore'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useReviewStore } from '@/stores/modules/reviewStore'
 import { useCurrencyStore } from '@/stores/modules/currencyStore'
+import { useProfileStore } from '@/stores/modules/profileStore'
 import { get_request } from '@/services/request_http.js'
 import Navbar from '@/components/shared/Navbar.vue'
 import Footer from '@/components/shared/Footer.vue'
@@ -250,6 +268,10 @@ import FAQ from '@/components/shared/FAQ.vue'
 import WishlistSelector from '@/components/wishlists/WishlistSelector.vue'
 import TrendingProducts from '@/components/products/TrendingProducts.vue'
 import ProductReviews from '@/components/products/ProductReviews.vue'
+
+// Importar iconos SVG
+import HeartCheckIcon from '@/assets/icons/heart/check.svg?url'
+import HeartNoCheckIcon from '@/assets/icons/heart/no_check.svg?url'
 
 // Props
 defineProps({
@@ -269,6 +291,7 @@ const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const reviewStore = useReviewStore()
 const currencyStore = useCurrencyStore()
+const profileStore = useProfileStore()
 
 // Reactive data
 const selectedImageIndex = ref(0)
@@ -281,6 +304,8 @@ const thumbnailScrollPosition = ref(0)
 const maxVisibleThumbnails = ref(5)
 const thumbnailList = ref(null)
 const showWishlistSelector = ref(false)
+const isFavorited = ref(false)
+const isTogglingFavorite = ref(false)
 
 // ⭐ NUEVO: Stock en tiempo real
 const realTimeStock = ref(null)
@@ -950,6 +975,48 @@ const addToCart = async () => {
     console.error('❌ Error inesperado:', err)
   } finally {
     isAddingToCart.value = false
+  }
+}
+
+const buyNow = async () => {
+  if (!product.value || isAddingToCart.value) return
+  
+  // Agregar al carrito primero
+  await addToCart()
+  
+  // Si se agregó exitosamente, redirigir al checkout
+  if (addToCartSuccess.value) {
+    router.push({ name: `Checkout-${i18nStore.locale}` })
+  }
+}
+
+const handleToggleFavorite = async () => {
+  // Check if user is authenticated
+  if (!authStore.isLoggedIn) {
+    router.push({ name: `Login-${i18nStore.locale}` })
+    return
+  }
+  
+  isTogglingFavorite.value = true
+  
+  try {
+    if (isFavorited.value) {
+      // Remove from favorites
+      const result = await profileStore.removeProductFromFavorites(product.value.id)
+      if (result.success) {
+        isFavorited.value = false
+      }
+    } else {
+      // Add to favorites
+      const result = await profileStore.addProductToFavorites(product.value.id)
+      if (result.success) {
+        isFavorited.value = true
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling favorite:', error)
+  } finally {
+    isTogglingFavorite.value = false
   }
 }
 
@@ -1906,9 +1973,17 @@ watch(product, (newProduct, oldProduct) => {
   outline: none;
 }
 
-.add-to-cart-btn {
+/* Action buttons row */
+.action-buttons-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Buy Now Button - Brand Pink Medium */
+.buy-now-btn {
   flex: 1;
-  background-color: #64748b;
+  background-color: #D689A2; /* Brand pink medium */
   color: white;
   border: none;
   padding: 0.875rem 1.25rem;
@@ -1922,6 +1997,45 @@ watch(product, (newProduct, oldProduct) => {
 }
 
 @media (min-width: 640px) {
+  .buy-now-btn {
+    padding: 0.875rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    min-height: 50px;
+  }
+}
+
+.buy-now-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(214, 137, 162, 0.5);
+}
+
+.buy-now-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Add to Cart Button - Brand Pink Medium */
+.add-to-cart-btn {
+  flex: 1;
+  background-color: #D689A2; /* Brand pink medium */
+  color: white;
+  border: none;
+  padding: 0.875rem 1.25rem;
+  border-radius: 22px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
   .add-to-cart-btn {
     padding: 0.875rem 1.5rem;
     border-radius: 25px;
@@ -1931,9 +2045,9 @@ watch(product, (newProduct, oldProduct) => {
 }
 
 .add-to-cart-btn:hover:not(:disabled) {
-  background-color: #475569;
+  opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+  box-shadow: 0 4px 12px rgba(214, 137, 162, 0.5);
 }
 
 .add-to-cart-btn:disabled {
@@ -1944,20 +2058,48 @@ watch(product, (newProduct, oldProduct) => {
 }
 
 .add-to-cart-btn.success {
-  background-color: #DA9DFF; /* Brand purple light */
+  background-color: #D689A2; /* Keep same color */
+  opacity: 0.95;
 }
 
 .add-to-cart-btn.success:hover {
-  background-color: #c084fc; /* Brand purple hover */
+  opacity: 0.85;
 }
 
-.add-to-cart-btn.out-of-stock {
-  background-color: #ef4444;
+/* Favorite Icon Button - Header */
+.favorite-icon-btn-header {
+  background-color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .favorite-icon-btn-header {
+    padding: 0.875rem;
+    border-radius: 15px;
+    min-width: 50px;
+    min-height: 50px;
+  }
+}
+
+.favorite-icon-btn-header:hover:not(:disabled) {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-icon-btn-header:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-}
-
-.add-to-cart-btn.out-of-stock:hover {
-  background-color: #dc2626;
   transform: none;
 }
 

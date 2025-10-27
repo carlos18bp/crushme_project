@@ -199,20 +199,20 @@ class EmailVerificationSerializer(serializers.Serializer):
 
 class UserLoginSerializer(serializers.Serializer):
     """
-    Serializer for user login with email and password
+    Serializer for user login with username and password
     """
-    email = serializers.EmailField()
+    username = serializers.CharField()
     password = serializers.CharField(style={'input_type': 'password'})
     
     def validate(self, attrs):
         """Validate login credentials"""
-        email = attrs.get('email')
+        username = attrs.get('username')
         password = attrs.get('password')
         
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(username__iexact=username)
         except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid email or password.")
+            raise serializers.ValidationError("Invalid username or password.")
         
         if not user.is_active:
             raise serializers.ValidationError("Account is not activated. Please verify your email.")
@@ -221,9 +221,9 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Email not verified. Please check your email for verification code.")
         
         # Authenticate with password
-        authenticated_user = authenticate(username=email, password=password)
+        authenticated_user = authenticate(username=user.username, password=password)
         if not authenticated_user:
-            raise serializers.ValidationError("Invalid email or password.")
+            raise serializers.ValidationError("Invalid username or password.")
         
         attrs['user'] = authenticated_user
         return attrs

@@ -1,6 +1,6 @@
 {
   "title": "Regresa a tu mundo privado.",
-  "emailPlaceholder": "Tu dirección de correo",
+  "usernamePlaceholder": "Tu nombre de usuario",
   "passwordPlaceholder": "Tu contraseña",
   "rememberMe": "Recordarme",
   "forgotPassword": "¿Olvidaste tu contraseña?",

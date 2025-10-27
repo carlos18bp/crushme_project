@@ -25,6 +25,14 @@
     "signupFailed": "Error al registrarse: ",
     "emailExists": "Este correo ya está registrado",
     "usernameExists": "Este nombre de usuario ya está en uso"
+  },
+  "passwordRequirements": {
+    "title": "La contraseña debe contener:",
+    "minLength": "Al menos 8 caracteres",
+    "uppercase": "Al menos una letra mayúscula (A-Z)",
+    "lowercase": "Al menos una letra minúscula (a-z)",
+    "number": "Al menos un número (0-9)",
+    "special": "Al menos un carácter especial (!@#$%^&*)"
   }
 }
 

@@ -47,6 +47,18 @@
               </button>
             </div>
           </div>
+
+          <!-- Password Requirements -->
+          <div class="password-requirements">
+            <p class="requirements-title">{{ $t('resetPassword.passwordRequirements.title') }}</p>
+            <ul class="requirements-list">
+              <li>{{ $t('resetPassword.passwordRequirements.minLength') }}</li>
+              <li>{{ $t('resetPassword.passwordRequirements.uppercase') }}</li>
+              <li>{{ $t('resetPassword.passwordRequirements.lowercase') }}</li>
+              <li>{{ $t('resetPassword.passwordRequirements.number') }}</li>
+              <li>{{ $t('resetPassword.passwordRequirements.special') }}</li>
+            </ul>
+          </div>
           
           <!-- Confirm Password Input -->
           <div class="input-group">
@@ -401,6 +413,48 @@ const handleResetPassword = async () => {
 
 .password-toggle:hover {
   color: #4b5563;
+}
+
+/* Password Requirements */
+.password-requirements {
+  background: rgba(218, 157, 255, 0.05);
+  border: 1px solid rgba(218, 157, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: -0.5rem;
+}
+
+.requirements-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6B7280;
+  margin: 0 0 0.5rem 0;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.requirements-list li {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  color: #6B7280;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.requirements-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0.5rem;
+  color: #DA9DFF;
+  font-weight: bold;
 }
 
 .password-strength {

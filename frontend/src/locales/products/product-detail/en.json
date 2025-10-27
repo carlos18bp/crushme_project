@@ -12,9 +12,12 @@
   "saleBadge": "Sale!",
   "selectColor": "Select Color",
   "selectSize": "Choose Size",
+  "buyNow": "Buy Now",
   "addToCart": "Add to Cart",
   "addedToCart": "Added to Cart",
   "addToWishlist": "Add to my wishlist",
+  "addToFavorites": "Add to favorites",
+  "removeFromFavorites": "Remove from favorites",
   "stock": {
     "inStock": "In Stock",
     "outOfStock": "Out of Stock"

@@ -48,6 +48,7 @@ class WishList(models.Model):
     shipping_data = models.JSONField(
         default=dict,
         blank=True,
+        null=True,
         verbose_name="Shipping Data",
         help_text="JSON data containing shipping information (name, address, phone, email)"
     )

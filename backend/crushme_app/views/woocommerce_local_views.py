@@ -1077,12 +1077,17 @@ def get_organized_categories_local(request):
             for cat_id in all_category_ids:
                 if cat_id in category_map:
                     cat = category_map[cat_id]
+                    
+                    # Filtrar categorías sin productos
+                    if cat.product_count == 0:
+                        continue
+                    
                     cat_translated = get_translated_category(cat, target_lang)
                     
-                    # Buscar subcategorías
+                    # Buscar subcategorías (solo las que tienen productos)
                     subcategories = []
                     for sub in all_categories:
-                        if sub.wc_parent_id == cat_id:
+                        if sub.wc_parent_id == cat_id and sub.product_count > 0:
                             sub_translated = get_translated_category(sub, target_lang)
                             subcategories.append({
                                 'id': sub.wc_id,
@@ -1193,6 +1198,7 @@ def get_random_featured_categories_local(request):
     """
     Obtener 4 categorías destacadas aleatorias con imagen del primer producto.
     Usa base de datos local para respuestas rápidas.
+    Solo retorna categorías que tienen productos con imágenes.
     """
     try:
         target_lang = get_language_from_request(request)
@@ -1208,46 +1214,54 @@ def get_random_featured_categories_local(request):
             {'name': 'Ofertas y Descuentos', 'slug': 'ofertas', 'icon': '💰', 'category_id': 695}
         ]
         
-        # Seleccionar 4 aleatorias
-        selected_themes = random.sample(main_themes, min(4, len(main_themes)))
+        # Mezclar aleatoriamente todas las categorías
+        shuffled_themes = main_themes.copy()
+        random.shuffle(shuffled_themes)
         
         featured_categories = []
         
-        for theme in selected_themes:
-            # Obtener primer producto de la categoría
+        # Intentar obtener 4 categorías con imagen
+        for theme in shuffled_themes:
+            # Si ya tenemos 4, detener
+            if len(featured_categories) >= 4:
+                break
+            
+            # Obtener primer producto de la categoría con imagen
             first_product = WooCommerceProduct.objects.filter(
                 categories__wc_id=theme['category_id'],
                 status='publish'
             ).prefetch_related('images').first()
             
-            # Obtener imagen del producto
+            # Verificar que el producto tenga imagen
             first_product_image = None
             if first_product and first_product.images.exists():
                 first_product_image = first_product.images.first().src
             
-            # Traducir nombre si es necesario
-            theme_name = theme['name']
-            if target_lang != 'es':
-                try:
-                    # Intentar obtener traducción del caché
-                    category = WooCommerceCategory.objects.filter(wc_id=theme['category_id']).first()
-                    if category:
-                        cat_translated = get_translated_category(category, target_lang)
-                        theme_name = cat_translated['name']
-                except:
-                    pass
-            
-            featured_categories.append({
-                'name': theme_name,
-                'slug': theme['slug'],
-                'icon': theme['icon'],
-                'category_id': theme['category_id'],
-                'first_product_image': first_product_image
-            })
+            # Solo agregar si tiene imagen
+            if first_product_image:
+                # Traducir nombre si es necesario
+                theme_name = theme['name']
+                if target_lang != 'es':
+                    try:
+                        # Intentar obtener traducción del caché
+                        category = WooCommerceCategory.objects.filter(wc_id=theme['category_id']).first()
+                        if category:
+                            cat_translated = get_translated_category(category, target_lang)
+                            theme_name = cat_translated['name']
+                    except:
+                        pass
+                
+                featured_categories.append({
+                    'name': theme_name,
+                    'slug': theme['slug'],
+                    'icon': theme['icon'],
+                    'category_id': theme['category_id'],
+                    'first_product_image': first_product_image
+                })
         
         return Response({
             'success': True,
-            'message': '4 categorías destacadas obtenidas exitosamente',
+            'message': f'{len(featured_categories)} categorías destacadas obtenidas exitosamente',
             'data': featured_categories,
             'total_selected': len(featured_categories),
             'language': target_lang,

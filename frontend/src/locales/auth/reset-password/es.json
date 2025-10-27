@@ -21,6 +21,14 @@
     "updateFailed": "Error al actualizar contraseña: ",
     "invalidToken": "La sesión de restablecimiento ha expirado. Por favor inicia de nuevo.",
     "weakPassword": "La contraseña es muy débil. Por favor elige una contraseña más fuerte."
+  },
+  "passwordRequirements": {
+    "title": "La contraseña debe contener:",
+    "minLength": "Al menos 8 caracteres",
+    "uppercase": "Al menos una letra mayúscula (A-Z)",
+    "lowercase": "Al menos una letra minúscula (a-z)",
+    "number": "Al menos un número (0-9)",
+    "special": "Al menos un carácter especial (!@#$%^&*)"
   }
 }
 

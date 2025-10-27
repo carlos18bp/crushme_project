@@ -6,7 +6,7 @@
   "goToShop": "Ir a la tienda",
   "create": "Crear",
   "backToMyWishlists": "Volver a Mis Listas",
-  "searchPlaceholder": "Buscar por @usuario (presiona Enter)",
+  "searchPlaceholder": "Buscar por {'@'}usuario (presiona Enter)",
   "search": "Buscar",
   "items": "artículos",
   "public": "Pública",

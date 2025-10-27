@@ -12,38 +12,41 @@ import string
 
 class UserManager(BaseUserManager):
     """
-    Custom user manager to handle user creation with email as the unique identifier.
+    Custom user manager to handle user creation with username as the unique identifier.
     Based on signin_signon_feature and gym_project pattern
     """
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, username, email=None, password=None, **extra_fields):
         """
-        Creates and returns a regular user with the given email and password.
+        Creates and returns a regular user with the given username and password.
 
         Args:
-            email (str): The email of the user.
+            username (str): The username of the user.
+            email (str, optional): The email of the user. Defaults to None.
             password (str, optional): The password for the user. Defaults to None.
             **extra_fields: Additional fields for the user model.
 
         Raises:
-            ValueError: If the email is not provided.
+            ValueError: If the username is not provided.
 
         Returns:
             User: The created user instance.
         """
-        if not email:
-            raise ValueError('The email must be defined')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+        if not username:
+            raise ValueError('The username must be defined')
+        if email:
+            email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
         """
-        Creates and returns a superuser with the given email and password.
+        Creates and returns a superuser with the given username and password.
 
         Args:
-            email (str): The email of the superuser.
+            username (str): The username of the superuser.
+            email (str, optional): The email of the superuser. Defaults to None.
             password (str, optional): The password for the superuser. Defaults to None.
             **extra_fields: Additional fields for the superuser model.
 
@@ -61,18 +64,18 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class User(AbstractUser):
     """
-    Custom user model extending AbstractUser. Uses email as the unique identifier for authentication.
-    Includes username for display purposes and additional profile fields.
+    Custom user model extending AbstractUser. Uses username as the unique identifier for authentication.
+    Includes email for verification and communication purposes.
     Based on signin_signon_feature and gym_project implementation
     
     Attributes:
-        email (EmailField): The unique email of the user (used for authentication).
-        username (CharField): Unique username for display purposes.
+        username (CharField): Unique username for authentication and display purposes.
+        email (EmailField): The unique email of the user (for verification and communication).
         first_name (CharField): The first name of the user.
         last_name (CharField): The last name of the user.
         phone (CharField): Phone number of the user.
@@ -86,19 +89,19 @@ class User(AbstractUser):
         crush_verified_at (DateTimeField): When Crush was verified/approved.
         crush_rejection_reason (TextField): Reason for rejection if applicable.
     """
-    # Override the default username to make it unique but not for authentication
+    # Username is now the primary authentication field
     username = models.CharField(
         max_length=30, 
         unique=True, 
         verbose_name="Username",
-        help_text="Unique username for display purposes. Can be changed later.",
-        null=True,
-        blank=True
+        help_text="Unique username for authentication and display purposes.",
+        null=False,
+        blank=False
     )
     groups = None
     user_permissions = None
     
-    # Use email as the unique identifier for authentication
+    # Email is still unique but not used for authentication
     email = models.EmailField(unique=True, verbose_name="Email Address")
     first_name = models.CharField(max_length=60, blank=True, null=True, verbose_name="First Name")
     last_name = models.CharField(max_length=60, blank=True, null=True, verbose_name="Last Name")
@@ -234,9 +237,9 @@ class User(AbstractUser):
         help_text="Number of gifts sent by this user"
     )
 
-    # Set email as the username field for authentication
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    # Set username as the username field for authentication
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     # Use the custom user manager
     objects = UserManager()

@@ -198,6 +198,12 @@ class WishListCreateUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating wishlists
     """
+    # Make optional fields explicitly optional
+    description = serializers.CharField(required=False, allow_blank=True)
+    is_active = serializers.BooleanField(required=False, default=True)
+    is_public = serializers.BooleanField(required=False, default=False)
+    shipping_data = serializers.JSONField(required=False, allow_null=True)
+    
     class Meta:
         model = WishList
         fields = [
@@ -206,7 +212,7 @@ class WishListCreateUpdateSerializer(serializers.ModelSerializer):
     
     def validate_name(self, value):
         """Validate wishlist name"""
-        if len(value.strip()) < 2:
+        if not value or len(value.strip()) < 2:
             raise serializers.ValidationError(
                 "Wishlist name must be at least 2 characters long."
             )
@@ -218,7 +224,7 @@ class WishListCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Description must be at least 5 characters long if provided."
             )
-        return value.strip() if value else value
+        return value.strip() if value else ""
     
     def validate_shipping_data(self, value):
         """Validate shipping data structure"""
@@ -234,8 +240,9 @@ class WishListCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f"Invalid shipping data keys: {', '.join(invalid_keys)}"
                 )
+            return value
         
-        return value
+        return {}
 
 
 class WishListPublicSerializer(serializers.ModelSerializer):

@@ -6,7 +6,7 @@
   "goToShop": "Go to shop",
   "create": "Create",
   "backToMyWishlists": "Back to My Wishlists",
-  "searchPlaceholder": "Search by @username (press Enter)",
+  "searchPlaceholder": "Search by {'@'}username (press Enter)",
   "search": "Search",
   "items": "items",
   "public": "Public",

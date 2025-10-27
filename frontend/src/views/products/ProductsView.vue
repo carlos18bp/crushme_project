@@ -229,7 +229,6 @@
                   :is-in-list="isProductInList(product.id)"
                   :is-in-favorites="isProductInFavorites(product.id)"
                   @navigate-to-product="navigateToProduct"
-                  @add-to-cart="addToCart"
                   @toggle-wishlist="toggleWishlist"
                   @toggle-list="toggleProductList"
                   @favorite-updated="handleFavoriteUpdated"
@@ -588,43 +587,6 @@ const navigateTo = (routeName) => {
 const navigateToProduct = (productId) => {
   const currentLang = i18nStore.locale
   router.push({ name: `ProductDetail-${currentLang}`, params: { id: productId } })
-}
-
-const addToCart = async (product) => {
-  console.log('🛒 Agregando al carrito desde ProductsView:', product.name)
-  
-  try {
-    // Backend envía converted_price con el precio ya convertido
-    const productPrice = parseFloat(product.converted_price || product.price) || 0
-    
-    // Preparar opciones del producto
-    const options = {
-      name: product.name,
-      price: productPrice,
-      image: product.images?.[0]?.src || null,
-      stock_status: product.stock_status,
-      variation_id: null // Los productos desde la lista no tienen variación seleccionada
-    }
-    
-    // Llamar al cartStore para agregar el producto
-    const result = await cartStore.addToCart(
-      product.id,
-      1, // cantidad por defecto
-      options
-    )
-    
-    if (result.success) {
-      console.log('✅ Producto agregado al carrito exitosamente:', product.name)
-      console.log('📦 Items en carrito ahora:', cartStore.items.length)
-      // Aquí podrías mostrar una notificación de éxito si tienes un sistema de notificaciones
-    } else {
-      console.error('❌ Error al agregar al carrito:', result.error)
-      alert(`Error al agregar ${product.name} al carrito: ${result.error}`)
-    }
-  } catch (err) {
-    console.error('❌ Error inesperado al agregar al carrito:', err)
-    alert(`Error inesperado al agregar ${product.name} al carrito`)
-  }
 }
 
 const toggleWishlist = (productId) => {

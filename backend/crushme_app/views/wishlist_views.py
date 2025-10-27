@@ -36,7 +36,21 @@ def get_wishlists(request):
 def create_wishlist(request):
     """
     Create a new wishlist
+    
+    Required fields:
+    - name: string (min 2 characters)
+    
+    Optional fields:
+    - description: string (min 5 characters if provided)
+    - is_active: boolean (default: true)
+    - is_public: boolean (default: false)
+    - shipping_data: object with keys: name, address, phone, email
     """
+    # Log request data for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Creating wishlist with data: {request.data}")
+    
     serializer = WishListCreateUpdateSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -47,6 +61,9 @@ def create_wishlist(request):
             'message': 'Wishlist created successfully',
             'wishlist': detail_serializer.data
         }, status=status.HTTP_201_CREATED)
+    
+    # Log validation errors
+    logger.error(f"Wishlist creation failed: {serializer.errors}")
     
     return Response({
         'error': 'Invalid data',

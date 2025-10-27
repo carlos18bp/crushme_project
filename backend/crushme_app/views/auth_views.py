@@ -311,9 +311,9 @@ def resend_verification_code(request):
 @permission_classes([AllowAny])
 def login(request):
     """
-    Handle user login with email and password.
+    Handle user login with username and password.
 
-    This view processes POST requests to authenticate a user using email and password.
+    This view processes POST requests to authenticate a user using username and password.
     The user must have verified their email to login successfully.
 
     Args:

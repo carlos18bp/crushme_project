@@ -18,12 +18,12 @@
 
         <!-- Login Form -->
         <form @submit.prevent="handleLogin" class="login-form">
-          <!-- Email Input -->
+          <!-- Username Input -->
           <div class="input-group">
             <input
-              v-model="form.email"
-              type="email"
-              :placeholder="$t('login.emailPlaceholder')"
+              v-model="form.username"
+              type="text"
+              :placeholder="$t('login.usernamePlaceholder')"
               class="form-input"
               required
             />
@@ -136,7 +136,7 @@ const { showError } = useAlert()
 
 // Reactive form data
 const form = reactive({
-  email: '',
+  username: '',
   password: '',
   rememberMe: false
 })
@@ -155,14 +155,14 @@ const handleLogin = async () => {
   
   try {
     // Validate form
-    if (!form.email || !form.password) {
+    if (!form.username || !form.password) {
       showError(t('login.validation.fillAllFields'))
       return
     }
 
     // Call auth store login method
     const result = await authStore.login({
-      email: form.email,
+      username: form.username,
       password: form.password
     })
 
