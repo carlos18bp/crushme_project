@@ -286,9 +286,9 @@ WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'
 
 # PayPal API settings
 # TODO: Mover estas credenciales a variables de entorno en producción
-PAYPAL_CLIENT_ID = 'AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'
-PAYPAL_CLIENT_SECRET = 'ELvYzKUvkuEGopUV0XLg3RGIf9irlT5qWgks7ddZXkbjIBj7z0icmM3aH9YQjspAu9TaovpR54RsOTgb'
-PAYPAL_MODE = 'sandbox'  # Cambiar a 'live' en producción
+PAYPAL_CLIENT_ID = 'AXOC4gQsXk_e8NhrrZRorJzU3rld7lOJP5_2S8RYDKUgjkDT-2wfc-1Eu1AqYQseWTcJA_VBEnGUUGCQ'
+PAYPAL_CLIENT_SECRET = 'EK58LGYfmckc4T0TKyE7_mMWKWcNW8B47s2fQYqhOLe3_zIOZUiixU11r1LBnIe3P3PTGOLcVTW8NHwG'
+PAYPAL_MODE = 'live'  # Cambiar a 'live' en producción
 
 # Wompi API settings (Colombian payment gateway - COP only)
 # TODO: Mover estas credenciales a variables de entorno en producción
