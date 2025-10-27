@@ -51,7 +51,7 @@ class WishListItemSerializer(serializers.ModelSerializer):
         return obj.product_data if obj.product_data else None
     
     def to_representation(self, instance):
-        """Translate WooCommerce product fields and user notes"""
+        """Translate WooCommerce product fields, user notes, and convert prices"""
         representation = super().to_representation(instance)
         request = self.context.get('request')
         
@@ -77,6 +77,25 @@ class WishListItemSerializer(serializers.ModelSerializer):
             # Translate user-generated notes (auto-detect source language)
             if representation.get('notes'):
                 representation['notes'] = translator.translate_user_content(representation['notes'])
+            
+            # Convert prices in product_info to target currency
+            currency = getattr(request, 'currency', 'COP')
+            if representation.get('product_info') and isinstance(representation['product_info'], dict):
+                from ..utils.price_helpers import convert_price_fields
+                representation['product_info'] = convert_price_fields(
+                    representation['product_info'], 
+                    currency,
+                    fields=['price', 'regular_price', 'sale_price']
+                )
+            
+            # Convert product_price field
+            if representation.get('product_price') is not None:
+                from ..utils.currency_converter import CurrencyConverter
+                try:
+                    price_value = float(representation['product_price'])
+                    representation['product_price'] = CurrencyConverter.convert_price(price_value, currency)
+                except (ValueError, TypeError):
+                    pass  # Keep original if conversion fails
         
         return representation
 
@@ -139,7 +158,7 @@ class WishListDetailSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     user_username = serializers.SerializerMethodField()
     total_items = serializers.ReadOnlyField()
-    total_value = serializers.ReadOnlyField()
+    total_value = serializers.SerializerMethodField()
     public_url = serializers.ReadOnlyField()
     shareable_path = serializers.ReadOnlyField()
     is_favorited = serializers.SerializerMethodField()
@@ -177,6 +196,12 @@ class WishListDetailSerializer(serializers.ModelSerializer):
     def get_favorites_count(self, obj):
         """Get number of users who favorited this wishlist"""
         return FavoriteWishList.get_wishlist_favorites_count(obj)
+    
+    def get_total_value(self, obj):
+        """Calculate total value from item prices (will be converted later)"""
+        # Return the model's total_value which is in COP
+        # The conversion will happen in to_representation via convert_price_fields
+        return obj.total_value
     
     def to_representation(self, instance):
         """Translate wishlist name and description"""

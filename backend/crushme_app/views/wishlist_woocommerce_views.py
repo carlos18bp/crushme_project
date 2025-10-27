@@ -298,7 +298,11 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
     """
     Get public wishlist by username and ID
     Format: /@username/{id}
-    Automatically loads fresh product data from WooCommerce
+    
+    Query Parameters:
+    - refresh: 'true' to fetch fresh data from WooCommerce (slower)
+    
+    By default uses cached product data for fast response
     """
     try:
         # Find wishlist by ID and check if it belongs to the user with that username
@@ -318,13 +322,15 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
         # Get currency from request (set by CurrencyMiddleware)
         currency = getattr(request, 'currency', 'COP')
         
-        # Enriquecer con datos frescos de WooCommerce
-        wishlist = enrich_wishlist_with_woocommerce_data(wishlist)
+        # Only enrich with fresh WooCommerce data if explicitly requested
+        refresh = request.GET.get('refresh', 'false').lower() == 'true'
+        if refresh:
+            wishlist = enrich_wishlist_with_woocommerce_data(wishlist)
         
         detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
         wishlist_data = detail_serializer.data
         
-        # Convert prices in wishlist data
+        # Convert prices in wishlist data (now also converts prices in items)
         from ..utils.price_helpers import convert_price_fields
         wishlist_data = convert_price_fields(wishlist_data, currency)
         

@@ -364,6 +364,7 @@ def get_gift_orders(request):
         - all: Both sent and received gifts
 
     Returns user's gift orders with gift information
+    Uses local DB data only - fast response
     """
     user = request.user
     gift_type = request.GET.get('type', 'sent')
@@ -373,17 +374,17 @@ def get_gift_orders(request):
         gift_orders = Order.objects.filter(
             Q(is_gift=True) &
             (Q(sender_username=user.username) | Q(receiver_username=user.username))
-        ).order_by('-created_at')
+        ).prefetch_related('items').order_by('-created_at')
     elif gift_type == 'received':
         gift_orders = Order.objects.filter(
             is_gift=True,
             receiver_username=user.username
-        ).order_by('-created_at')
+        ).prefetch_related('items').order_by('-created_at')
     else:  # sent (default)
         gift_orders = Order.objects.filter(
             is_gift=True,
             sender_username=user.username
-        ).order_by('-created_at')
+        ).prefetch_related('items').order_by('-created_at')
 
     # Paginate results
     page = int(request.GET.get('page', 1))
@@ -393,8 +394,9 @@ def get_gift_orders(request):
 
     paginated_orders = gift_orders[start_index:end_index]
 
-    # Serialize orders with enriched product data and conditional shipping info
-    serializer = OrderPrivateSerializer(paginated_orders, many=True, context={'request': request})
+    # Serialize orders using FAST local DB serializer (no WooCommerce queries)
+    from ..serializers.order_serializers import OrderHistorySerializer
+    serializer = OrderHistorySerializer(paginated_orders, many=True, context={'request': request})
     
     # Get currency from request (set by CurrencyMiddleware)
     currency = getattr(request, 'currency', 'COP')
@@ -441,15 +443,16 @@ def get_user_purchase_history(request):
     - include_gifts: 'true' to include gift orders, 'false' for only regular purchases (default: true)
 
     Returns user's purchase history with statistics
+    Uses local DB data only - fast response
     """
     user = request.user
     include_gifts = request.GET.get('include_gifts', 'true').lower() == 'true'
 
-    # Base query for user's purchases
+    # Base query for user's purchases with prefetch for performance
     if include_gifts:
-        purchases = user.purchase_history.all().order_by('-created_at')
+        purchases = user.purchase_history.prefetch_related('items').all().order_by('-created_at')
     else:
-        purchases = user.purchase_history.filter(is_gift=False).order_by('-created_at')
+        purchases = user.purchase_history.prefetch_related('items').filter(is_gift=False).order_by('-created_at')
 
     # Paginate results
     page = int(request.GET.get('page', 1))
@@ -459,13 +462,13 @@ def get_user_purchase_history(request):
 
     paginated_purchases = purchases[start_index:end_index]
 
-    # Serialize orders with enriched product data and conditional shipping info
-    serializer = OrderPrivateSerializer(paginated_purchases, many=True, context={'request': request})
+    # Serialize orders using FAST local DB serializer (no WooCommerce queries)
+    from ..serializers.order_serializers import OrderHistorySerializer
+    serializer = OrderHistorySerializer(paginated_purchases, many=True, context={'request': request})
 
     # Get currency from request (set by CurrencyMiddleware)
     currency = getattr(request, 'currency', 'COP')
     
-    # Debug logging para ver respuesta al frontend
     response_data = {
         'purchases': serializer.data,
         'pagination': {

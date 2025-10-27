@@ -396,6 +396,34 @@ class OrderCancelSerializer(serializers.Serializer):
         return attrs
 
 
+class OrderItemLocalSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer for order items using ONLY local DB data
+    Does NOT query WooCommerce - much faster for purchase history
+    """
+    subtotal = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = OrderItem
+        fields = [
+            'id', 'woocommerce_product_id', 'woocommerce_variation_id',
+            'quantity', 'unit_price', 'subtotal', 'product_name',
+            'product_description', 'product_image', 'created_at'
+        ]
+        read_only_fields = fields
+    
+    def get_subtotal(self, obj):
+        """Calculate subtotal from stored data"""
+        return float(obj.quantity * obj.unit_price)
+    
+    def get_product_image(self, obj):
+        """Get product image from context (batch fetched)"""
+        # Image will be provided by parent serializer via context
+        product_images = self.context.get('product_images', {})
+        return product_images.get(obj.woocommerce_product_id)
+
+
 class OrderPrivateSerializer(serializers.ModelSerializer):
     """
     Enhanced serializer for private user order endpoints
@@ -454,8 +482,8 @@ class OrderPrivateSerializer(serializers.ModelSerializer):
                         'woocommerce_product_id': item.woocommerce_product_id,
                         'woocommerce_variation_id': item.woocommerce_variation_id,
                         'quantity': item.quantity,
-                        'unit_price': str(item.unit_price),
-                        'subtotal': str(item.quantity * item.unit_price),
+                        'unit_price': float(item.unit_price),
+                        'subtotal': float(item.quantity * item.unit_price),
                         'product_name': wc_product.get('name', item.product_name),
                         'product_description': wc_product.get('short_description', item.product_description),
                         'image_url': image_url,
@@ -469,8 +497,8 @@ class OrderPrivateSerializer(serializers.ModelSerializer):
                         'woocommerce_product_id': item.woocommerce_product_id,
                         'woocommerce_variation_id': item.woocommerce_variation_id,
                         'quantity': item.quantity,
-                        'unit_price': str(item.unit_price),
-                        'subtotal': str(item.quantity * item.unit_price),
+                        'unit_price': float(item.unit_price),
+                        'subtotal': float(item.quantity * item.unit_price),
                         'product_name': item.product_name,
                         'product_description': item.product_description,
                         'image_url': None
@@ -485,8 +513,8 @@ class OrderPrivateSerializer(serializers.ModelSerializer):
                     'woocommerce_product_id': item.woocommerce_product_id,
                     'woocommerce_variation_id': item.woocommerce_variation_id,
                     'quantity': item.quantity,
-                    'unit_price': str(item.unit_price),
-                    'subtotal': str(item.quantity * item.unit_price),
+                    'unit_price': float(item.unit_price),
+                    'subtotal': float(item.quantity * item.unit_price),
                     'product_name': item.product_name,
                     'product_description': item.product_description,
                     'image_url': None
@@ -542,3 +570,119 @@ class OrderPrivateSerializer(serializers.ModelSerializer):
             'message': obj.gift_message,
             'privacy_note': 'Shipping details hidden for privacy'
         }
+
+
+class OrderHistorySerializer(serializers.ModelSerializer):
+    """
+    Fast serializer for purchase history using ONLY local DB data
+    Fetches product images in batch for efficiency
+    """
+    items = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    total_items = serializers.ReadOnlyField()
+    full_shipping_address = serializers.ReadOnlyField()
+
+    # Gift information
+    gift_summary = serializers.SerializerMethodField()
+
+    # Shipping information (conditional for gifts)
+    shipping_address = serializers.SerializerMethodField()
+    shipping_city = serializers.SerializerMethodField()
+    shipping_state = serializers.SerializerMethodField()
+    shipping_postal_code = serializers.SerializerMethodField()
+    shipping_country = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'order_number', 'status', 'status_display',
+            'total', 'total_items', 'items', 'email', 'name',
+            'shipping_address', 'shipping_city', 'shipping_state',
+            'shipping_postal_code', 'shipping_country', 'phone_number',
+            'full_shipping_address', 'notes', 'gift_message',
+            'woocommerce_order_id', 'is_gift', 'sender_username', 'receiver_username',
+            'gift_summary', 'created_at', 'updated_at', 'shipped_at', 'delivered_at'
+        ]
+        read_only_fields = [
+            'id', 'order_number', 'created_at', 'updated_at',
+            'shipped_at', 'delivered_at'
+        ]
+
+    def get_shipping_address(self, obj):
+        """Return shipping address only for non-gift orders"""
+        if obj.is_gift:
+            return "Dirección de envío privada (regalo)"
+        return obj.address_line_1
+
+    def get_shipping_city(self, obj):
+        """Return shipping city only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.city
+
+    def get_shipping_state(self, obj):
+        """Return shipping state only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.state
+
+    def get_shipping_postal_code(self, obj):
+        """Return shipping postal code only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.zipcode
+
+    def get_shipping_country(self, obj):
+        """Return shipping country only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.country
+
+    def get_phone_number(self, obj):
+        """Return phone only for non-gift orders"""
+        if obj.is_gift:
+            return None
+        return obj.phone
+
+    def get_gift_summary(self, obj):
+        """Return gift summary for gift orders"""
+        if not obj.is_gift:
+            return None
+
+        return {
+            'type': 'gift_order',
+            'sender': obj.sender_username,
+            'receiver': obj.receiver_username,
+            'message': obj.gift_message,
+            'privacy_note': 'Shipping details hidden for privacy'
+        }
+    
+    def get_items(self, obj):
+        """Get items with product images fetched in batch"""
+        items = obj.items.all()
+        
+        # Collect all product IDs
+        product_ids = [item.woocommerce_product_id for item in items]
+        
+        # Fetch images in batch from WooCommerce
+        product_images = {}
+        if product_ids:
+            from ..services.woocommerce_service import woocommerce_service
+            for product_id in product_ids:
+                try:
+                    result = woocommerce_service.get_product_by_id(product_id)
+                    if result['success']:
+                        wc_product = result['data']
+                        if wc_product.get('images') and len(wc_product['images']) > 0:
+                            product_images[product_id] = wc_product['images'][0].get('src')
+                except Exception:
+                    pass  # Skip if product fetch fails
+        
+        # Serialize items with images in context
+        serializer = OrderItemLocalSerializer(
+            items, 
+            many=True, 
+            context={'product_images': product_images}
+        )
+        return serializer.data
