@@ -45,7 +45,7 @@
                 {{ $t('contact.for') }}:
               </label>
               <div class="text-brand-dark font-poppins text-xs md:text-sm bg-white/20 rounded-lg px-3 py-2">
-                BuyIt4me (team@buyit4me.com)
+                {{ $t('contact.to') }}
               </div>
             </div>
 

@@ -39,8 +39,9 @@
     <!-- Notes Grid -->
     <div v-else-if="notes.length > 0" class="flex flex-wrap justify-center gap-8 md:gap-10 lg:gap-12 items-start">
       <NoteCard
-        v-for="note in notes"
+        v-for="(note, index) in notes"
         :key="note.id"
+        v-show="index < 3 || isDesktop"
         :username="note.username"
         :note="note.note"
         :status="note.status"
@@ -56,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import NoteCard from './NoteCard.vue'
 import { useCrushStore } from '@/stores/modules/crushStore'
 
@@ -65,6 +66,13 @@ const crushStore = useCrushStore()
 // Estados locales
 const isLoading = ref(false)
 const error = ref(null)
+
+// Detectar si es desktop
+const isDesktop = ref(window.innerWidth >= 1024)
+
+const handleResize = () => {
+  isDesktop.value = window.innerWidth >= 1024
+}
 
 // Mapear los datos del API al formato esperado por NoteCard
 const notes = computed(() => {
@@ -83,6 +91,9 @@ const notes = computed(() => {
 
 // Cargar crushes al montar el componente
 onMounted(async () => {
+  // Agregar listener de resize
+  window.addEventListener('resize', handleResize)
+  
   // Solo cargar si no hay datos ya cargados
   if (crushStore.randomSevenCrushes.length === 0) {
     isLoading.value = true
@@ -98,6 +109,10 @@ onMounted(async () => {
       isLoading.value = false
     }
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

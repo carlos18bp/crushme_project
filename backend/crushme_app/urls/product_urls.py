@@ -23,7 +23,8 @@ from ..views.woocommerce_local_views import (
     get_product_variation_detail_local,
     get_woocommerce_categories_local, get_woocommerce_stats_local,
     get_organized_categories_local, get_category_tree_local,
-    get_random_featured_categories_local, get_product_stock_local
+    get_random_featured_categories_local, get_product_stock_local,
+    search_woocommerce_products
 )
 
 urlpatterns = [
@@ -51,6 +52,7 @@ urlpatterns = [
     
     # OPTIMIZED ENDPOINTS - Use local DB with translations (DEFAULT)
     # NOTE: Order matters! More specific paths MUST come before generic ones
+    path('woocommerce/products/search/', search_woocommerce_products, name='search_woocommerce_products'),
     path('woocommerce/products/trending/', get_trending_products_local, name='get_trending_products'),
     path('woocommerce/products/<int:product_id>/variations/<int:variation_id>/', get_product_variation_detail_local, name='get_product_variation_detail'),
     path('woocommerce/products/<int:product_id>/variations/', get_product_variations_local, name='get_product_variations'),

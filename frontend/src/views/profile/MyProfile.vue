@@ -66,23 +66,13 @@
               <label for="phone" class="block text-xs md:text-sm font-medium text-gray-900 mb-2">
                 {{ $t('profile.form.basicInfo.phone') }}
               </label>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <select
-                  v-model="formData.phoneCode"
-                  class="rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
-                >
-                  <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
-                    {{ country.flag }} {{ country.dial_code }}
-                  </option>
-                </select>
-                <input
-                  id="phone"
-                  v-model="formData.phone"
-                  type="tel"
-                  :placeholder="$t('profile.form.placeholders.phone')"
-                  class="flex-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
-                />
-              </div>
+              <input
+                id="phone"
+                v-model="formData.phone"
+                type="tel"
+                placeholder="3001234567"
+                class="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
+              />
             </div>
           </div>
 
@@ -95,7 +85,8 @@
               id="country"
               v-model="formData.country"
               @change="onCountryChange"
-              class="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
+              disabled
+              class="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors bg-gray-100 cursor-not-allowed"
             >
               <option value="">{{ $t('profile.form.placeholders.selectCountry') }}</option>
               <option v-for="country in countries" :key="country.isoCode" :value="country.isoCode">
@@ -800,8 +791,8 @@ const formData = ref({
   last_name: '',
   email: '',
   phone: '',
-  phoneCode: '+1',
-  country: '',
+  phoneCode: '+57',
+  country: 'CO', // ⭐ Colombia por defecto
   city: '',
   state: '',
   postal_code: '',
@@ -851,8 +842,11 @@ onMounted(async () => {
           c.name.toLowerCase() === defaultAddr.country.toLowerCase() ||
           c.isoCode === defaultAddr.country
         )
-        formData.value.country = foundCountry?.isoCode || ''
+        formData.value.country = foundCountry?.isoCode || 'CO' // ⭐ Colombia por defecto
       }
+    } else {
+      // ⭐ Si no hay dirección, asegurar que Colombia esté seleccionada
+      formData.value.country = 'CO'
     }
     
     // Llenar links
@@ -1101,39 +1095,9 @@ async function handleSubmit() {
   
   try {
     // ============================================
-    // STEP 1: Upload profile/cover images if they exist
+    // STEP 1: Enviar información de texto primero
     // ============================================
-    if (profilePictureFile.value || coverImageFile.value) {
-      const imageResult = await profileStore.uploadProfileImages({
-        profilePicture: profilePictureFile.value,
-        coverImage: coverImageFile.value
-      })
-      
-      if (imageResult.success) {
-        // Clear preview and files after successful upload
-        profilePictureFile.value = null
-        coverImageFile.value = null
-        
-        if (profilePicturePreview.value) {
-          URL.revokeObjectURL(profilePicturePreview.value)
-          profilePicturePreview.value = null
-        }
-        
-        if (coverImagePreview.value) {
-          URL.revokeObjectURL(coverImagePreview.value)
-          coverImagePreview.value = null
-        }
-        
-        showSuccess(imageResult.message, '¡Imágenes Actualizadas!')
-      } else {
-        showError(imageResult.error, 'Error al subir imágenes')
-        // Continue with the rest of the form submission even if image upload fails
-      }
-    }
-    
-    // ============================================
-    // STEP 2: Continue with the rest of the profile update
-    // ============================================
+    console.log('📝 [UPLOAD] Paso 1: Enviando información de texto...')
     
     // Get country name from isoCode
     const selectedCountry = countries.find(c => c.isoCode === formData.value.country)
@@ -1151,7 +1115,7 @@ async function handleSubmit() {
       current_status: formData.value.current_status
     }
     
-    // Prepare address data (if default address exists, update it, otherwise create new)
+    // Prepare address data
     const addresses = []
     if (formData.value.address_line1 && formData.value.city && formData.value.state && countryName) {
       const addressData = {
@@ -1161,15 +1125,12 @@ async function handleSubmit() {
         address_line_1: formData.value.address_line1
       }
       
-      // Add zip_code if it has a value (required for new addresses)
       if (formData.value.postal_code) {
         addressData.zip_code = formData.value.postal_code
       } else if (!profileStore.defaultAddress?.id) {
-        // If creating new address, zip_code is required
         addressData.zip_code = ''
       }
       
-      // Add optional fields only if they have values
       if (formData.value.address_line2) {
         addressData.address_line_2 = formData.value.address_line2
       }
@@ -1178,11 +1139,9 @@ async function handleSubmit() {
         addressData.additional_details = formData.value.additional_details
       }
       
-      // Set as default
       addressData.is_default_shipping = true
       addressData.is_default_billing = true
       
-      // If there's a default address, add its ID to update it
       if (profileStore.defaultAddress?.id) {
         addressData.id = profileStore.defaultAddress.id
       }
@@ -1192,7 +1151,7 @@ async function handleSubmit() {
     
     // Prepare links data
     const links = formData.value.links
-      .filter(link => link.url && link.title) // Only include filled links
+      .filter(link => link.url && link.title)
       .map((link, index) => {
         const linkData = {
           title: link.title,
@@ -1201,7 +1160,6 @@ async function handleSubmit() {
           is_active: link.is_active !== undefined ? link.is_active : true
         }
         
-        // If link has ID, include it to update existing link
         if (link.id) {
           linkData.id = link.id
         }
@@ -1209,78 +1167,123 @@ async function handleSubmit() {
         return linkData
       })
     
-    // Check if we have images to upload
-    if (uploadedFiles.value.length > 0) {
-      // Upload images using multipart/form-data
-      const imageMeta = uploadedFiles.value.map((file, index) => ({
-        caption: file.name,
-        is_profile_picture: index === 0 && existingPhotos.value.length === 0 // First image is profile picture only if no existing photos
+    // Prepare gallery_photos (keep existing photos not marked for deletion)
+    const gallery_photos = existingPhotos.value
+      .filter(photo => !photosToDelete.value.includes(photo.id))
+      .map(photo => ({
+        id: photo.id
       }))
+    
+    // Enviar información de texto primero
+    const dataToSend = {
+      basicInfo: basicInfo,
+      addresses: addresses.length > 0 ? addresses : undefined,
+      links: links.length > 0 ? links : undefined,
+      gallery_photos: gallery_photos.length > 0 ? gallery_photos : undefined
+    }
+    
+    const textResult = await profileStore.updateProfileComplete(dataToSend)
+    
+    if (!textResult.success) {
+      showError(textResult.error, 'Error al actualizar información')
+      return
+    }
+    
+    console.log('✅ [UPLOAD] Información de texto enviada correctamente')
+    
+    // ============================================
+    // STEP 2: Subir imagen de cover (si existe)
+    // ============================================
+    if (coverImageFile.value) {
+      console.log('🖼️ [UPLOAD] Paso 2: Subiendo imagen de cover...')
       
-      const result = await profileStore.uploadGalleryImages({
-        images: uploadedFiles.value,
-        basicInfo: basicInfo,
-        imageMeta: imageMeta
+      const coverResult = await profileStore.uploadProfileImages({
+        coverImage: coverImageFile.value
       })
       
-      if (result.success) {
-        // Clear uploaded files
-        uploadedFiles.value = []
-        
-        // Reset file input to allow selecting same files again
-        fileInputKey.value++
-        
-        // Update existing photos with new data from server
-        if (result.data && result.data.gallery_photos) {
-          existingPhotos.value = result.data.gallery_photos
-        } else {
-          // If no gallery_photos in response, reload profile
-          await profileStore.fetchProfile()
-          if (profileStore.profile && profileStore.profile.gallery_photos) {
-            existingPhotos.value = profileStore.profile.gallery_photos
-          }
+      if (coverResult.success) {
+        coverImageFile.value = null
+        if (coverImagePreview.value) {
+          URL.revokeObjectURL(coverImagePreview.value)
+          coverImagePreview.value = null
         }
-        
-        // Clear deleted photos list
-        photosToDelete.value = []
-        
-        showSuccess('Perfil y galería actualizados correctamente', '¡Éxito!')
+        console.log('✅ [UPLOAD] Imagen de cover subida correctamente')
       } else {
-        showError(result.error, 'Error al actualizar perfil')
-      }
-    } else {
-      // Prepare gallery_photos (keep existing photos not marked for deletion)
-      const gallery_photos = existingPhotos.value
-        .filter(photo => !photosToDelete.value.includes(photo.id))
-        .map(photo => ({
-          id: photo.id
-          // Only include ID to keep the photo, metadata updates would be here
-        }))
-      
-      // Update complete profile with nested data (no new images to upload)
-      const dataToSend = {
-        basicInfo: basicInfo,
-        addresses: addresses.length > 0 ? addresses : undefined,
-        links: links.length > 0 ? links : undefined,
-        gallery_photos: gallery_photos.length > 0 ? gallery_photos : undefined
-      }
-      
-      const result = await profileStore.updateProfileComplete(dataToSend)
-      
-      if (result.success) {
-        // Update existing photos with new data from server
-        if (result.data.gallery_photos) {
-          existingPhotos.value = result.data.gallery_photos
-        }
-        
-        // Clear deleted photos list
-        photosToDelete.value = []
-        
-        showSuccess('Perfil actualizado correctamente', '¡Éxito!')
-      } else {
-        showError(result.error, 'Error al actualizar perfil')
+        console.error('❌ [UPLOAD] Error al subir imagen de cover:', coverResult.error)
       }
     }
+    
+    // ============================================
+    // STEP 3: Subir imagen de perfil (si existe)
+    // ============================================
+    if (profilePictureFile.value) {
+      console.log('👤 [UPLOAD] Paso 3: Subiendo imagen de perfil...')
+      
+      const profileResult = await profileStore.uploadProfileImages({
+        profilePicture: profilePictureFile.value
+      })
+      
+      if (profileResult.success) {
+        profilePictureFile.value = null
+        if (profilePicturePreview.value) {
+          URL.revokeObjectURL(profilePicturePreview.value)
+          profilePicturePreview.value = null
+        }
+        console.log('✅ [UPLOAD] Imagen de perfil subida correctamente')
+      } else {
+        console.error('❌ [UPLOAD] Error al subir imagen de perfil:', profileResult.error)
+      }
+    }
+    
+    // ============================================
+    // STEP 4: Subir imágenes de galería una por una (si existen)
+    // ============================================
+    if (uploadedFiles.value.length > 0) {
+      console.log(`🖼️ [UPLOAD] Paso 4: Subiendo ${uploadedFiles.value.length} imágenes de galería...`)
+      
+      for (let i = 0; i < uploadedFiles.value.length; i++) {
+        const file = uploadedFiles.value[i]
+        console.log(`📷 [UPLOAD] Subiendo imagen ${i + 1}/${uploadedFiles.value.length}: ${file.name}`)
+        
+        const imageMeta = [{
+          caption: file.name,
+          is_profile_picture: i === 0 && existingPhotos.value.length === 0
+        }]
+        
+        const result = await profileStore.uploadGalleryImages({
+          images: [file], // Subir una imagen a la vez
+          basicInfo: basicInfo,
+          imageMeta: imageMeta
+        })
+        
+        if (result.success) {
+          console.log(`✅ [UPLOAD] Imagen ${i + 1}/${uploadedFiles.value.length} subida correctamente`)
+          
+          // Update existing photos with new data from server
+          if (result.data && result.data.gallery_photos) {
+            existingPhotos.value = result.data.gallery_photos
+          }
+        } else {
+          console.error(`❌ [UPLOAD] Error al subir imagen ${i + 1}/${uploadedFiles.value.length}:`, result.error)
+        }
+      }
+      
+      // Clear uploaded files after all uploads
+      uploadedFiles.value = []
+      fileInputKey.value++
+      console.log('✅ [UPLOAD] Todas las imágenes de galería subidas')
+    }
+    
+    // Clear deleted photos list
+    photosToDelete.value = []
+    
+    // Reload profile to get updated data
+    await profileStore.fetchProfile()
+    if (profileStore.profile && profileStore.profile.gallery_photos) {
+      existingPhotos.value = profileStore.profile.gallery_photos
+    }
+    
+    showSuccess('Perfil actualizado correctamente', '¡Éxito!')
   } catch (error) {
     console.error('Error:', error)
     showError('Ocurrió un error inesperado', 'Error')

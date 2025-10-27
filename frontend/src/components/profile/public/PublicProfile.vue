@@ -58,15 +58,17 @@
         <div class="links-section">
           <h3 class="section-title">{{ $t('diaries.publicProfile.myLinks') }}</h3>
           <div class="links-buttons">
-            <button 
+            <a 
               v-for="(link, index) in profile.links" 
               :key="index"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
               class="link-button"
-              :style="{ backgroundColor: link.color }"
-              @click="link.url && window.open(link.url, '_blank')"
+              :style="{ backgroundColor: link.color || '#C77DFF' }"
             >
               {{ link.label }}
-            </button>
+            </a>
           </div>
         </div>
 
@@ -665,6 +667,7 @@ const copyWishlistLink = async (wishlist) => {
 }
 
 .link-button {
+  display: block;
   width: 100%;
   padding: 10px 20px;
   border: none;
@@ -673,6 +676,8 @@ const copyWishlistLink = async (wishlist) => {
   font-size: 0.8125rem;
   font-weight: 500;
   color: white;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

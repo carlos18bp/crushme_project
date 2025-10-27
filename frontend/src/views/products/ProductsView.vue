@@ -4,26 +4,8 @@
     <Navbar />
 
     <!-- Main Content -->
-    <div class="main-content bg-pink-50 min-h-screen pt-0">
+    <div class="main-content bg-pink-50 min-h-screen pt-20">
       <div class="container mx-auto px-4 md:px-5 lg:px-6 pt-20 md:pt-22 lg:pt-24 pb-4 md:pb-5 lg:pb-6">
-        
-        <!-- Breadcrumb Dinámico -->
-        <div class="breadcrumb mb-4 md:mb-6 lg:mb-8 flex items-center relative z-10 pt-2 md:pt-3 lg:pt-4">
-          <button @click="clearAllFilters" class="text-gray-600 hover:text-brand-pink-dark transition-colors">
-            {{ $t('products.breadcrumb.home') }}
-          </button>
-          <span v-if="currentTheme || currentCategory" class="text-gray-400 mx-2">></span>
-          <button 
-            v-if="currentTheme" 
-            @click="onThemeSelect(currentTheme.theme)"
-            class="text-gray-600 hover:text-brand-pink-dark transition-colors">
-            {{ currentTheme.name }}
-          </button>
-          <span v-if="currentCategory" class="text-gray-400 mx-2">></span>
-          <span v-if="currentCategory" class="text-gray-800 font-medium">
-            {{ currentCategory.name }}
-          </span>
-        </div>
 
         <div class="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 relative z-10">
           <!-- Sidebar Filters -->
@@ -31,15 +13,25 @@
             <div class="filters-container bg-white rounded-2xl md:rounded-3xl shadow-sm p-4 md:p-5 lg:p-6 border border-gray-100">
               
               <!-- Filters Header -->
-              <div class="filters-header mb-4 md:mb-5 lg:mb-6 pb-3 md:pb-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">{{ $t('products.filters.title') }}</h3>
-                <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                </svg>
+              <div class="filters-header mb-4 md:mb-5 lg:mb-6 pb-3 md:pb-4 border-b border-gray-200">
+                <div class="flex items-center justify-between mb-3 md:mb-0">
+                  <h3 class="text-lg md:text-xl lg:text-2xl font-semibold text-gray-800">{{ $t('products.filters.title') }}</h3>
+                  <button 
+                    @click="toggleCategoriesMenu" 
+                    class="lg:hidden text-gray-600 hover:text-brand-pink-dark transition-colors">
+                    <svg 
+                      :class="['w-6 h-6 transition-transform', isCategoriesMenuOpen ? 'rotate-180' : '']"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <!-- Filter Categories -->
-              <div class="filter-categories">
+              <div :class="['filter-categories', { 'hidden lg:block': !isCategoriesMenuOpen }]">
                 
                 <!-- Loading Categories -->
                 <div v-if="isLoadingThemes" class="text-center py-3 md:py-4">
@@ -136,6 +128,36 @@
           <!-- Products Section -->
           <main class="products-section flex-1">
             
+            <!-- Search Bar -->
+            <div class="search-bar mb-4 md:mb-6">
+              <div class="relative">
+                <input
+                  v-model="searchQuery"
+                  @input="handleSearchInput"
+                  @keyup.enter="performSearch"
+                  type="text"
+                  placeholder="Buscar productos..."
+                  class="w-full px-4 py-2.5 md:py-3 pl-11 md:pl-12 pr-10 md:pr-12 border-2 border-gray-200 rounded-xl md:rounded-2xl focus:outline-none focus:border-brand-purple-light focus:ring-2 focus:ring-brand-purple-light focus:ring-opacity-20 transition-all text-sm md:text-base"
+                />
+                <svg 
+                  class="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-6 md:h-6 text-gray-400"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <button
+                  v-if="searchQuery"
+                  @click="clearSearch"
+                  class="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+              <p v-if="isSearching" class="text-sm text-gray-500 mt-2">{{ $t('products.searching') || 'Buscando...' }}</p>
+            </div>
+
             <!-- Products Header -->
             <div class="products-header flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 lg:mb-8 gap-3 md:gap-4">
               <div>
@@ -281,6 +303,12 @@ const currentPage = ref(1)
 const productsPerPage = ref(9) // ⭐ Cambiado a 9 productos por página
 const wishlistProducts = ref(new Set())
 const listProducts = ref(new Set())
+const isCategoriesMenuOpen = ref(false) // ⭐ NUEVO: Estado del menú de categorías en mobile
+const searchQuery = ref('') // ⭐ NUEVO: Query de búsqueda
+const isSearching = ref(false) // ⭐ NUEVO: Estado de búsqueda
+const searchResultsCount = ref(null) // ⭐ NUEVO: Cantidad de resultados
+const activeSearchQuery = ref('') // ⭐ NUEVO: Query de búsqueda activa (para paginación)
+const searchPagination = ref(null) // ⭐ NUEVO: Datos de paginación de búsqueda
 
 // Computed properties from store
 const themes = computed(() => productStore.wooThemes)
@@ -336,8 +364,13 @@ const displayedProducts = computed(() => {
   }
 })
 
-// ⭐ Total de productos (global o por categoría/tema)
+// ⭐ Total de productos (global o por categoría/tema/búsqueda)
 const totalProducts = computed(() => {
+  // Si hay una búsqueda activa, usar el total de resultados de búsqueda
+  if (activeSearchQuery.value && searchPagination.value) {
+    return searchPagination.value.total_results || 0
+  }
+  
   // Si hay una categoría seleccionada, usar su total
   if (selectedCategory.value) {
     const category = productStore.getCategoryById(selectedCategory.value)
@@ -513,8 +546,17 @@ const changePage = async (newPage) => {
   updateURL()
   
   try {
+    // Si hay una búsqueda activa, paginar en los resultados de búsqueda
+    if (activeSearchQuery.value) {
+      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de búsqueda: "${activeSearchQuery.value}"`)
+      const result = await productStore.searchWooProducts(activeSearchQuery.value, newPage)
+      if (result.success) {
+        searchPagination.value = result.pagination
+        searchResultsCount.value = result.pagination?.total_results || result.data.length
+      }
+    }
     // Determinar qué cargar según el contexto
-    if (selectedCategory.value) {
+    else if (selectedCategory.value) {
       // Cargar página de categoría específica
       console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de categoría ${selectedCategory.value}`)
       await productStore.fetchWooProductsByCategory(selectedCategory.value, 9, newPage)
@@ -720,6 +762,87 @@ const handleInitialQuery = async () => {
   await restoreFromURL()
 }
 
+/**
+ * ⭐ NUEVO: Toggle del menú de categorías en mobile
+ */
+const toggleCategoriesMenu = () => {
+  isCategoriesMenuOpen.value = !isCategoriesMenuOpen.value
+}
+
+/**
+ * ⭐ NUEVO: Manejar input de búsqueda (debounce)
+ */
+let searchTimeout = null
+const handleSearchInput = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    if (searchQuery.value.trim().length >= 2) {
+      performSearch()
+    } else if (searchQuery.value.trim().length === 0) {
+      clearSearch()
+    }
+  }, 500) // Esperar 500ms después de que el usuario deje de escribir
+}
+
+/**
+ * ⭐ NUEVO: Realizar búsqueda de productos
+ */
+const performSearch = async () => {
+  const query = searchQuery.value.trim()
+  
+  if (query.length < 2) {
+    return
+  }
+
+  isSearching.value = true
+  searchResultsCount.value = null
+  
+  // Limpiar filtros de categoría al buscar
+  selectedTheme.value = ''
+  selectedCategory.value = ''
+  currentPage.value = 1
+  
+  console.log('🔍 Buscando productos:', query)
+  
+  try {
+    const result = await productStore.searchWooProducts(query, 1)
+    
+    if (result.success) {
+      activeSearchQuery.value = query // Guardar query activa para paginación
+      searchPagination.value = result.pagination
+      searchResultsCount.value = result.pagination?.total_results || result.data.length
+      console.log(`✅ Búsqueda completada: ${result.pagination?.total_results || result.data.length} productos encontrados (página 1 de ${result.pagination?.total_pages || 1})`)
+    } else {
+      console.error('❌ Error en búsqueda:', result.error)
+      searchResultsCount.value = 0
+      activeSearchQuery.value = ''
+      searchPagination.value = null
+    }
+  } catch (error) {
+    console.error('❌ Error inesperado en búsqueda:', error)
+    searchResultsCount.value = 0
+    activeSearchQuery.value = ''
+    searchPagination.value = null
+  } finally {
+    isSearching.value = false
+  }
+}
+
+/**
+ * ⭐ NUEVO: Limpiar búsqueda y restaurar productos
+ */
+const clearSearch = async () => {
+  searchQuery.value = ''
+  searchResultsCount.value = null
+  isSearching.value = false
+  activeSearchQuery.value = '' // Limpiar query activa
+  searchPagination.value = null // Limpiar paginación de búsqueda
+  
+  // Recargar productos generales
+  console.log('🔄 Limpiando búsqueda, cargando productos generales...')
+  await clearAllFilters()
+}
+
 // Lifecycle
 onMounted(async () => {
   // Inicializar catálogo de productos
@@ -735,6 +858,13 @@ onMounted(async () => {
     if (result.success) {
       console.log('✅ IDs de favoritos cargados:', result.data.length)
     }
+  }
+  
+  // En mobile, cerrar el menú de categorías por defecto
+  if (window.innerWidth < 1024) {
+    isCategoriesMenuOpen.value = false
+  } else {
+    isCategoriesMenuOpen.value = true
   }
 })
 </script>
@@ -941,6 +1071,22 @@ onMounted(async () => {
 .breadcrumb button {
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Search Bar Styles */
+.search-bar input {
+  transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+  box-shadow: 0 0 0 3px rgba(218, 157, 255, 0.2);
+}
+
+/* Category Menu Toggle for Mobile */
+@media (min-width: 1024px) {
+  .filter-categories {
+    display: block !important;
+  }
 }
 </style>
 

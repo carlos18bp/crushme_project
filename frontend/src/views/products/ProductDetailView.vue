@@ -79,11 +79,6 @@
               <!-- Product Title -->
               <h1 class="product-title">{{ product.name }}</h1>
               
-              <!-- Short Description (debajo del título) -->
-              <div v-if="cleanShortDescription" class="product-short-description">
-                <p v-html="cleanShortDescription"></p>
-              </div>
-              
               <!-- Reviews (Real data or hardcoded fallback) -->
               <div class="product-reviews">
                 <div class="stars">

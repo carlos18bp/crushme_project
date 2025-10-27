@@ -28,6 +28,129 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def search_woocommerce_products(request):
+    """
+    Buscar productos por nombre en español o inglés con paginación.
+    
+    Query params:
+    - q: Query de búsqueda (requerido)
+    - page: Número de página (default: 1)
+    - per_page: Productos por página (default: 9, máx: 50)
+    - lang: Idioma (es/en, también soporta Accept-Language header)
+    
+    Retorna productos paginados con:
+    - Traducciones según idioma
+    - Precios con margen aplicado
+    - Conversión de currency
+    """
+    try:
+        # Obtener query de búsqueda
+        search_query = request.query_params.get('q', '').strip()
+        
+        if not search_query:
+            return Response({
+                'error': 'Query de búsqueda requerido',
+                'message': 'Debe proporcionar el parámetro "q" con el término de búsqueda'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obtener parámetros de paginación
+        page = int(request.query_params.get('page', 1))
+        per_page = min(int(request.query_params.get('per_page', 9)), 50)  # Máximo 50
+        
+        # Obtener idioma y currency
+        target_lang = get_language_from_request(request)
+        target_currency = getattr(request, 'currency', 'COP')
+        
+        logger.info(f"🔍 Búsqueda de productos: '{search_query}' (lang={target_lang}, currency={target_currency}, page={page})")
+        
+        # Buscar según idioma
+        if target_lang == 'es':
+            # Buscar en español (campo original name)
+            queryset = WooCommerceProduct.objects.filter(
+                status='publish',
+                name__icontains=search_query
+            ).prefetch_related('categories', 'images').select_related()
+            
+            logger.info(f"📝 Búsqueda en español: {queryset.count()} resultados totales")
+            
+        else:
+            # Buscar en inglés (traducciones)
+            # Obtener IDs de productos con traducciones que coincidan
+            translated_products = TranslatedContent.objects.filter(
+                content_type=TranslatedContent.CONTENT_TYPE_PRODUCT_NAME,
+                target_language=target_lang,
+                translated_text__icontains=search_query
+            ).values_list('object_id', flat=True)
+            
+            # Si no hay traducciones, buscar en el nombre original como fallback
+            if not translated_products:
+                logger.info(f"⚠️ No se encontraron traducciones, buscando en nombres originales")
+                queryset = WooCommerceProduct.objects.filter(
+                    status='publish',
+                    name__icontains=search_query
+                ).prefetch_related('categories', 'images').select_related()
+            else:
+                # Obtener productos por IDs encontrados
+                queryset = WooCommerceProduct.objects.filter(
+                    wc_id__in=list(translated_products),
+                    status='publish'
+                ).prefetch_related('categories', 'images').select_related()
+            
+            logger.info(f"📝 Búsqueda en inglés: {queryset.count()} resultados totales")
+        
+        # Aplicar paginación
+        total_count = queryset.count()
+        start = (page - 1) * per_page
+        end = start + per_page
+        products_page = queryset[start:end]
+        
+        # Convertir a lista con traducciones y conversión de moneda
+        products_data = get_products_list(
+            queryset=products_page,
+            target_language=target_lang,
+            include_stock=False,
+            target_currency=target_currency
+        )
+        
+        # Calcular información de paginación
+        total_pages = (total_count + per_page - 1) // per_page
+        
+        return Response({
+            'success': True,
+            'message': f'Se encontraron {total_count} productos',
+            'data': products_data,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_results': total_count,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_previous': page > 1
+            },
+            'search': {
+                'query': search_query,
+                'language': target_lang,
+                'currency': target_currency,
+                'results_count': len(products_data)
+            },
+            'source': 'local_db_search'
+        }, status=status.HTTP_200_OK)
+        
+    except ValueError as e:
+        return Response({
+            'error': 'Parámetros inválidos',
+            'details': 'Los parámetros page y per_page deben ser números enteros'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"❌ Error en búsqueda de productos: {str(e)}")
+        return Response({
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def get_woocommerce_products_local(request):
     """
     Obtener productos desde la base de datos local (OPTIMIZADO).

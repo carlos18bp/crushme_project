@@ -165,20 +165,23 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/modules/i18nStore'
 import Navbar from '@/components/shared/Navbar.vue'
 import PromoBanner from '@/components/shared/PromoBanner.vue'
 import Footer from '@/components/shared/Footer.vue'
 import diaryImage from '@/assets/about_us/about_us_3.png'
 
+const router = useRouter()
+const i18nStore = useI18nStore()
+
 // Handle banner interactions
 const handleShopCollection = () => {
-  console.log('Shopping collection...')
-  // Here you can add router navigation or any action
+  router.push(`/${i18nStore.locale}/products`)
 }
 
 const handleExploreDiaries = () => {
-  console.log('Exploring diaries...')
-  // Here you can add router navigation or any action
+  router.push(`/${i18nStore.locale}/diaries`)
 }
 
 // Corporate Values

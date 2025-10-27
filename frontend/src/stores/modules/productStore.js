@@ -1056,6 +1056,44 @@ export const useProductStore = defineStore('product', () => {
   }
 
   /**
+   * ⭐ NUEVO: Buscar productos de WooCommerce por nombre
+   * @param {string} query - Término de búsqueda
+   * @param {number} page - Número de página (default: 1)
+   * @returns {Promise<Object>} Resultado con productos encontrados y paginación
+   */
+  async function searchWooProducts(query, page = 1) {
+    if (!query || query.trim().length < 2) {
+      return { success: true, data: [], message: 'Query too short' };
+    }
+
+    isLoadingWoo.value = true;
+    wooError.value = null;
+
+    try {
+      const response = await get_request(`products/woocommerce/products/search/?q=${encodeURIComponent(query.trim())}&page=${page}`);
+      
+      const products = response.data.data || [];
+      
+      // Reemplazar productos actuales con resultados de búsqueda
+      wooProducts.value = products;
+      
+      return {
+        success: true,
+        data: products,
+        pagination: response.data.pagination || null,
+        search: response.data.search || null,
+        total: response.data.pagination?.total_results || products.length,
+        message: response.data.message
+      };
+    } catch (err) {
+      wooError.value = err.response?.data?.error || 'Failed to search products';
+      return { success: false, error: wooError.value };
+    } finally {
+      isLoadingWoo.value = false;
+    }
+  }
+
+  /**
    * ⭐ NUEVO: Carga inicial optimizada - PRIMERO categorías, DESPUÉS productos
    * Secuencia optimizada para evitar demoras innecesarias
    */
@@ -1182,6 +1220,7 @@ export const useProductStore = defineStore('product', () => {
     fetchWooTrendingProducts, // ⭐ NUEVO: Productos en tendencia (8 tops)
     fetchFeaturedCategories, // ⭐ NUEVO: Categorías destacadas aleatorias
     fetchProductsByCategorySlug, // ⭐ NUEVO: Productos por slug de categoría
+    searchWooProducts, // ⭐ NUEVO: Buscar productos por nombre
     fetchWooProduct,
     fetchWooProductVariations, // ⭐ NUEVO: Obtener variaciones del producto
     fetchWooProductVariation, // ⭐ NUEVO: Obtener variación específica
