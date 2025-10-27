@@ -1,15 +1,27 @@
 <template>
   <section class="relative min-h-screen flex items-center pt-[60px]">
-    <!-- Video Background -->
+    <!-- Video Background with Crossfade -->
     <div class="absolute inset-0 w-full h-full overflow-hidden">
+      <!-- Video 1 -->
       <video
-        ref="videoPlayer"
+        ref="videoPlayer1"
         class="absolute inset-0 w-full h-full object-cover"
         muted
         playsinline
-        @ended="onVideoEnded"
+        @ended="onVideoEnded(0)"
       >
-        <source :src="currentVideoSrc" type="video/mp4">
+        <source :src="videos[0]" type="video/mp4">
+      </video>
+      
+      <!-- Video 2 (overlay for crossfade) -->
+      <video
+        ref="videoPlayer2"
+        class="absolute inset-0 w-full h-full object-cover opacity-0"
+        muted
+        playsinline
+        @ended="onVideoEnded(1)"
+      >
+        <source :src="videos[1]" type="video/mp4">
       </video>
     </div>
 
@@ -23,17 +35,25 @@
           
           <!-- Centered Content: Text and Buttons -->
           <div class="flex flex-col gap-8 md:gap-10 items-center max-w-[900px]">
-            <h1 class="font-comfortaa text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight text-black m-0">
+            <h1 
+              ref="heroTitle"
+              class="font-comfortaa text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight text-white m-0"
+              style="text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3);"
+            >
               {{ $t('hero.title') }}<br>
               {{ $t('hero.titleSecondLine') }} 💕
             </h1>
             
-            <p class="font-poppins text-xl md:text-2xl lg:text-3xl font-light leading-relaxed text-black m-0 max-w-[700px]">
+            <p 
+              ref="heroSubtitle"
+              class="font-poppins text-xl md:text-2xl lg:text-3xl font-light leading-relaxed text-white m-0 max-w-[700px]"
+              style="text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);"
+            >
               {{ $t('hero.subtitle') }}
             </p>
             
             <!-- Call to Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-5 md:gap-7 w-full sm:w-auto">
+            <div ref="heroButtons" class="flex flex-col sm:flex-row gap-5 md:gap-7 w-full sm:w-auto">
               <router-link 
                 :to="`/${i18nStore.locale}/products`"
                 class="font-poppins text-lg md:text-xl font-medium text-white bg-[#4A6FA5] border-none rounded-full px-10 md:px-16 py-4 md:py-5 cursor-pointer no-underline inline-block transition-all duration-300 shadow-[0_4px_12px_rgba(74,111,165,0.3)] hover:bg-[#3d5a8a] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(74,111,165,0.4)] text-center"
@@ -130,6 +150,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18nStore } from '@/stores/modules/i18nStore'
+import gsap from 'gsap'
 import Clip1 from '@/assets/home/hero/Clip1.mp4'
 import Clip2 from '@/assets/home/hero/Clip2.mp4'
 
@@ -173,15 +194,119 @@ const goToSlide = (index) => {
   currentSlide.value = index
 }
 
+// Video loop logic with crossfade
+const videoPlayer1 = ref(null)
+const videoPlayer2 = ref(null)
+const videos = [Clip1, Clip2]
+let currentVideoIndex = 0
+
+// Refs for animated elements
+const heroTitle = ref(null)
+const heroSubtitle = ref(null)
+const heroButtons = ref(null)
+
+const onVideoEnded = (playerIndex) => {
+  // Determinar qué video está activo y cuál es el siguiente
+  const activePlayer = playerIndex === 0 ? videoPlayer1.value : videoPlayer2.value
+  const nextPlayer = playerIndex === 0 ? videoPlayer2.value : videoPlayer1.value
+  
+  // Cambiar al siguiente video
+  currentVideoIndex = (currentVideoIndex + 1) % videos.length
+  
+  // Cargar el siguiente video en el player inactivo
+  if (nextPlayer) {
+    nextPlayer.src = videos[currentVideoIndex]
+    nextPlayer.load()
+    
+    // Crossfade animation
+    gsap.to(activePlayer, {
+      opacity: 0,
+      duration: 1.5,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        // Pausar el video que se está ocultando
+        activePlayer.pause()
+      }
+    })
+    
+    gsap.to(nextPlayer, {
+      opacity: 1,
+      duration: 1.5,
+      ease: 'power2.inOut',
+      onStart: () => {
+        // Reproducir el nuevo video
+        nextPlayer.play()
+      }
+    })
+    
+    // Animar contenido al cambiar de video
+    animateContentTransition()
+  }
+}
+
+const animateContentTransition = () => {
+  const tl = gsap.timeline()
+  
+  // Fade out y scale down
+  tl.to([heroTitle.value, heroSubtitle.value, heroButtons.value], {
+    opacity: 0.6,
+    scale: 0.98,
+    duration: 0.4,
+    ease: 'power2.in',
+    stagger: 0.05
+  })
+  
+  // Fade in y scale up
+  tl.to([heroTitle.value, heroSubtitle.value, heroButtons.value], {
+    opacity: 1,
+    scale: 1,
+    duration: 0.6,
+    ease: 'power2.out',
+    stagger: 0.05
+  })
+}
+
+const initializeAnimations = () => {
+  // Initial animation timeline
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+  
+  // Set initial states
+  gsap.set([heroTitle.value, heroSubtitle.value, heroButtons.value], {
+    opacity: 0,
+    y: 30
+  })
+  
+  // Animate in sequence
+  tl.to(heroTitle.value, {
+    opacity: 1,
+    y: 0,
+    duration: 1,
+    delay: 0.3
+  })
+  .to(heroSubtitle.value, {
+    opacity: 1,
+    y: 0,
+    duration: 0.8
+  }, '-=0.5')
+  .to(heroButtons.value, {
+    opacity: 1,
+    y: 0,
+    duration: 0.8
+  }, '-=0.4')
+}
+
 // Auto-advance carousel
 let carouselInterval = null
 
 onMounted(() => {
   // Iniciar reproducción del primer video
-  if (videoPlayer.value) {
-    videoPlayer.value.play()
+  if (videoPlayer1.value) {
+    videoPlayer1.value.play()
   }
-
+  
+  // Initialize GSAP animations
+  initializeAnimations()
+  
   // Auto-advance carousel every 4 seconds
   carouselInterval = setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % trustBadges.length
@@ -192,31 +317,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (carouselInterval) {
     clearInterval(carouselInterval)
-  }
-})
-
-// Video loop logic
-const videoPlayer = ref(null)
-const videos = [Clip1, Clip2]
-let currentVideoIndex = 0
-const currentVideoSrc = ref(videos[0])
-
-const onVideoEnded = () => {
-  // Cambiar al siguiente video
-  currentVideoIndex = (currentVideoIndex + 1) % videos.length
-  currentVideoSrc.value = videos[currentVideoIndex]
-  
-  // Esperar a que el video se cargue y reproducir
-  if (videoPlayer.value) {
-    videoPlayer.value.load()
-    videoPlayer.value.play()
-  }
-}
-
-onMounted(() => {
-  // Iniciar reproducción del primer video
-  if (videoPlayer.value) {
-    videoPlayer.value.play()
   }
 })
 </script>
