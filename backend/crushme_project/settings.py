@@ -304,7 +304,7 @@ WOMPI_ENVIRONMENT = 'test'  # 'test' o 'production'
 
 # Production/Development environment flag
 # Set to True in production, False in development
-PRODUCTION = False
+PRODUCTION = True
 
 # Frontend URLs based on environment
 if PRODUCTION:
