@@ -4,10 +4,9 @@
     <div class="profile-header">
       <div 
         class="header-gradient"
-        :class="{ 'has-cover': profile.coverImage }"
+        :class="{ 'has-cover': profile.coverImage, 'cursor-pointer': profile.coverImage }"
         :style="profile.coverImage ? { backgroundImage: `url(${profile.coverImage})` } : {}"
         @click="profile.coverImage && openImageModal(profile.coverImage)"
-        :class="{ 'cursor-pointer': profile.coverImage }"
       ></div>
       
       <!-- Share Button -->
