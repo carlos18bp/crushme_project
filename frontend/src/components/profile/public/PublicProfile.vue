@@ -29,7 +29,7 @@
       </button>
       
       <!-- Avatar -->
-      <div class="avatar-container" @click="openImageModal(profile.avatar)" class="cursor-pointer">
+      <div class="avatar-container cursor-pointer" @click="openImageModal(profile.avatar)">
         <img 
           :src="profile.avatar" 
           :alt="profile.name"
