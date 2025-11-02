@@ -678,8 +678,15 @@ const updateURL = () => {
  */
 const restoreFromURL = async () => {
   const { theme, category, page } = route.query
+  // También leer categoría desde params (para rutas como /products/category/:category)
+  const categoryFromParams = route.params.category
   
-  console.log('🔍 Restaurando estado desde URL:', { theme, category, page })
+  console.log('🔍 Restaurando estado desde URL:', { 
+    theme, 
+    category, 
+    categoryFromParams, 
+    page 
+  })
   
   // Restaurar página
   if (page) {
@@ -692,16 +699,29 @@ const restoreFromURL = async () => {
     console.log('🔍 Tema restaurado:', theme)
   }
   
-  // Restaurar categoría
-  if (category) {
-    const categoryId = parseInt(category)
-    selectedCategory.value = categoryId
-    console.log('🔍 Categoría restaurada:', categoryId)
-    
-    // Cargar productos de la categoría con la página correcta
-    const result = await productStore.fetchWooProductsByCategory(categoryId, 9, currentPage.value)
-    if (result.success) {
-      console.log(`✅ Productos de categoría ${categoryId} cargados (página ${currentPage.value}):`, result.data.length)
+  // Restaurar categoría (priorizar params sobre query)
+  const categorySlug = categoryFromParams || category
+  if (categorySlug) {
+    // Si es un slug (string), cargar productos por slug
+    if (typeof categorySlug === 'string' && isNaN(categorySlug)) {
+      console.log('🔍 Cargando productos por slug de categoría:', categorySlug)
+      selectedTheme.value = categorySlug // Usar el slug como tema
+      
+      const result = await productStore.fetchProductsByCategorySlug(categorySlug, 9, currentPage.value)
+      if (result.success) {
+        console.log(`✅ Productos de categoría ${categorySlug} cargados (página ${currentPage.value}):`, result.data.length)
+      }
+    } else {
+      // Si es un ID numérico, usar el método anterior
+      const categoryId = parseInt(categorySlug)
+      selectedCategory.value = categoryId
+      console.log('🔍 Categoría restaurada:', categoryId)
+      
+      // Cargar productos de la categoría con la página correcta
+      const result = await productStore.fetchWooProductsByCategory(categoryId, 9, currentPage.value)
+      if (result.success) {
+        console.log(`✅ Productos de categoría ${categoryId} cargados (página ${currentPage.value}):`, result.data.length)
+      }
     }
   } else if (theme) {
     // Si solo hay tema, cargar productos del tema

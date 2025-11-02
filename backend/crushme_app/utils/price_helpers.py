@@ -4,6 +4,72 @@ Price conversion helpers for API responses
 from .currency_converter import CurrencyConverter
 
 
+def apply_category_margin_to_product(product):
+    """
+    Aplica el margen de categoría a un producto WooCommerce.
+    
+    Args:
+        product: Instancia de WooCommerceProduct o WooCommerceProductVariation
+        
+    Returns:
+        Diccionario con precios con margen aplicado:
+        {
+            'price': precio_con_margen,
+            'regular_price': precio_regular_con_margen,
+            'sale_price': precio_oferta_con_margen (si existe)
+        }
+    """
+    result = {}
+    
+    # Aplicar margen al precio actual
+    if hasattr(product, 'get_price_with_margin'):
+        result['price'] = product.get_price_with_margin()
+        result['regular_price'] = product.get_regular_price_with_margin()
+        sale_price = product.get_sale_price_with_margin()
+        if sale_price:
+            result['sale_price'] = sale_price
+    else:
+        # Fallback si el producto no tiene los métodos
+        result['price'] = float(product.price) if product.price else None
+        result['regular_price'] = float(product.regular_price) if product.regular_price else None
+        if product.sale_price:
+            result['sale_price'] = float(product.sale_price)
+    
+    return result
+
+
+def apply_margin_and_convert_price(product, currency='COP'):
+    """
+    Aplica margen de categoría Y convierte a la moneda solicitada.
+    
+    Args:
+        product: Instancia de WooCommerceProduct o WooCommerceProductVariation
+        currency: Moneda destino ('COP' o 'USD')
+        
+    Returns:
+        Diccionario con precios con margen aplicado y convertidos:
+        {
+            'price': precio_final,
+            'regular_price': precio_regular_final,
+            'sale_price': precio_oferta_final (si existe),
+            'currency': 'COP' o 'USD'
+        }
+    """
+    # Primero aplicar margen
+    prices = apply_category_margin_to_product(product)
+    
+    # Luego convertir a la moneda solicitada
+    result = {}
+    for key, value in prices.items():
+        if value is not None:
+            result[key] = CurrencyConverter.convert_price(value, currency)
+        else:
+            result[key] = None
+    
+    result['currency'] = currency.upper()
+    return result
+
+
 def convert_price_fields(data, currency, fields=None):
     """
     Convert price fields in a dictionary to target currency.

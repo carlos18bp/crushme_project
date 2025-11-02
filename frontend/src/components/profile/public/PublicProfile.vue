@@ -6,6 +6,8 @@
         class="header-gradient"
         :class="{ 'has-cover': profile.coverImage }"
         :style="profile.coverImage ? { backgroundImage: `url(${profile.coverImage})` } : {}"
+        @click="profile.coverImage && openImageModal(profile.coverImage)"
+        :class="{ 'cursor-pointer': profile.coverImage }"
       ></div>
       
       <!-- Share Button -->
@@ -28,7 +30,7 @@
       </button>
       
       <!-- Avatar -->
-      <div class="avatar-container">
+      <div class="avatar-container" @click="openImageModal(profile.avatar)" class="cursor-pointer">
         <img 
           :src="profile.avatar" 
           :alt="profile.name"
@@ -92,7 +94,8 @@
           <div 
             v-for="(image, index) in profile.gallery" 
             :key="index"
-            class="gallery-item"
+            class="gallery-item cursor-pointer"
+            @click="openImageModal(image)"
           >
             <img 
               :src="image" 
@@ -196,6 +199,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Image Modal -->
+    <Teleport to="body">
+      <div 
+        v-if="showImageModal" 
+        class="image-modal-overlay"
+        @click="closeImageModal"
+      >
+        <div class="image-modal-content" @click.stop>
+          <button 
+            class="image-modal-close"
+            @click="closeImageModal"
+            aria-label="Close"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <img 
+            :src="selectedImage" 
+            alt="Full size image"
+            class="image-modal-img"
+          />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -212,6 +242,8 @@ const i18nStore = useI18nStore()
 // State
 const expandedWishlists = ref([])
 const showCopiedMessage = ref(false)
+const showImageModal = ref(false)
+const selectedImage = ref('')
 
 // Props
 const props = defineProps({
@@ -381,6 +413,22 @@ const copyWishlistLink = async (wishlist) => {
   } catch (error) {
     console.error('❌ Error copying wishlist link:', error)
   }
+}
+
+// Open image modal
+const openImageModal = (imageUrl) => {
+  selectedImage.value = imageUrl
+  showImageModal.value = true
+  // Prevent body scroll when modal is open
+  document.body.style.overflow = 'hidden'
+}
+
+// Close image modal
+const closeImageModal = () => {
+  showImageModal.value = false
+  selectedImage.value = ''
+  // Restore body scroll
+  document.body.style.overflow = ''
 }
 </script>
 
@@ -861,6 +909,66 @@ const copyWishlistLink = async (wishlist) => {
     font-size: 0.8125rem;
     padding: 8px 16px;
   }
+}
+
+/* Image Modal */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  cursor: default;
+}
+
+.image-modal-img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1f2937;
+}
+
+.image-modal-close:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  opacity: 0.95;
 }
 </style>
 

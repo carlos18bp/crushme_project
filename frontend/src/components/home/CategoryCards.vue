@@ -110,33 +110,18 @@
   // Función para manejar clic en categoría
   const handleCategoryClick = async (category) => {
     try {
-      // Primero cargar productos de la categoría usando el nuevo endpoint
-      const result = await productStore.fetchProductsByCategorySlug(category.slug, 20, 1)
-
-      if (result.success) {
-        // Si se cargaron productos exitosamente, navegar a la página de productos
-        const currentLang = i18nStore.locale
-        router.push({
-          name: `Products-${currentLang}`,
-          query: { category: category.slug }
-        })
-      } else {
-        console.error('Error loading category products:', result.error)
-        // Navegar de todas formas para mostrar el error en la página de productos
-        const currentLang = i18nStore.locale
-        router.push({
-          name: `Products-${currentLang}`,
-          query: { category: category.slug }
-        })
-      }
-    } catch (err) {
-      console.error('Error navigating to category:', err)
-      // Navegar de todas formas incluso si hay error
+      console.log('🎯 [CategoryCards] Navegando a categoría:', category.slug)
+      
+      // Navegar a la ruta específica de categoría
       const currentLang = i18nStore.locale
-      router.push({
-        name: `Products-${currentLang}`,
-        query: { category: category.slug }
+      await router.push({
+        name: `ProductsByCategory-${currentLang}`,
+        params: { category: category.slug }
       })
+      
+      console.log('✅ [CategoryCards] Navegación exitosa a:', `/${currentLang}/products/category/${category.slug}`)
+    } catch (err) {
+      console.error('❌ [CategoryCards] Error navegando a categoría:', err)
     }
   }
 

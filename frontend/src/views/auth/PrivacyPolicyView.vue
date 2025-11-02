@@ -179,17 +179,128 @@ import Footer from '@/components/shared/Footer.vue'
 
 // Store
 const i18nStore = useI18nStore()
-const { tm } = useI18n()  // tm() es para obtener mensajes como objetos/arrays
+const { t } = useI18n()
 
-// Computed properties for arrays
-const informationCollectionItems = computed(() => tm('privacy.sections.informationCollection.items'))
-const automaticCollectionItems = computed(() => tm('privacy.sections.automaticCollection.items'))
-const useOfInformationItems = computed(() => tm('privacy.sections.useOfInformation.items'))
-const informationSharingItems = computed(() => tm('privacy.sections.informationSharing.items'))
-const discreteShippingItems = computed(() => tm('privacy.sections.discreteShipping.items'))
-const giftPrivacyItems = computed(() => tm('privacy.sections.giftPrivacy.items'))
-const dataSecurityItems = computed(() => tm('privacy.sections.dataSecurity.items'))
-const yourRightsItems = computed(() => tm('privacy.sections.yourRights.items'))
+// Computed properties for arrays - usando índices numéricos
+const informationCollectionItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.informationCollection.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.informationCollection.items.${i}`)
+    if (item && !item.includes('privacy.sections.informationCollection.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const automaticCollectionItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.automaticCollection.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.automaticCollection.items.${i}`)
+    if (item && !item.includes('privacy.sections.automaticCollection.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const useOfInformationItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.useOfInformation.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.useOfInformation.items.${i}`)
+    if (item && !item.includes('privacy.sections.useOfInformation.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const informationSharingItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.informationSharing.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.informationSharing.items.${i}`)
+    if (item && !item.includes('privacy.sections.informationSharing.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const discreteShippingItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.discreteShipping.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.discreteShipping.items.${i}`)
+    if (item && !item.includes('privacy.sections.discreteShipping.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const giftPrivacyItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.giftPrivacy.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.giftPrivacy.items.${i}`)
+    if (item && !item.includes('privacy.sections.giftPrivacy.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const dataSecurityItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.dataSecurity.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.dataSecurity.items.${i}`)
+    if (item && !item.includes('privacy.sections.dataSecurity.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
+
+const yourRightsItems = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`privacy.sections.yourRights.items.${i}`, null) !== null) {
+    const item = t(`privacy.sections.yourRights.items.${i}`)
+    if (item && !item.includes('privacy.sections.yourRights.items')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
 </script>
 
 <style scoped>

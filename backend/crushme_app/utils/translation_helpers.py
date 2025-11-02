@@ -122,17 +122,13 @@ def calculate_product_price(product, target_currency='COP'):
     Calculate product price with category margin and currency conversion.
     
     Args:
-        product: WooCommerceProduct instance with base price
+        product: WooCommerceProduct or WooCommerceProductVariation instance
         target_currency: Target currency code ('COP' or 'USD')
         
     Returns:
         dict: Price information with margin applied and converted
     """
-    base_price = product.price
-    base_regular_price = product.regular_price
-    base_sale_price = product.sale_price
-    
-    if not base_price:
+    if not product.price:
         return {
             'price': None,
             'regular_price': None,
@@ -141,11 +137,23 @@ def calculate_product_price(product, target_currency='COP'):
             'on_sale': product.on_sale
         }
     
-    # Get margin configuration
-    margin = None
+    # Use the new model methods to apply margins
+    final_price = product.get_price_with_margin()
+    final_regular_price = product.get_regular_price_with_margin()
+    final_sale_price = product.get_sale_price_with_margin()
     
-    # Try to get margin from product's first category
-    first_category = product.categories.first()
+    # Get margin info for logging/debugging
+    margin = None
+    first_category = None
+    
+    # Get category for margin info
+    if hasattr(product, 'categories'):
+        # WooCommerceProduct
+        first_category = product.categories.first()
+    elif hasattr(product, 'product'):
+        # WooCommerceProductVariation - use parent's category
+        first_category = product.product.categories.first()
+    
     if first_category:
         try:
             margin = CategoryPriceMargin.objects.get(
@@ -155,20 +163,9 @@ def calculate_product_price(product, target_currency='COP'):
         except CategoryPriceMargin.DoesNotExist:
             pass
     
-    # Fallback to default margin
+    # Fallback to default margin for info
     if not margin:
         margin = DefaultPriceMargin.get_active()
-    
-    # Apply margin
-    if margin:
-        final_price = margin.calculate_price(base_price)
-        final_regular_price = margin.calculate_price(base_regular_price) if base_regular_price else None
-        final_sale_price = margin.calculate_price(base_sale_price) if base_sale_price else None
-    else:
-        # No margin configured, use original prices
-        final_price = float(base_price)
-        final_regular_price = float(base_regular_price) if base_regular_price else None
-        final_sale_price = float(base_sale_price) if base_sale_price else None
     
     # Convert to target currency
     converted_price = CurrencyConverter.convert_price(final_price, target_currency)
@@ -290,14 +287,11 @@ def get_product_full_data(product, target_language='en', include_stock=True, tar
                     attributes_map[attr_key] = set()
                 attributes_map[attr_key].add(attr_value)
             
-            # Apply margin to variation price (inherit from product parent)
-            variation_price = float(variation.price) if variation.price else None
-            if variation_price and margin_percentage:
-                margin_multiplier = 1 + (margin_percentage / 100)
-                variation_price = round(variation_price * margin_multiplier, 2)
+            # Use variation's get_price_with_margin method (inherits from parent product)
+            variation_price_with_margin = variation.get_price_with_margin()
             
             # Convert variation price to target currency
-            converted_variation_price = CurrencyConverter.convert_price(variation_price, target_currency) if variation_price else None
+            converted_variation_price = CurrencyConverter.convert_price(variation_price_with_margin, target_currency) if variation_price_with_margin else None
             
             # Add variation summary (id + attributes for quick lookup)
             variations_summary.append({

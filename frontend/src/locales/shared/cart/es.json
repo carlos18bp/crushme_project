@@ -94,12 +94,12 @@
       "includesTax": "Incluye {tax} en impuestos",
       "taxIncluded": "✓ IVA (19%) ya incluido en el precio: {tax}",
       "placeholders": {
-        "email": "tu{'@'}ejemplo.com",
+        "email": "tu@ejemplo.com",
         "searchUser": "Buscar usuario...",
         "note": "Escribe algo dulce (o mantenlo sorpresa 😊)"
       },
       "help": {
-        "username": "{'@'}LovelyFan92 Esta es la forma en que tu Crush te reconocerá como remitente 💕"
+        "username": "@LovelyFan92 - Esta es la forma en que tu Crush te reconocerá como remitente 💕"
       }
     }
   }

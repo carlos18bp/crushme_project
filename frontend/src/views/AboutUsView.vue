@@ -107,7 +107,7 @@
             <!-- Corporate Values -->
             <div class="values-section">
               <h2 class="font-comfortaa text-brand-dark text-3xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-8">
-                Corporate Values
+                {{ $t('aboutUs.corporateValuesTitle') }}
               </h2>
               <ul class="space-y-3 md:space-y-4">
                 <li v-for="(value, index) in corporateValues" :key="index" class="flex items-start">
@@ -122,11 +122,11 @@
             <!-- What Makes Us Different -->
             <div class="values-section">
               <h2 class="font-comfortaa text-brand-dark text-3xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-8">
-                What Makes Us Different?
+                {{ $t('aboutUs.whatMakesUsDifferentTitle') }}
               </h2>
               <div class="mb-4 md:mb-6">
                 <p class="font-poppins text-brand-dark text-base md:text-lg leading-relaxed font-medium">
-                  We don't just offer a product catalog—we create experiences.
+                  {{ $t('aboutUs.whatMakesUsDifferentIntro') }}
                 </p>
               </div>
               <ul class="space-y-3 md:space-y-4">
@@ -165,7 +165,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import Navbar from '@/components/shared/Navbar.vue'
 import PromoBanner from '@/components/shared/PromoBanner.vue'
@@ -174,6 +176,7 @@ import diaryImage from '@/assets/about_us/about_us_3.png'
 
 const router = useRouter()
 const i18nStore = useI18nStore()
+const { t } = useI18n()
 
 // Handle banner interactions
 const handleShopCollection = () => {
@@ -184,22 +187,37 @@ const handleExploreDiaries = () => {
   router.push(`/${i18nStore.locale}/diaries`)
 }
 
-// Corporate Values
-const corporateValues = [
-  "Trust & Discretion: every gesture is kept in the privacy it deserves.",
-  "Passion: we pour heart and sensuality into every experience.", 
-  "Authenticity: every detail reflects a unique, personal bond.",
-  "Creativity: we reinvent the art of surprising and enchanting.",
-  "Closeness: we support each user so the gift conveys exactly what they feel."
-]
+// Corporate Values - cargados desde traducciones
+const corporateValues = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`aboutUs.corporateValues.${i}`, null) !== null) {
+    const item = t(`aboutUs.corporateValues.${i}`)
+    if (item && !item.includes('aboutUs.corporateValues')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
 
-// What Makes Us Different
-const whatMakesUsDifferent = [
-  "We fuse romance and eroticism in one elegant, safe space.",
-  "We turn every purchase into a gesture of intimacy and seduction.",
-  "We guarantee absolute discretion so desire can be expressed without barriers.",
-  "We are more than a store—we are a bridge to intimacy."
-]
+// What Makes Us Different - cargados desde traducciones
+const whatMakesUsDifferent = computed(() => {
+  const items = []
+  let i = 0
+  while (t(`aboutUs.whatMakesUsDifferent.${i}`, null) !== null) {
+    const item = t(`aboutUs.whatMakesUsDifferent.${i}`)
+    if (item && !item.includes('aboutUs.whatMakesUsDifferent')) {
+      items.push(item)
+      i++
+    } else {
+      break
+    }
+  }
+  return items
+})
 </script>
 
 <style scoped>

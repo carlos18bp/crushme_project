@@ -1286,7 +1286,9 @@ class CrushMeAdminSite(admin.AdminSite):
                 'app_label': 'user_management',
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['User', 'PasswordCode', 'UserAddress', 'UserGallery', 'UserLink', 'GuestUser', 'Feed']
+                    # Solo mostrar Users y UserAddress
+                    # Ocultar: PasswordCode, UserGallery, UserLink, GuestUser, Feed
+                    if model['object_name'] in ['User', 'UserAddress']
                 ]
             },
             {
@@ -1294,33 +1296,28 @@ class CrushMeAdminSite(admin.AdminSite):
                 'app_label': 'woocommerce_management',
                 'models': [
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
+                    # Solo mostrar Category Price Margins y Default Price Margins
+                    # Ocultar: WooCommerceCategory, WooCommerceProduct, WooCommerceProductVariation, TranslatedContent, ProductSyncLog
                     if model['object_name'] in [
-                        'WooCommerceCategory', 
-                        'WooCommerceProduct', 
-                        'WooCommerceProductVariation',
                         'CategoryPriceMargin',
-                        'DefaultPriceMargin',
-                        'TranslatedContent',
-                        'ProductSyncLog'
+                        'DefaultPriceMargin'
                     ]
                 ]
             },
-            {
-                'name': _('Product Management'),
-                'app_label': 'product_management',
-                'models': [
-                    model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['Product']
-                ]
-            },
-            {
-                'name': _('Shopping Management'),
-                'app_label': 'shopping_management',
-                'models': [
-                    model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['Cart', 'CartItem']
-                ]
-            },
+            # Ocultar completamente: Product Management
+            # {
+            #     'name': _('Product Management'),
+            #     'app_label': 'product_management',
+            #     'models': [...]
+            # },
+            
+            # Ocultar completamente: Shopping Management
+            # {
+            #     'name': _('Shopping Management'),
+            #     'app_label': 'shopping_management',
+            #     'models': [...]
+            # },
+            
             {
                 'name': _('Order Management'),
                 'app_label': 'order_management',
@@ -1329,14 +1326,14 @@ class CrushMeAdminSite(admin.AdminSite):
                     if model['object_name'] in ['Order', 'OrderItem', 'DiscountCode']
                 ]
             },
-            {
-                'name': _('Wishlist Management'),
-                'app_label': 'wishlist_management',
-                'models': [
-                    model for model in app_dict.get('crushme_app', {}).get('models', [])
-                    if model['object_name'] in ['WishList', 'WishListItem', 'FavoriteWishList']
-                ]
-            },
+            
+            # Ocultar completamente: Wishlist Management
+            # {
+            #     'name': _('Wishlist Management'),
+            #     'app_label': 'wishlist_management',
+            #     'models': [...]
+            # },
+            
             {
                 'name': _('Review Management'),
                 'app_label': 'review_management',
@@ -1344,15 +1341,21 @@ class CrushMeAdminSite(admin.AdminSite):
                     model for model in app_dict.get('crushme_app', {}).get('models', [])
                     if model['object_name'] in ['Review']
                 ]
-            },
-            {
-                'name': _('Media & Attachments'),
-                'app_label': 'media_management',
-                'models': [
-                    model for model in app_dict.get('django_attachments', {}).get('models', [])
-                    if model['object_name'] in ['Library', 'Attachment']
-                ]
             }
+            
+            # Ocultar completamente: Media & Attachments
+            # {
+            #     'name': _('Media & Attachments'),
+            #     'app_label': 'media_management',
+            #     'models': [...]
+            # },
+            
+            # Ocultar completamente: Favorite Products
+            # {
+            #     'name': _('Favorite Products'),
+            #     'app_label': 'favorite_management',
+            #     'models': [...]
+            # }
         ]
         return custom_app_list
 
@@ -1390,3 +1393,9 @@ admin_site.register(DefaultPriceMargin, DefaultPriceMarginAdmin)
 
 # Discount Code
 admin_site.register(DiscountCode, DiscountCodeAdmin)
+
+# Favorite Products (visible en el índice)
+admin_site.register(FavoriteProduct, FavoriteProductAdmin)
+
+# WishListItem (oculto del índice pero accesible directamente)
+admin_site.register(WishListItem, WishListItemAdmin)

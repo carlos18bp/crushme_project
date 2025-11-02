@@ -94,7 +94,7 @@
       "includesTax": "Includes {tax} in taxes",
       "taxIncluded": "✓ VAT (19%) already included in price: {tax}",
       "placeholders": {
-        "email": "you{'@'}example.com",
+        "email": "you@example.com",
         "searchUser": "Search user...",
         "note": "Whisper something sweet (or keep it a surprise 😊)"
       },

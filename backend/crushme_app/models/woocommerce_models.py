@@ -189,6 +189,52 @@ class WooCommerceProduct(models.Model):
     def get_categories_list(self):
         """Get list of category names"""
         return [cat.name for cat in self.categories.all()]
+    
+    def get_price_with_margin(self, base_price=None):
+        """
+        Calcula el precio con margen de categoría aplicado.
+        
+        Args:
+            base_price: Precio base. Si es None, usa self.price
+            
+        Returns:
+            Precio con margen aplicado
+        """
+        if base_price is None:
+            base_price = self.price
+        
+        if base_price is None:
+            return None
+        
+        # Intentar obtener margen de la primera categoría del producto
+        from .translation_models import CategoryPriceMargin, DefaultPriceMargin
+        
+        category_margin = None
+        for category in self.categories.all():
+            try:
+                category_margin = category.price_margin
+                if category_margin and category_margin.is_active:
+                    return category_margin.calculate_price(base_price)
+            except CategoryPriceMargin.DoesNotExist:
+                continue
+        
+        # Si no hay margen de categoría, usar margen por defecto
+        default_margin = DefaultPriceMargin.get_active()
+        if default_margin:
+            return default_margin.calculate_price(base_price)
+        
+        # Si no hay ningún margen configurado, retornar precio base
+        return float(base_price)
+    
+    def get_regular_price_with_margin(self):
+        """Calcula el precio regular con margen aplicado"""
+        return self.get_price_with_margin(self.regular_price)
+    
+    def get_sale_price_with_margin(self):
+        """Calcula el precio de oferta con margen aplicado"""
+        if self.sale_price:
+            return self.get_price_with_margin(self.sale_price)
+        return None
 
 
 class WooCommerceProductImage(models.Model):
@@ -298,6 +344,36 @@ class WooCommerceProductVariation(models.Model):
     def get_attribute_description(self):
         """Get human-readable attribute description"""
         return ", ".join([f"{k}: {v}" for k, v in self.attributes.items()])
+    
+    def get_price_with_margin(self, base_price=None):
+        """
+        Calcula el precio con margen de categoría aplicado.
+        Usa las categorías del producto padre.
+        
+        Args:
+            base_price: Precio base. Si es None, usa self.price
+            
+        Returns:
+            Precio con margen aplicado
+        """
+        if base_price is None:
+            base_price = self.price
+        
+        if base_price is None:
+            return None
+        
+        # Usar el método del producto padre
+        return self.product.get_price_with_margin(base_price)
+    
+    def get_regular_price_with_margin(self):
+        """Calcula el precio regular con margen aplicado"""
+        return self.get_price_with_margin(self.regular_price)
+    
+    def get_sale_price_with_margin(self):
+        """Calcula el precio de oferta con margen aplicado"""
+        if self.sale_price:
+            return self.get_price_with_margin(self.sale_price)
+        return None
 
 
 class ProductSyncLog(models.Model):

@@ -606,6 +606,7 @@
                 </div>
                 <input
                   v-model="link.url"
+                  @input="cleanLinkUrl(link)"
                   type="text"
                   :placeholder="$t('profile.form.linktree.urlPlaceholder')"
                   class="block w-full rounded-lg border border-gray-300 pl-20 pr-4 py-3 text-gray-900 placeholder-gray-400 focus:border-brand-pink-dark focus:ring-2 focus:ring-brand-pink-dark/20 transition-colors"
@@ -934,6 +935,13 @@ function addLink() {
 
 function removeLink(index) {
   formData.value.links.splice(index, 1)
+}
+
+function cleanLinkUrl(link) {
+  // Remove https:// or http:// if user pastes a full URL
+  if (link.url) {
+    link.url = link.url.replace(/^https?:\/\//i, '')
+  }
 }
 
 function onCountryChange() {
