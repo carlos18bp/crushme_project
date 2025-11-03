@@ -114,46 +114,48 @@
             :key="wishlist.id"
             class="wishlist-card border-2 border-gray-900 rounded-2xl overflow-hidden"
           >
-            <div class="p-6">
-              <!-- Header con título, botones y flecha en la misma línea -->
-              <div class="flex items-center justify-between gap-3 mb-2">
-                <h3 class="text-lg font-semibold text-gray-900 flex-shrink-0">{{ wishlist.name }}</h3>
+            <div class="p-4 md:p-6">
+              <!-- Header con título y flecha -->
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <h3 class="text-base md:text-lg font-semibold text-gray-900 flex-shrink-0">{{ wishlist.name }}</h3>
                 
-                <div class="flex items-center gap-2 ml-auto">
-                  <!-- Wishlist Actions -->
-                  <button 
-                    @click="copyWishlistLink(wishlist)"
-                    class="wishlist-action-btn copy-btn"
+                <!-- Toggle button -->
+                <button 
+                  @click="toggleWishlist(wishlist.id)" 
+                  class="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                >
+                  <svg 
+                    class="w-5 h-5 text-gray-600 transition-transform" 
+                    :class="{ 'rotate-180': expandedWishlists.includes(wishlist.id) }" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                    Copy wishlist link
-                  </button>
-                  <button 
-                    @click="buyWishlist(wishlist)"
-                    class="wishlist-action-btn buy-btn"
-                  >
-                    Buy my wishlist
-                  </button>
-                  
-                  <!-- Toggle button -->
-                  <button 
-                    @click="toggleWishlist(wishlist.id)" 
-                    class="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                  >
-                    <svg 
-                      class="w-5 h-5 text-gray-600 transition-transform" 
-                      :class="{ 'rotate-180': expandedWishlists.includes(wishlist.id) }" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- Wishlist Actions - Responsive -->
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
+                <button 
+                  @click="copyWishlistLink(wishlist)"
+                  class="wishlist-action-btn copy-btn"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span class="hidden sm:inline">Copy wishlist link</span>
+                  <span class="sm:hidden">Copy link</span>
+                </button>
+                <button 
+                  @click="buyWishlist(wishlist)"
+                  class="wishlist-action-btn buy-btn"
+                >
+                  <span class="hidden sm:inline">Buy my wishlist</span>
+                  <span class="sm:hidden">Buy wishlist</span>
+                </button>
               </div>
               
               <!-- Description y detalles -->
@@ -166,7 +168,7 @@
             </div>
 
             <!-- Products -->
-            <div v-if="expandedWishlists.includes(wishlist.id)" class="px-6 pb-6">
+            <div v-if="expandedWishlists.includes(wishlist.id)" class="px-4 md:px-6 pb-4 md:pb-6">
               <!-- Products grid -->
               <div v-if="wishlist.items && wishlist.items.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div v-for="item in wishlist.items" :key="item.id" class="relative">
@@ -845,16 +847,26 @@ const closeImageModal = () => {
 .wishlist-action-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 24px;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
   font-family: 'Poppins', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .wishlist-action-btn {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    gap: 8px;
+    flex: initial;
+  }
 }
 
 .wishlist-action-btn.copy-btn {

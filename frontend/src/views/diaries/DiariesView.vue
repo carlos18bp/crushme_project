@@ -20,18 +20,22 @@
 
         <!-- Content -->
         <div v-else class="diaries-grid">
-          <!-- First Component: Public Profile (2 columns) -->
-          <div class="profile-column">
-            <PublicProfile :profile-data="profileData" />
+          <!-- Mobile Order: Search → YouMayKnow → Profile -->
+          <!-- Desktop Order: Profile (2 cols) → Search + YouMayKnow (2 cols) -->
+          
+          <!-- User Search component - First on mobile -->
+          <div class="search-column">
+            <UserSearch />
           </div>
           
-          <!-- Other Components (2 columns) -->
-          <div class="other-columns">
-            <!-- User Search component -->
-            <UserSearch />
-            
-            <!-- You may know component -->
+          <!-- You may know component - Second on mobile -->
+          <div class="you-may-know-column">
             <YouMayKnow />
+          </div>
+          
+          <!-- Public Profile - Third on mobile, spans 2 columns on desktop -->
+          <div class="profile-column">
+            <PublicProfile :profile-data="profileData" />
           </div>
         </div>
       </div>
@@ -292,35 +296,45 @@ onMounted(() => {
   }
 }
 
-/* Profile Column - Mobile first */
+/* Search Column - First on mobile, right side on desktop */
+.search-column {
+  width: 100%;
+  order: 1;
+}
+
+@media (min-width: 1024px) {
+  .search-column {
+    grid-column: 3 / 5;
+    grid-row: 1;
+    order: initial;
+  }
+}
+
+/* You May Know Column - Second on mobile, right side below search on desktop */
+.you-may-know-column {
+  width: 100%;
+  order: 2;
+}
+
+@media (min-width: 1024px) {
+  .you-may-know-column {
+    grid-column: 3 / 5;
+    grid-row: 2;
+    order: initial;
+  }
+}
+
+/* Profile Column - Third on mobile, left side (2 cols) on desktop */
 .profile-column {
   width: 100%;
+  order: 3;
 }
 
 @media (min-width: 1024px) {
   .profile-column {
-    grid-column: span 2;
-  }
-}
-
-/* Other Columns - Mobile first */
-.other-columns {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .other-columns {
-    gap: 20px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .other-columns {
-    grid-column: span 2;
-    gap: 24px;
+    grid-column: 1 / 3;
+    grid-row: 1 / 3;
+    order: initial;
   }
 }
 </style>
