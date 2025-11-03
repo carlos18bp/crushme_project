@@ -293,14 +293,12 @@ PAYPAL_MODE = 'live'  # Cambiar a 'live' en producción
 # Wompi API settings (Colombian payment gateway - COP only)
 # TODO: Mover estas credenciales a variables de entorno en producción
 # Obtener credenciales en: https://comercios.wompi.co/
-# Documentación: https://docs.wompi.co/
-WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR')
-WOMPI_PRIVATE_KEY = os.environ.get('WOMPI_PRIVATE_KEY', 'prv_test_KfwGaDHAt9QikBRArROhTFbUFobB8dnn')
-WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', 'test_events_yfttSa6ec6puxj8Ld6YTzbzdqY4w47gk')
-WOMPI_INTEGRITY_KEY = os.environ.get('WOMPI_INTEGRITY_KEY', 'test_integrity_Zjk5ESr4C6fLn2vH3JA8G2MPTqHIsPy1')  # Para firmar transacciones
-WOMPI_BASE_URL = 'https://sandbox.wompi.co/v1'  # Sandbox API para testing
-WOMPI_CHECKOUT_URL = 'https://checkout.wompi.co'  # Mismo checkout para sandbox y producción (diferencia por llaves)
-WOMPI_ENVIRONMENT = 'test'  # 'test' o 'production'
+WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', 'pub_prod_yG6ag71rCqGUJmVfgrYPSOFQfkjGHXOT')
+WOMPI_PRIVATE_KEY = os.environ.get('WOMPI_PRIVATE_KEY', 'prv_prod_LuKNH2CnnkVpOWlaXFpFUBXJ4GrDbfpv')
+WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', 'prod_events_rNsdyOwA4n7bBe0zapMOynNB7vV7Dql0')
+WOMPI_INTEGRITY_KEY = os.environ.get('WOMPI_INTEGRITY_KEY', 'prod_integrity_OusORPFWl3nwhPa2q4FYpGwwosFWiMJ3')  # Para firmar transacciones
+WOMPI_BASE_URL = 'https://production.wompi.co/v1'  # Sandbox URL para testing
+WOMPI_ENVIRONMENT = 'production'  # 'test' o 'production'
 
 # Production/Development environment flag
 # Set to True in production, False in development
