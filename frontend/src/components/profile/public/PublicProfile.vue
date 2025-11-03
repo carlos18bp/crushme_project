@@ -383,21 +383,24 @@ const copyProfileLink = async () => {
   }
 }
 
-// Buy entire wishlist - Navigate to checkout with wishlist data
+// Buy entire wishlist - Navigate to wishlist redirect route
 const buyWishlist = (wishlist) => {
   const username = profile.value.username?.replace('@', '') || route.params.username
   
+  // Navigate to the wishlist redirect route that loads products to cart
   router.push({
-    name: `Checkout-${i18nStore.locale}`,
-    query: {
-      giftMode: 'true',
+    name: `WishlistCheckoutRedirect-${i18nStore.locale}`,
+    params: {
       username: username,
-      wishlistId: wishlist.id,
-      wishlistName: wishlist.name
+      wishlistId: wishlist.id
     }
   })
   
-  console.log('🎁 Navigating to checkout for wishlist:', wishlist.name)
+  console.log('🎁 Navigating to wishlist checkout redirect:', {
+    username,
+    wishlistId: wishlist.id,
+    wishlistName: wishlist.name
+  })
 }
 
 // Copy wishlist link to clipboard
