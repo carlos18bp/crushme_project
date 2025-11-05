@@ -18,18 +18,23 @@ export default defineConfig({
     'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'),
   },
   
-  // Configuración para build
+  // Configuración para build con cache busting
   build: {
     outDir: '../backend/static/frontend',
     emptyOutDir: true,
+    manifest: true, // Genera manifest.json para mapear archivos con hash
     rollupOptions: {
       output: {
-        entryFileNames: 'index.js',
+        // Genera archivos JS con hash en el nombre
+        entryFileNames: 'assets/[name].[hash].js',
+        // Genera archivos CSS con hash en el nombre
+        chunkFileNames: 'assets/[name].[hash].js',
+        // Genera otros assets (imágenes, fuentes) con hash
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) {
-            return 'index.css'
+            return 'assets/[name].[hash].css'
           }
-          return assetInfo.name
+          return 'assets/[name].[hash].[ext]'
         }
       }
     }

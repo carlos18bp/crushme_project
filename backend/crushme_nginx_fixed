@@ -6,18 +6,34 @@ server {
         log_not_found off; 
     }
     
+    # Assets de Vue con hash: cache largo e immutable (cache busting)
+    location /static/frontend/assets/ {
+        alias /home/ryzepeck/webapps/crushme_project/backend/static/frontend/assets/;
+        access_log off;
+        etag on;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        
+        # Compresión para archivos JS/CSS
+        gzip on;
+        gzip_types text/css application/javascript application/json;
+        gzip_vary on;
+    }
+    
+    # Otros archivos estáticos (sin hash): cache moderado
     location /static/ {
         alias /home/ryzepeck/webapps/crushme_project/backend/static/;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
     }
     
     location /media/ {
         alias /home/ryzepeck/webapps/crushme_project/backend/media/;
         expires 7d;
-        add_header Cache-Control "public";
+        add_header Cache-Control "public, max-age=604800";
     }
 
+    # HTML servido por Django: NUNCA cachear (para que siempre cargue nuevos hashes)
     location / {
         proxy_pass http://unix:/run/gunicorn.sock;
         proxy_set_header X-Real-IP $remote_addr;
@@ -25,6 +41,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Host $http_host;
         proxy_redirect off;
+        
+        # NO CACHEAR HTML para que siempre obtenga los nuevos hashes de assets
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
         
         # Increase timeouts for long-running requests
         proxy_connect_timeout 600s;
