@@ -1,15 +1,22 @@
-{% load static %}
+{% load static vite_asset %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="https://crushme.com.co/static/frontend/BUY.png" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'frontend/assets/BUY.DouXL_bQ.png' %}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Permissions Policy for PayPal SDK -->
     <meta http-equiv="Permissions-Policy" content="unload=()">
     <title>CrushMe</title>
-    <script type="module" crossorigin src="{% static 'frontend/index.js' %}"></script>
-    <link rel="stylesheet" crossorigin href="{% static 'frontend/index.css' %}">
+    
+    {# Cargar archivos CSS con hash (cache busting) #}
+    {% vite_css 'index.html' as css_files %}
+    {% for css_file in css_files %}
+    <link rel="stylesheet" crossorigin href="{{ css_file }}">
+    {% endfor %}
+    
+    {# Cargar archivo JS principal con hash (cache busting) #}
+    <script type="module" crossorigin src="{% vite_asset 'index.html' %}"></script>
   </head>
   <body>
     <div id="app"></div>
