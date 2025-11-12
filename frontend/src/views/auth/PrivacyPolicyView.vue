@@ -142,7 +142,7 @@
           <section class="privacy-section">
             <h2 class="section-title">{{ $t('privacy.sections.contact.title') }}</h2>
             <p class="section-content">{{ $t('privacy.sections.contact.content') }}</p>
-            <p class="contact-info">{{ $t('privacy.sections.contact.email') }}</p>
+            <p class="contact-info">{{ $t('privacy.sections.contact.email') }}@{{ $t('privacy.sections.contact.emailDomain') }}</p>
             <p class="contact-info">{{ $t('privacy.sections.contact.support') }}</p>
           </section>
           

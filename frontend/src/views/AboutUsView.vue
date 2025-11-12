@@ -176,7 +176,7 @@ import diaryImage from '@/assets/about_us/about_us_3.png'
 
 const router = useRouter()
 const i18nStore = useI18nStore()
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 // Handle banner interactions
 const handleShopCollection = () => {
@@ -187,34 +187,24 @@ const handleExploreDiaries = () => {
   router.push(`/${i18nStore.locale}/diaries`)
 }
 
-// Corporate Values - cargados desde traducciones
+// Corporate Values - convertir objeto a array
 const corporateValues = computed(() => {
-  const items = []
+  const values = []
   let i = 0
-  while (t(`aboutUs.corporateValues.${i}`, null) !== null) {
-    const item = t(`aboutUs.corporateValues.${i}`)
-    if (item && !item.includes('aboutUs.corporateValues')) {
-      items.push(item)
-      i++
-    } else {
-      break
-    }
+  while (te(`aboutUs.corporateValues.${i}`)) {
+    values.push(t(`aboutUs.corporateValues.${i}`))
+    i++
   }
-  return items
+  return values
 })
 
-// What Makes Us Different - cargados desde traducciones
+// What Makes Us Different - convertir objeto a array
 const whatMakesUsDifferent = computed(() => {
   const items = []
   let i = 0
-  while (t(`aboutUs.whatMakesUsDifferent.${i}`, null) !== null) {
-    const item = t(`aboutUs.whatMakesUsDifferent.${i}`)
-    if (item && !item.includes('aboutUs.whatMakesUsDifferent')) {
-      items.push(item)
-      i++
-    } else {
-      break
-    }
+  while (te(`aboutUs.whatMakesUsDifferent.${i}`)) {
+    items.push(t(`aboutUs.whatMakesUsDifferent.${i}`))
+    i++
   }
   return items
 })

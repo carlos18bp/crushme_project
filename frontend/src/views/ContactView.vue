@@ -45,7 +45,7 @@
                 {{ $t('contact.for') }}:
               </label>
               <div class="text-brand-dark font-poppins text-xs md:text-sm bg-white/20 rounded-lg px-3 py-2">
-                {{ $t('contact.to') }}
+                {{ $t('contact.to') }}@{{ $t('contact.toDomain') }}
               </div>
             </div>
 
@@ -59,7 +59,7 @@
                 v-model="form.email"
                 type="email"
                 required
-                :placeholder="$t('contact.emailPlaceholder')"
+                :placeholder="`${$t('contact.emailPlaceholder')}@${$t('contact.emailPlaceholderDomain')}`"
                 class="w-full font-poppins !bg-transparent backdrop-blur-sm border-0 rounded-lg px-3 py-2 text-xs md:text-sm text-brand-dark placeholder-brand-dark/60 focus:outline-none focus:ring-2 focus:ring-brand-pink-dark/50 transition-all duration-200"
               />
             </div>

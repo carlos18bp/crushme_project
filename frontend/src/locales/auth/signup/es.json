@@ -32,7 +32,7 @@
     "uppercase": "Al menos una letra mayúscula (A-Z)",
     "lowercase": "Al menos una letra minúscula (a-z)",
     "number": "Al menos un número (0-9)",
-    "special": "Al menos un carácter especial (!@#$%^&*)"
+    "special": "Al menos un carácter especial (!#$%^&*)"
   }
 }
 

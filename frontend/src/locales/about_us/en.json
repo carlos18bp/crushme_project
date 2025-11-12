@@ -10,21 +10,21 @@
   "visionTitle": "Vision",
   "visionText": "To be Latin America's leading platform, inspiring thousands to gift emotions, seduce with style, and build deep bonds through intimate, meaningful gestures.",
   "corporateValuesTitle": "Corporate Values",
-  "corporateValues": [
-    "Trust & Discretion: every gesture is kept in the privacy it deserves.",
-    "Passion: we pour heart and sensuality into every experience.",
-    "Authenticity: every detail reflects a unique, personal bond.",
-    "Creativity: we reinvent the art of surprising and enchanting.",
-    "Closeness: we support each user so the gift conveys exactly what they feel."
-  ],
+  "corporateValues": {
+    "0": "Trust & Discretion: every gesture is kept in the privacy it deserves.",
+    "1": "Passion: we pour heart and sensuality into every experience.",
+    "2": "Authenticity: every detail reflects a unique, personal bond.",
+    "3": "Creativity: we reinvent the art of surprising and enchanting.",
+    "4": "Closeness: we support each user so the gift conveys exactly what they feel."
+  },
   "whatMakesUsDifferentTitle": "What Makes Us Different?",
   "whatMakesUsDifferentIntro": "We don't just offer a product catalog—we create experiences.",
-  "whatMakesUsDifferent": [
-    "We fuse romance and eroticism in one elegant, safe space.",
-    "We turn every purchase into a gesture of intimacy and seduction.",
-    "We guarantee absolute discretion so desire can be expressed without barriers.",
-    "We are more than a store—we are a bridge to intimacy."
-  ],
+  "whatMakesUsDifferent": {
+    "0": "We fuse romance and eroticism in one elegant, safe space.",
+    "1": "We turn every purchase into a gesture of intimacy and seduction.",
+    "2": "We guarantee absolute discretion so desire can be expressed without barriers.",
+    "3": "We are more than a store—we are a bridge to intimacy."
+  },
   "bannerDescription": "Dare to gift emotions that captivate and details that seduce. Choose pieces that whisper romance and awaken desire—tasteful, discreet, unforgettable. Every gift becomes a scene in your story; let the next chapter begin here, with elegance you can feel and privacy you can trust.",
   "shopCollectionBtn": "Shop the Collection",
   "exploreDiariesBtn": "Explore Diaries"

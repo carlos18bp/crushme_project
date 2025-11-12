@@ -10,21 +10,21 @@
   "visionTitle": "Visión",
   "visionText": "Ser la plataforma líder de Latinoamérica, inspirando a miles a regalar emociones, seducir con estilo y construir vínculos profundos a través de gestos íntimos y significativos.",
   "corporateValuesTitle": "Valores Corporativos",
-  "corporateValues": [
-    "Confianza y Discreción: cada gesto se mantiene en la privacidad que merece.",
-    "Pasión: volcamos corazón y sensualidad en cada experiencia.",
-    "Autenticidad: cada detalle refleja un vínculo único y personal.",
-    "Creatividad: reinventamos el arte de sorprender y encantar.",
-    "Cercanía: apoyamos a cada usuario para que el regalo transmita exactamente lo que siente."
-  ],
+  "corporateValues": {
+    "0": "Confianza y Discreción: cada gesto se mantiene en la privacidad que merece.",
+    "1": "Pasión: volcamos corazón y sensualidad en cada experiencia.",
+    "2": "Autenticidad: cada detalle refleja un vínculo único y personal.",
+    "3": "Creatividad: reinventamos el arte de sorprender y encantar.",
+    "4": "Cercanía: apoyamos a cada usuario para que el regalo transmita exactamente lo que siente."
+  },
   "whatMakesUsDifferentTitle": "¿Qué nos hace diferentes?",
   "whatMakesUsDifferentIntro": "No solo ofrecemos un catálogo de productos—creamos experiencias.",
-  "whatMakesUsDifferent": [
-    "Fusionamos romance y erotismo en un espacio elegante y seguro.",
-    "Convertimos cada compra en un gesto de intimidad y seducción.",
-    "Garantizamos discreción absoluta para que el deseo se pueda expresar sin barreras.",
-    "Somos más que una tienda—somos un puente hacia la intimidad."
-  ],
+  "whatMakesUsDifferent": {
+    "0": "Fusionamos romance y erotismo en un espacio elegante y seguro.",
+    "1": "Convertimos cada compra en un gesto de intimidad y seducción.",
+    "2": "Garantizamos discreción absoluta para que el deseo se pueda expresar sin barreras.",
+    "3": "Somos más que una tienda—somos un puente hacia la intimidad."
+  },
   "bannerDescription": "Atrévete a regalar emociones que cautivan y detalles que seducen. Elige piezas que susurren romance y despierten el deseo—elegantes, discretas, inolvidables. Cada regalo se convierte en una escena de tu historia; deja que el próximo capítulo comience aquí, con elegancia que puedes sentir y privacidad en la que puedes confiar.",
   "shopCollectionBtn": "Ver la Colección",
   "exploreDiariesBtn": "Explorar Diarios"
