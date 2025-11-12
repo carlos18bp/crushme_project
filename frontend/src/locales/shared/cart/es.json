@@ -82,24 +82,64 @@
     },
     "form": {
       "email": "Correo electrónico",
-      "username": "Usuario",
-      "note": "Nota",
+      "emailGift": "Tu correo electrónico",
+      "fullName": "Nombre completo",
+      "country": "País",
+      "address1": "Dirección línea 1",
+      "address2": "Dirección línea 2",
+      "city": "Ciudad",
+      "state": "Departamento",
+      "zipCode": "Código postal",
+      "phone": "Teléfono",
+      "additionalDetails": "Detalles adicionales de dirección (opcional)",
+      "recipientUsername": "Usuario que recibe el regalo",
+      "giftNote": "Nota para {username}",
       "paymentMethod": "Método de pago",
       "selectPaymentMethod": "Selecciona tu método de pago preferido",
       "orderSummary": "Resumen del pedido",
       "subtotal": "Subtotal",
-      "shipping": "Se calcula en el checkout",
-      "tax": "Impuestos (19%)",
+      "shipping": "Envío",
+      "tax": "Impuestos",
       "total": "Total",
       "includesTax": "Incluye {tax} en impuestos",
       "taxIncluded": "✓ IVA (19%) ya incluido en el precio: {tax}",
+      "shippingCost": "📦 Costo de envío: {cost}",
+      "loadingProducts": "Cargando productos...",
+      "color": "Color",
+      "size": "Talla",
+      "variation": "Variación",
+      "discountCode": "Código de descuento",
+      "discountApplied": "🎉 Descuento {code} (-{percentage}%)",
+      "taxIncludedBadge": "(Incluido)",
       "placeholders": {
         "email": "tu{'@'}ejemplo.com",
+        "emailGift": "tu{'@'}correo.com",
+        "fullName": "Juan Pérez",
+        "address1": "Calle 123 #45-67",
+        "address2": "Apto, suite, número de unidad, etc. (opcional)",
+        "city": "Ej: Bogotá, Medellín, Cali...",
+        "zipCode": "11001",
+        "phone": "300 123 4567",
+        "additionalDetails": "Instrucciones especiales de entrega, códigos de acceso, detalles del edificio, etc.",
         "searchUser": "Buscar usuario...",
-        "note": "Escribe algo dulce (o mantenlo sorpresa 😊)"
+        "giftNote": "Escribe algo dulce para esa persona...",
+        "discountCode": "Ingresa tu código",
+        "selectState": "Selecciona un departamento"
       },
       "help": {
-        "username": "Esta es la forma en que tu Crush te reconocerá como remitente 💕"
+        "emailGift": "Enviaremos la factura de compra a este correo (privado)",
+        "recipientUsername": "¿Quién recibirá este regalo?"
+      },
+      "buttons": {
+        "payWithWompi": "Pagar con Wompi →",
+        "continueToPay": "Continuar al pago →",
+        "completeRequired": "Completa todos los campos obligatorios",
+        "validate": "Validar",
+        "validating": "Validando...",
+        "remove": "Remover"
+      },
+      "paypal": {
+        "title": "Completa tu pago con PayPal"
       }
     }
   }

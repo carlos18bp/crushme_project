@@ -22,33 +22,36 @@
 
           <!-- Email (shown for both shipping types) -->
           <div class="form-group">
-            <label for="email">{{ $t('cart.checkout.form.email') }} <span class="text-red-500">*</span></label>
+            <label for="email">{{ shippingType === 'gift' ? $t('cart.checkout.form.emailGift') : $t('cart.checkout.form.email') }} <span class="text-red-500">*</span></label>
             <input
               type="email"
               id="email"
               v-model="shippingForm.email"
-              :placeholder="$t('cart.checkout.form.placeholders.email')"
+              :placeholder="shippingType === 'gift' ? $t('cart.checkout.form.placeholders.emailGift') : $t('cart.checkout.form.placeholders.email')"
               class="form-input"
               required
             >
+            <p v-if="shippingType === 'gift'" class="gift-field-description">
+              {{ $t('cart.checkout.form.help.emailGift') }}
+            </p>
           </div>
 
           <!-- For Me Shipping Fields -->
           <template v-if="shippingType === 'me'" class="gift-form-section">
             <div class="form-group">
-              <label for="fullname">Full name <span class="text-red-500">*</span></label>
+              <label for="fullname">{{ $t('cart.checkout.form.fullName') }} <span class="text-red-500">*</span></label>
               <input
                 type="text"
                 id="fullname"
                 v-model="shippingForm.fullName"
-                placeholder="John Doe"
+                :placeholder="$t('cart.checkout.form.placeholders.fullName')"
                 class="form-input"
                 required
               >
             </div>
 
             <div class="form-group">
-              <label for="country">Country</label>
+              <label for="country">{{ $t('cart.checkout.form.country') }}</label>
               <select
                 id="country"
                 v-model="shippingForm.country"
@@ -60,35 +63,35 @@
             </div>
 
             <div class="form-group">
-              <label for="address1">Address line 1 <span class="text-red-500">*</span></label>
+              <label for="address1">{{ $t('cart.checkout.form.address1') }} <span class="text-red-500">*</span></label>
               <input
                 type="text"
                 id="address1"
                 v-model="shippingForm.address1"
-                placeholder="123 Main Street"
+                :placeholder="$t('cart.checkout.form.placeholders.address1')"
                 class="form-input"
                 required
               >
             </div>
 
             <div class="form-group">
-              <label for="address2">Address line 2</label>
+              <label for="address2">{{ $t('cart.checkout.form.address2') }}</label>
               <input
                 type="text"
                 id="address2"
                 v-model="shippingForm.address2"
-                placeholder="Apt, suite, unit number, etc. (optional)"
+                :placeholder="$t('cart.checkout.form.placeholders.address2')"
                 class="form-input"
               >
             </div>
 
             <div class="form-group">
-              <label for="city">Ciudad <span class="text-red-500">*</span></label>
+              <label for="city">{{ $t('cart.checkout.form.city') }} <span class="text-red-500">*</span></label>
               <input
                 type="text"
                 id="city"
                 v-model="shippingForm.city"
-                placeholder="Ej: Bogotá, Medellín, Cali..."
+                :placeholder="$t('cart.checkout.form.placeholders.city')"
                 class="form-input"
                 required
                 list="colombia-cities"
@@ -112,21 +115,21 @@
               </datalist>
               <p class="city-shipping-info" v-if="shippingForm.city">
                 <span>
-                  📦 Costo de envío: {{ formatPrice(shipping) }}
+                  {{ $t('cart.checkout.form.shippingCost', { cost: formatPrice(shipping) }) }}
                 </span>
               </p>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="state">Departamento <span class="text-red-500">*</span></label>
+                <label for="state">{{ $t('cart.checkout.form.state') }} <span class="text-red-500">*</span></label>
                 <select
                   id="state"
                   v-model="shippingForm.state"
                   class="form-input form-select"
                   required
                 >
-                  <option value="">Selecciona un departamento</option>
+                  <option value="">{{ $t('cart.checkout.form.placeholders.selectState') }}</option>
                   <option v-for="state in availableStates" :key="state.isoCode" :value="state.name">
                     {{ state.name }}
                   </option>
@@ -134,12 +137,12 @@
               </div>
 
               <div class="form-group">
-                <label for="zipcode">Código Postal <span class="text-red-500">*</span></label>
+                <label for="zipcode">{{ $t('cart.checkout.form.zipCode') }} <span class="text-red-500">*</span></label>
                 <input
                   type="text"
                   id="zipcode"
                   v-model="shippingForm.zipCode"
-                  placeholder="11001"
+                  :placeholder="$t('cart.checkout.form.placeholders.zipCode')"
                   class="form-input"
                   required
                 >
@@ -147,7 +150,7 @@
             </div>
 
             <div class="form-group">
-              <label for="phone">Phone <span class="text-red-500">*</span></label>
+              <label for="phone">{{ $t('cart.checkout.form.phone') }} <span class="text-red-500">*</span></label>
               <div class="phone-input">
                 <select v-model="shippingForm.phoneCode" class="phone-code" disabled>
                   <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
@@ -158,7 +161,7 @@
                   type="tel"
                   id="phone"
                   v-model="shippingForm.phone"
-                  placeholder="300 123 4567"
+                  :placeholder="$t('cart.checkout.form.placeholders.phone')"
                   class="form-input phone-number"
                   required
                 >
@@ -166,11 +169,11 @@
             </div>
 
             <div class="form-group">
-              <label for="additional">Additional address details (optional)</label>
+              <label for="additional">{{ $t('cart.checkout.form.additionalDetails') }}</label>
               <textarea
                 id="additional"
                 v-model="shippingForm.additionalDetails"
-                placeholder="Special delivery instructions, gate codes, building details, etc."
+                :placeholder="$t('cart.checkout.form.placeholders.additionalDetails')"
                 class="form-textarea"
                 rows="3"
               ></textarea>
@@ -180,7 +183,7 @@
           <!-- For Gift Shipping Fields -->
           <template v-if="shippingType === 'gift'" class="gift-form-section">
             <div class="form-group">
-              <label for="username">{{ $t('cart.checkout.form.username') }} <span class="text-red-500">*</span></label>
+              <label for="username">{{ $t('cart.checkout.form.recipientUsername') }} <span class="text-red-500">*</span></label>
               <div class="username-search-container">
                 <input
                   type="text"
@@ -212,17 +215,17 @@
                   </div>
                 </div>
               </div>
-              <p v-if="isUserAuthenticated" class="gift-field-description">
-                <span class="highlight">@{{ authStore.username }}</span> {{ $t('cart.checkout.form.help.username') }}
+              <p class="gift-field-description">
+                {{ $t('cart.checkout.form.help.recipientUsername') }}
               </p>
             </div>
 
             <div class="form-group">
-              <label for="note">{{ $t('cart.checkout.form.note') }}</label>
+              <label for="note">{{ giftNoteLabel }}</label>
               <textarea
                 id="note"
                 v-model="shippingForm.note"
-                :placeholder="$t('cart.checkout.form.placeholders.note')"
+                :placeholder="$t('cart.checkout.form.placeholders.giftNote')"
                 class="form-textarea"
                 rows="3"
               ></textarea>
@@ -236,14 +239,14 @@
               :disabled="!isFormValid"
               class="continue-payment-btn"
             >
-              {{ isFormValid ? (currencyStore.currentCurrency === 'COP' ? 'Pagar con Wompi →' : 'Continuar al pago →') : 'Completa todos los campos obligatorios' }}
+              {{ isFormValid ? (currencyStore.currentCurrency === 'COP' ? $t('cart.checkout.form.buttons.payWithWompi') : $t('cart.checkout.form.buttons.continueToPay')) : $t('cart.checkout.form.buttons.completeRequired') }}
             </button>
             <p v-if="formError" class="payment-error">{{ formError }}</p>
           </div>
 
           <!-- PayPal Buttons Section (USD only) -->
           <div v-if="showPayPalButtons && currencyStore.currentCurrency === 'USD'" id="paypal-section" class="paypal-section">
-            <h3 class="paypal-title">Completa tu pago con PayPal</h3>
+            <h3 class="paypal-title">{{ $t('cart.checkout.form.paypal.title') }}</h3>
             <div id="paypal-button-container"></div>
           </div>
         </div>
@@ -256,7 +259,7 @@
           
           <!-- Loading State -->
           <div v-if="cartStore.isUpdating" class="loading-state">
-            <p>Cargando productos...</p>
+            <p>{{ $t('cart.checkout.form.loadingProducts') }}</p>
           </div>
           
           <!-- Products List -->
@@ -274,8 +277,8 @@
               </div>
               <div class="product-details">
                 <h4 class="product-name">{{ item.name || 'Product' }}</h4>
-                <p class="product-meta" v-if="item.color">Color: {{ item.color }}</p>
-                <p class="product-meta" v-if="item.size">Talla: {{ item.size }}</p>
+                <p class="product-meta" v-if="item.color">{{ $t('cart.checkout.form.color') }}: {{ item.color }}</p>
+                <p class="product-meta" v-if="item.size">{{ $t('cart.checkout.form.size') }}: {{ item.size }}</p>
                 <!-- ⭐ Mostrar atributos de variación -->
                 <p class="product-meta" v-if="item.attributes && Object.keys(item.attributes).length > 0">
                   <span v-for="(value, key) in item.attributes" :key="key">
@@ -284,7 +287,7 @@
                 </p>
                 <!-- ⭐ Mostrar ID de variación (debug) -->
                 <p class="product-meta variation-id" v-if="item.variation_id">
-                  Variación: #{{ item.variation_id }}
+                  {{ $t('cart.checkout.form.variation') }}: #{{ item.variation_id }}
                 </p>
               </div>
               <div class="product-quantity">
@@ -298,14 +301,14 @@
 
           <!-- Discount Code -->
           <div class="discount-section">
-            <h3 class="discount-title">Código de descuento</h3>
+            <h3 class="discount-title">{{ $t('cart.checkout.form.discountCode') }}</h3>
             
             <!-- Input y botón de validación -->
             <div v-if="!discountData" class="discount-input">
               <input 
                 type="text" 
                 v-model="discountCode"
-                placeholder="Ingresa tu código"
+                :placeholder="$t('cart.checkout.form.placeholders.discountCode')"
                 class="form-input"
                 :disabled="isValidatingDiscount"
                 @keyup.enter="validateDiscountCode"
@@ -315,7 +318,7 @@
                 :disabled="isValidatingDiscount || !discountCode.trim()"
                 class="validate-btn"
               >
-                {{ isValidatingDiscount ? 'Validando...' : 'Validar' }}
+                {{ isValidatingDiscount ? $t('cart.checkout.form.buttons.validating') : $t('cart.checkout.form.buttons.validate') }}
               </button>
             </div>
 
@@ -363,13 +366,13 @@
             <!-- Badge de descuento aplicado -->
             <div v-if="discountData" class="total-row discount-row">
               <span class="discount-label">
-                🎉 Descuento {{ discountData.code }} (-{{ discountData.discount_percentage }}%)
+                {{ $t('cart.checkout.form.discountApplied', { code: discountData.code, percentage: discountData.discount_percentage }) }}
               </span>
               <span class="total-value discount-value">-{{ formatPrice(discountAmount) }}</span>
             </div>
             
             <div class="total-row tax-row">
-              <span>{{ $t('cart.checkout.form.tax') }} <span class="tax-included-badge">(Incluido)</span></span>
+              <span>{{ $t('cart.checkout.form.tax') }} <span class="tax-included-badge">{{ $t('cart.checkout.form.taxIncludedBadge') }}</span></span>
               <span class="total-value tax-included-value">{{ formatPrice(tax) }}</span>
             </div>
           </div>
@@ -491,6 +494,16 @@ const cartItems = computed(() => cartStore.items);
 
 // Check if user is authenticated and has username
 const isUserAuthenticated = computed(() => authStore.isLoggedIn && authStore.username);
+
+// ⭐ Dynamic gift note label with selected username
+const giftNoteLabel = computed(() => {
+  if (selectedGiftUser.value && selectedGiftUser.value.username) {
+    return i18nStore.locale === 'es' 
+      ? `Nota para @${selectedGiftUser.value.username}`
+      : `Note for @${selectedGiftUser.value.username}`;
+  }
+  return i18nStore.locale === 'es' ? 'Nota para el destinatario' : 'Note for recipient';
+});
 
 // ⭐ User search functionality
 const searchUsers = async (query) => {
@@ -692,7 +705,7 @@ const proceedToPayment = async () => {
       woocommerce_variation_id: item.variation_id || null,
       product_name: item.name,
       quantity: item.quantity,
-      unit_price: parseFloat(item.price),
+      unit_price: currencyStore.currentCurrency === 'USD' ? parseFloat(parseFloat(item.price).toFixed(2)) : parseFloat(item.price),
       attributes: item.attributes || null
     }));
 
@@ -703,7 +716,7 @@ const proceedToPayment = async () => {
         woocommerce_variation_id: null,
         product_name: dropshippingProduct.value.name,
         quantity: 1,
-        unit_price: parseFloat(dropshippingProduct.value.price),
+        unit_price: currencyStore.currentCurrency === 'USD' ? parseFloat(parseFloat(dropshippingProduct.value.price).toFixed(2)) : parseFloat(dropshippingProduct.value.price),
         attributes: null
       });
       console.log('📦 [DROPSHIPPING] Producto agregado a items');
@@ -723,8 +736,8 @@ const proceedToPayment = async () => {
         receiver_username: shippingForm.value.username.replace('@', ''),
         gift_message: shippingForm.value.note || '',
         is_gift: true,
-        shipping: baseShipping.value,
-        total: total.value,
+        shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
+        total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value,
         // Incluir wishlist data si existe
         is_from_wishlist: !!wishlistId.value,
         wishlist_id: wishlistId.value || null,
@@ -757,8 +770,8 @@ const proceedToPayment = async () => {
         shipping_country: countryName,
         phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
         notes: shippingForm.value.additionalDetails || '',
-        shipping: baseShipping.value,
-        total: total.value
+        shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
+        total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value
       };
     }
 

@@ -300,17 +300,19 @@ class PayPalService:
         # Build purchase units with items
         items = []
         for item in cart_items:
+            unit_price = round(float(item['unit_price']), 2)
             items.append({
                 'name': item['product_name'],
                 'quantity': str(item['quantity']),
                 'unit_amount': {
                     'currency_code': 'USD',  # PayPal requiere USD
-                    'value': str(item['unit_price'])
+                    'value': f"{unit_price:.2f}"
                 }
             })
         
         # Calculate breakdown
         items_total = sum(float(item['unit_price']) * item['quantity'] for item in cart_items)
+        items_total = round(items_total, 2)
         
         # Normalize country code for PayPal API
         country_code = self._normalize_country_code(shipping_info.get('country', 'US'))
@@ -318,10 +320,15 @@ class PayPalService:
         # Build breakdown with shipping
         # NOTA: Los precios de productos YA INCLUYEN IVA del 19% (impuesto incluido en Colombia)
         # Por lo tanto, NO agregamos 'tax' como campo separado en el breakdown
+        
+        # Round shipping and total to 2 decimals
+        shipping_cost = round(float(shipping_cost), 2) if shipping_cost else 0
+        total_amount = round(float(total_amount), 2)
+        
         breakdown = {
             'item_total': {
                 'currency_code': 'USD',
-                'value': str(items_total)  # IVA 19% ya incluido
+                'value': f"{items_total:.2f}"  # IVA 19% ya incluido
             }
         }
         
@@ -329,7 +336,7 @@ class PayPalService:
         if shipping_cost and shipping_cost > 0:
             breakdown['shipping'] = {
                 'currency_code': 'USD',
-                'value': str(shipping_cost)
+                'value': f"{shipping_cost:.2f}"
             }
             logger.info(f"💰 [PAYPAL PAYLOAD] Including shipping in breakdown: {shipping_cost}")
         
@@ -339,7 +346,7 @@ class PayPalService:
                 {
                     'amount': {
                         'currency_code': 'USD',
-                        'value': str(total_amount),
+                        'value': f"{total_amount:.2f}",
                         'breakdown': breakdown
                     },
                     'items': items,

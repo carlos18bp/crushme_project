@@ -115,16 +115,19 @@ def create_paypal_order_data(data_dict):
             cart_items.append({
                 'product_name': item['product_name'],
                 'quantity': item['quantity'],
-                'unit_price': float(item['unit_price']),
+                'unit_price': round(float(item['unit_price']), 2),
                 'woocommerce_product_id': item['woocommerce_product_id']
             })
             items_total += float(item['unit_price']) * item['quantity']
 
+        # Round to 2 decimals to avoid floating point precision errors
+        items_total = round(items_total, 2)
+        
         # Get shipping cost from request
-        shipping_cost = float(data_dict.get('shipping', 0))
+        shipping_cost = round(float(data_dict.get('shipping', 0)), 2)
         
         # Total DEBE incluir productos + shipping para PayPal
-        total_amount = items_total + shipping_cost
+        total_amount = round(items_total + shipping_cost, 2)
         
         # Log para debugging
         logger.info(f"💰 [PAYPAL] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")

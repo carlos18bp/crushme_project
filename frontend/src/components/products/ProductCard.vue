@@ -149,6 +149,10 @@ const props = defineProps({
   giftMode: {
     type: Boolean,
     default: false
+  },
+  recipientUsername: {
+    type: String,
+    default: ''
   }
 })
 
@@ -380,6 +384,7 @@ const handleAddToCart = async () => {
 
 const handleBuyAsGift = async () => {
   console.log('🎁 [ProductCard] handleBuyAsGift clicked for product:', props.product.id)
+  console.log('🎁 [ProductCard] Recipient username:', props.recipientUsername)
   
   // Si es un producto variable, redirigir al detalle
   if (props.product.type === 'variable') {
@@ -396,6 +401,10 @@ const handleBuyAsGift = async () => {
   }
   
   try {
+    // ⭐ Limpiar el carrito primero (solo queremos este producto)
+    cartStore.clearCart()
+    console.log('🗑️ [ProductCard] Carrito limpiado')
+    
     // Agregar el producto al carrito (siempre 1 unidad)
     const result = cartStore.addToCart(props.product.id, 1, {
       name: props.product.name,
@@ -408,8 +417,17 @@ const handleBuyAsGift = async () => {
     console.log('🎁 [ProductCard] handleBuyAsGift result:', result)
     
     if (result.success) {
-      // Redirigir al checkout
-      router.push({ name: `Checkout-${i18nStore.locale}` })
+      // ⭐ Redirigir al checkout en modo gift con username
+      const checkoutRoute = {
+        name: `Checkout-${i18nStore.locale}`,
+        query: {
+          giftMode: 'true',
+          username: props.recipientUsername
+        }
+      }
+      
+      console.log('🎁 [ProductCard] Redirecting to checkout:', checkoutRoute)
+      router.push(checkoutRoute)
     }
   } catch (error) {
     console.error('Error al comprar el producto como regalo:', error)

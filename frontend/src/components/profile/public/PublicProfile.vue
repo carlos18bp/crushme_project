@@ -177,6 +177,7 @@
                     v-if="item.product_info"
                     :product="formatProductForCard(item)"
                     :gift-mode="true"
+                    :recipient-username="profile.username"
                     @navigate-to-product="navigateToProduct"
                     @add-to-cart="handleAddToCart"
                   />
@@ -383,24 +384,17 @@ const copyProfileLink = async () => {
   }
 }
 
-// Buy entire wishlist - Navigate to wishlist redirect route
+// Buy entire wishlist - Navigate to the shareable path
 const buyWishlist = (wishlist) => {
-  const username = profile.value.username?.replace('@', '') || route.params.username
+  // Use shareable_path from backend (e.g., "/@username/1")
+  const wishlistPath = wishlist.shareable_path
   
-  // Navigate to the wishlist redirect route that loads products to cart
-  router.push({
-    name: `WishlistCheckoutRedirect-${i18nStore.locale}`,
-    params: {
-      username: username,
-      wishlistId: wishlist.id
-    }
-  })
-  
-  console.log('🎁 Navigating to wishlist checkout redirect:', {
-    username,
-    wishlistId: wishlist.id,
-    wishlistName: wishlist.name
-  })
+  if (wishlistPath) {
+    console.log('🎁 Navigating to wishlist:', wishlistPath)
+    router.push(wishlistPath)
+  } else {
+    console.error('❌ No shareable_path found in wishlist:', wishlist)
+  }
 }
 
 // Copy wishlist link to clipboard

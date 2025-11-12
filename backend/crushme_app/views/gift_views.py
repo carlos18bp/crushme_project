@@ -89,11 +89,12 @@ def send_gift(request):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         # Get shipping cost from request
-        shipping_cost = float(request.data.get('shipping', 0))
+        shipping_cost = round(float(request.data.get('shipping', 0)), 2)
         
         # Calculate total (items + shipping)
         items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
-        total_amount = items_total + shipping_cost
+        items_total = round(items_total, 2)
+        total_amount = round(items_total + shipping_cost, 2)
         
         # Log for debugging
         logger.info(f"🎁 [GIFT] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")

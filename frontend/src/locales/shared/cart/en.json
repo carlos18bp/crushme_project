@@ -82,24 +82,64 @@
     },
     "form": {
       "email": "Email",
-      "username": "Username",
-      "note": "Note",
+      "emailGift": "Your email",
+      "fullName": "Full name",
+      "country": "Country",
+      "address1": "Address line 1",
+      "address2": "Address line 2",
+      "city": "City",
+      "state": "State",
+      "zipCode": "Postal code",
+      "phone": "Phone",
+      "additionalDetails": "Additional address details (optional)",
+      "recipientUsername": "Recipient's username",
+      "giftNote": "Note for {username}",
       "paymentMethod": "Payment method",
       "selectPaymentMethod": "Select your preferred payment method",
       "orderSummary": "Order Summary",
       "subtotal": "Subtotal",
-      "shipping": "Calculated at checkout",
-      "tax": "Tax (19%)",
+      "shipping": "Shipping",
+      "tax": "Tax",
       "total": "Total",
       "includesTax": "Includes {tax} in taxes",
       "taxIncluded": "✓ VAT (19%) already included in price: {tax}",
+      "shippingCost": "📦 Shipping cost: {cost}",
+      "loadingProducts": "Loading products...",
+      "color": "Color",
+      "size": "Size",
+      "variation": "Variation",
+      "discountCode": "Discount code",
+      "discountApplied": "🎉 Discount {code} (-{percentage}%)",
+      "taxIncludedBadge": "(Included)",
       "placeholders": {
         "email": "you{'@'}example.com",
+        "emailGift": "your{'@'}email.com",
+        "fullName": "John Doe",
+        "address1": "123 Main Street",
+        "address2": "Apt, suite, unit number, etc. (optional)",
+        "city": "e.g., Bogotá, Medellín, Cali...",
+        "zipCode": "11001",
+        "phone": "300 123 4567",
+        "additionalDetails": "Special delivery instructions, gate codes, building details, etc.",
         "searchUser": "Search user...",
-        "note": "Whisper something sweet (or keep it a surprise 😊)"
+        "giftNote": "Write something sweet for them...",
+        "discountCode": "Enter your code",
+        "selectState": "Select a state"
       },
       "help": {
-        "username": "This is how your Crush will recognize you as the sender 💕"
+        "emailGift": "We'll send the purchase invoice to this email (private)",
+        "recipientUsername": "Who will receive this gift?"
+      },
+      "buttons": {
+        "payWithWompi": "Pay with Wompi →",
+        "continueToPay": "Continue to payment →",
+        "completeRequired": "Complete all required fields",
+        "validate": "Validate",
+        "validating": "Validating...",
+        "remove": "Remove"
+      },
+      "paypal": {
+        "title": "Complete your payment with PayPal"
       }
     }
   }
