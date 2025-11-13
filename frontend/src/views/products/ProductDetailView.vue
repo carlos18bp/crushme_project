@@ -76,21 +76,37 @@
             
             <!-- Right Side: Product Information -->
             <div class="product-info">
-              <!-- Product Title with Favorite Button -->
+              <!-- Product Title with Action Buttons -->
               <div class="flex items-center justify-between gap-4 mb-4">
                 <h1 class="product-title flex-1">{{ product.name }}</h1>
-                <button 
-                  @click="handleToggleFavorite" 
-                  :disabled="isTogglingFavorite"
-                  class="favorite-icon-btn-header"
-                  :title="isFavorited ? $t('productDetail.removeFromFavorites') : $t('productDetail.addToFavorites')"
-                >
-                  <img 
-                    :src="isFavorited ? HeartCheckIcon : HeartNoCheckIcon" 
-                    alt="Favorite icon"
-                    class="w-6 h-6"
-                  />
-                </button>
+                <div class="flex items-center gap-2">
+                  <!-- Wishlist Button -->
+                  <button 
+                    @click="handleAddToWishlist" 
+                    class="action-icon-btn"
+                    :title="$t('productDetail.addToWishlist') || 'Add to wishlist'"
+                  >
+                    <img 
+                      :src="ListCheckIcon" 
+                      alt="Wishlist icon"
+                      class="w-6 h-6"
+                    />
+                  </button>
+                  
+                  <!-- Favorite Button -->
+                  <button 
+                    @click="handleToggleFavorite" 
+                    :disabled="isTogglingFavorite"
+                    class="action-icon-btn"
+                    :title="isFavorited ? $t('productDetail.removeFromFavorites') : $t('productDetail.addToFavorites')"
+                  >
+                    <img 
+                      :src="isFavorited ? HeartCheckIcon : HeartNoCheckIcon" 
+                      alt="Favorite icon"
+                      class="w-6 h-6"
+                    />
+                  </button>
+                </div>
               </div>
               
               <!-- Reviews (Real data or hardcoded fallback) -->
@@ -272,6 +288,8 @@ import ProductReviews from '@/components/products/ProductReviews.vue'
 // Importar iconos SVG
 import HeartCheckIcon from '@/assets/icons/heart/check.svg?url'
 import HeartNoCheckIcon from '@/assets/icons/heart/no_check.svg?url'
+import ListCheckIcon from '@/assets/icons/list/check.svg?url'
+import ListNoCheckIcon from '@/assets/icons/list/no_check.svg?url'
 
 // Props
 defineProps({
@@ -2066,8 +2084,8 @@ watch(product, (newProduct, oldProduct) => {
   opacity: 0.85;
 }
 
-/* Favorite Icon Button - Header */
-.favorite-icon-btn-header {
+/* Action Icon Buttons - Header (Wishlist & Favorite) */
+.action-icon-btn {
   background-color: white;
   border: none;
   padding: 0.75rem;
@@ -2084,7 +2102,7 @@ watch(product, (newProduct, oldProduct) => {
 }
 
 @media (min-width: 640px) {
-  .favorite-icon-btn-header {
+  .action-icon-btn {
     padding: 0.875rem;
     border-radius: 15px;
     min-width: 50px;
@@ -2092,12 +2110,12 @@ watch(product, (newProduct, oldProduct) => {
   }
 }
 
-.favorite-icon-btn-header:hover:not(:disabled) {
+.action-icon-btn:hover:not(:disabled) {
   transform: scale(1.1) rotate(5deg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.favorite-icon-btn-header:disabled {
+.action-icon-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
