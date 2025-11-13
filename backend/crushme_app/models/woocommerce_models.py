@@ -186,6 +186,24 @@ class WooCommerceProduct(models.Model):
         """Get all images ordered by position"""
         return self.images.all().order_by('position')
     
+    @property
+    def final_price(self):
+        """
+        Precio final con margen aplicado (SIEMPRE usar este).
+        Este es el precio que se debe mostrar al cliente.
+        """
+        return self.get_price_with_margin()
+    
+    @property
+    def final_regular_price(self):
+        """Precio regular final con margen aplicado"""
+        return self.get_regular_price_with_margin()
+    
+    @property
+    def final_sale_price(self):
+        """Precio de oferta final con margen aplicado"""
+        return self.get_sale_price_with_margin()
+    
     def get_categories_list(self):
         """Get list of category names"""
         return [cat.name for cat in self.categories.all()]
@@ -344,6 +362,21 @@ class WooCommerceProductVariation(models.Model):
     def get_attribute_description(self):
         """Get human-readable attribute description"""
         return ", ".join([f"{k}: {v}" for k, v in self.attributes.items()])
+    
+    @property
+    def final_price(self):
+        """Precio final con margen aplicado (SIEMPRE usar este)"""
+        return self.get_price_with_margin()
+    
+    @property
+    def final_regular_price(self):
+        """Precio regular final con margen aplicado"""
+        return self.get_regular_price_with_margin()
+    
+    @property
+    def final_sale_price(self):
+        """Precio de oferta final con margen aplicado"""
+        return self.get_sale_price_with_margin()
     
     def get_price_with_margin(self, base_price=None):
         """

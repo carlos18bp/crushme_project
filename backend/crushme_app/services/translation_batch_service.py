@@ -159,6 +159,10 @@ class TranslationBatchService:
                     logger.debug(f"   Skipping long description for product {product.wc_id}")
                     self.stats['skipped'] += 1
                 
+                # Traducir atributos de productos variables
+                if product.is_variable and product.attributes:
+                    self._translate_product_attributes(product, force_retranslate)
+                
                 self.stats['products_translated'] += 1
                 
             except Exception as e:
@@ -275,6 +279,79 @@ class TranslationBatchService:
         except Exception as e:
             logger.error(f"Error translating product {product_id}: {str(e)}")
             return False
+    
+    def _translate_product_attributes(self, product, force_retranslate=False):
+        """
+        Traducir nombres y valores de atributos de un producto variable.
+        
+        Args:
+            product: WooCommerceProduct instance
+            force_retranslate: Re-traducir si ya existe
+        """
+        try:
+            # Recopilar todos los atributos únicos del producto y sus variaciones
+            unique_attributes = set()
+            unique_values = set()
+            
+            # Atributos del producto principal
+            if product.attributes:
+                for attr in product.attributes:
+                    if isinstance(attr, dict):
+                        # Nombre del atributo
+                        attr_name = attr.get('name', '')
+                        if attr_name:
+                            # Limpiar prefijos
+                            clean_name = attr_name.replace('attribute_pa_', '').replace('attribute_', '')
+                            unique_attributes.add(clean_name)
+                        
+                        # Valores del atributo
+                        options = attr.get('options', [])
+                        if isinstance(options, list):
+                            for option in options:
+                                if option and isinstance(option, str):
+                                    unique_values.add(option)
+            
+            # Atributos de las variaciones
+            variations = product.variations.all()
+            for variation in variations:
+                if variation.attributes:
+                    for attr_key, attr_value in variation.attributes.items():
+                        # Nombre del atributo
+                        clean_key = attr_key.replace('attribute_pa_', '').replace('attribute_', '')
+                        unique_attributes.add(clean_key)
+                        
+                        # Valor del atributo
+                        if attr_value:
+                            unique_values.add(attr_value)
+            
+            # Traducir nombres de atributos
+            for attr_name in unique_attributes:
+                if attr_name and attr_name.strip():
+                    # Usar el product ID como object_id para agrupar atributos por producto
+                    # Concatenar "attr_name_" + nombre para hacer único
+                    unique_id = hash(f"{product.wc_id}_attr_name_{attr_name}") % 2147483647
+                    self._translate_field(
+                        content_type=TranslatedContent.CONTENT_TYPE_VARIATION_ATTRIBUTE,
+                        object_id=unique_id,
+                        source_text=attr_name,
+                        force_retranslate=force_retranslate
+                    )
+            
+            # Traducir valores de atributos
+            for attr_value in unique_values:
+                if attr_value and attr_value.strip():
+                    # Usar hash del valor para hacer único
+                    unique_id = hash(f"{product.wc_id}_attr_value_{attr_value}") % 2147483647
+                    self._translate_field(
+                        content_type=TranslatedContent.CONTENT_TYPE_VARIATION_ATTRIBUTE,
+                        object_id=unique_id,
+                        source_text=attr_value,
+                        force_retranslate=force_retranslate
+                    )
+            
+        except Exception as e:
+            logger.error(f"Error translating attributes for product {product.wc_id}: {str(e)}")
+            self.stats['errors'] += 1
     
     def get_translated_text(self, content_type, object_id, target_language='en', fallback_text=''):
         """

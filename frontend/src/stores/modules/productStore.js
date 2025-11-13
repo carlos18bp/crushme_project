@@ -414,8 +414,9 @@ export const useProductStore = defineStore('product', () => {
    * @param {number} options.categoryId - Category ID filter
    * @param {number} options.perPage - Products per page (max 100)
    * @param {number} options.page - Page number
+   * @param {string} options.sortBy - Sort option (popular, price_asc, price_desc, rating, newest)
    */
-  async function fetchWooProducts({ categoryId = null, perPage = 10, page = 1 } = {}) {
+  async function fetchWooProducts({ categoryId = null, perPage = 10, page = 1, sortBy = null } = {}) {
     isLoadingWoo.value = true;
     wooError.value = null;
 
@@ -423,6 +424,9 @@ export const useProductStore = defineStore('product', () => {
       let url = `products/woocommerce/products/?per_page=${perPage}&page=${page}`;
       if (categoryId) {
         url += `&category_id=${categoryId}`;
+      }
+      if (sortBy) {
+        url += `&sort_by=${sortBy}`;
       }
 
       const response = await get_request(url);
@@ -449,10 +453,11 @@ export const useProductStore = defineStore('product', () => {
    * @param {number} categoryId - Category ID
    * @param {number} perPage - Products per page
    * @param {number} page - Page number
+   * @param {string} sortBy - Sort option (popular, price_asc, price_desc, rating, newest)
    */
-  async function fetchWooProductsByCategory(categoryId, perPage = 10, page = 1) {
+  async function fetchWooProductsByCategory(categoryId, perPage = 10, page = 1, sortBy = null) {
     selectedWooCategory.value = categoryId;
-    return await fetchWooProducts({ categoryId, perPage, page });
+    return await fetchWooProducts({ categoryId, perPage, page, sortBy });
   }
 
   /**

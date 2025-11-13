@@ -45,7 +45,7 @@
               <!-- Main product image -->
               <div class="relative">
                 <img 
-                  src="@/assets/about_us/about_us_1.png" 
+                  src="@/assets/home/CTAs/CTA.png" 
                   alt="About Us - Main"
                   class="w-full h-auto object-contain"
                 />
@@ -66,7 +66,7 @@
             <div class="relative flex justify-center lg:justify-start">
               <div class="relative w-full max-w-md lg:max-w-full">
                 <img 
-                  src="@/assets/about_us/about_us_2.png" 
+                  src="@/assets/home/CTAs/CTA2.png" 
                   alt="Mission & Vision"
                   class="w-full h-auto object-contain"
                 />

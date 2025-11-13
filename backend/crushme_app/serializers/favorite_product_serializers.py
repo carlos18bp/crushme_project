@@ -93,8 +93,15 @@ class FavoriteProductListSerializer(serializers.ModelSerializer):
         return obj.product_data.get('name', 'Unknown Product')
     
     def get_product_price(self, obj):
-        """Extract product price from cached data"""
-        return obj.product_data.get('price', '0')
+        """Extract product price WITH MARGIN from local DB or cached data"""
+        # Try to get from local DB first
+        from ..models.woocommerce_models import WooCommerceProduct
+        try:
+            wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
+            return float(wc_product.final_price) if wc_product.final_price else 0.0
+        except WooCommerceProduct.DoesNotExist:
+            # Fallback to cached data
+            return obj.product_data.get('price', '0')
     
     def get_product_image(self, obj):
         """Extract product image URL from cached data"""

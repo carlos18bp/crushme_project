@@ -46,13 +46,13 @@ class WishListItemSerializer(serializers.ModelSerializer):
             return obj.get_product_name()
     
     def get_product_price(self, obj):
-        """Get product price from local DB (in COP) or fallback to cache"""
+        """Get product price WITH MARGIN from local DB (in COP) or fallback to cache"""
         # Try to get from local DB first (prices are in COP)
         from ..models.woocommerce_models import WooCommerceProduct
         try:
             wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
-            # Return price in COP (will be converted later)
-            return float(wc_product.price) if wc_product.price else 0.0
+            # Return price WITH MARGIN in COP (will be converted later)
+            return float(wc_product.final_price) if wc_product.final_price else 0.0
         except WooCommerceProduct.DoesNotExist:
             # Fallback to cache
             return obj.get_product_price()
@@ -70,16 +70,16 @@ class WishListItemSerializer(serializers.ModelSerializer):
             return obj.get_product_image()
     
     def get_product_info(self, obj):
-        """Get full product data from local DB or fallback to cache"""
+        """Get full product data WITH MARGINS from local DB or fallback to cache"""
         # Try to get from local DB first
         from ..models.woocommerce_models import WooCommerceProduct
         try:
             wc_product = WooCommerceProduct.objects.get(wc_id=obj.woocommerce_product_id)
             return {
                 'name': wc_product.name,
-                'price': float(wc_product.price) if wc_product.price else 0.0,
-                'regular_price': float(wc_product.regular_price) if wc_product.regular_price else 0.0,
-                'sale_price': float(wc_product.sale_price) if wc_product.sale_price else 0.0,
+                'price': float(wc_product.final_price) if wc_product.final_price else 0.0,
+                'regular_price': float(wc_product.final_regular_price) if wc_product.final_regular_price else 0.0,
+                'sale_price': float(wc_product.final_sale_price) if wc_product.final_sale_price else 0.0,
                 'stock_status': wc_product.stock_status,
                 'stock_quantity': wc_product.stock_quantity,
                 'on_sale': wc_product.on_sale,

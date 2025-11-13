@@ -228,8 +228,28 @@ export const useWishlistStore = defineStore('wishlist', () => {
         data: updatedWishlist 
       };
     } catch (err) {
-      error.value = err.response?.data?.details || err.response?.data?.error || 'Failed to add product to wishlist';
-      return { success: false, error: error.value };
+      // Manejar diferentes formatos de error del backend
+      let errorMessage = 'Failed to add product to wishlist';
+      
+      if (err.response?.data) {
+        const data = err.response.data;
+        
+        // Si el error viene en formato { "woocommerce_product_id": ["mensaje"] }
+        if (data.woocommerce_product_id && Array.isArray(data.woocommerce_product_id)) {
+          errorMessage = data.woocommerce_product_id[0];
+        }
+        // Si el error viene en formato { "error": "mensaje" }
+        else if (data.error) {
+          errorMessage = data.error;
+        }
+        // Si el error viene en formato { "details": "mensaje" }
+        else if (data.details) {
+          errorMessage = data.details;
+        }
+      }
+      
+      error.value = errorMessage;
+      return { success: false, error: errorMessage };
     } finally {
       isUpdating.value = false;
     }

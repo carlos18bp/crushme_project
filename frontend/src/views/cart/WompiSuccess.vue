@@ -17,7 +17,8 @@
           <p class="order-total">Total: <strong>{{ formatPrice(total) }}</strong></p>
           <p class="order-email">Recibirás un email de confirmación en: <strong>{{ email }}</strong></p>
         </div>
-        <button @click="goToHome" class="btn-primary">Ir al inicio</button>
+        <p class="redirect-message">Redirigiendo al inicio en {{ redirectCountdown }} segundo{{ redirectCountdown !== 1 ? 's' : '' }}...</p>
+        <button @click="goToHome" class="btn-primary">Ir al inicio ahora</button>
       </div>
 
       <!-- Error State -->
@@ -55,6 +56,7 @@ const orderNumber = ref('');
 const total = ref(0);
 const email = ref('');
 const errorMessage = ref('');
+const redirectCountdown = ref(3);
 
 // Methods
 const formatPrice = (price) => {
@@ -121,6 +123,15 @@ async function confirmPayment() {
 
       // Limpiar estado de pago
       paymentStore.clearPaymentState();
+
+      // Iniciar contador de redirección
+      const countdownInterval = setInterval(() => {
+        redirectCountdown.value--;
+        if (redirectCountdown.value <= 0) {
+          clearInterval(countdownInterval);
+          goToHome();
+        }
+      }, 1000);
 
     } else {
       throw new Error(result.error || 'Error al confirmar el pago');
@@ -238,6 +249,13 @@ onMounted(async () => {
   color: var(--color-brand-pink-dark);
   font-weight: 600;
   font-size: 1.125rem;
+}
+
+.redirect-message {
+  color: var(--color-brand-blue-medium);
+  font-size: 0.9375rem;
+  margin: 1.5rem 0 1rem 0;
+  font-style: italic;
 }
 
 /* Error State */

@@ -60,13 +60,26 @@ def get_organized_categories(request):
         
         all_categories = result['data']
         
+        # Obtener idioma objetivo
+        translator = create_translator_from_request(request)
+        
         # Organizar por temas
         organized = organize_categories_by_theme(all_categories)
         
         # Traducir nombres de categorías y temas
-        translator = create_translator_from_request(request)
         if translator.target_language != 'es':
-            organized = translate_category_names(organized, translator)
+            # Traducir cada tema
+            for theme in organized:
+                # Traducir nombre del tema principal
+                theme['name'] = translator.translate_if_needed(theme['name'], content_language='es')
+                
+                # Traducir categorías dentro del tema
+                for category in theme.get('categories', []):
+                    category['name'] = translator.translate_if_needed(category['name'], content_language='es')
+                    
+                    # Traducir subcategorías
+                    for subcategory in category.get('subcategories', []):
+                        subcategory['name'] = translator.translate_if_needed(subcategory['name'], content_language='es')
         
         # Preparar respuesta
         response_data = {
@@ -156,6 +169,23 @@ def organize_categories_by_theme(categories):
     # Crear un diccionario para búsqueda rápida
     category_map = {cat['id']: cat for cat in categories}
     
+    # Helper function to calculate total count including subcategories
+    def get_total_count_with_subcategories(cat_id, categories):
+        """Calculate total product count including all subcategories recursively"""
+        cat = category_map.get(cat_id)
+        if not cat:
+            return 0
+        
+        # Start with the category's own count
+        total = cat.get('count', 0)
+        
+        # Add counts from all subcategories recursively
+        for sub in categories:
+            if sub['parent'] == cat_id:
+                total += get_total_count_with_subcategories(sub['id'], categories)
+        
+        return total
+    
     # Organizar categorías en temas
     for theme_key, theme_data in themes.items():
         all_category_ids = theme_data['main_categories'] + theme_data['related_categories']
@@ -164,8 +194,11 @@ def organize_categories_by_theme(categories):
             if cat_id in category_map:
                 cat = category_map[cat_id]
                 
-                # Filtrar categorías sin productos
-                if cat.get('count', 0) == 0:
+                # Calculate total count including subcategories
+                total_count = get_total_count_with_subcategories(cat_id, categories)
+                
+                # Filtrar categorías sin productos (ni en ella ni en subcategorías)
+                if total_count == 0:
                     continue
                 
                 # Buscar subcategorías si las tiene (solo las que tienen productos)
@@ -183,7 +216,8 @@ def organize_categories_by_theme(categories):
                     'id': cat['id'],
                     'name': cat['name'],
                     'slug': cat['slug'],
-                    'count': cat['count'],
+                    'count': total_count,  # Use total count including subcategories
+                    'direct_count': cat['count'],  # Keep original count for reference
                     'is_main': cat_id in theme_data['main_categories'],
                     'has_subcategories': len(subcategories) > 0,
                     'subcategories': subcategories if subcategories else []

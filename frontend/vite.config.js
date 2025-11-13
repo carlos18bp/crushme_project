@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   define: {
-    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify(process.env.VITE_PAYPAL_CLIENT_ID),
+    // Wompi public key (fallback to test key if not provided)
     'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify(process.env.VITE_WOMPI_PUBLIC_KEY || 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR'),
   },
   server: {

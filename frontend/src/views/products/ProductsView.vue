@@ -340,28 +340,23 @@ const pageTitle = computed(() => {
   return t('products.title')
 })
 
-// ⭐ NUEVA LÓGICA: Productos directamente del store (ya vienen paginados del backend)
+// ⭐ Productos directamente del store (ya vienen ordenados del backend)
 const displayedProducts = computed(() => {
-  const products = productStore.wooProducts
-  
-  // Ordenar localmente si es necesario
-  const sorted = [...products]
-  
-  switch (sortBy.value) {
-    case 'mostPopular':
-      return sorted.sort((a, b) => (b.total_sales || 0) - (a.total_sales || 0))
-    case 'priceLowHigh':
-      return sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
-    case 'priceHighLow':
-      return sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
-    case 'newest':
-      return sorted.sort((a, b) => new Date(b.date_created) - new Date(a.date_created))
-    case 'bestRating':
-      return sorted.sort((a, b) => parseFloat(b.average_rating || 0) - parseFloat(a.average_rating || 0))
-    default:
-      return sorted
-  }
+  // El backend ya envía los productos ordenados según el parámetro sort_by
+  return productStore.wooProducts
 })
+
+// Mapeo de opciones del frontend a parámetros del backend
+const getSortByParam = (sortOption) => {
+  const sortMap = {
+    'mostPopular': 'popular',
+    'priceLowHigh': 'price_asc',
+    'priceHighLow': 'price_desc',
+    'newest': 'newest',
+    'bestRating': 'rating'
+  }
+  return sortMap[sortOption] || null
+}
 
 // ⭐ Total de productos (global o por categoría/tema/búsqueda)
 const totalProducts = computed(() => {
@@ -461,10 +456,30 @@ const onThemeSelect = async (themeSlug) => {
  * ⭐ Cargar productos de un tema (solo 9)
  */
 const loadThemeProducts = async (themeSlug) => {
+  const sortParam = getSortByParam(sortBy.value)
+  await loadThemeProductsWithSort(themeSlug, sortParam)
+}
+
+/**
+ * ⭐ Cargar productos de un tema con ordenamiento
+ */
+const loadThemeProductsWithSort = async (themeSlug, sortParam) => {
   try {
-    const result = await productStore.fetchProductsByTheme(themeSlug, 9, 1)
-    if (result.success) {
-      console.log(`✅ Productos de ${themeSlug} cargados:`, result.data.length)
+    const theme = productStore.getThemeBySlug(themeSlug)
+    if (!theme) {
+      console.error('Tema no encontrado:', themeSlug)
+      return
+    }
+
+    // Si el tema tiene una categoría principal, usar esa
+    const mainCategory = theme.categories.find(cat => cat.is_main)
+    const categoryId = mainCategory ? mainCategory.id : theme.categories[0]?.id
+    
+    if (categoryId) {
+      const result = await productStore.fetchWooProductsByCategory(categoryId, 9, currentPage.value, sortParam)
+      if (result.success) {
+        console.log(`✅ Productos de ${themeSlug} cargados con sort=${sortParam}:`, result.data.length)
+      }
     }
   } catch (error) {
     console.error('Error cargando productos del tema:', error)
@@ -493,11 +508,12 @@ const selectCategory = async (categoryId) => {
   // Actualizar URL
   updateURL()
   
-  // ⭐ Cargar solo 9 productos de la categoría
+  // ⭐ Cargar solo 9 productos de la categoría con ordenamiento
+  const sortParam = getSortByParam(sortBy.value)
   try {
-    const result = await productStore.fetchWooProductsByCategory(categoryId, 9, 1)
+    const result = await productStore.fetchWooProductsByCategory(categoryId, 9, 1, sortParam)
     if (result.success) {
-      console.log(`✅ Productos de categoría ${categoryId} cargados:`, result.data.length)
+      console.log(`✅ Productos de categoría ${categoryId} cargados con sort=${sortParam}:`, result.data.length)
     }
   } catch (error) {
     console.error('Error cargando productos de categoría:', error)
@@ -519,20 +535,46 @@ const clearAllFilters = async () => {
   updateURL()
   
   console.log('🔄 Limpiando filtros, cargando productos generales...')
-  // Cargar primeros 9 productos sin filtros
-  const result = await productStore.fetchWooProducts({ perPage: 9, page: 1 })
+  // Cargar primeros 9 productos sin filtros pero con ordenamiento
+  const sortParam = getSortByParam(sortBy.value)
+  const result = await productStore.fetchWooProducts({ perPage: 9, page: 1, sortBy: sortParam })
   if (result.success) {
-    console.log('✅ Productos generales cargados:', result.data.length)
+    console.log(`✅ Productos generales cargados con sort=${sortParam}:`, result.data.length)
   }
 }
 
-const handleSortChange = (event) => {
+const handleSortChange = async (event) => {
   sortBy.value = event.target.value
   currentPage.value = 1 // Reset to first page when sorting
+  
+  // Recargar productos con el nuevo ordenamiento
+  await loadProductsWithSort()
 }
 
 /**
- * ⭐ NUEVO: Cambiar de página - Carga 9 productos de esa página
+ * ⭐ Cargar productos con el ordenamiento actual
+ */
+const loadProductsWithSort = async () => {
+  const sortParam = getSortByParam(sortBy.value)
+  
+  try {
+    if (selectedCategory.value) {
+      // Cargar productos de categoría con ordenamiento
+      await productStore.fetchWooProductsByCategory(selectedCategory.value, 9, currentPage.value, sortParam)
+    } else if (selectedTheme.value) {
+      // Cargar productos de tema con ordenamiento
+      await loadThemeProductsWithSort(selectedTheme.value, sortParam)
+    } else {
+      // Cargar todos los productos con ordenamiento
+      await productStore.fetchWooProducts({ perPage: 9, page: currentPage.value, sortBy: sortParam })
+    }
+  } catch (error) {
+    console.error('Error cargando productos con ordenamiento:', error)
+  }
+}
+
+/**
+ * ⭐ NUEVO: Cambiar de página - Carga 9 productos de esa página con ordenamiento
  */
 const changePage = async (newPage) => {
   if (newPage < 1) return
@@ -543,6 +585,8 @@ const changePage = async (newPage) => {
   
   // Actualizar URL con nueva página
   updateURL()
+  
+  const sortParam = getSortByParam(sortBy.value)
   
   try {
     // Si hay una búsqueda activa, paginar en los resultados de búsqueda
@@ -556,17 +600,17 @@ const changePage = async (newPage) => {
     }
     // Determinar qué cargar según el contexto
     else if (selectedCategory.value) {
-      // Cargar página de categoría específica
-      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de categoría ${selectedCategory.value}`)
-      await productStore.fetchWooProductsByCategory(selectedCategory.value, 9, newPage)
+      // Cargar página de categoría específica con ordenamiento
+      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de categoría ${selectedCategory.value} con sort=${sortParam}`)
+      await productStore.fetchWooProductsByCategory(selectedCategory.value, 9, newPage, sortParam)
     } else if (selectedTheme.value) {
-      // Cargar página de tema
-      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de tema ${selectedTheme.value}`)
-      await productStore.fetchProductsByTheme(selectedTheme.value, 9, newPage)
+      // Cargar página de tema con ordenamiento
+      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de tema ${selectedTheme.value} con sort=${sortParam}`)
+      await loadThemeProductsWithSort(selectedTheme.value, sortParam)
     } else {
-      // Cargar página de todos los productos
-      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de todos los productos`)
-      await productStore.fetchWooProducts({ perPage: 9, page: newPage })
+      // Cargar página de todos los productos con ordenamiento
+      console.log(`📄 PAGINATION DEBUG - Cargando página ${newPage} de todos los productos con sort=${sortParam}`)
+      await productStore.fetchWooProducts({ perPage: 9, page: newPage, sortBy: sortParam })
     }
     
     console.log(`📄 PAGINATION DEBUG - Después de cargar página ${newPage}, productos en store:`, productStore.wooProducts.length)

@@ -41,9 +41,32 @@
         </button>
       </div>
       
+      <!-- Success Message -->
+      <div v-if="successMessage" class="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl animate-fade-in">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0">
+            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+          </div>
+        </div>
+      </div>
+      
       <!-- Error -->
-      <div v-if="error" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-        <p class="text-sm text-red-800">{{ error }}</p>
+      <div v-if="error" class="mt-4 p-4 bg-pink-50 border-2 border-pink-200 rounded-xl animate-fade-in">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0">
+            <svg class="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-pink-800">{{ error }}</p>
+          </div>
+        </div>
       </div>
       
       <!-- Actions -->
@@ -81,12 +104,24 @@ const wishlistStore = useWishlistStore()
 const isAdding = ref(false)
 const selectedWishlistId = ref(null)
 const error = ref(null)
+const successMessage = ref(null)
 
 // Watch for show prop to load wishlists
-watch(() => props.show, async (newValue) => {
-  if (newValue) {
+watch(() => props.show, async (newValue, oldValue) => {
+  // Solo cargar si cambió de false a true (evitar loops)
+  if (newValue && !oldValue) {
     error.value = null
+    successMessage.value = null
+    selectedWishlistId.value = null
+    isAdding.value = false
     await wishlistStore.fetchWishlists()
+  }
+  // Limpiar estado cuando se cierra
+  if (!newValue && oldValue) {
+    error.value = null
+    successMessage.value = null
+    selectedWishlistId.value = null
+    isAdding.value = false
   }
 })
 
@@ -96,6 +131,7 @@ const selectWishlist = async (wishlistId) => {
   isAdding.value = true
   selectedWishlistId.value = wishlistId
   error.value = null
+  successMessage.value = null
   
   try {
     const result = await wishlistStore.addWooCommerceProductToWishlist(
@@ -106,9 +142,16 @@ const selectWishlist = async (wishlistId) => {
     )
     
     if (result.success) {
+      // Mostrar mensaje de éxito
+      successMessage.value = 'Product added to wishlist!'
       emit('added', wishlistId)
-      emit('close')
+      
+      // Delay para que el usuario vea el éxito antes de cerrar
+      setTimeout(() => {
+        emit('close')
+      }, 800)
     } else {
+      // Mostrar error de forma más amigable
       error.value = result.error || 'Failed to add product to wishlist'
     }
   } catch (err) {
@@ -121,4 +164,19 @@ const selectWishlist = async (wishlistId) => {
 }
 </script>
 
+<style scoped>
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+</style>

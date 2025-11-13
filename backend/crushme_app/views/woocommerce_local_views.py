@@ -63,32 +63,100 @@ def search_woocommerce_products(request):
         
         logger.info(f"🔍 Búsqueda de productos: '{search_query}' (lang={target_lang}, currency={target_currency}, page={page})")
         
+        # Normalizar búsqueda: quitar acentos y convertir a minúsculas
+        from django.db.models import Q
+        import unicodedata
+        
+        def normalize_text(text):
+            """Normaliza texto: quita acentos, convierte a minúsculas"""
+            text = text.lower()
+            # Quitar acentos
+            text = ''.join(
+                c for c in unicodedata.normalize('NFD', text)
+                if unicodedata.category(c) != 'Mn'
+            )
+            return text
+        
+        def get_search_variations(word):
+            """Genera variaciones de una palabra (singular/plural)"""
+            variations = [word]
+            
+            # Si termina en 's', quitar la 's' (plural -> singular)
+            if word.endswith('s') and len(word) > 3:
+                variations.append(word[:-1])
+            
+            # Si termina en 'es', quitar 'es' (plural -> singular)
+            if word.endswith('es') and len(word) > 4:
+                variations.append(word[:-2])
+            
+            # Si no termina en 's', agregar 's' (singular -> plural)
+            if not word.endswith('s'):
+                variations.append(word + 's')
+                variations.append(word + 'es')
+            
+            return variations
+        
+        # Normalizar query
+        normalized_query = normalize_text(search_query)
+        
+        # Dividir en palabras y generar variaciones
+        search_words = []
+        for word in normalized_query.split():
+            search_words.extend(get_search_variations(word))
+        
         # Buscar según idioma
         if target_lang == 'es':
-            # Buscar en español (campo original name)
+            # Buscar en español (nombre y descripción corta)
+            # Crear query que busque cada palabra en nombre o descripción
+            q_objects = Q()
+            for word in search_words:
+                q_objects |= Q(name__icontains=word) | Q(short_description__icontains=word)
+            
+            # También buscar la frase completa
+            q_objects |= Q(name__icontains=search_query) | Q(short_description__icontains=search_query)
+            
             queryset = WooCommerceProduct.objects.filter(
-                status='publish',
-                name__icontains=search_query
-            ).prefetch_related('categories', 'images').select_related()
+                status='publish'
+            ).filter(q_objects).prefetch_related('categories', 'images').select_related().distinct()
             
             logger.info(f"📝 Búsqueda en español: {queryset.count()} resultados totales")
             
         else:
-            # Buscar en inglés (traducciones)
-            # Obtener IDs de productos con traducciones que coincidan
-            translated_products = TranslatedContent.objects.filter(
+            # Buscar en inglés (traducciones de nombre y descripción)
+            # Crear query para búsqueda por palabras en traducciones
+            q_objects = Q()
+            for word in search_words:
+                q_objects |= Q(translated_text__icontains=word)
+            
+            # También buscar la frase completa
+            q_objects |= Q(translated_text__icontains=search_query)
+            
+            # Buscar en nombres traducidos
+            translated_names = TranslatedContent.objects.filter(
                 content_type=TranslatedContent.CONTENT_TYPE_PRODUCT_NAME,
-                target_language=target_lang,
-                translated_text__icontains=search_query
-            ).values_list('object_id', flat=True)
+                target_language=target_lang
+            ).filter(q_objects).values_list('object_id', flat=True)
+            
+            # Buscar en descripciones cortas traducidas
+            translated_descriptions = TranslatedContent.objects.filter(
+                content_type=TranslatedContent.CONTENT_TYPE_PRODUCT_SHORT_DESC,
+                target_language=target_lang
+            ).filter(q_objects).values_list('object_id', flat=True)
+            
+            # Combinar IDs de ambas búsquedas
+            translated_products = set(list(translated_names) + list(translated_descriptions))
             
             # Si no hay traducciones, buscar en el nombre original como fallback
             if not translated_products:
                 logger.info(f"⚠️ No se encontraron traducciones, buscando en nombres originales")
+                q_objects_fallback = Q()
+                for word in search_words:
+                    q_objects_fallback |= Q(name__icontains=word)
+                q_objects_fallback |= Q(name__icontains=search_query)
+                
                 queryset = WooCommerceProduct.objects.filter(
-                    status='publish',
-                    name__icontains=search_query
-                ).prefetch_related('categories', 'images').select_related()
+                    status='publish'
+                ).filter(q_objects_fallback).prefetch_related('categories', 'images').select_related()
             else:
                 # Obtener productos por IDs encontrados
                 queryset = WooCommerceProduct.objects.filter(
@@ -160,6 +228,13 @@ def get_woocommerce_products_local(request):
     - per_page: Productos por página (máx 100, default 20)
     - page: Número de página (default 1)
     - lang: Idioma (es/en, también soporta Accept-Language header)
+    - sort_by: Ordenamiento (opcional):
+        * 'popular' - Más vendidos (por número de compras)
+        * 'price_asc' - Precio menor a mayor
+        * 'price_desc' - Precio mayor a menor
+        * 'rating' - Mejor calificados (por rating promedio)
+        * 'newest' - Más recientes
+        * default - Sin ordenamiento específico
     
     Retorna productos con:
     - Traducciones pre-calculadas
@@ -167,10 +242,15 @@ def get_woocommerce_products_local(request):
     - Datos locales (ultra rápido)
     """
     try:
+        from django.db.models import Count, Avg, Q
+        from ..models.order import OrderItem
+        from ..models.review import Review
+        
         # Obtener parámetros
         category_id = request.query_params.get('category_id')
         per_page = min(int(request.query_params.get('per_page', 20)), 100)
         page = int(request.query_params.get('page', 1))
+        sort_by = request.query_params.get('sort_by', '').lower()
         target_lang = get_language_from_request(request)
         
         # Base queryset: solo productos publicados
@@ -182,6 +262,48 @@ def get_woocommerce_products_local(request):
         if category_id:
             category_id = int(category_id)
             queryset = queryset.filter(categories__wc_id=category_id)
+        
+        # Aplicar ordenamiento según el parámetro sort_by
+        if sort_by == 'popular':
+            # Ordenar por número de compras (más vendidos primero)
+            queryset = queryset.annotate(
+                purchase_count=Count('wc_id', filter=Q(
+                    wc_id__in=OrderItem.objects.values_list('woocommerce_product_id', flat=True)
+                ))
+            ).order_by('-purchase_count', '-wc_id')
+            
+        elif sort_by == 'price_asc':
+            # Precio menor a mayor
+            queryset = queryset.order_by('price')
+            
+        elif sort_by == 'price_desc':
+            # Precio mayor a menor
+            queryset = queryset.order_by('-price')
+            
+        elif sort_by == 'rating':
+            # Ordenar por rating promedio (mejor calificados primero)
+            # Subconsulta para obtener el rating promedio de cada producto
+            from django.db.models import Subquery, OuterRef
+            
+            # Obtener rating promedio para cada producto
+            rating_subquery = Review.objects.filter(
+                woocommerce_product_id=OuterRef('wc_id'),
+                is_active=True
+            ).values('woocommerce_product_id').annotate(
+                avg_rating=Avg('rating')
+            ).values('avg_rating')
+            
+            queryset = queryset.annotate(
+                avg_rating=Subquery(rating_subquery)
+            ).order_by('-avg_rating', '-wc_id')
+            
+        elif sort_by == 'newest':
+            # Más recientes primero (por fecha de creación en WooCommerce)
+            queryset = queryset.order_by('-date_created_wc')
+        
+        # Si no hay sort_by o es inválido, usar orden por defecto (ID descendente)
+        else:
+            queryset = queryset.order_by('-wc_id')
         
         # Paginación
         total_count = queryset.count()
@@ -217,7 +339,8 @@ def get_woocommerce_products_local(request):
             },
             'filters': {
                 'category_id': category_id,
-                'language': target_lang
+                'language': target_lang,
+                'sort_by': sort_by if sort_by else 'default'
             },
             'source': 'local_db'  # Indicador de que viene de DB local
         }, status=status.HTTP_200_OK)
@@ -705,36 +828,8 @@ def get_product_variation_detail_local(request, product_id, variation_id):
         
         # Calcular margen del producto padre (se aplica a la variación)
         # Las variaciones heredan el margen de la categoría del producto padre
+        # Get margin info for debugging (optional)
         margin_info = calculate_product_price(product, target_currency)
-        
-        # Aplicar el margen a los precios de la variación
-        def apply_margin_to_variation_price(base_price, margin_info):
-            """Aplica el mismo margen del producto padre al precio de la variación"""
-            if not base_price:
-                return None
-            
-            # Extract margin percentage from string (e.g., "Aceites Para Masajes: +30.00%" -> 30.0)
-            margin_percentage = None
-            if margin_info.get('margin_applied'):
-                try:
-                    import re
-                    match = re.search(r'[+-]?(\d+(?:\.\d+)?)', str(margin_info['margin_applied']))
-                    if match:
-                        margin_percentage = float(match.group(1))
-                except (ValueError, AttributeError):
-                    margin_percentage = None
-            
-            # Apply margin if exists
-            if margin_percentage:
-                margin_multiplier = 1 + (margin_percentage / 100)
-                final_price = round(float(base_price) * margin_multiplier, 2)
-            else:
-                final_price = float(base_price)
-            
-            # Convert to target currency
-            from ..utils.currency_converter import CurrencyConverter
-            converted_price = CurrencyConverter.convert_price(final_price, target_currency)
-            return converted_price
         
         # Obtener categorías del producto padre (traducidas)
         categories = []
@@ -773,9 +868,11 @@ def get_product_variation_detail_local(request, product_id, variation_id):
             })
         
         # Construir respuesta completa con datos locales
-        converted_price = apply_margin_to_variation_price(variation.price, margin_info)
-        converted_regular_price = apply_margin_to_variation_price(variation.regular_price, margin_info)
-        converted_sale_price = apply_margin_to_variation_price(variation.sale_price, margin_info)
+        # Usar final_price que ya tiene el margen aplicado, luego convertir a currency
+        from ..utils.currency_converter import CurrencyConverter
+        converted_price = CurrencyConverter.convert_price(variation.final_price, target_currency) if variation.final_price else None
+        converted_regular_price = CurrencyConverter.convert_price(variation.final_regular_price, target_currency) if variation.final_regular_price else None
+        converted_sale_price = CurrencyConverter.convert_price(variation.final_sale_price, target_currency) if variation.final_sale_price else None
         
         variation_data = {
             'id': variation.wc_id,

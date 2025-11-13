@@ -137,10 +137,10 @@ def calculate_product_price(product, target_currency='COP'):
             'on_sale': product.on_sale
         }
     
-    # Use the new model methods to apply margins
-    final_price = product.get_price_with_margin()
-    final_regular_price = product.get_regular_price_with_margin()
-    final_sale_price = product.get_sale_price_with_margin()
+    # Use the model properties to get prices with margins applied
+    final_price = product.final_price
+    final_regular_price = product.final_regular_price
+    final_sale_price = product.final_sale_price
     
     # Get margin info for logging/debugging
     margin = None
@@ -197,9 +197,14 @@ def get_product_full_data(product, target_language='en', include_stock=True, tar
     Returns:
         dict: Complete product data
     """
+    from ..services.translation_service import TranslationService
+    
     # Get product instance if ID was provided
     if isinstance(product, int):
         product = WooCommerceProduct.objects.get(wc_id=product)
+    
+    # Create translator for attribute translations
+    translator = TranslationService(target_language=target_language)
     
     # Get translations
     translated = get_translated_product(product, target_language)
@@ -287,8 +292,8 @@ def get_product_full_data(product, target_language='en', include_stock=True, tar
                     attributes_map[attr_key] = set()
                 attributes_map[attr_key].add(attr_value)
             
-            # Use variation's get_price_with_margin method (inherits from parent product)
-            variation_price_with_margin = variation.get_price_with_margin()
+            # Use variation's final_price property (with margin applied)
+            variation_price_with_margin = variation.final_price
             
             # Convert variation price to target currency
             converted_variation_price = CurrencyConverter.convert_price(variation_price_with_margin, target_currency) if variation_price_with_margin else None
@@ -303,19 +308,53 @@ def get_product_full_data(product, target_language='en', include_stock=True, tar
                 'converted_price': converted_variation_price
             })
         
-        # Convert attributes to list format
+        # Convert attributes to list format with translations
         attributes_list = []
         for attr_key, attr_values in attributes_map.items():
             # Clean attribute key (remove 'attribute_pa_' prefix if exists)
             clean_key = attr_key.replace('attribute_pa_', '').replace('attribute_', '')
+            
+            # Translate attribute name
+            translated_attr_name = translator.translate_if_needed(clean_key, content_language='es')
+            
+            # Translate attribute values
+            translated_options = []
+            for option_value in sorted(list(attr_values)):
+                translated_value = translator.translate_if_needed(option_value, content_language='es')
+                translated_options.append(translated_value)
+            
             attributes_list.append({
-                'name': clean_key,
+                'name': translated_attr_name,
+                'name_original': clean_key,  # Keep original for reference
                 'slug': attr_key,
-                'options': sorted(list(attr_values))
+                'options': translated_options
             })
         
         data['attributes'] = attributes_list
-        data['available_variations'] = variations_summary
+        
+        # Translate attributes in variations summary
+        translated_variations_summary = []
+        for variation in variations_summary:
+            translated_attributes = {}
+            for attr_key, attr_value in variation['attributes'].items():
+                # Clean attribute key
+                clean_key = attr_key.replace('attribute_pa_', '').replace('attribute_', '')
+                # Translate both key and value
+                translated_key = translator.translate_if_needed(clean_key, content_language='es')
+                translated_value = translator.translate_if_needed(attr_value, content_language='es')
+                translated_attributes[translated_key] = translated_value
+            
+            translated_variations_summary.append({
+                'id': variation['id'],
+                'attributes': translated_attributes,
+                'attributes_original': variation['attributes'],  # Keep original for matching
+                'in_stock': variation['in_stock'],
+                'stock_quantity': variation['stock_quantity'],
+                'price': variation['price'],
+                'converted_price': variation['converted_price']
+            })
+        
+        data['available_variations'] = translated_variations_summary
     else:
         data['is_variable'] = False
     

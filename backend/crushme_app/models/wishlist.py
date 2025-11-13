@@ -90,15 +90,15 @@ class WishList(models.Model):
     
     @property
     def total_value(self):
-        """Calculate total value of all items in wishlist (in COP)"""
+        """Calculate total value WITH MARGINS of all items in wishlist (in COP)"""
         from .woocommerce_models import WooCommerceProduct
         total = 0
         for item in self.items.all():
-            # Try to get price from local DB first (prices are in COP)
+            # Try to get price WITH MARGIN from local DB first (prices are in COP)
             try:
                 wc_product = WooCommerceProduct.objects.get(wc_id=item.woocommerce_product_id)
-                if wc_product.price:
-                    total += float(wc_product.price)
+                if wc_product.final_price:
+                    total += float(wc_product.final_price)
             except WooCommerceProduct.DoesNotExist:
                 # Fallback to cached product data
                 price = item.get_product_price()
