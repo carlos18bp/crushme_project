@@ -12,8 +12,10 @@ export default defineConfig({
     },
   },
   define: {
-    // Wompi public key (fallback to test key if not provided)
-    'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify(process.env.VITE_WOMPI_PUBLIC_KEY || 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR'),
+    // Wompi public key
+    'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify('pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR'),
+    // PayPal client ID
+    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AXOC4gQsXk_e8NhrrZRorJzU3rld7lOJP5_2S8RYDKUgjkDT-2wfc-1Eu1AqYQseWTcJA_VBEnGUUGCQ'),
   },
   server: {
     port: 5173,

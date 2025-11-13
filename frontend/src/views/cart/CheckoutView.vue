@@ -193,7 +193,7 @@
                   class="form-input username-search-input"
                   autocomplete="off"
                   @focus="showUserSearchResults = crushStore.searchResults.length > 0"
-                  @blur="() => setTimeout(() => showUserSearchResults = false, 200)"
+                  @blur="handleUsernameBlur"
                 >
                 <!-- Search Results Dropdown -->
                 <div v-if="showUserSearchResults && crushStore.searchResults.length > 0" class="username-search-results">
@@ -517,6 +517,13 @@ const searchUsers = async (query) => {
   } catch (error) {
     console.error('Error searching users:', error);
   }
+};
+
+// ⭐ Handle username input blur
+const handleUsernameBlur = () => {
+  setTimeout(() => {
+    showUserSearchResults.value = false;
+  }, 200);
 };
 
 // ⭐ Select user from search results
@@ -860,21 +867,17 @@ const loadPayPalScript = async () => {
       return;
     }
 
-    console.log('💳 [PAYPAL] Obteniendo configuración...');
-    
-    const configResult = await paymentStore.fetchPayPalConfig();
-    
-    if (!configResult.success) {
-      console.error('❌ [PAYPAL] Error al obtener configuración');
-      reject(new Error(configResult.error));
-      return;
-    }
-
-    const config = configResult.data;
     console.log('💳 [PAYPAL] Cargando SDK...');
     
+    // Usar client ID desde vite.config.js
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    const currency = currencyStore.currentCurrency; // USD
+    
+    console.log('💳 [PAYPAL] Client ID:', clientId);
+    console.log('💳 [PAYPAL] Currency:', currency);
+    
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${config.client_id}&buyer-country=US&currency=${config.currency}&components=buttons&enable-funding=venmo,paylater,card`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=${currency}&components=buttons&enable-funding=venmo,paylater,card`;
     script.setAttribute('data-sdk-integration-source', 'developer-studio');
     
     script.onload = () => {

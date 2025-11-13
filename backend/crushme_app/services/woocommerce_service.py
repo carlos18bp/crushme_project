@@ -35,8 +35,7 @@ class WooCommerceService:
                 url,
                 auth=self.auth,
                 params=params,
-                timeout=self.timeout,
-                headers={'Content-Type': 'application/json'}
+                timeout=self.timeout
             )
             
             # Log de la respuesta para debugging
