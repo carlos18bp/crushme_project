@@ -6,6 +6,7 @@
       '--rotation': `${rotation}deg`,
       '--pin-rotation': `${pinRotation}deg`
     }"
+    @click="goToDiary"
   >
     <!-- Pin -->
     <div class="pin" :class="`pin-${pinPosition}`">
@@ -105,8 +106,8 @@ const rotationClass = computed(() => {
 
 // Navigate to user's diary
 const goToDiary = () => {
-  const currentLang = i18nStore.locale
-  router.push(`/${currentLang}/diaries/@${props.username}`)
+  console.log('🔄 Navigating to diary:', props.username)
+  router.push(`/diaries/@${props.username}`)
 }
 </script>
 

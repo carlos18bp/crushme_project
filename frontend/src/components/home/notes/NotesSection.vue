@@ -16,7 +16,10 @@
       
       <!-- Tercera fila: Botón alineado a la izquierda -->
       <div class="flex justify-start w-full">
-        <button class="px-8 md:px-10 lg:px-12 py-3 md:py-4 lg:py-[1.125rem] bg-slate-600 text-white border-none rounded-full font-poppins text-base md:text-lg lg:text-xl font-medium cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-slate-700 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,0,0,0.15)] active:translate-y-0 w-full sm:w-auto">
+        <button 
+          @click="goToMyDiaries"
+          class="px-8 md:px-10 lg:px-12 py-3 md:py-4 lg:py-[1.125rem] bg-slate-600 text-white border-none rounded-full font-poppins text-base md:text-lg lg:text-xl font-medium cursor-pointer transition-all duration-300 whitespace-nowrap hover:bg-slate-700 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,0,0,0.15)] active:translate-y-0 w-full sm:w-auto"
+        >
           {{ $t('notes.secretsButton') }}
         </button>
       </div>
@@ -58,10 +61,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import NoteCard from './NoteCard.vue'
 import { useCrushStore } from '@/stores/modules/crushStore'
+import { useAuthStore } from '@/stores/modules/authStore'
 
+const router = useRouter()
 const crushStore = useCrushStore()
+const authStore = useAuthStore()
 
 // Estados locales
 const isLoading = ref(false)
@@ -72,6 +79,21 @@ const isDesktop = ref(window.innerWidth >= 1024)
 
 const handleResize = () => {
   isDesktop.value = window.innerWidth >= 1024
+}
+
+// Ir a la vista de Diaries del usuario actual
+const goToMyDiaries = () => {
+  console.log('🔄 Go to my diaries clicked')
+  console.log('Auth state:', { isLoggedIn: authStore.isLoggedIn, username: authStore.user?.username })
+  
+  if (authStore.isLoggedIn && authStore.user?.username) {
+    console.log('✅ Navigating to:', `/diaries/@${authStore.user.username}`)
+    router.push(`/diaries/@${authStore.user.username}`)
+  } else {
+    // Si no está logueado, ir a Diaries general
+    console.log('⚠️ Not logged in, going to general diaries')
+    router.push('/diaries')
+  }
 }
 
 // Mapear los datos del API al formato esperado por NoteCard
