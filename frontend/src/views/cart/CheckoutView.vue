@@ -877,7 +877,8 @@ const loadPayPalScript = async () => {
     console.log('💳 [PAYPAL] Currency:', currency);
     
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=${currency}&components=buttons&enable-funding=venmo,paylater,card`;
+    // SDK v6 - Parámetros simplificados (buyer-country y enable-funding causan error 400)
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&components=buttons`;
     script.setAttribute('data-sdk-integration-source', 'developer-studio');
     
     script.onload = () => {
