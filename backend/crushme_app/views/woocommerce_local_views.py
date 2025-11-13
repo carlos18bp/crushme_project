@@ -1208,9 +1208,23 @@ def get_organized_categories_local(request):
         for theme_key, theme_data in themes.items():
             total_products = sum(cat['count'] for cat in theme_data['categories'])
             
+            # Traducir nombre del tema si es necesario
+            theme_name = theme_data['name']
+            if target_lang == 'en':
+                theme_translations = {
+                    'Juguetes': 'Toys',
+                    'Lencería': 'Lingerie',
+                    'Lubricantes y Cosmética': 'Lubricants & Cosmetics',
+                    'Bondage': 'Bondage',
+                    'Bienestar Sexual': 'Sexual Wellness',
+                    'Marcas': 'Brands',
+                    'Ofertas y Descuentos': 'Offers & Discounts'
+                }
+                theme_name = theme_translations.get(theme_data['name'], theme_data['name'])
+            
             result.append({
                 'theme': theme_key,
-                'name': theme_data['name'],
+                'name': theme_name,
                 'icon': theme_data['icon'],
                 'slug': theme_data['slug'],
                 'total_products': total_products,
