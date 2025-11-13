@@ -47,12 +47,16 @@ urlpatterns = [
     # Product routes
     path('en/products/', FrontendView.as_view(), name='products-en'),
     path('es/products/', FrontendView.as_view(), name='products-es'),
+    re_path(r'^en/products/category/(?P<category>[\w-]+)/$', FrontendView.as_view(), name='products-by-category-en'),
+    re_path(r'^es/products/category/(?P<category>[\w-]+)/$', FrontendView.as_view(), name='products-by-category-es'),
     re_path(r'^en/products/(?P<id>\d+)/$', FrontendView.as_view(), name='product-detail-en'),
     re_path(r'^es/products/(?P<id>\d+)/$', FrontendView.as_view(), name='product-detail-es'),
     
     # Shopping cart routes
     path('en/checkout/', FrontendView.as_view(), name='checkout-en'),
     path('es/checkout/', FrontendView.as_view(), name='checkout-es'),
+    path('en/checkout/wompi/success/', FrontendView.as_view(), name='wompi-success-en'),
+    path('es/checkout/wompi/success/', FrontendView.as_view(), name='wompi-success-es'),
     
     # Profile routes (protected)
     path('en/profile/', FrontendView.as_view(), name='profile-en'),
