@@ -55,6 +55,11 @@ urlpatterns = [
     # Shopping cart routes
     path('en/checkout/', FrontendView.as_view(), name='checkout-en'),
     path('es/checkout/', FrontendView.as_view(), name='checkout-es'),
+    
+    # Wompi success routes (with and without language prefix)
+    # Without prefix - for Wompi redirect (will be handled by Vue router)
+    path('checkout/wompi/success/', FrontendView.as_view(), name='wompi-success'),
+    # With language prefix
     path('en/checkout/wompi/success/', FrontendView.as_view(), name='wompi-success-en'),
     path('es/checkout/wompi/success/', FrontendView.as_view(), name='wompi-success-es'),
     
