@@ -101,7 +101,6 @@ const baseRoutes = [
     name: 'WompiSuccess',
     component: () => import('@/views/cart/WompiSuccess.vue')
   },
-
   
   // User profile routes (protected) - with layout and children
   {

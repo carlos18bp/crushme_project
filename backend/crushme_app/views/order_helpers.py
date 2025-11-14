@@ -133,24 +133,79 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
         
         # STEP 5.5: Send email notifications
         try:
-            # Prepare items for email
+            # Detect currency based on payment provider
+            # Wompi = COP, PayPal = USD
+            currency = 'COP' if payment_provider == 'wompi' else 'USD'
+            
+            # Prepare items for email (filter out dropshipping products)
+            from ..models import WooCommerceProduct
             email_items = []
+            dropshipping_cost = 0
+            
             for item in items:
-                email_items.append({
-                    'name': item['product_name'],
-                    'quantity': item['quantity']
-                })
+                # Check if product is dropshipping (ID 48500 or contains "dropshipping" in name)
+                is_dropshipping = (
+                    item.get('woocommerce_product_id') == 48500 or
+                    'dropshipping' in item.get('product_name', '').lower()
+                )
+                
+                if is_dropshipping:
+                    # Add dropshipping cost to shipping
+                    dropshipping_cost += float(item['unit_price']) * item['quantity']
+                    logger.info(f"📦 Dropshipping product found: {item['product_name']} - Adding ${dropshipping_cost} to shipping")
+                else:
+                    # Use product name from request (frontend sends it)
+                    product_name = item.get('product_name', 'Product')
+                    # Price with margin (unit_price already includes margin from frontend)
+                    unit_price = float(item['unit_price'])
+                    logger.info(f"📧 Adding product to email: {product_name} x{item['quantity']} @ ${unit_price}")
+                    
+                    # Format price based on currency
+                    if currency == 'COP':
+                        formatted_price = f"{int(round(unit_price))}"
+                    else:
+                        formatted_price = f"{round(unit_price, 2):.2f}"
+                    
+                    # Add regular product to email items (name, quantity, and price)
+                    email_items.append({
+                        'name': product_name,
+                        'quantity': item['quantity'],
+                        'price': formatted_price
+                    })
+            
+            # Calculate shipping for email (includes dropshipping cost)
+            email_shipping = shipping_cost + dropshipping_cost
+            
+            # Calculate subtotal (only regular products)
+            email_subtotal = sum(float(item['unit_price']) * item['quantity'] for item in items if not (
+                item.get('woocommerce_product_id') == 48500 or 'dropshipping' in item.get('product_name', '').lower()
+            ))
+            
+            # Format amounts based on currency
+            if currency == 'COP':
+                # COP: no decimals
+                formatted_total = f"{int(round(total_amount))}"
+                formatted_subtotal = f"{int(round(email_subtotal))}"
+                formatted_shipping = f"{int(round(email_shipping))}"
+            else:
+                # USD: 2 decimals
+                formatted_total = f"{round(total_amount, 2):.2f}"
+                formatted_subtotal = f"{round(email_subtotal, 2):.2f}"
+                formatted_shipping = f"{round(email_shipping, 2):.2f}"
             
             # Send order confirmation to purchaser
             email_service.send_order_confirmation(
                 to_email=customer_email,
                 order_number=order.order_number,
-                total=total_amount,
+                total=formatted_total,
+                subtotal=formatted_subtotal,
+                shipping=formatted_shipping,
+                currency=currency,
                 items=email_items,
                 username=user.username,
                 lang=lang
             )
-            logger.info(f"📧 Order confirmation email sent to {customer_email}")
+            logger.info(f"📧 Order confirmation email sent to {customer_email} (lang: {lang}, currency: {currency})")
             
             # Create feed entry for order confirmation
             try:

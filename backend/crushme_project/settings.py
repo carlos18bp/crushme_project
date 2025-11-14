@@ -54,6 +54,41 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Allow popups and iframes for payment gateways (PayPal, Wompi)
+X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allow iframes from same origin
+
+# Security headers - Allow popups
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # Allow popups to communicate
+
+# Additional CORS settings for popups and payment gateways
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-currency',  # Custom header for currency
+]
+
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-currency',
+]
+
+# Allow all HTTP methods for CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 ROOT_URLCONF = 'crushme_project.urls'
 
 TEMPLATES = [

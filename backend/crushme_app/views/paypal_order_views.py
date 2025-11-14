@@ -567,23 +567,74 @@ def capture_paypal_order(request):
         
         # STEP 4.5: Send email notifications
         try:
-            # Prepare items for email
+            # Get language from request (default to 'en')
+            lang = request.GET.get('lang', 'en')
+            
+            # PayPal always uses USD
+            currency = 'USD'
+            
+            # Prepare items for email (filter out dropshipping products)
+            from ..models import WooCommerceProduct
             email_items = []
+            dropshipping_cost = 0
+            
             for item in items:
-                email_items.append({
-                    'name': item['product_name'],
-                    'quantity': item['quantity']
-                })
+                # Check if product is dropshipping (ID 48500 or contains "dropshipping" in name)
+                is_dropshipping = (
+                    item.get('woocommerce_product_id') == 48500 or
+                    'dropshipping' in item.get('product_name', '').lower()
+                )
+                
+                if is_dropshipping:
+                    # Add dropshipping cost to shipping
+                    dropshipping_cost += float(item['unit_price']) * item['quantity']
+                    logger.info(f"📦 Dropshipping product found: {item['product_name']} - Adding ${dropshipping_cost} to shipping")
+                else:
+                    # Use product name from request (frontend sends it)
+                    product_name = item.get('product_name', 'Product')
+                    # Price with margin (unit_price already includes margin from frontend)
+                    unit_price = round(float(item['unit_price']), 2)
+                    logger.info(f"📧 Adding product to email: {product_name} x{item['quantity']} @ ${unit_price}")
+                    
+                    # Format price for USD (2 decimals)
+                    formatted_price = f"{unit_price:.2f}"
+                    
+                    # Add regular product to email items (name, quantity, and price)
+                    email_items.append({
+                        'name': product_name,
+                        'quantity': item['quantity'],
+                        'price': formatted_price
+                    })
+            
+            # Calculate shipping for email (includes dropshipping cost)
+            email_shipping = round(shipping_cost + dropshipping_cost, 2)
+            
+            # Calculate subtotal (only regular products)
+            email_subtotal = round(sum(float(item['unit_price']) * item['quantity'] for item in items if not (
+                item.get('woocommerce_product_id') == 48500 or 'dropshipping' in item.get('product_name', '').lower()
+            )), 2)
+            
+            # Format amounts for USD (2 decimals)
+            email_total = round(total_amount, 2)
+            
+            # DEBUG: Log email items
+            logger.info(f"📧 [EMAIL DEBUG] Items count: {len(email_items)}")
+            logger.info(f"📧 [EMAIL DEBUG] Items: {email_items}")
+            logger.info(f"📧 [EMAIL DEBUG] Subtotal: {email_subtotal}, Shipping: {email_shipping}, Total: {email_total}")
             
             # Send order confirmation to purchaser
             email_service.send_order_confirmation(
                 to_email=customer_email,
                 order_number=order.order_number,
-                total=total_amount,
+                total=f"{email_total:.2f}",
+                subtotal=f"{email_subtotal:.2f}",
+                shipping=f"{email_shipping:.2f}",
+                currency=currency,
                 items=email_items,
-                user_name=customer_name
+                username=user.username,
+                lang=lang
             )
-            logger.info(f"📧 Order confirmation email sent to {customer_email}")
+            logger.info(f"📧 Order confirmation email sent to {customer_email} (lang: {lang}, currency: {currency})")
             
             # If it's a gift, send notifications
             if order.is_gift and receiver_username_value:
@@ -593,26 +644,30 @@ def capture_paypal_order(request):
                     # Send gift received notification to receiver
                     email_service.send_gift_received_notification(
                         to_email=receiver_user.email,
-                        sender_name=customer_name,
+                        sender_username=user.username,
                         gift_message=order.gift_message or '',
                         order_number=order.order_number,
-                        user_name=receiver_user.get_full_name() or receiver_user.username
+                        username=receiver_user.username,
+                        lang=lang
                     )
-                    logger.info(f"📧 Gift received notification sent to {receiver_user.email}")
+                    logger.info(f"📧 Gift received notification sent to {receiver_user.email} (lang: {lang})")
                     
                     # Send gift sent confirmation to sender
                     email_service.send_gift_sent_confirmation(
                         to_email=customer_email,
-                        receiver_name=receiver_user.get_full_name() or receiver_user.username,
+                        receiver_username=receiver_user.username,
                         order_number=order.order_number,
-                        user_name=customer_name
+                        username=user.username,
+                        lang=lang
                     )
-                    logger.info(f"📧 Gift sent confirmation sent to {customer_email}")
+                    logger.info(f"📧 Gift sent confirmation sent to {customer_email} (lang: {lang})")
                     
                 except User.DoesNotExist:
                     logger.warning(f"⚠️ Receiver user {receiver_username_value} not found for gift notifications")
         except Exception as e:
             logger.error(f"❌ Error sending email notifications: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Don't fail the order if email fails
 
         # STEP 5: Send order to WooCommerce in background (non-blocking)

@@ -3,6 +3,7 @@ Email Service - Central email management for CrushMe
 Handles all email sending with HTML templates
 """
 import logging
+import re
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -56,21 +57,17 @@ class EmailService:
             if lang not in ['es', 'en']:
                 lang = 'es'  # Default to Spanish
             
-            # Load template with language folder
+            # Load template with language folder using Django template engine
+            from django.template import Template, Context
             template_path = Path(settings.BASE_DIR) / 'email_templates' / lang / template_name
             
             # Read template file
             with open(template_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
+                template_content = f.read()
             
-            # Simple template rendering (replace {{ variables }})
-            for key, value in context.items():
-                html_content = html_content.replace(f'{{{{ {key} }}}}', str(value))
-            
-            # Remove unused template variables
-            import re
-            html_content = re.sub(r'\{\%.*?\%\}', '', html_content)
-            html_content = re.sub(r'\{\{.*?\}\}', '', html_content)
+            # Render template with Django template engine (supports {% for %} loops)
+            template = Template(template_content)
+            html_content = template.render(Context(context))
             
             # Create plain text version (strip HTML tags)
             text_content = re.sub('<[^<]+?>', '', html_content)
@@ -156,21 +153,29 @@ class EmailService:
         )
     
     @staticmethod
-    def send_order_confirmation(to_email, order_number, total, items, username, lang='es'):
+    def send_order_confirmation(to_email, order_number, total, subtotal, shipping, currency, items, username, lang='es'):
         """
         Send order confirmation email
         
         Args:
             to_email (str): Recipient email
             order_number (str): Order number
-            total (float): Order total amount
-            items (list): List of order items
+            total (str): Order total amount (formatted string)
+            subtotal (str): Subtotal (products only, formatted string)
+            shipping (str): Shipping cost (formatted string, includes dropshipping if any)
+            currency (str): Currency code ('COP' or 'USD')
+            items (list): List of order items with 'name' and 'quantity' only
             username (str): User's username (required)
             lang (str): Language code ('es' or 'en', default: 'es')
         """
         context = {
             'order_number': order_number,
-            'username': username
+            'username': username,
+            'total': total,
+            'subtotal': subtotal,
+            'shipping': shipping,
+            'currency': currency,
+            'items': items
         }
         
         # Set subject based on language
@@ -199,7 +204,9 @@ class EmailService:
         """
         context = {
             'sender_username': sender_username,
-            'username': username
+            'username': username,
+            'gift_message': gift_message,
+            'order_number': order_number
         }
         
         # Set subject based on language
@@ -227,7 +234,8 @@ class EmailService:
         """
         context = {
             'receiver_username': receiver_username,
-            'username': username
+            'username': username,
+            'order_number': order_number
         }
         
         # Set subject based on language
