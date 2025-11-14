@@ -15,7 +15,7 @@ export default defineConfig({
     // Wompi public key
     'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify('pub_prod_yG6ag71rCqGUJmVfgrYPSOFQfkjGHXOT'),
     // PayPal client ID
-    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'),
+    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AXOC4gQsXk_e8NhrrZRorJzU3rld7lOJP5_2S8RYDKUgjkDT-2wfc-1Eu1AqYQseWTcJA_VBEnGUUGCQ'),
   },
   
   // Configuración para build con cache busting
