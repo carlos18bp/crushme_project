@@ -9,7 +9,7 @@ import axios from 'axios';
 
 export const useCurrencyStore = defineStore('currency', () => {
   // State
-  const currentCurrency = ref('COP'); // ⚠️ TEMPORAL: Default COP para testing Wompi (cambiar a USD después)
+  const currentCurrency = ref('USD'); // Default USD, will be auto-detected
   const exchangeRate = ref(null); // Optional: if you want to store the rate
   const isInitialized = ref(false);
   const detectedCountry = ref(null);
@@ -71,15 +71,6 @@ export const useCurrencyStore = defineStore('currency', () => {
    * COP for Colombia (CO), USD for all other countries
    */
   async function detectCurrency() {
-    // ⚠️ TEMPORAL: Forzar COP para testing de Wompi en localhost
-    // TODO: Descomentar la lógica de detección cuando termines de probar
-    console.log('⚠️ [currencyStore] MODO TESTING: Forzando COP para Wompi');
-    detectedCountry.value = 'CO';
-    setCurrency('COP');
-    isInitialized.value = true;
-    return 'COP';
-    
-    /* COMENTADO TEMPORALMENTE - Descomentar cuando termines de probar Wompi
     console.log('💱 [currencyStore] Iniciando detección de currency por IP...')
     console.log('💱 [currencyStore] Estado inicial:', {
       isInitialized: isInitialized.value,
@@ -167,7 +158,6 @@ export const useCurrencyStore = defineStore('currency', () => {
       isInitialized.value = true;
       return 'USD';
     }
-    */
   }
 
   /**
