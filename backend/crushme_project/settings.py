@@ -280,9 +280,9 @@ THUMBNAIL_ALIASES = {
 }
 
 # WooCommerce API settings
-WOOCOMMERCE_CONSUMER_KEY = 'ck_2997c6fc6d68b3d998045a33002b2e88cce81682'
-WOOCOMMERCE_CONSUMER_SECRET = 'cs_51006180ee1f5999d5cae68d3091e3313174c9c9'
-WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'
+WOOCOMMERCE_CONSUMER_KEY = 'ck_2064e964032e98cf9ec26b135eb91f0605cb59c9'
+WOOCOMMERCE_CONSUMER_SECRET = 'cs_bf5fe1355fe4a2d30dae5ce5f69b6ec4d296f53c'
+WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
 
 # PayPal API settings
 # TODO: Mover estas credenciales a variables de entorno en producción
