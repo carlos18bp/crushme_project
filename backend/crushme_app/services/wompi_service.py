@@ -23,12 +23,13 @@ class WompiService:
         self.events_secret = getattr(settings, 'WOMPI_EVENTS_SECRET', '')
         self.integrity_key = getattr(settings, 'WOMPI_INTEGRITY_KEY', '')  # Para firmar transacciones
         self.base_url = getattr(settings, 'WOMPI_BASE_URL', 'https://production.wompi.co/v1')
+        self.checkout_url = getattr(settings, 'WOMPI_CHECKOUT_URL', 'https://checkout.wompi.co')
         self.timeout = 30
     
     def create_transaction(self, amount_in_cents, reference, customer_email, 
                           customer_name, redirect_url, phone_number='', currency='COP'):
         """
-        Create a Wompi payment transaction
+        Create Wompi Widget transaction data (no longer creates payment link)
         
         Args:
             amount_in_cents: Amount in cents (e.g., 10000 = $100.00 COP)
@@ -36,11 +37,11 @@ class WompiService:
             customer_email: Customer email address
             customer_name: Customer full name
             redirect_url: URL to redirect after payment
-            phone_number: Customer phone number (required by Wompi)
+            phone_number: Customer phone number (optional for widget)
             currency: Currency code (default: COP)
         
         Returns:
-            dict: Transaction response with transaction_id and payment URL
+            dict: Widget configuration data with integrity signature
         """
         try:
             # Generate integrity signature
@@ -51,70 +52,53 @@ class WompiService:
             
             logger.info(f"🔐 [WOMPI] Integrity string: {reference}{amount_in_cents}{currency}[INTEGRITY_KEY]")
             logger.info(f"🔐 [WOMPI] Integrity signature: {integrity_signature}")
+            logger.info(f"🔗 [WOMPI] Redirect URL: {redirect_url}")
             
-            # Build payment link payload
-            payload = {
-                'name': f'Orden {reference}',  # Required
-                'description': 'Compra en CrushMe',  # Required
-                'single_use': True,  # Required - Link solo se puede usar una vez
-                'collect_shipping': False,  # Required - Ya tenemos la dirección
-                'amount_in_cents': int(amount_in_cents),
+            # Return widget configuration data
+            # El frontend usará estos datos para inicializar el widget de Wompi
+            # Documentación: https://docs.wompi.co/en/docs/colombia/widget-checkout-web/
+            
+            # Separar phone_number en prefix y number
+            # Formato esperado: "+57 300 1234567" o "300 1234567"
+            phone_prefix = '+57'
+            phone_only = phone_number
+            
+            if phone_number:
+                # Si tiene +, extraer el prefijo
+                if phone_number.startswith('+'):
+                    parts = phone_number.split(' ', 1)
+                    if len(parts) == 2:
+                        phone_prefix = parts[0]
+                        phone_only = parts[1].replace(' ', '')
+                    else:
+                        phone_only = phone_number[3:].replace(' ', '')  # Remover +57 y espacios
+                else:
+                    phone_only = phone_number.replace(' ', '')
+            
+            widget_data = {
+                'public_key': self.public_key,
                 'currency': currency,
+                'amount_in_cents': int(amount_in_cents),
                 'reference': reference,
+                'signature': integrity_signature,
                 'redirect_url': redirect_url,
                 'customer_data': {
                     'email': customer_email,
                     'full_name': customer_name,
-                    'phone_number': phone_number,
+                    'phone_number': phone_only,
+                    'phone_number_prefix': phone_prefix,
                 }
             }
             
-            # Create payment link (allows user to select payment method)
-            url = f"{self.base_url}/payment_links"
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.private_key}'  # Payment links use private key
+            logger.info(f"✅ [WOMPI] Widget data prepared for reference: {reference}")
+            logger.info(f"💰 [WOMPI] Amount: {amount_in_cents} cents ({amount_in_cents/100} {currency})")
+            
+            return {
+                'success': True,
+                'widget_data': widget_data,
+                'reference': reference,
+                'status': 'PENDING'
             }
-            
-            logger.info(f"🔵 [WOMPI] Creating payment link for reference: {reference}")
-            logger.debug(f"Payload: {payload}")
-            
-            response = requests.post(
-                url,
-                json=payload,
-                headers=headers,
-                timeout=self.timeout
-            )
-            
-            if response.status_code in [200, 201]:
-                payment_link_data = response.json()
-                data = payment_link_data.get('data', {})
-                
-                # Log completo para debugging
-                logger.info(f"✅ [WOMPI] Payment link created: {data.get('id')}")
-                logger.info(f"🔍 [WOMPI] Full response data: {data}")
-                
-                # Construir URL del checkout manualmente
-                # Wompi no retorna la URL, se construye con el ID del payment link
-                payment_link_id = data.get('id')
-                payment_url = f"https://checkout.wompi.co/l/{payment_link_id}"
-                
-                logger.info(f"🔗 [WOMPI] Payment URL constructed: {payment_url}")
-                
-                return {
-                    'success': True,
-                    'transaction_id': payment_link_id,
-                    'payment_url': payment_url,
-                    'status': 'PENDING',
-                    'data': payment_link_data
-                }
-            else:
-                logger.error(f"❌ [WOMPI] Transaction creation failed: {response.status_code} - {response.text}")
-                return {
-                    'success': False,
-                    'error': f"Transaction creation failed: {response.status_code}",
-                    'details': response.text
-                }
         
         except Exception as e:
             logger.error(f"❌ [WOMPI] Transaction creation error: {str(e)}")

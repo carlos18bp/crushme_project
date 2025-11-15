@@ -248,9 +248,9 @@ THUMBNAIL_ALIASES = {
 }
 
 # WooCommerce API settings
-WOOCOMMERCE_CONSUMER_KEY = 'ck_2064e964032e98cf9ec26b135eb91f0605cb59c9'
-WOOCOMMERCE_CONSUMER_SECRET = 'cs_bf5fe1355fe4a2d30dae5ce5f69b6ec4d296f53c'
-WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
+WOOCOMMERCE_CONSUMER_KEY = 'ck_2997c6fc6d68b3d998045a33002b2e88cce81682'
+WOOCOMMERCE_CONSUMER_SECRET = 'cs_51006180ee1f5999d5cae68d3091e3313174c9c9'
+WOOCOMMERCE_API_URL = 'https://desarrollo.distrisex.com/wp-json/wc/v3'
 
 # PayPal API settings
 # TODO: Mover estas credenciales a variables de entorno en producción
@@ -261,11 +261,13 @@ PAYPAL_MODE = 'sandbox'  # Cambiar a 'live' en producción
 # Wompi API settings (Colombian payment gateway - COP only)
 # TODO: Mover estas credenciales a variables de entorno en producción
 # Obtener credenciales en: https://comercios.wompi.co/
+# Documentación: https://docs.wompi.co/
 WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', 'pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR')
 WOMPI_PRIVATE_KEY = os.environ.get('WOMPI_PRIVATE_KEY', 'prv_test_KfwGaDHAt9QikBRArROhTFbUFobB8dnn')
 WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', 'test_events_yfttSa6ec6puxj8Ld6YTzbzdqY4w47gk')
 WOMPI_INTEGRITY_KEY = os.environ.get('WOMPI_INTEGRITY_KEY', 'test_integrity_Zjk5ESr4C6fLn2vH3JA8G2MPTqHIsPy1')  # Para firmar transacciones
-WOMPI_BASE_URL = 'https://sandbox.wompi.co/v1'  # Sandbox URL para testing
+WOMPI_BASE_URL = 'https://sandbox.wompi.co/v1'  # Sandbox API para testing
+WOMPI_CHECKOUT_URL = 'https://checkout.wompi.co'  # Mismo checkout para sandbox y producción (diferencia por llaves)
 WOMPI_ENVIRONMENT = 'test'  # 'test' o 'production'
 
 # Production/Development environment flag

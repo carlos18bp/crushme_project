@@ -136,9 +136,24 @@ def create_wompi_transaction(request):
         )
         
         if wompi_result['success']:
-            # Store gift and wishlist data in cache for later retrieval during confirmation
+            # Store complete order data in cache for webhook processing
             from django.core.cache import cache
-            gift_data = {
+            
+            # Store all order data for webhook to process
+            order_data = {
+                'items': items,
+                'customer_email': customer_email,
+                'customer_name': customer_name,
+                'phone_number': phone_number,
+                'shipping_address': request.data.get('shipping_address', ''),
+                'shipping_address_line_2': request.data.get('shipping_address_line_2', ''),
+                'shipping_city': request.data.get('shipping_city', ''),
+                'shipping_state': request.data.get('shipping_state', ''),
+                'shipping_postal_code': request.data.get('shipping_postal_code', ''),
+                'shipping_country': request.data.get('shipping_country', 'CO'),
+                'shipping': shipping_cost,
+                'notes': request.data.get('notes', ''),
+                # Gift data
                 'is_gift': request.data.get('is_gift', False),
                 'sender_username': request.data.get('sender_username'),
                 'receiver_username': request.data.get('receiver_username'),
@@ -146,17 +161,19 @@ def create_wompi_transaction(request):
                 # Wishlist data
                 'is_from_wishlist': request.data.get('is_from_wishlist', False),
                 'wishlist_id': request.data.get('wishlist_id'),
-                'wishlist_name': request.data.get('wishlist_name')
+                'wishlist_name': request.data.get('wishlist_name'),
+                # Language
+                'language': request.headers.get('Accept-Language', 'en').split(',')[0].split('-')[0]
             }
             
-            # Store gift and wishlist data with transaction ID as key (expires in 1 hour)
-            cache.set(f'gift_data_{wompi_result["transaction_id"]}', gift_data, 3600)
+            # Store order data with reference as key (expires in 1 hour)
+            cache.set(f'wompi_order_data_{reference}', order_data, 3600)
+            logger.info(f"💾 [WOMPI] Stored order data in cache for reference: {reference}")
             
             return Response({
                 'success': True,
-                'message': 'Wompi transaction created successfully',
-                'transaction_id': wompi_result['transaction_id'],
-                'payment_url': wompi_result['payment_url'],
+                'message': 'Wompi widget data prepared successfully',
+                'widget_data': wompi_result['widget_data'],
                 'reference': reference,
                 'total': str(total_amount),
                 'amount_in_cents': amount_in_cents,
@@ -229,24 +246,43 @@ def confirm_wompi_payment(request):
         
         # STEP 1: Verify payment with Wompi
         logger.info(f"🔵 [WOMPI] Verifying payment: {transaction_id}")
+        logger.info(f"📦 [WOMPI] Request data keys: {list(request.data.keys())}")
+        
         verification_result = wompi_service.get_transaction(transaction_id)
         
         if not verification_result['success']:
             logger.error(f"❌ [WOMPI] Verification failed: {verification_result.get('error')}")
+            logger.error(f"❌ [WOMPI] Verification details: {verification_result.get('details')}")
             return Response({
                 'error': 'Payment verification failed',
                 'details': verification_result.get('error'),
-                'wompi_status': 'FAILED'
+                'wompi_status': 'FAILED',
+                'transaction_id': transaction_id
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Check if payment was approved
         payment_status = verification_result.get('status')
+        logger.info(f"💳 [WOMPI] Payment status: {payment_status}")
+        
         if payment_status != 'APPROVED':
             logger.warning(f"⚠️ [WOMPI] Payment not approved: {payment_status}")
+            
+            # Provide more detailed error message based on status
+            status_messages = {
+                'PENDING': 'Payment is still pending. Please wait for confirmation.',
+                'DECLINED': 'Payment was declined by the payment processor.',
+                'VOIDED': 'Payment was voided.',
+                'ERROR': 'An error occurred during payment processing.'
+            }
+            
+            error_message = status_messages.get(payment_status, 'Payment was not approved')
+            
             return Response({
-                'error': 'Payment was not approved',
+                'error': error_message,
                 'status': payment_status,
-                'transaction_id': transaction_id
+                'transaction_id': transaction_id,
+                'reference': verification_result.get('reference'),
+                'amount': verification_result.get('amount_in_cents')
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Payment approved!
@@ -297,47 +333,168 @@ def get_wompi_config(request):
     }, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_payment_status(request, reference):
+    """
+    Check if payment has been processed by webhook (PUBLIC ENDPOINT)
+    Used by frontend to poll for payment completion
+    
+    Returns:
+    - status: 'pending', 'success', or 'error'
+    - order_id: if success
+    - transaction_id: if success
+    - error: if error
+    """
+    try:
+        from django.core.cache import cache
+        
+        # Check cache for payment status
+        payment_status = cache.get(f'wompi_payment_status_{reference}')
+        
+        if not payment_status:
+            # Payment not yet processed
+            return Response({
+                'status': 'pending',
+                'message': 'Payment is being processed'
+            }, status=status.HTTP_200_OK)
+        
+        if payment_status['status'] == 'success':
+            # Get order details to return to frontend
+            from ..models import Order
+            try:
+                order = Order.objects.get(id=payment_status.get('order_id'))
+                return Response({
+                    'status': 'success',
+                    'order_id': payment_status.get('order_id'),
+                    'order_number': order.order_number,
+                    'transaction_id': payment_status.get('transaction_id'),
+                    'total': str(order.total),
+                    'email': order.email,
+                    'message': 'Payment processed successfully'
+                }, status=status.HTTP_200_OK)
+            except Order.DoesNotExist:
+                return Response({
+                    'status': 'success',
+                    'order_id': payment_status.get('order_id'),
+                    'transaction_id': payment_status.get('transaction_id'),
+                    'message': 'Payment processed successfully'
+                }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'status': 'error',
+                'error': payment_status.get('error', 'Unknown error'),
+                'message': 'Payment processing failed'
+            }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        logger.error(f"❌ [WOMPI] Error checking payment status: {str(e)}")
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@transaction.atomic
 def wompi_webhook(request):
     """
     Webhook endpoint for Wompi events (PUBLIC ENDPOINT)
     Wompi will send notifications here when payment status changes
     
-    This is optional - can be used for real-time updates
+    This endpoint processes payments automatically when Wompi confirms approval
     """
     try:
-        # Get signature from headers
-        signature = request.headers.get('X-Wompi-Signature', '')
-        
-        # Verify signature
-        if not wompi_service.verify_signature(request.data, signature):
-            logger.warning(f"⚠️ [WOMPI WEBHOOK] Invalid signature")
-            return Response({
-                'error': 'Invalid signature'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+        logger.info(f"📬 [WOMPI WEBHOOK] Received webhook")
+        logger.info(f"📬 [WOMPI WEBHOOK] Headers: {dict(request.headers)}")
+        logger.info(f"📬 [WOMPI WEBHOOK] Body: {request.data}")
         
         # Get event data
         event_type = request.data.get('event')
-        transaction_data = request.data.get('data', {})
+        transaction_data = request.data.get('data', {}).get('transaction', {})
         transaction_id = transaction_data.get('id')
         status_value = transaction_data.get('status')
+        reference = transaction_data.get('reference')
         
-        logger.info(f"📬 [WOMPI WEBHOOK] Event: {event_type}, Transaction: {transaction_id}, Status: {status_value}")
+        logger.info(f"📬 [WOMPI WEBHOOK] Event: {event_type}, Transaction: {transaction_id}, Status: {status_value}, Reference: {reference}")
         
-        # Handle different event types
-        if event_type == 'transaction.updated':
-            # Transaction status changed
-            # You can add logic here to update order status in real-time
-            pass
+        # Only process if transaction is approved
+        if status_value != 'APPROVED':
+            logger.info(f"⏭️ [WOMPI WEBHOOK] Skipping non-approved transaction: {status_value}")
+            return Response({
+                'success': True,
+                'message': 'Event received but not processed (not approved)'
+            }, status=status.HTTP_200_OK)
+        
+        # Check if this transaction was already processed
+        from ..models import Order
+        existing_order = Order.objects.filter(transaction_id=transaction_id).first()
+        if existing_order:
+            logger.info(f"⏭️ [WOMPI WEBHOOK] Order already exists for transaction: {transaction_id}")
+            return Response({
+                'success': True,
+                'message': 'Order already processed'
+            }, status=status.HTTP_200_OK)
+        
+        # Get order data from cache using reference
+        from django.core.cache import cache
+        order_data = cache.get(f'wompi_order_data_{reference}')
+        
+        if not order_data:
+            logger.error(f"❌ [WOMPI WEBHOOK] No order data found in cache for reference: {reference}")
+            return Response({
+                'error': 'Order data not found',
+                'reference': reference
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        logger.info(f"✅ [WOMPI WEBHOOK] Found order data in cache for reference: {reference}")
+        
+        # Prepare payment info
+        payment_info = {
+            'transaction_id': transaction_id,
+            'status': status_value,
+            'payer_email': transaction_data.get('customer_email', order_data.get('customer_email')),
+            'payer_name': order_data.get('customer_name', 'Guest')
+        }
+        
+        # Get language from order data or default to 'en'
+        lang = order_data.get('language', 'en')
+        
+        # Process order using common flow
+        logger.info(f"🔄 [WOMPI WEBHOOK] Processing order for transaction: {transaction_id}")
+        
+        result = process_order_after_payment(
+            request_data=order_data,
+            payment_info=payment_info,
+            payment_provider='wompi',
+            lang=lang
+        )
+        
+        # Store success status in cache for frontend polling
+        if result.status_code == 201:
+            cache.set(f'wompi_payment_status_{reference}', {
+                'status': 'success',
+                'order_id': result.data.get('order_id'),
+                'transaction_id': transaction_id
+            }, 3600)  # 1 hour
+            logger.info(f"✅ [WOMPI WEBHOOK] Order processed successfully: {result.data.get('order_id')}")
+        else:
+            cache.set(f'wompi_payment_status_{reference}', {
+                'status': 'error',
+                'error': result.data.get('error', 'Unknown error')
+            }, 3600)
+            logger.error(f"❌ [WOMPI WEBHOOK] Order processing failed: {result.data}")
         
         return Response({
             'success': True,
-            'message': 'Webhook received'
+            'message': 'Webhook processed successfully'
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
         logger.error(f"❌ [WOMPI WEBHOOK] Error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return Response({
             'error': 'Internal server error',
             'details': str(e)

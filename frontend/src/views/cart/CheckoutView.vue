@@ -244,6 +244,13 @@
             <p v-if="formError" class="payment-error">{{ formError }}</p>
           </div>
 
+          <!-- Wompi Widget Section (COP only) -->
+          <div v-if="showWompiWidget && wompiWidgetData && currencyStore.currentCurrency === 'COP'" id="wompi-widget-section" class="wompi-section">
+            <h3 class="wompi-title">💳 Completa tu pago</h3>
+            <p class="wompi-description">Selecciona tu método de pago preferido</p>
+            <WompiWidget :widget-data="wompiWidgetData" render-mode="button" />
+          </div>
+
           <!-- PayPal Buttons Section (USD only) -->
           <div v-if="showPayPalButtons && currencyStore.currentCurrency === 'USD'" id="paypal-section" class="paypal-section">
             <h3 class="paypal-title">{{ $t('cart.checkout.form.paypal.title') }}</h3>
@@ -403,6 +410,7 @@ import { useRouter } from 'vue-router';
 import { useAlert } from '@/composables/useAlert.js';
 import { Country, State } from 'country-state-city';
 import { useCurrencyStore } from '@/stores/modules/currencyStore.js';
+import WompiWidget from '@/components/WompiWidget.vue';
 
 const router = useRouter();
 const currencyStore = useCurrencyStore();
@@ -745,6 +753,8 @@ const proceedToPayment = async () => {
         is_gift: true,
         shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
         total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value,
+        // Incluir código de descuento si existe
+        discount_code: discountData.value ? discountData.value.code : null,
         // Incluir wishlist data si existe
         is_from_wishlist: !!wishlistId.value,
         wishlist_id: wishlistId.value || null,
@@ -778,11 +788,25 @@ const proceedToPayment = async () => {
         phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
         notes: shippingForm.value.additionalDetails || '',
         shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
-        total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value
+        total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value,
+        // Incluir código de descuento si existe
+        discount_code: discountData.value ? discountData.value.code : null
       };
     }
 
     console.log('📤 [CHECKOUT] Datos de orden preparados:', orderData);
+    
+    // Log del descuento aplicado
+    if (discountData.value) {
+      console.log('🎟️ [DISCOUNT] Código de descuento incluido en orden:', {
+        code: discountData.value.code,
+        percentage: discountData.value.discount_percentage,
+        subtotal_original: subtotal.value,
+        descuento: discountAmount.value,
+        subtotal_con_descuento: subtotalAfterDiscount.value,
+        total_final: total.value
+      });
+    }
 
     // Procesar pago según la moneda
     if (currencyStore.currentCurrency === 'COP') {
@@ -810,32 +834,47 @@ const proceedToPayment = async () => {
 };
 
 /**
- * ⭐ Procesar pago con Wompi (COP)
+ * ⭐ Procesar pago con Wompi (COP) - Ahora usa Widget
  */
+const wompiWidgetData = ref(null);
+const showWompiWidget = ref(false);
+
 const processWompiPayment = async (orderData) => {
   try {
-    showLoading('Creando transacción...', '💳 Wompi');
+    showLoading('Preparando pago...', '💳 Wompi');
     
-    console.log('💳 [WOMPI] Iniciando pago...', orderData);
+    console.log('💳 [WOMPI] Iniciando pago con Widget...', orderData);
     
     const result = await paymentStore.createWompiTransaction(orderData);
     
     closeAlert();
     
     if (!result.success) {
-      formError.value = result.error || 'Error al crear transacción en Wompi';
+      formError.value = result.error || 'Error al preparar pago con Wompi';
       await showError(formError.value, '❌ Error en Wompi');
       return;
     }
     
-    console.log('✅ [WOMPI] Transacción creada:', result.data);
+    console.log('✅ [WOMPI] Widget data recibida:', result.data);
     
     // Guardar datos para confirmar después
-    localStorage.setItem('wompi_transaction_id', result.data.transaction_id);
+    localStorage.setItem('wompi_reference', result.data.reference);
     localStorage.setItem('wompi_order_data', JSON.stringify(orderData));
     
-    // Redirigir a Wompi checkout
-    window.location.href = result.data.payment_url;
+    // También guardar el widget_data para poder verificar después
+    localStorage.setItem('wompi_widget_data', JSON.stringify(result.data.widget_data));
+    
+    // Mostrar el widget de Wompi
+    wompiWidgetData.value = result.data.widget_data;
+    showWompiWidget.value = true;
+    
+    // Scroll al widget
+    setTimeout(() => {
+      const wompiSection = document.getElementById('wompi-widget-section');
+      if (wompiSection) {
+        wompiSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
     
   } catch (error) {
     closeAlert();
@@ -2332,6 +2371,32 @@ onBeforeUnmount(() => {
   .payment-subtitle {
     font-size: 0.9rem;
   }
+}
+
+/* Wompi Section */
+.wompi-section {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  border: 2px solid var(--color-brand-purple-light);
+  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.15);
+}
+
+.wompi-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-family: 'Comfortaa', cursive;
+}
+
+.wompi-description {
+  font-size: 0.9375rem;
+  color: var(--color-brand-blue-medium);
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
 
 /* PayPal Section */

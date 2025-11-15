@@ -4,8 +4,9 @@
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <h2>Verificando tu pago...</h2>
-        <p>Por favor espera mientras confirmamos tu transacción</p>
+        <h2>Procesando tu pago...</h2>
+        <p>Wompi está confirmando tu transacción. Esto puede tomar unos segundos.</p>
+        <p class="polling-info">⏳ Verificando estado... ({{ pollingAttempts }}/{{ maxPollingAttempts }})</p>
       </div>
 
       <!-- Success State -->
@@ -26,9 +27,28 @@
         <div class="error-icon">❌</div>
         <h2>Error en el Pago</h2>
         <p class="error-message">{{ errorMessage }}</p>
+        
+        <!-- Instrucciones si no hay transaction ID -->
+        <div v-if="!hasTransactionId" class="manual-instructions">
+          <p class="instruction-title">💡 ¿Completaste el pago en Wompi?</p>
+          <p class="instruction-text">
+            Si completaste el pago exitosamente pero llegaste aquí directamente, 
+            copia el <strong>ID de transacción</strong> de la URL de Wompi y pégalo aquí:
+          </p>
+          <div class="manual-input-group">
+            <input 
+              v-model="manualTransactionId" 
+              type="text" 
+              placeholder="Ej: test_abc123"
+              class="manual-input"
+            />
+            <button @click="verifyManualTransaction" class="btn-primary">Verificar</button>
+          </div>
+        </div>
+        
         <div class="error-actions">
           <button @click="goToCheckout" class="btn-secondary">Volver al checkout</button>
-          <button @click="retry" class="btn-primary">Reintentar verificación</button>
+          <button v-if="hasTransactionId" @click="retry" class="btn-primary">Reintentar verificación</button>
         </div>
       </div>
     </div>
@@ -57,6 +77,11 @@ const total = ref(0);
 const email = ref('');
 const errorMessage = ref('');
 const redirectCountdown = ref(3);
+const hasTransactionId = ref(false);
+const manualTransactionId = ref('');
+const pollingAttempts = ref(0);
+const maxPollingAttempts = ref(60); // 60 intentos = 1 minuto (1 intento cada segundo)
+const pollingInterval = ref(null);
 
 // Methods
 const formatPrice = (price) => {
@@ -78,42 +103,59 @@ async function retry() {
   await confirmPayment();
 }
 
-async function confirmPayment() {
+async function verifyManualTransaction() {
+  if (!manualTransactionId.value.trim()) {
+    errorMessage.value = 'Por favor ingresa un ID de transacción válido';
+    return;
+  }
+  
+  // Actualizar URL con el transaction ID manual
+  const newUrl = `${window.location.pathname}?id=${manualTransactionId.value.trim()}`;
+  window.history.pushState({}, '', newUrl);
+  
+  // Reintentar confirmación
+  await retry();
+}
+
+async function checkPaymentStatus() {
   try {
-    // Obtener transaction_id de la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const transactionId = urlParams.get('id');
+    // Obtener reference de localStorage
+    const reference = localStorage.getItem('wompi_reference');
     
-    if (!transactionId) {
-      throw new Error('No se encontró el ID de transacción en la URL');
+    if (!reference) {
+      throw new Error('No se encontró la referencia de pago. Por favor vuelve al checkout.');
     }
 
-    console.log('✅ [WOMPI] Transaction ID desde URL:', transactionId);
-
-    // Recuperar datos de la orden guardados en localStorage
-    const orderDataStr = localStorage.getItem('wompi_order_data');
+    console.log(`🔍 [WOMPI] Verificando estado del pago (intento ${pollingAttempts.value + 1}/${maxPollingAttempts.value})`);
     
-    if (!orderDataStr) {
-      throw new Error('No se encontraron los datos de la orden. Por favor vuelve al checkout.');
-    }
-
-    const orderData = JSON.parse(orderDataStr);
-    console.log('📦 [WOMPI] Datos de orden recuperados:', orderData);
-
-    // Confirmar pago con el backend
-    const result = await paymentStore.confirmWompiPayment(transactionId, orderData);
-
-    if (result.success) {
-      console.log('✅ [WOMPI] Pago confirmado exitosamente:', result.order);
+    // Llamar al endpoint de polling
+    const result = await paymentStore.checkWompiPaymentStatus(reference);
+    
+    if (result.status === 'success') {
+      // Pago procesado exitosamente por el webhook
+      console.log('✅ [WOMPI] Pago confirmado por webhook:', result);
+      
+      // Detener polling
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+      }
       
       success.value = true;
-      orderNumber.value = result.order.order_number;
-      total.value = parseFloat(result.order.total);
-      email.value = result.order.email;
+      orderNumber.value = result.order_id;
+      
+      // Recuperar datos de orden para mostrar total y email
+      const orderDataStr = localStorage.getItem('wompi_order_data');
+      if (orderDataStr) {
+        const orderData = JSON.parse(orderDataStr);
+        total.value = parseFloat(orderData.total || 0);
+        email.value = orderData.customer_email || '';
+      }
 
       // Limpiar localStorage
-      localStorage.removeItem('wompi_transaction_id');
+      localStorage.removeItem('wompi_reference');
       localStorage.removeItem('wompi_order_data');
+      localStorage.removeItem('wompi_widget_data');
 
       // Limpiar sessionStorage
       sessionStorage.removeItem('checkout_order_data');
@@ -124,6 +166,8 @@ async function confirmPayment() {
       // Limpiar estado de pago
       paymentStore.clearPaymentState();
 
+      loading.value = false;
+
       // Iniciar contador de redirección
       const countdownInterval = setInterval(() => {
         redirectCountdown.value--;
@@ -132,25 +176,78 @@ async function confirmPayment() {
           goToHome();
         }
       }, 1000);
-
+      
+    } else if (result.status === 'error') {
+      // Error al procesar el pago
+      console.error('❌ [WOMPI] Error en el pago:', result.error);
+      
+      // Detener polling
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+      }
+      
+      loading.value = false;
+      success.value = false;
+      errorMessage.value = result.error || 'Error al procesar el pago';
+      
     } else {
-      throw new Error(result.error || 'Error al confirmar el pago');
+      // Status 'pending' - continuar polling
+      pollingAttempts.value++;
+      
+      if (pollingAttempts.value >= maxPollingAttempts.value) {
+        // Timeout - demasiados intentos
+        console.warn('⏱️ [WOMPI] Timeout esperando confirmación del pago');
+        
+        if (pollingInterval.value) {
+          clearInterval(pollingInterval.value);
+          pollingInterval.value = null;
+        }
+        
+        loading.value = false;
+        success.value = false;
+        errorMessage.value = 'El pago está tomando más tiempo de lo esperado. Por favor verifica tu email o contacta a soporte.';
+      }
     }
 
   } catch (error) {
-    console.error('❌ [WOMPI] Error al confirmar pago:', error);
+    console.error('❌ [WOMPI] Error al verificar estado:', error);
     
+    // Detener polling en caso de error
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value);
+      pollingInterval.value = null;
+    }
+    
+    loading.value = false;
     success.value = false;
     errorMessage.value = error.message || 'Error al verificar el pago. Por favor contacta a soporte.';
-
-  } finally {
-    loading.value = false;
   }
 }
 
+function startPolling() {
+  // Verificar inmediatamente
+  checkPaymentStatus();
+  
+  // Luego verificar cada segundo
+  pollingInterval.value = setInterval(() => {
+    checkPaymentStatus();
+  }, 1000);
+}
+
 // Lifecycle
-onMounted(async () => {
-  await confirmPayment();
+onMounted(() => {
+  console.log('🚀 [WOMPI SUCCESS] Iniciando polling de estado de pago');
+  startPolling();
+});
+
+// Cleanup on unmount
+import { onUnmounted } from 'vue';
+onUnmounted(() => {
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value);
+    pollingInterval.value = null;
+  }
 });
 </script>
 
@@ -187,6 +284,13 @@ onMounted(async () => {
 .loading-state p {
   color: var(--color-brand-blue-medium);
   font-size: 1rem;
+}
+
+.polling-info {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-brand-purple-light);
+  font-style: italic;
 }
 
 .spinner {
@@ -336,6 +440,56 @@ onMounted(async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Manual Instructions */
+.manual-instructions {
+  background: var(--color-brand-pink-lighter);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+  border: 1px solid var(--color-brand-pink-light);
+}
+
+.instruction-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-brand-pink-dark);
+  margin-bottom: 0.75rem;
+}
+
+.instruction-text {
+  color: var(--color-brand-dark);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.manual-input-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-direction: column;
+}
+
+.manual-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-brand-pink-light);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.3s ease;
+}
+
+.manual-input:focus {
+  outline: none;
+  border-color: var(--color-brand-purple-light);
+}
+
+.manual-input::placeholder {
+  color: var(--color-brand-blue-medium);
+  opacity: 0.6;
 }
 
 /* Responsive */

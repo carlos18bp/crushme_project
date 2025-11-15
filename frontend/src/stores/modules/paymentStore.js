@@ -219,13 +219,13 @@ export const usePaymentStore = defineStore('payment', () => {
     error.value = null;
 
     try {
-      console.log('💳 [WOMPI] Creando transacción...', orderData);
+      console.log('💳 [WOMPI] Preparando widget de pago...', orderData);
       
       const response = await create_request('orders/wompi/create/', orderData);
       
+      // El backend ahora retorna widget_data en lugar de payment_url
       const transactionData = {
-        transaction_id: response.data.transaction_id || response.data.id,
-        payment_url: response.data.payment_url || response.data.url,
+        widget_data: response.data.widget_data,
         reference: response.data.reference,
         total: response.data.total,
         amount_in_cents: response.data.amount_in_cents,
@@ -234,15 +234,15 @@ export const usePaymentStore = defineStore('payment', () => {
 
       currentOrder.value = transactionData;
 
-      console.log('✅ [WOMPI] Transacción creada:', transactionData);
+      console.log('✅ [WOMPI] Widget data recibida:', transactionData);
 
       return { 
         success: true, 
         data: transactionData
       };
     } catch (err) {
-      console.error('❌ [WOMPI] Error creando transacción:', err);
-      error.value = err.response?.data?.error || 'Failed to create Wompi transaction';
+      console.error('❌ [WOMPI] Error preparando widget:', err);
+      error.value = err.response?.data?.error || 'Failed to prepare Wompi widget';
 
       return { 
         success: false, 
@@ -251,6 +251,32 @@ export const usePaymentStore = defineStore('payment', () => {
       };
     } finally {
       isProcessing.value = false;
+    }
+  }
+
+  /**
+   * Verificar estado del pago Wompi (polling)
+   * GET /api/orders/wompi/status/{reference}/
+   * @param {string} reference - Referencia de la transacción
+   */
+  async function checkWompiPaymentStatus(reference) {
+    try {
+      const response = await get_request(`orders/wompi/status/${reference}/`);
+      
+      return {
+        status: response.data.status, // 'pending', 'success', or 'error'
+        order_id: response.data.order_id,
+        transaction_id: response.data.transaction_id,
+        error: response.data.error,
+        message: response.data.message
+      };
+    } catch (err) {
+      console.error('❌ [WOMPI] Error verificando estado:', err);
+      
+      return {
+        status: 'error',
+        error: err.response?.data?.error || 'Failed to check payment status'
+      };
     }
   }
 
@@ -395,6 +421,7 @@ export const usePaymentStore = defineStore('payment', () => {
     // Actions - Wompi
     fetchWompiConfig,
     createWompiTransaction,
+    checkWompiPaymentStatus,
     confirmWompiPayment,
     
     // Actions - Discounts

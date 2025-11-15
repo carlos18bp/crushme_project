@@ -12,7 +12,7 @@ from ..views.paypal_order_views import (
     create_paypal_order, capture_paypal_order, get_paypal_config
 )
 from ..views.wompi_order_views import (
-    create_wompi_transaction, confirm_wompi_payment, get_wompi_config, wompi_webhook
+    create_wompi_transaction, confirm_wompi_payment, get_wompi_config, wompi_webhook, check_payment_status
 )
 from ..views.gift_views import send_gift
 
@@ -30,6 +30,7 @@ urlpatterns = [
     path('wompi/create/', create_wompi_transaction, name='create_wompi_transaction'),
     path('wompi/confirm/', confirm_wompi_payment, name='confirm_wompi_payment'),
     path('wompi/webhook/', wompi_webhook, name='wompi_webhook'),  # For Wompi event notifications
+    path('wompi/status/<str:reference>/', check_payment_status, name='check_payment_status'),  # For frontend polling
     
     # Order management (Legacy - direct order creation without payment)
     path('', get_orders, name='get_orders'),
