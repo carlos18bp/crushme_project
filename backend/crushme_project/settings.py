@@ -23,6 +23,19 @@ ALLOWED_HOSTS = [
     'www.crushme.com.co',  # Production domain with www
 ]
 
+# Cache Configuration
+# IMPORTANT: Use Redis in production for webhook data persistence across workers
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'crushme',
+        'TIMEOUT': 3600,  # 1 hour default
+    }
+}
 
 # Application definition
 

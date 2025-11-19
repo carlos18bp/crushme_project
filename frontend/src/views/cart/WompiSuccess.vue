@@ -22,7 +22,7 @@ const { showLoading, showSuccess, showError, closeAlert } = useAlert();
 
 // State
 const pollingInterval = ref(null);
-const maxPollingAttempts = ref(60);
+const maxPollingAttempts = ref(300); // 300 segundos = 5 minutos (máximo, se detiene antes si responde)
 const pollingAttempts = ref(0);
 
 // Methods
