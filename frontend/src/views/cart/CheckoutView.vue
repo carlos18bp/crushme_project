@@ -752,8 +752,11 @@ const proceedToPayment = async () => {
         gift_message: shippingForm.value.note || '',
         is_gift: true,
         shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
+        // ⭐ Enviar subtotal SIN descuento para validación del backend
+        subtotal: currencyStore.currentCurrency === 'USD' ? parseFloat(subtotal.value.toFixed(2)) : subtotal.value,
+        // ⭐ Enviar total CON descuento aplicado (para PayPal/Wompi)
         total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value,
-        // Incluir código de descuento si existe
+        // Incluir código de descuento - el backend validará y aplicará el descuento
         discount_code: discountData.value ? discountData.value.code : null,
         // Incluir wishlist data si existe
         is_from_wishlist: !!wishlistId.value,
@@ -788,24 +791,32 @@ const proceedToPayment = async () => {
         phone_number: `${shippingForm.value.phoneCode} ${shippingForm.value.phone}`,
         notes: shippingForm.value.additionalDetails || '',
         shipping: currencyStore.currentCurrency === 'USD' ? parseFloat(baseShipping.value.toFixed(2)) : baseShipping.value,
+        // ⭐ Enviar subtotal SIN descuento para validación del backend
+        subtotal: currencyStore.currentCurrency === 'USD' ? parseFloat(subtotal.value.toFixed(2)) : subtotal.value,
+        // ⭐ Enviar total CON descuento aplicado (para PayPal/Wompi)
         total: currencyStore.currentCurrency === 'USD' ? parseFloat(total.value.toFixed(2)) : total.value,
-        // Incluir código de descuento si existe
+        // Incluir código de descuento - el backend validará y aplicará el descuento
         discount_code: discountData.value ? discountData.value.code : null
       };
     }
 
     console.log('📤 [CHECKOUT] Datos de orden preparados:', orderData);
+    console.log('🎟️ [CHECKOUT] discount_code en orderData:', orderData.discount_code);
     
     // Log del descuento aplicado
     if (discountData.value) {
       console.log('🎟️ [DISCOUNT] Código de descuento incluido en orden:', {
         code: discountData.value.code,
         percentage: discountData.value.discount_percentage,
-        subtotal_original: subtotal.value,
-        descuento: discountAmount.value,
-        subtotal_con_descuento: subtotalAfterDiscount.value,
-        total_final: total.value
+        subtotal_original: orderData.subtotal,
+        descuento_aplicado: discountAmount.value,
+        total_con_descuento: orderData.total,
+        shipping: orderData.shipping,
+        discount_code_enviado: orderData.discount_code,
+        nota: 'Backend validará el descuento usando subtotal + discount_code'
       });
+    } else {
+      console.log('ℹ️ [CHECKOUT] No hay código de descuento aplicado');
     }
 
     // Procesar pago según la moneda

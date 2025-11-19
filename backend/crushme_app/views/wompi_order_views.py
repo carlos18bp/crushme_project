@@ -57,11 +57,15 @@ def create_wompi_transaction(request):
         customer_name = request.data.get('customer_name', 'Guest')
         customer_email = request.data.get('customer_email', '')
         phone_number = request.data.get('phone_number', '')
+        discount_code_raw = request.data.get('discount_code', '')
+        discount_code = discount_code_raw.strip().upper() if discount_code_raw else ''
         
         # Log received data for debugging
         logger.info(f"📦 [WOMPI] Received {len(items)} items from frontend")
         logger.info(f"👤 [WOMPI] Customer: {customer_name} ({customer_email})")
         logger.info(f"📱 [WOMPI] Phone: {phone_number}")
+        if discount_code:
+            logger.info(f"🎟️ [WOMPI] Discount code received: {discount_code}")
         for idx, item in enumerate(items):
             logger.info(f"  Item {idx + 1}: {item}")
         
@@ -106,10 +110,28 @@ def create_wompi_transaction(request):
         items = valid_items
         logger.info(f"✅ Validated {len(items)} items for Wompi transaction")
         
-        # Calculate total
-        items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
+        # Get values from frontend (already calculated with discount applied)
         shipping_cost = float(request.data.get('shipping', 0))
-        total_amount = items_total + shipping_cost
+        total_amount = float(request.data.get('total', 0))
+        
+        # Validate discount code if provided (for usage tracking)
+        discount_percentage = 0
+        
+        if discount_code:
+            from ..models import DiscountCode
+            try:
+                discount = DiscountCode.objects.get(code=discount_code, is_active=True)
+                
+                if discount.is_valid():
+                    discount_percentage = float(discount.discount_percentage)
+                    logger.info(f"✅ [WOMPI] Discount code validated: {discount_code} ({discount_percentage}%)")
+                    
+                    # Increment usage counter
+                    discount.increment_usage()
+                else:
+                    logger.warning(f"⚠️ [WOMPI] Discount code invalid or expired: {discount_code}")
+            except DiscountCode.DoesNotExist:
+                logger.warning(f"⚠️ [WOMPI] Discount code not found: {discount_code}")
         
         # Convert to cents (Wompi requires amount in cents)
         amount_in_cents = int(total_amount * 100)
@@ -121,8 +143,10 @@ def create_wompi_transaction(request):
         # Get redirect URL from settings
         redirect_url = f"{settings.FRONTEND_URL}/checkout/wompi/success"
         
-        logger.info(f"💰 [WOMPI] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount} COP")
+        logger.info(f"💰 [WOMPI] Total from frontend (with discount): {total_amount} COP")
+        logger.info(f"💰 [WOMPI] Shipping: {shipping_cost} COP")
         logger.info(f"💰 [WOMPI] Amount in cents: {amount_in_cents}")
+        logger.info(f"💰 [WOMPI] Items count: {len(items)}")
         
         # Create Wompi transaction
         wompi_result = wompi_service.create_transaction(
@@ -162,6 +186,9 @@ def create_wompi_transaction(request):
                 'is_from_wishlist': request.data.get('is_from_wishlist', False),
                 'wishlist_id': request.data.get('wishlist_id'),
                 'wishlist_name': request.data.get('wishlist_name'),
+                # Discount data
+                'discount_code': discount_code if discount_code else None,
+                'discount_percentage': discount_percentage,
                 # Language
                 'language': request.headers.get('Accept-Language', 'en').split(',')[0].split('-')[0]
             }
@@ -177,7 +204,8 @@ def create_wompi_transaction(request):
                 'reference': reference,
                 'total': str(total_amount),
                 'amount_in_cents': amount_in_cents,
-                'items_count': len(items)
+                'items_count': len(items),
+                'discount_applied': bool(discount_code)
             }, status=status.HTTP_201_CREATED)
         else:
             return Response({

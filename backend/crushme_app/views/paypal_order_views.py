@@ -32,7 +32,7 @@ def create_paypal_order_data(data_dict):
             - customer_email, customer_name, items, shipping_address,
             - shipping_city, shipping_state, shipping_postal_code,
             - shipping_country, phone_number, notes, gift_message,
-            - is_gift, sender_username, receiver_username
+            - is_gift, sender_username, receiver_username, discount_code
 
     Returns:
         Response-like object with status_code and data attributes
@@ -42,9 +42,13 @@ def create_paypal_order_data(data_dict):
         items = data_dict.get('items', [])
         customer_name = data_dict.get('customer_name', 'Guest')
         customer_email = data_dict.get('customer_email', '')
+        discount_code_raw = data_dict.get('discount_code', '')
+        discount_code = discount_code_raw.strip().upper() if discount_code_raw else ''
 
         # Log received items for debugging
         logger.info(f"📦 [PAYPAL] Received {len(items)} items from frontend")
+        if discount_code:
+            logger.info(f"🎟️ [PAYPAL] Discount code received: {discount_code}")
         for idx, item in enumerate(items):
             logger.info(f"  Item {idx + 1}: {item}")
 
@@ -108,47 +112,78 @@ def create_paypal_order_data(data_dict):
             from rest_framework.response import Response
             return Response({'error': 'Missing required shipping information'}, status=400)
 
-        # Build cart items for PayPal
+        # Build cart items for PayPal and calculate items_total
         cart_items = []
         items_total = 0
+        
         for item in items:
+            item_price = round(float(item['unit_price']), 2)
+            item_quantity = item['quantity']
+            
             cart_items.append({
                 'product_name': item['product_name'],
-                'quantity': item['quantity'],
-                'unit_price': round(float(item['unit_price']), 2),
+                'quantity': item_quantity,
+                'unit_price': item_price,
                 'woocommerce_product_id': item['woocommerce_product_id']
             })
-            items_total += float(item['unit_price']) * item['quantity']
-
-        # Round to 2 decimals to avoid floating point precision errors
+            
+            items_total += item_price * item_quantity
+        
         items_total = round(items_total, 2)
         
-        # Get shipping cost from request
+        # Get values from frontend
         shipping_cost = round(float(data_dict.get('shipping', 0)), 2)
+        total_amount = round(float(data_dict.get('total', 0)), 2)
         
-        # Total DEBE incluir productos + shipping para PayPal
-        total_amount = round(items_total + shipping_cost, 2)
+        # Calculate discount amount: items_total + shipping - total
+        discount_amount = round(items_total + shipping_cost - total_amount, 2)
+        
+        # Validate discount code if provided (for usage tracking)
+        discount_percentage = 0
+        
+        if discount_code and discount_amount > 0:
+            from ..models import DiscountCode
+            try:
+                discount = DiscountCode.objects.get(code=discount_code, is_active=True)
+                
+                if discount.is_valid():
+                    discount_percentage = float(discount.discount_percentage)
+                    logger.info(f"✅ [PAYPAL] Discount code validated: {discount_code} ({discount_percentage}%)")
+                    logger.info(f"💰 [PAYPAL] Discount amount: ${discount_amount}")
+                    
+                    # Increment usage counter
+                    discount.increment_usage()
+                else:
+                    logger.warning(f"⚠️ [PAYPAL] Discount code invalid or expired: {discount_code}")
+            except DiscountCode.DoesNotExist:
+                logger.warning(f"⚠️ [PAYPAL] Discount code not found: {discount_code}")
         
         # Log para debugging
-        logger.info(f"💰 [PAYPAL] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")
+        logger.info(f"💰 [PAYPAL] Items total: ${items_total}")
+        logger.info(f"💰 [PAYPAL] Shipping: ${shipping_cost}")
+        logger.info(f"💰 [PAYPAL] Discount: ${discount_amount}")
+        logger.info(f"💰 [PAYPAL] Total from frontend: ${total_amount}")
+        logger.info(f"💰 [PAYPAL] Validation: {items_total} + {shipping_cost} - {discount_amount} = {total_amount}")
 
         # Create PayPal order
         paypal_result = paypal_service.create_order(
             cart_items=cart_items,
             shipping_info=shipping_info,
             total_amount=total_amount,
-            shipping_cost=shipping_cost
+            shipping_cost=shipping_cost,
+            discount_amount=discount_amount
         )
 
         if paypal_result['success']:
-            # Store gift data in session-like storage for later retrieval during capture
-            # We'll use a simple approach: store in a temporary model or use Django's cache
+            # Store gift data and discount info in cache for later retrieval during capture
             from django.core.cache import cache
             gift_data = {
                 'is_gift': data_dict.get('is_gift', False),
                 'sender_username': data_dict.get('sender_username'),
                 'receiver_username': data_dict.get('receiver_username'),
-                'gift_message': data_dict.get('gift_message', '')
+                'gift_message': data_dict.get('gift_message', ''),
+                'discount_code': discount_code if discount_code else None,
+                'discount_percentage': discount_percentage
             }
 
             # Store gift data with PayPal order ID as key (expires in 1 hour)
@@ -160,7 +195,8 @@ def create_paypal_order_data(data_dict):
                 'message': 'PayPal order created successfully',
                 'paypal_order_id': paypal_result['order_id'],
                 'total': str(total_amount),
-                'items_count': len(cart_items)
+                'items_count': len(cart_items),
+                'discount_applied': bool(discount_code)
             }, status=201)
         else:
             from rest_framework.response import Response

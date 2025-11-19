@@ -88,6 +88,12 @@ def send_gift(request):
                     'error': 'Invalid item format. Each item must have: woocommerce_product_id, product_name, quantity, unit_price'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Get discount code if provided
+        discount_code_raw = request.data.get('discount_code', '')
+        discount_code = discount_code_raw.strip().upper() if discount_code_raw else ''
+        if discount_code:
+            logger.info(f"🎟️ [GIFT] Discount code received: {discount_code}")
+
         # Get shipping cost from request
         shipping_cost = round(float(request.data.get('shipping', 0)), 2)
         
@@ -104,7 +110,7 @@ def send_gift(request):
             'customer_email': receiver_user.email,
             'customer_name': receiver_user.get_full_name() or receiver_username,
             'items': items,
-            'shipping': shipping_cost,  # ← AGREGADO: Shipping cost
+            'shipping': shipping_cost,
             'shipping_address': shipping_info['address']['address_line_1'],
             'shipping_city': shipping_info['address']['city'],
             'shipping_state': shipping_info['address']['state'],
@@ -115,7 +121,8 @@ def send_gift(request):
             'gift_message': request.data.get('gift_message', ''),
             'is_gift': True,  # Mark as gift order
             'sender_username': request.data.get('sender_username'),  # Who sent the gift
-            'receiver_username': receiver_username  # Who receives the gift
+            'receiver_username': receiver_username,  # Who receives the gift
+            'discount_code': discount_code if discount_code else None  # Discount code
         }
 
         # Create PayPal order

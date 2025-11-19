@@ -158,15 +158,16 @@ class PayPalService:
                 'error': str(e)
             }
     
-    def create_order(self, cart_items, shipping_info, total_amount, shipping_cost=0):
+    def create_order(self, cart_items, shipping_info, total_amount, shipping_cost=0, discount_amount=0):
         """
         Create a PayPal order
         
         Args:
             cart_items: List of items from cart
             shipping_info: Dict with shipping address
-            total_amount: Decimal total amount (items + shipping)
+            total_amount: Decimal total amount (items + shipping - discount)
             shipping_cost: Decimal shipping cost
+            discount_amount: Decimal discount amount
         
         Returns:
             dict: PayPal order response with order_id
@@ -180,7 +181,7 @@ class PayPalService:
             access_token = auth_result['access_token']
             
             # Build order payload
-            payload = self._build_order_payload(cart_items, shipping_info, total_amount, shipping_cost)
+            payload = self._build_order_payload(cart_items, shipping_info, total_amount, shipping_cost, discount_amount)
             
             # Create order
             url = f"{self.base_url}/v2/checkout/orders"
@@ -287,15 +288,16 @@ class PayPalService:
                 'error': str(e)
             }
     
-    def _build_order_payload(self, cart_items, shipping_info, total_amount, shipping_cost=0):
+    def _build_order_payload(self, cart_items, shipping_info, total_amount, shipping_cost=0, discount_amount=0):
         """
-        Build PayPal order payload with shipping included
+        Build PayPal order payload with shipping and discount
         
         Args:
             cart_items: List of items from cart
             shipping_info: Dict with shipping address
-            total_amount: Total amount (items + shipping)
+            total_amount: Total amount (items + shipping - discount)
             shipping_cost: Shipping cost
+            discount_amount: Discount amount
         """
         # Build purchase units with items
         items = []
@@ -340,30 +342,40 @@ class PayPalService:
             }
             logger.info(f"💰 [PAYPAL PAYLOAD] Including shipping in breakdown: {shipping_cost}")
         
+        # Add discount to breakdown if present
+        discount_amount = round(float(discount_amount), 2) if discount_amount else 0
+        if discount_amount and discount_amount > 0:
+            breakdown['discount'] = {
+                'currency_code': 'USD',
+                'value': f"{discount_amount:.2f}"
+            }
+            logger.info(f"💰 [PAYPAL PAYLOAD] Including discount in breakdown: {discount_amount}")
+        
+        # Build purchase unit
+        purchase_unit = {
+            'amount': {
+                'currency_code': 'USD',
+                'value': f"{total_amount:.2f}",
+                'breakdown': breakdown
+            },
+            'items': items,
+            'shipping': {
+                'name': {
+                    'full_name': shipping_info.get('name', 'Customer')
+                },
+                'address': {
+                    'address_line_1': shipping_info.get('address_line_1', ''),
+                    'admin_area_2': shipping_info.get('city', ''),
+                    'admin_area_1': shipping_info.get('state', ''),
+                    'postal_code': shipping_info.get('zipcode', ''),
+                    'country_code': country_code
+                }
+            }
+        }
+        
         payload = {
             'intent': 'CAPTURE',
-            'purchase_units': [
-                {
-                    'amount': {
-                        'currency_code': 'USD',
-                        'value': f"{total_amount:.2f}",
-                        'breakdown': breakdown
-                    },
-                    'items': items,
-                    'shipping': {
-                        'name': {
-                            'full_name': shipping_info.get('name', 'Customer')
-                        },
-                        'address': {
-                            'address_line_1': shipping_info.get('address_line_1', ''),
-                            'admin_area_2': shipping_info.get('city', ''),
-                            'admin_area_1': shipping_info.get('state', ''),
-                            'postal_code': shipping_info.get('zipcode', ''),
-                            'country_code': country_code  # Now using normalized 2-letter code
-                        }
-                    }
-                }
-            ],
+            'purchase_units': [purchase_unit],
             'application_context': {
                 'brand_name': 'CrushMe Store',
                 'landing_page': 'NO_PREFERENCE',
@@ -373,7 +385,8 @@ class PayPalService:
             }
         }
         
-        logger.info(f"💰 [PAYPAL PAYLOAD] Total: {total_amount}, Items: {items_total}, Shipping: {shipping_cost}")
+        logger.info(f"💰 [PAYPAL PAYLOAD] Total: {total_amount}, Items: {items_total}, Shipping: {shipping_cost}, Discount: {discount_amount}")
+        logger.info(f"💰 [PAYPAL PAYLOAD] Validation: {items_total} + {shipping_cost} - {discount_amount} = {total_amount}")
         
         return payload
 
