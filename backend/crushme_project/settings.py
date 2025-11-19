@@ -25,9 +25,10 @@ ALLOWED_HOSTS = [
 
 # Cache Configuration
 # IMPORTANT: Use Redis in production for webhook data persistence across workers
+# Using django-redis for better performance and features
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
