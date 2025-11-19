@@ -91,6 +91,8 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                 is_gift=gift_data.get('is_gift', request_data.get('is_gift', False)),
                 sender_username=gift_data.get('sender_username', request_data.get('sender_username')),
                 receiver_username=gift_data.get('receiver_username', request_data.get('receiver_username')),
+                transaction_id=transaction_id,  # Save payment transaction ID
+                payment_provider=payment_provider,  # Save payment provider
                 status='processing'  # Payment confirmed, processing order
             )
             

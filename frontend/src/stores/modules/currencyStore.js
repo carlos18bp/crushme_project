@@ -9,7 +9,7 @@ import axios from 'axios';
 
 export const useCurrencyStore = defineStore('currency', () => {
   // State
-  const currentCurrency = ref('USD'); // Default USD, will be auto-detected
+  const currentCurrency = ref('USD'); // Default to USD
   const exchangeRate = ref(null); // Optional: if you want to store the rate
   const isInitialized = ref(false);
   const detectedCountry = ref(null);
@@ -169,19 +169,19 @@ export const useCurrencyStore = defineStore('currency', () => {
       currentCurrency: currentCurrency.value,
       detectedCountry: detectedCountry.value,
       localStorage: localStorage.getItem('currency')
-    })
+    });
     
     // Si está inicializado pero no tiene detectedCountry, forzar re-detección
     if (isInitialized.value && !detectedCountry.value) {
-      console.log('⚠️ [currencyStore] Inicializado pero sin país detectado, forzando re-detección...')
-      isInitialized.value = false
+      console.log('⚠️ [currencyStore] Inicializado pero sin país detectado, forzando re-detección...');
+      isInitialized.value = false;
     }
     
     if (!isInitialized.value) {
-      console.log('🔄 [currencyStore] No está inicializado, detectando currency...')
+      console.log('🔄 [currencyStore] No está inicializado, detectando currency...');
       await detectCurrency();
     } else {
-      console.log('✅ [currencyStore] Ya está inicializado, usando currency actual:', currentCurrency.value)
+      console.log('✅ [currencyStore] Ya está inicializado, usando currency actual:', currentCurrency.value);
     }
   }
 

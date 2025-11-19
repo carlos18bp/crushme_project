@@ -118,6 +118,25 @@ class Order(models.Model):
         verbose_name="WooCommerce Order ID",
         help_text="ID of the corresponding order in WooCommerce (populated after sync)"
     )
+    
+    # Payment transaction ID (from PayPal, Wompi, etc.)
+    transaction_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        unique=True,
+        verbose_name="Transaction ID",
+        help_text="Payment transaction ID from payment provider (PayPal, Wompi, etc.)"
+    )
+    
+    # Payment provider (paypal, wompi, etc.)
+    payment_provider = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Payment Provider",
+        help_text="Payment provider used for this order (paypal, wompi, etc.)"
+    )
 
     # Gift order tracking
     is_gift = models.BooleanField(

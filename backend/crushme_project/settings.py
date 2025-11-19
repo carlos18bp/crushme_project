@@ -14,7 +14,14 @@ SECRET_KEY = 'django-insecure-n@6c1wwji_s(xko^a!p75$obp5y$(a3hvh9^qixhva755#)otg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'craggiest-unhermitically-patricia.ngrok-free.dev',  # ngrok URL for webhook testing
+    '.ngrok-free.dev',  # Allow any ngrok subdomain
+    'crushme.com.co',  # Production domain
+    'www.crushme.com.co',  # Production domain with www
+]
 
 
 # Application definition

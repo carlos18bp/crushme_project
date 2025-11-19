@@ -232,26 +232,43 @@
             </div>
           </template>
 
-          <!-- Continue to Payment Button -->
+          <!-- Payment Section -->
           <div class="form-group payment-button-section">
+            <!-- COP: Wompi Widget integrado -->
+            <div v-if="currencyStore.currentCurrency === 'COP'">
+              <div v-if="!isFormValid" class="payment-disabled-message">
+                <p>{{ $t('cart.checkout.form.buttons.completeRequired') }}</p>
+              </div>
+              <div v-else-if="wompiWidgetData" class="wompi-widget-wrapper">
+                <WompiWidget :widget-data="wompiWidgetData" render-mode="button" />
+              </div>
+              <button 
+                v-else
+                @click="prepareWompiPayment" 
+                :disabled="!isFormValid || isPreparingPayment"
+                class="payment-btn"
+              >
+                <span v-if="isPreparingPayment">{{ $t('cart.checkout.form.buttons.preparing') || 'Preparando...' }}</span>
+                <span v-else>💳 {{ $t('cart.checkout.form.buttons.payWithWompi') }}</span>
+              </button>
+            </div>
+
+            <!-- USD: PayPal Button -->
             <button 
+              v-else
               @click="proceedToPayment" 
               :disabled="!isFormValid"
-              class="continue-payment-btn"
+              class="payment-btn"
+              :class="{ 'payment-btn-disabled': !isFormValid }"
             >
-              {{ isFormValid ? (currencyStore.currentCurrency === 'COP' ? $t('cart.checkout.form.buttons.payWithWompi') : $t('cart.checkout.form.buttons.continueToPay')) : $t('cart.checkout.form.buttons.completeRequired') }}
+              <span v-if="!isFormValid">{{ $t('cart.checkout.form.buttons.completeRequired') }}</span>
+              <span v-else>{{ $t('cart.checkout.form.buttons.continueToPay') }}</span>
             </button>
+
             <p v-if="formError" class="payment-error">{{ formError }}</p>
           </div>
 
-          <!-- Wompi Widget Section (COP only) -->
-          <div v-if="showWompiWidget && wompiWidgetData && currencyStore.currentCurrency === 'COP'" id="wompi-widget-section" class="wompi-section">
-            <h3 class="wompi-title">💳 Completa tu pago</h3>
-            <p class="wompi-description">Selecciona tu método de pago preferido</p>
-            <WompiWidget :widget-data="wompiWidgetData" render-mode="button" />
-          </div>
-
-          <!-- PayPal Buttons Section (USD only) -->
+          <!-- PayPal Buttons Section (USD only) - Hidden until form is valid -->
           <div v-if="showPayPalButtons && currencyStore.currentCurrency === 'USD'" id="paypal-section" class="paypal-section">
             <h3 class="paypal-title">{{ $t('cart.checkout.form.paypal.title') }}</h3>
             <div id="paypal-button-container"></div>
@@ -819,23 +836,17 @@ const proceedToPayment = async () => {
       console.log('ℹ️ [CHECKOUT] No hay código de descuento aplicado');
     }
 
-    // Procesar pago según la moneda
-    if (currencyStore.currentCurrency === 'COP') {
-      // Wompi para COP
-      await processWompiPayment(orderData);
-    } else {
-      // PayPal para USD - guardar datos y mostrar botón
-      sessionStorage.setItem('checkout_order_data', JSON.stringify(orderData));
-      showPayPalButtons.value = true;
-      
-      // Scroll al botón de PayPal
-      setTimeout(() => {
-        const paypalSection = document.getElementById('paypal-section');
-        if (paypalSection) {
-          paypalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-    }
+    // PayPal para USD - guardar datos y mostrar botón
+    sessionStorage.setItem('checkout_order_data', JSON.stringify(orderData));
+    showPayPalButtons.value = true;
+    
+    // Scroll al botón de PayPal
+    setTimeout(() => {
+      const paypalSection = document.getElementById('paypal-section');
+      if (paypalSection) {
+        paypalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
 
   } catch (error) {
     console.error('❌ [CHECKOUT] Error al preparar datos:', error);
@@ -845,24 +856,117 @@ const proceedToPayment = async () => {
 };
 
 /**
- * ⭐ Procesar pago con Wompi (COP) - Ahora usa Widget
+ * ⭐ Variables para Wompi Widget
  */
 const wompiWidgetData = ref(null);
-const showWompiWidget = ref(false);
+const isPreparingPayment = ref(false);
 
-const processWompiPayment = async (orderData) => {
+/**
+ * ⭐ Preparar widget de Wompi (COP) - Muestra el widget integrado
+ */
+const prepareWompiPayment = async () => {
+  formError.value = '';
+  isPreparingPayment.value = true;
+
   try {
-    showLoading('Preparando pago...', '💳 Wompi');
-    
-    console.log('💳 [WOMPI] Iniciando pago con Widget...', orderData);
+    console.log('📦 [CHECKOUT] Preparando datos para Wompi...');
+
+    // Validar formulario
+    if (!isFormValid.value) {
+      formError.value = 'Por favor completa todos los campos obligatorios';
+      await showError('Completa todos los campos obligatorios.', '⚠️ Campos Incompletos');
+      isPreparingPayment.value = false;
+      return;
+    }
+
+    // Validar carrito
+    if (!cartStore.items || cartStore.items.length === 0) {
+      formError.value = 'El carrito está vacío';
+      await showError('Tu carrito está vacío.', '🛒 Carrito Vacío');
+      isPreparingPayment.value = false;
+      return;
+    }
+
+    // Preparar datos de orden (mismo código que proceedToPayment)
+    const selectedCountry = countries.find(c => c.isoCode === shippingForm.value.country);
+    const countryName = selectedCountry ? selectedCountry.name : shippingForm.value.country;
+
+    const items = cartStore.items.map(item => ({
+      woocommerce_product_id: item.product_id || item.id,
+      woocommerce_variation_id: item.variation_id || null,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit_price: parseFloat(item.price),
+      attributes: item.attributes || null
+    }));
+
+    // Agregar dropshipping
+    if (dropshippingProduct.value) {
+      items.push({
+        woocommerce_product_id: dropshippingProduct.value.id,
+        woocommerce_variation_id: null,
+        product_name: dropshippingProduct.value.name,
+        quantity: 1,
+        unit_price: parseFloat(dropshippingProduct.value.price),
+        attributes: null
+      });
+    }
+
+    let orderData;
+    if (shippingType.value === 'gift') {
+      orderData = {
+        items: items,
+        customer_email: shippingForm.value.email,
+        customer_name: isUserAuthenticated.value 
+          ? `${authStore.user?.first_name || ''} ${authStore.user?.last_name || ''}`.trim() || authStore.username
+          : shippingForm.value.email,
+        receiver_username: shippingForm.value.username.replace('@', ''),
+        gift_message: shippingForm.value.note || '',
+        is_gift: true,
+        shipping: baseShipping.value,
+        subtotal: subtotal.value,
+        total: total.value,
+        discount_code: discountData.value ? discountData.value.code : null,
+        is_from_wishlist: !!wishlistId.value,
+        wishlist_id: wishlistId.value || null,
+        wishlist_name: wishlistName.value || null,
+        shipping_address: selectedGiftUser.value?.address || 'Dirección del destinatario',
+        shipping_city: selectedGiftUser.value?.city || 'Ciudad',
+        shipping_state: selectedGiftUser.value?.state || 'Departamento',
+        shipping_postal_code: selectedGiftUser.value?.postal_code || '00000',
+        shipping_country: countryName,
+        phone_number: selectedGiftUser.value?.phone || '+57 300 0000000'
+      };
+      if (isUserAuthenticated.value) {
+        orderData.sender_username = authStore.username;
+      }
+    } else {
+      orderData = {
+        items: items,
+        customer_email: shippingForm.value.email,
+        customer_name: shippingForm.value.fullName,
+        shipping_address: shippingForm.value.address1,
+        shipping_city: shippingForm.value.city,
+        shipping_state: shippingForm.value.state,
+        shipping_postal_code: shippingForm.value.postalCode,
+        shipping_country: countryName,
+        phone_number: `${shippingForm.value.phoneCode}${shippingForm.value.phone}`,
+        shipping: baseShipping.value,
+        subtotal: subtotal.value,
+        total: total.value,
+        notes: shippingForm.value.note || '',
+        discount_code: discountData.value ? discountData.value.code : null
+      };
+    }
+
+    console.log('💳 [WOMPI] Creando transacción...', orderData);
     
     const result = await paymentStore.createWompiTransaction(orderData);
-    
-    closeAlert();
     
     if (!result.success) {
       formError.value = result.error || 'Error al preparar pago con Wompi';
       await showError(formError.value, '❌ Error en Wompi');
+      isPreparingPayment.value = false;
       return;
     }
     
@@ -871,27 +975,17 @@ const processWompiPayment = async (orderData) => {
     // Guardar datos para confirmar después
     localStorage.setItem('wompi_reference', result.data.reference);
     localStorage.setItem('wompi_order_data', JSON.stringify(orderData));
-    
-    // También guardar el widget_data para poder verificar después
     localStorage.setItem('wompi_widget_data', JSON.stringify(result.data.widget_data));
     
-    // Mostrar el widget de Wompi
+    // Mostrar el widget
     wompiWidgetData.value = result.data.widget_data;
-    showWompiWidget.value = true;
-    
-    // Scroll al widget
-    setTimeout(() => {
-      const wompiSection = document.getElementById('wompi-widget-section');
-      if (wompiSection) {
-        wompiSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+    isPreparingPayment.value = false;
     
   } catch (error) {
-    closeAlert();
     console.error('❌ [WOMPI] Error inesperado:', error);
     formError.value = 'Error al procesar el pago con Wompi';
     await showError(formError.value, '❌ Error');
+    isPreparingPayment.value = false;
   }
 };
 
@@ -1763,31 +1857,65 @@ onBeforeUnmount(() => {
   margin-top: 2rem;
 }
 
-.continue-payment-btn {
+.payment-btn {
   width: 100%;
   background: var(--color-brand-purple-light);
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 1rem 2rem;
+  padding: 1.125rem 2rem;
   font-size: 1.125rem;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.4);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.continue-payment-btn:hover:not(:disabled) {
+.payment-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(218, 157, 255, 0.5);
-  opacity: 0.9;
+  box-shadow: 0 6px 20px rgba(218, 157, 255, 0.4);
+  opacity: 0.95;
 }
 
-.continue-payment-btn:disabled {
-  opacity: 0.5;
+.payment-btn:disabled,
+.payment-btn-disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  background: #9ca3af;
+  background: #cbd5e1;
+  color: #64748b;
   box-shadow: none;
+  transform: none;
+}
+
+.payment-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Payment Disabled Message */
+.payment-disabled-message {
+  padding: 1rem;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.payment-disabled-message p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+/* Wompi Widget Wrapper */
+.wompi-widget-wrapper {
+  width: 100%;
+  overflow: visible;
 }
 
 .payment-error {
@@ -2384,31 +2512,7 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Wompi Section */
-.wompi-section {
-  margin-top: 2rem;
-  padding: 2rem;
-  background: white;
-  border-radius: 16px;
-  border: 2px solid var(--color-brand-purple-light);
-  box-shadow: 0 4px 12px rgba(218, 157, 255, 0.15);
-}
-
-.wompi-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-brand-dark);
-  margin-bottom: 0.5rem;
-  text-align: center;
-  font-family: 'Comfortaa', cursive;
-}
-
-.wompi-description {
-  font-size: 0.9375rem;
-  color: var(--color-brand-blue-medium);
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
+/* Wompi Section - REMOVED (botón integrado directamente en el formulario) */
 
 /* PayPal Section */
 .paypal-section {
