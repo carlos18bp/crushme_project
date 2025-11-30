@@ -5,7 +5,17 @@
     
     <!-- Main content -->
     <main class="main-content">
-  <div class="product-detail-view">
+      <!-- ⭐ Botón de volver con filtros -->
+      <div class="back-button-container">
+        <button @click="goBackToProducts" class="back-button">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          <span>{{ $t('productDetail.backToProducts') || 'Volver a productos' }}</span>
+        </button>
+      </div>
+      
+      <div class="product-detail-view">
         
         <!-- Loading State -->
         <div v-if="isLoadingProduct" class="loading-container">
@@ -1060,6 +1070,34 @@ const handleCreateWishlist = () => {
   router.push({ name: `ProfileWishlist-${i18nStore.locale}` })
 }
 
+// ⭐ NUEVO: Función para regresar a productos con filtros
+const goBackToProducts = () => {
+  const currentLang = i18nStore.locale
+  
+  // Intentar leer el returnTo del query
+  const returnToStr = route.query.returnTo
+  
+  if (returnToStr) {
+    try {
+      const returnQuery = JSON.parse(returnToStr)
+      console.log('🔙 Regresando a productos con filtros:', returnQuery)
+      
+      // Navegar a productos con los filtros guardados
+      router.push({
+        name: `Products-${currentLang}`,
+        query: returnQuery
+      })
+      return
+    } catch (error) {
+      console.error('❌ Error parseando returnTo:', error)
+    }
+  }
+  
+  // Si no hay returnTo o hubo error, navegar sin filtros
+  console.log('🔙 Regresando a productos sin filtros')
+  router.push({ name: `Products-${currentLang}` })
+}
+
 // Initialize
 onMounted(() => {
   loadProduct()
@@ -1164,6 +1202,68 @@ watch(product, (newProduct, oldProduct) => {
   .main-content {
     padding-top: 100px;
     padding-bottom: 3rem;
+  }
+}
+
+/* ⭐ Back Button - Mobile First */
+.back-button-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 0.75rem 1rem 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .back-button-container {
+    padding: 0 1rem 1.5rem 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .back-button-container {
+    padding: 0 1rem 2rem 1rem;
+  }
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  color: var(--color-brand-blue-medium, #406582);
+  border: 2px solid var(--color-brand-pink-light, #E9C3CD);
+  border-radius: 0.75rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.back-button:hover {
+  background-color: var(--color-brand-pink-lighter, #FAF3F3);
+  border-color: var(--color-brand-pink-medium, #D689A2);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.back-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .back-button {
+    padding: 0.625rem 1.25rem;
+    font-size: 1rem;
+    border-radius: 1rem;
+  }
+  
+  .back-button svg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 }
 

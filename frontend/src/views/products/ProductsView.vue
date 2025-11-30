@@ -547,6 +547,9 @@ const handleSortChange = async (event) => {
   sortBy.value = event.target.value
   currentPage.value = 1 // Reset to first page when sorting
   
+  // ⭐ Actualizar URL con el nuevo ordenamiento
+  updateURL()
+  
   // Recargar productos con el nuevo ordenamiento
   await loadProductsWithSort()
 }
@@ -630,7 +633,32 @@ const navigateTo = (routeName) => {
 
 const navigateToProduct = (productId) => {
   const currentLang = i18nStore.locale
-  router.push({ name: `ProductDetail-${currentLang}`, params: { id: productId } })
+  
+  // ⭐ Guardar el estado actual en el query para poder regresar con los mismos filtros
+  const returnQuery = {}
+  
+  if (selectedTheme.value) {
+    returnQuery.theme = selectedTheme.value
+  }
+  
+  if (selectedCategory.value) {
+    returnQuery.category = selectedCategory.value
+  }
+  
+  if (currentPage.value > 1) {
+    returnQuery.page = currentPage.value
+  }
+  
+  if (sortBy.value && sortBy.value !== 'mostPopular') {
+    returnQuery.sort = sortBy.value
+  }
+  
+  // Navegar al detalle del producto con el query para poder regresar
+  router.push({ 
+    name: `ProductDetail-${currentLang}`, 
+    params: { id: productId },
+    query: { returnTo: JSON.stringify(returnQuery) }
+  })
 }
 
 const toggleWishlist = (productId) => {
@@ -710,6 +738,11 @@ const updateURL = () => {
     query.page = currentPage.value
   }
   
+  // ⭐ Agregar ordenamiento si no es el default (mostPopular)
+  if (sortBy.value && sortBy.value !== 'mostPopular') {
+    query.sort = sortBy.value
+  }
+  
   // Actualizar URL sin recargar la página
   router.replace({ 
     name: route.name, 
@@ -721,7 +754,7 @@ const updateURL = () => {
  * ⭐ NUEVO: Restaurar estado desde URL
  */
 const restoreFromURL = async () => {
-  const { theme, category, page } = route.query
+  const { theme, category, page, sort } = route.query
   // También leer categoría desde params (para rutas como /products/category/:category)
   const categoryFromParams = route.params.category
   
@@ -729,8 +762,15 @@ const restoreFromURL = async () => {
     theme, 
     category, 
     categoryFromParams, 
-    page 
+    page,
+    sort
   })
+  
+  // ⭐ Restaurar ordenamiento
+  if (sort) {
+    sortBy.value = sort
+    console.log('🔍 Ordenamiento restaurado:', sort)
+  }
   
   // Restaurar página
   if (page) {
