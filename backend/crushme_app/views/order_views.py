@@ -486,12 +486,16 @@ def get_user_purchase_history(request):
             'sent_gifts_count': user.sent_gifts_count,
             'received_gifts_count': user.received_gifts.count(),
             'total_spent': float(sum(order.total for order in user.purchase_history.all()))
-        }
+        },
+        'currency': currency  # Add currency to response
     }
     
-    # Convert prices to target currency
-    from ..utils.price_helpers import convert_price_fields
-    response_data = convert_price_fields(response_data, currency)
+    # IMPORTANT: Order prices are stored in COP (base currency)
+    # Only convert to USD if user requests it
+    # If user is in Colombia (COP), prices are already in correct currency
+    if currency == 'USD':
+        from ..utils.price_helpers import convert_price_fields
+        response_data = convert_price_fields(response_data, currency)
 
     return Response(response_data, status=status.HTTP_200_OK)
 
