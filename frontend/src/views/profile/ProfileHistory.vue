@@ -6,50 +6,8 @@
         Purchase History
       </h1>
 
-      <!-- Filters -->
-      <div class="filters-section mb-4 md:mb-6">
-        <h2 class="text-base md:text-lg font-medium text-gray-900 font-comfortaa mb-3 md:mb-4">
-          Filter by
-        </h2>
-        <div class="filters-row flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
-          <!-- Search Input -->
-          <div class="search-input relative flex-1 sm:max-w-xs">
-            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <input 
-              type="text" 
-              placeholder="Search"
-              v-model="searchQuery"
-              class="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa"
-            />
-          </div>
-
-          <!-- Date Filter -->
-          <div class="date-filter relative w-full sm:w-auto">
-            <select 
-              v-model="dateFilter"
-              class="appearance-none w-full px-4 py-2 pr-10 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-pink focus:border-transparent font-comfortaa cursor-pointer bg-white"
-            >
-              <option value="">Date</option>
-              <option value="last-week">Last Week</option>
-              <option value="last-month">Last Month</option>
-              <option value="last-3-months">Last 3 Months</option>
-              <option value="last-year">Last Year</option>
-            </select>
-            <span class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </div>
-
       <!-- Loading State -->
-      <div v-if="isLoading" class="loading-state flex justify-center items-center py-12">
+      <div v-if="orderStore.isLoading" class="loading-state flex justify-center items-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-pink"></div>
       </div>
 
@@ -75,44 +33,118 @@
       </div>
 
       <!-- Orders List -->
-      <div v-else class="orders-list space-y-4 md:space-y-6">
+      <div v-else class="orders-list space-y-3 md:space-y-4">
         <!-- Order Card -->
         <div 
-          v-for="order in filteredOrders" 
+          v-for="order in displayOrders" 
           :key="order.id"
-          class="order-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-200"
+          class="order-card rounded-xl md:rounded-2xl border border-gray-200 overflow-hidden"
           style="background-color: rgba(255, 63, 213, 0.2);"
         >
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-            <!-- Left Section: Order Details -->
-            <div class="lg:col-span-2 space-y-3 md:space-y-4">
-              <!-- Order ID -->
-              <div class="order-id mb-3 md:mb-4 flex flex-wrap items-center gap-2 md:gap-3">
-                <p class="text-xs md:text-sm text-gray-600 font-comfortaa">
-                  Order ID #{{ order.orderNumber }}
+          <!-- Order Header (Always Visible) -->
+          <div 
+            @click="toggleOrderExpansion(order.id)"
+            class="order-header p-3 md:p-4 cursor-pointer hover:bg-white/30 transition-colors"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <!-- Left: Order Info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <p class="text-xs md:text-sm font-semibold text-gray-900 font-comfortaa">
+                    Order #{{ order.orderNumber }}
+                  </p>
+                  <span 
+                    v-if="order.isGift" 
+                    class="gift-badge px-2 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+                    </svg>
+                    GIFT
+                  </span>
+                </div>
+                <p class="text-xs md:text-sm text-gray-600 font-poppins">
+                  {{ order.itemCount }} {{ order.itemCount === 1 ? 'item' : 'items' }} • Total: ${{ order.total }}
                 </p>
-                <span 
-                  v-if="order.isGift" 
-                  class="gift-badge px-2.5 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full font-poppins flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 md:h-3 md:w-3" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-                  </svg>
-                  GIFT
-                </span>
               </div>
+              
+              <!-- Right: Expand Icon -->
+              <div class="flex-shrink-0">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  class="h-5 w-5 md:h-6 md:w-6 text-gray-600 transition-transform duration-200"
+                  :class="{ 'rotate-180': isOrderExpanded(order.id) }"
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-              <!-- Order Summary -->
-              <div class="order-summary">
+          <!-- Order Details (Expandable) -->
+          <div 
+            v-show="isOrderExpanded(order.id)"
+            class="order-details bg-white/50 border-t border-gray-200"
+          >
+            <div class="p-3 md:p-4 space-y-3 md:space-y-4">
+              <!-- Products Table -->
+              <div class="products-section">
                 <h3 class="text-sm md:text-base font-semibold text-gray-900 font-comfortaa mb-2">
-                  Order Summary
+                  Products
                 </h3>
-                <ul class="space-y-1 text-xs md:text-sm text-gray-600 font-comfortaa">
-                  <li>• Product: {{ order.product.name }}</li>
-                  <li>• Quantity: {{ order.quantity }}</li>
-                  <li>• Price: ${{ order.price }}</li>
-                  <li>• Shipping: {{ order.shippingMethod }}</li>
-                  <li>• Total: ${{ order.total }}</li>
-                </ul>
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead>
+                      <tr class="border-b border-gray-200">
+                        <th class="text-left py-2 px-2 text-xs md:text-sm font-semibold text-gray-700 font-poppins">Product</th>
+                        <th class="text-center py-2 px-2 text-xs md:text-sm font-semibold text-gray-700 font-poppins">Qty</th>
+                        <th class="text-right py-2 px-2 text-xs md:text-sm font-semibold text-gray-700 font-poppins">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr 
+                        v-for="item in order.items" 
+                        :key="item.id"
+                        class="border-b border-gray-100 hover:bg-white/50 transition-colors"
+                      >
+                        <td class="py-2 px-2">
+                          <div class="flex items-center gap-2 md:gap-3">
+                            <img 
+                              :src="item.image" 
+                              :alt="item.name"
+                              class="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg flex-shrink-0"
+                              @click="handleNavigateToProduct(item.productId)"
+                              style="cursor: pointer;"
+                            />
+                            <span 
+                              class="text-xs md:text-sm text-gray-900 font-poppins line-clamp-2 cursor-pointer hover:text-brand-pink"
+                              @click="handleNavigateToProduct(item.productId)"
+                            >
+                              {{ item.name }}
+                            </span>
+                          </div>
+                        </td>
+                        <td class="py-2 px-2 text-center text-xs md:text-sm text-gray-700 font-poppins">
+                          {{ item.quantity }}
+                        </td>
+                        <td class="py-2 px-2 text-right text-xs md:text-sm font-semibold text-gray-900 font-poppins">
+                          ${{ item.price }}
+                        </td>
+                      </tr>
+                      <!-- Subtotal Row -->
+                      <tr class="border-t-2 border-gray-300">
+                        <td colspan="2" class="py-2 px-2 text-right text-xs md:text-sm font-semibold text-gray-700 font-poppins">
+                          Subtotal:
+                        </td>
+                        <td class="py-2 px-2 text-right text-xs md:text-sm font-bold text-gray-900 font-poppins">
+                          ${{ order.subtotal }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Shipping Information -->
@@ -120,40 +152,50 @@
                 <h3 class="text-sm md:text-base font-semibold text-gray-900 font-comfortaa mb-2">
                   Shipping information
                 </h3>
-                <ul class="space-y-1 text-xs md:text-sm text-gray-600 font-comfortaa">
-                  <li>• Name: {{ order.shippingName }}</li>
-                  <li>• Address: {{ order.shippingAddress }}</li>
-                  <li>• Phone: {{ order.shippingPhone }}</li>
-                </ul>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600 font-poppins">
+                  <div><span class="font-semibold">Name:</span> {{ order.shippingName }}</div>
+                  <div><span class="font-semibold">Phone:</span> {{ order.shippingPhone }}</div>
+                  <div class="sm:col-span-2"><span class="font-semibold">Address:</span> {{ order.shippingAddress }}</div>
+                  <div class="sm:col-span-2"><span class="font-semibold">Shipping Method:</span> {{ order.shippingMethod }}</div>
+                </div>
+                
+                <!-- Order Summary -->
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                  <div class="space-y-1 text-xs md:text-sm font-poppins">
+                    <div class="flex justify-between text-gray-600">
+                      <span>Subtotal:</span>
+                      <span class="font-semibold">${{ order.subtotal }}</span>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                      <span>Shipping:</span>
+                      <span class="font-semibold">${{ order.shippingCost }}</span>
+                    </div>
+                    <div class="flex justify-between text-base md:text-lg font-bold text-brand-pink pt-1 border-t border-gray-200">
+                      <span>Total:</span>
+                      <span>${{ order.total }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Gift Message (if it's a gift) -->
-              <div v-if="order.isGift && order.giftMessage" class="gift-message mt-3 md:mt-4 p-3 md:p-4 bg-pink-50 rounded-lg md:rounded-xl border border-pink-200">
-                <h3 class="text-sm md:text-base font-semibold text-brand-pink font-comfortaa mb-2 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <div v-if="order.isGift && order.giftMessage" class="gift-message p-3 bg-pink-50 rounded-lg border border-pink-200">
+                <h3 class="text-sm md:text-base font-semibold text-brand-pink font-comfortaa mb-1 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                   </svg>
                   Gift Message
                 </h3>
-                <p class="text-xs md:text-sm text-gray-700 font-comfortaa italic">
+                <p class="text-xs md:text-sm text-gray-700 font-poppins italic">
                   "{{ order.giftMessage }}"
                 </p>
               </div>
-            </div>
-
-            <!-- Right Section: Product Card -->
-            <div class="lg:col-span-1">
-              <ProductCard 
-                :product="order.product"
-                :is-in-favorites="order.isFavorited"
-                @navigate-to-product="handleNavigateToProduct"
-              />
             </div>
           </div>
         </div>
 
         <!-- Empty State -->
-        <div v-if="filteredOrders.length === 0" class="empty-state text-center py-8 md:py-12">
+        <div v-if="displayOrders.length === 0" class="empty-state text-center py-8 md:py-12">
           <div class="flex flex-col items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 lg:h-24 lg:w-24 text-gray-300 mb-3 md:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -162,10 +204,9 @@
               No orders found
             </h3>
             <p class="text-sm md:text-base text-gray-500 font-comfortaa mb-4 md:mb-6">
-              {{ searchQuery || dateFilter ? 'Try adjusting your filters' : "You haven't made any purchases yet" }}
+              You haven't made any purchases yet
             </p>
             <button 
-              v-if="!searchQuery && !dateFilter"
               @click="router.push({ name: `Products-${i18nStore.locale}` })"
               class="btn-shop px-5 md:px-6 py-2.5 md:py-3 rounded-full text-white font-semibold font-poppins text-sm md:text-base transition-all duration-200 hover:opacity-90"
               style="background-color: #DA9DFF;">
@@ -173,89 +214,123 @@
             </button>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="pagination.totalPages > 1" class="pagination-container mt-6 md:mt-8 flex justify-center items-center gap-2">
+          <!-- Previous Button -->
+          <button
+            @click="goToPage(currentPage - 1)"
+            :disabled="!pagination.hasPrevious"
+            class="pagination-btn px-3 py-2 rounded-lg font-poppins text-sm transition-all duration-200"
+            :class="pagination.hasPrevious ? 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex gap-2">
+            <template v-for="page in visiblePages" :key="page">
+              <span
+                v-if="page === '...'"
+                class="w-10 h-10 flex items-center justify-center text-gray-400 font-poppins text-sm"
+              >
+                ...
+              </span>
+              <button
+                v-else
+                @click="goToPage(page)"
+                class="pagination-btn w-10 h-10 rounded-lg font-poppins text-sm font-medium transition-all duration-200"
+                :class="page === currentPage 
+                  ? 'text-white' 
+                  : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'"
+                :style="page === currentPage ? 'background-color: #DA9DFF;' : ''"
+              >
+                {{ page }}
+              </button>
+            </template>
+          </div>
+
+          <!-- Next Button -->
+          <button
+            @click="goToPage(currentPage + 1)"
+            :disabled="!pagination.hasNext"
+            class="pagination-btn px-3 py-2 rounded-lg font-poppins text-sm transition-all duration-200"
+            :class="pagination.hasNext ? 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import ProductCard from '@/components/products/ProductCard.vue'
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18nStore } from '@/stores/modules/i18nStore'
 import { useOrderStore } from '@/stores/modules/orderStore'
 import { useProfileStore } from '@/stores/modules/profileStore'
 
 // Router and stores
 const router = useRouter()
+const route = useRoute()
 const i18nStore = useI18nStore()
 const orderStore = useOrderStore()
 const profileStore = useProfileStore()
 
 // Local state
-const searchQuery = ref('')
-const dateFilter = ref('')
+const expandedOrders = ref(new Set()) // Track which orders are expanded
+const currentPage = ref(1)
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  totalCount: 0,
+  hasNext: false,
+  hasPrevious: false
+})
 
-// Computed: Filtered orders from store
-const filteredOrders = computed(() => {
-  let filtered = [...orderStore.orders]
-  
-  // Filter by search query
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(order => 
-      order.order_number?.toLowerCase().includes(query) ||
-      order.items?.some(item => 
-        item.product_name?.toLowerCase().includes(query)
-      )
-    )
-  }
-  
-  // Filter by date
-  if (dateFilter.value) {
-    const now = new Date()
-    const filterDate = new Date()
-    
-    switch (dateFilter.value) {
-      case 'last-week':
-        filterDate.setDate(now.getDate() - 7)
-        break
-      case 'last-month':
-        filterDate.setMonth(now.getMonth() - 1)
-        break
-      case 'last-3-months':
-        filterDate.setMonth(now.getMonth() - 3)
-        break
-      case 'last-year':
-        filterDate.setFullYear(now.getFullYear() - 1)
-        break
-    }
-    
-    filtered = filtered.filter(order => {
-      const orderDate = new Date(order.created_at)
-      return orderDate >= filterDate
-    })
-  }
-  
+// Computed: Display orders (no local filtering, just transform)
+const displayOrders = computed(() => {
   // Transform orders to component structure
-  return filtered.map(order => {
-    const firstItem = order.items?.[0] || {}
-    
+  return orderStore.orders.map(order => {
     // Check if it's a gift order
     const isGift = order.is_gift === true
     
-    // Parse prices as integers (Colombian pesos don't use decimals)
-    const itemPrice = Math.floor(parseFloat(firstItem.unit_price || firstItem.price || 0))
+    // Parse prices
     const orderTotal = Math.floor(parseFloat(order.total || 0))
-    const shipCost = Math.floor(parseFloat(order.shipping_cost || 0))
+    
+    // Transform all items
+    const items = (order.items || []).map(item => {
+      const itemPrice = Math.floor(parseFloat(item.unit_price || item.price || 0))
+      return {
+        id: item.id,
+        productId: item.woocommerce_product_id || item.product_id,
+        name: item.product_name || item.name || 'Product',
+        quantity: item.quantity || 1,
+        price: itemPrice,
+        image: item.image_url || item.product_image || '/placeholder-product.png'
+      }
+    })
+    
+    // Calculate subtotal (sum of all item prices)
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    
+    // Calculate shipping as difference between total and subtotal
+    const shippingCost = Math.max(0, orderTotal - subtotal)
     
     return {
       id: order.id,
       orderNumber: order.order_number || order.id,
-      quantity: firstItem.quantity || 1,
-      price: itemPrice,
+      itemCount: items.length,
+      items: items,
+      subtotal: subtotal,
       shippingMethod: order.shipping_method || 'Standard (5-7 business days)',
-      shippingCost: shipCost,
+      shippingCost: shippingCost,
       total: orderTotal,
       // For gifts, shipping info might be hidden
       shippingName: isGift 
@@ -269,16 +344,7 @@ const filteredOrders = computed(() => {
         : (order.phone_number || 'N/A'),
       date: order.created_at,
       isGift: isGift,
-      giftMessage: order.gift_message || null,
-      isFavorited: isProductInFavorites(firstItem.woocommerce_product_id || firstItem.product_id),
-      product: {
-        id: firstItem.woocommerce_product_id || firstItem.product_id,
-        name: firstItem.product_name || firstItem.name || 'Product',
-        short_description: `<p>${firstItem.product_description || firstItem.description || ''}</p><p class="price">$${itemPrice}</p>`,
-        stock_status: firstItem.stock_status || 'instock',
-        // Use image_url from backend
-        images: firstItem.image_url ? [{ src: firstItem.image_url }] : (firstItem.product_image ? [{ src: firstItem.product_image }] : [])
-      }
+      giftMessage: order.gift_message || null
     }
   })
 })
@@ -315,14 +381,102 @@ const isProductInFavorites = (productId) => {
 }
 
 const handleNavigateToProduct = (productId) => {
-  router.push({ name: `ProductDetails-${i18nStore.locale}`, params: { id: productId } })
+  router.push({ name: `ProductDetail-${i18nStore.locale}`, params: { id: productId } })
+}
+
+const toggleOrderExpansion = (orderId) => {
+  if (expandedOrders.value.has(orderId)) {
+    expandedOrders.value.delete(orderId)
+  } else {
+    expandedOrders.value.add(orderId)
+  }
+  // Force reactivity
+  expandedOrders.value = new Set(expandedOrders.value)
+}
+
+const isOrderExpanded = (orderId) => {
+  return expandedOrders.value.has(orderId)
+}
+
+// Computed: Visible page numbers for pagination
+const visiblePages = computed(() => {
+  const total = pagination.value.totalPages
+  const current = currentPage.value
+  const pages = []
+  
+  if (total <= 7) {
+    // Show all pages if 7 or less
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Always show first page
+    pages.push(1)
+    
+    if (current > 3) {
+      pages.push('...')
+    }
+    
+    // Show pages around current
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    
+    if (current < total - 2) {
+      pages.push('...')
+    }
+    
+    // Always show last page
+    pages.push(total)
+  }
+  
+  return pages
+})
+
+// Computed: Loading state (use orderStore.isLoading directly in template)
+
+// Methods
+const updateURL = () => {
+  const query = {}
+  
+  if (currentPage.value > 1) {
+    query.page = currentPage.value
+  }
+  
+  router.replace({ query })
+}
+
+const restoreFromURL = () => {
+  const page = parseInt(route.query.page) || 1
+  currentPage.value = page
+  console.log('🔍 Página restaurada desde URL:', page)
+}
+
+const goToPage = async (page) => {
+  if (page < 1 || page > pagination.value.totalPages || page === currentPage.value) {
+    return
+  }
+  
+  currentPage.value = page
+  updateURL()
+  await loadPurchaseHistory()
+  
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const loadPurchaseHistory = async () => {
-  const result = await orderStore.fetchOrders()
+  const result = await orderStore.fetchOrders(currentPage.value)
   
   if (result.success) {
     console.log('✅ Purchase history loaded:', orderStore.orders.length, 'orders')
+    console.log('📊 Pagination data:', result.pagination)
+    
+    // Update pagination data
+    if (result.pagination) {
+      pagination.value = result.pagination
+      console.log('📄 Current page:', pagination.value.currentPage, '/', pagination.value.totalPages)
+    }
     
     // Load details for each order to get items if not already loaded
     for (const order of orderStore.orders) {
@@ -335,13 +489,12 @@ const loadPurchaseHistory = async () => {
   }
 }
 
-// Watch for filter changes (local filtering, no need to refetch)
-watch([searchQuery, dateFilter], () => {
-  // Filters are applied through computed property
-})
 
 // Lifecycle hooks
 onMounted(async () => {
+  // Restore state from URL
+  restoreFromURL()
+  
   // Load purchase history on component mount
   await loadPurchaseHistory()
   
@@ -349,6 +502,10 @@ onMounted(async () => {
   if (profileStore.favoriteProducts.length === 0) {
     await profileStore.fetchFavoriteProducts()
   }
+})
+
+onBeforeUnmount(() => {
+  // Clean up if needed
 })
 </script>
 
@@ -365,9 +522,71 @@ onMounted(async () => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.order-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+.order-header:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.order-details {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* Table styles */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Brand pink color */
+.text-brand-pink {
+  color: #FF3FD5;
+}
+
+/* Pagination styles */
+.pagination-container {
+  user-select: none;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(218, 157, 255, 0.3);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 /* Custom select arrow */

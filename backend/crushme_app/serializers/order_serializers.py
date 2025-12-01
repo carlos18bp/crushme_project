@@ -659,27 +659,34 @@ class OrderHistorySerializer(serializers.ModelSerializer):
         }
     
     def get_items(self, obj):
-        """Get items with product images fetched in batch"""
-        items = obj.items.all()
+        """
+        Get items with product images from LOCAL DB (fast)
+        Returns prices as stored at purchase time (historical data)
+        Filters out dropshipping product (ID 48500) - not visible to customers
+        """
+        # Filter out dropshipping product (ID 48500)
+        items = obj.items.exclude(woocommerce_product_id=48500)
         
         # Collect all product IDs
         product_ids = [item.woocommerce_product_id for item in items]
         
-        # Fetch images in batch from WooCommerce
+        # ✅ Fetch images from LOCAL DB (fast, no API calls)
         product_images = {}
         if product_ids:
-            from ..services.woocommerce_service import woocommerce_service
-            for product_id in product_ids:
-                try:
-                    result = woocommerce_service.get_product_by_id(product_id)
-                    if result['success']:
-                        wc_product = result['data']
-                        if wc_product.get('images') and len(wc_product['images']) > 0:
-                            product_images[product_id] = wc_product['images'][0].get('src')
-                except Exception:
-                    pass  # Skip if product fetch fails
+            from ..models.woocommerce_models import WooCommerceProduct, WooCommerceProductImage
+            
+            # Get first image (position=0) for each product in a single query
+            images = WooCommerceProductImage.objects.filter(
+                product__wc_id__in=product_ids,
+                position=0  # Primary image
+            ).select_related('product').only('product__wc_id', 'src')
+            
+            # Map product_id -> image_url
+            for image in images:
+                product_images[image.product.wc_id] = image.src
         
         # Serialize items with images in context
+        # unit_price comes from OrderItem (price at purchase time)
         serializer = OrderItemLocalSerializer(
             items, 
             many=True, 

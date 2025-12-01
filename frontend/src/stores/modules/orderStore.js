@@ -63,16 +63,29 @@ export const useOrderStore = defineStore('order', () => {
 
   /**
    * Fetch user's orders (purchase history)
+   * @param {number} page - Page number (default: 1)
    */
-  async function fetchOrders() {
+  async function fetchOrders(page = 1) {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await get_request('orders/history/');
+      const response = await get_request(`orders/history/?page=${page}`);
       // Backend returns 'purchases' array in history endpoint
       orders.value = response.data.purchases || response.data.orders || [];
-      return { success: true, data: orders.value };
+      
+      // Return pagination data
+      return { 
+        success: true, 
+        data: orders.value,
+        pagination: {
+          currentPage: response.data.current_page || page,
+          totalPages: response.data.total_pages || 1,
+          totalCount: response.data.total_count || orders.value.length,
+          hasNext: response.data.has_next || false,
+          hasPrevious: response.data.has_previous || false
+        }
+      };
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to fetch orders';
       return { success: false, error: error.value };
