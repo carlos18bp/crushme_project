@@ -107,12 +107,13 @@ def search_woocommerce_products(request):
         # Buscar según idioma
         if target_lang == 'es':
             # Buscar en español (nombre y descripción corta)
-            # Crear query que busque cada palabra en nombre o descripción
-            q_objects = Q()
+            # Incluir coincidencias EXACTAS del nombre/descripción
+            q_objects = Q(name__iexact=search_query) | Q(short_description__iexact=search_query)
+            # Crear query que busque cada palabra en nombre o descripción (coincidencias parciales)
             for word in search_words:
                 q_objects |= Q(name__icontains=word) | Q(short_description__icontains=word)
             
-            # También buscar la frase completa
+            # También buscar la frase completa como coincidencia parcial
             q_objects |= Q(name__icontains=search_query) | Q(short_description__icontains=search_query)
             
             queryset = WooCommerceProduct.objects.filter(
@@ -123,12 +124,13 @@ def search_woocommerce_products(request):
             
         else:
             # Buscar en inglés (traducciones de nombre y descripción)
-            # Crear query para búsqueda por palabras en traducciones
-            q_objects = Q()
+            # Incluir coincidencias EXACTAS en el texto traducido
+            q_objects = Q(translated_text__iexact=search_query)
+            # Crear query para búsqueda por palabras en traducciones (coincidencias parciales)
             for word in search_words:
                 q_objects |= Q(translated_text__icontains=word)
             
-            # También buscar la frase completa
+            # También buscar la frase completa como coincidencia parcial
             q_objects |= Q(translated_text__icontains=search_query)
             
             # Buscar en nombres traducidos
@@ -149,7 +151,9 @@ def search_woocommerce_products(request):
             # Si no hay traducciones, buscar en el nombre original como fallback
             if not translated_products:
                 logger.info(f"⚠️ No se encontraron traducciones, buscando en nombres originales")
-                q_objects_fallback = Q()
+                # Incluir coincidencias EXACTAS en el nombre original
+                q_objects_fallback = Q(name__iexact=search_query)
+                # Y coincidencias parciales por palabra y por frase completa
                 for word in search_words:
                     q_objects_fallback |= Q(name__icontains=word)
                 q_objects_fallback |= Q(name__icontains=search_query)

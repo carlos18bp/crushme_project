@@ -9,17 +9,17 @@ import axios from 'axios';
 
 export const useCurrencyStore = defineStore('currency', () => {
   // State
-  const currentCurrency = ref('USD'); // Default to USD
+  const currentCurrency = ref('COP'); // ⭐ TEMPORAL: Cambiado a COP para testing de Wompi
   const exchangeRate = ref(null); // Optional: if you want to store the rate
   const isInitialized = ref(false);
   const detectedCountry = ref(null);
   
-  // Inicializar desde localStorage si existe
-  const storedCurrency = localStorage.getItem('currency');
-  if (storedCurrency) {
-    console.log('💱 [currencyStore] Inicializando desde localStorage:', storedCurrency);
-    currentCurrency.value = storedCurrency;
-  }
+  // ⭐ TEMPORAL: Comentado para testing de Wompi - NO leer de localStorage
+  // const storedCurrency = localStorage.getItem('currency');
+  // if (storedCurrency) {
+  //   console.log('💱 [currencyStore] Inicializando desde localStorage:', storedCurrency);
+  //   currentCurrency.value = storedCurrency;
+  // }
 
   // Getters
   const currencySymbol = computed(() => {
@@ -69,8 +69,19 @@ export const useCurrencyStore = defineStore('currency', () => {
    * Auto-detect currency based on user's country via backend geolocation API
    * Uses MaxMind GeoLite2 database for fast, reliable IP-based detection
    * COP for Colombia (CO), USD for all other countries
+   * 
+   * ⭐ TEMPORAL: Función desactivada para testing de Wompi
    */
   async function detectCurrency() {
+    // ⭐ TEMPORAL: Detección desactivada - siempre retornar COP para testing de Wompi
+    console.log('⚠️ [currencyStore] Detección automática DESACTIVADA temporalmente');
+    console.log('⚠️ [currencyStore] Forzando COP para testing de Wompi');
+    currentCurrency.value = 'COP';
+    isInitialized.value = true;
+    return 'COP';
+    
+    /* ⭐ TEMPORAL: Código original comentado - DESCOMENTAR después del testing
+    ============================================================================
     console.log('💱 [currencyStore] Iniciando detección de currency por IP...')
     console.log('💱 [currencyStore] Estado inicial:', {
       isInitialized: isInitialized.value,
@@ -158,12 +169,24 @@ export const useCurrencyStore = defineStore('currency', () => {
       isInitialized.value = true;
       return 'USD';
     }
+    ============================================================================
+    FIN del código comentado temporalmente */
   }
 
   /**
    * Initialize currency detection if not already done
+   * ⭐ TEMPORAL: Desactivada para testing de Wompi
    */
   async function initializeIfNeeded() {
+    // ⭐ TEMPORAL: No inicializar detección automática - forzar COP
+    console.log('⚠️ [currencyStore] initializeIfNeeded DESACTIVADO temporalmente');
+    console.log('⚠️ [currencyStore] Forzando COP para testing de Wompi');
+    currentCurrency.value = 'COP';
+    isInitialized.value = true;
+    return;
+    
+    /* ⭐ TEMPORAL: Código original comentado - DESCOMENTAR después del testing
+    ============================================================================
     console.log('🔄 [currencyStore] initializeIfNeeded llamado. Estado:', {
       isInitialized: isInitialized.value,
       currentCurrency: currentCurrency.value,
@@ -183,6 +206,8 @@ export const useCurrencyStore = defineStore('currency', () => {
     } else {
       console.log('✅ [currencyStore] Ya está inicializado, usando currency actual:', currentCurrency.value);
     }
+    ============================================================================
+    FIN del código comentado temporalmente */
   }
 
   return {
