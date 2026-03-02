@@ -26,6 +26,11 @@ backend/crushme_venv/
 venv/
 env/
 .venv/
+venv_cpu/
+backend/venv_cpu/
+
+# Backup files
+*.bak
 
 # Operational logs
 *.log
