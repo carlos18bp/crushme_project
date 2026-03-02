@@ -32,8 +32,8 @@ max_requests = 1000
 max_requests_jitter = 50
 
 # Logging
-accesslog = "/tmp/gunicorn-access.log"
-errorlog = "/tmp/gunicorn-error.log"
+accesslog = "-"
+errorlog = "-"
 loglevel = "info"
 
 # Process naming
@@ -46,7 +46,7 @@ preload_app = True
 daemon = False
 
 # PID file
-pidfile = "/tmp/gunicorn-crushme.pid"
+pidfile = None
 
 # User/Group (opcional, comentado por defecto)
 # user = "cerrotico"

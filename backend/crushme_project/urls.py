@@ -3,10 +3,16 @@ URL configuration for CrushMe e-commerce project
 Main URL router that includes app URLs and serves media files in development"""
 from django.contrib import admin
 from django.conf import settings
+from django.http import JsonResponse
 from django.urls import path, include, re_path
 from django.conf.urls.static import static
 from crushme_app.admin import admin_site
 from crushme_app.views.frontend_views import FrontendView
+
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'})
+
 
 urlpatterns = [
     # Custom Django admin interface (organized by sections)
@@ -14,6 +20,8 @@ urlpatterns = [
     
     # Standard Django admin (fallback)
     path('django-admin/', admin.site.urls),
+    
+    path('api/health/', health_check, name='health-check'),
     
     # API endpoints
     path('api/', include('crushme_app.urls')),
@@ -99,3 +107,6 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if getattr(settings, 'ENABLE_SILK', False):
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]

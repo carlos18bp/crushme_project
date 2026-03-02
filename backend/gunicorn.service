@@ -7,7 +7,7 @@ After=network.target
 User=ryzepeck
 Group=www-data
 WorkingDirectory=/home/ryzepeck/webapps/crushme_project/backend
-ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv/bin/gunicorn \
+ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
           --bind unix:/run/gunicorn.sock \

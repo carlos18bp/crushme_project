@@ -1,33 +1,43 @@
+"""Django base settings for crushme_project.
+
+Shared settings used by both development and production environments.
+Environment-specific overrides are auto-imported at the end of this file
+from ``settings_dev.py`` or ``settings_prod.py`` based on the
+``DJANGO_ENV`` environment variable.
+"""
+
 import os
+from datetime import timedelta
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from decouple import Csv, config
+from huey import RedisHuey
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ---------------------------------------------------------------------------
+# Environment detection
+# ---------------------------------------------------------------------------
+DJANGO_ENV = config('DJANGO_ENV', default='development')
+IS_PRODUCTION = DJANGO_ENV == 'production'
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n@6c1wwji_s(xko^a!p75$obp5y$(a3hvh9^qixhva755#)otg'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'crushme.com.co', 'www.crushme.com.co']
+# ---------------------------------------------------------------------------
+# Core Django settings
+# ---------------------------------------------------------------------------
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='change-me')
+DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 # Cache Configuration
-# IMPORTANT: Use Redis in production for webhook data persistence across workers
-# Using django-redis for better performance and features
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'LOCATION': config('REDIS_CACHE_URL', default='redis://127.0.0.1:6379/1'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
         'KEY_PREFIX': 'crushme',
-        'TIMEOUT': 3600,  # 1 hour default
+        'TIMEOUT': 3600,
     }
 }
 
@@ -47,6 +57,9 @@ INSTALLED_APPS = [
     'django_attachments',
     'crushme_app',
     'django_cleanup.apps.CleanupConfig',
+    # Operations
+    'dbbackup',
+    'huey.contrib.djhuey',
 ]
 
 MIDDLEWARE = [
@@ -61,19 +74,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
-    "https://crushme.com.co",
-    "https://www.crushme.com.co",
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://127.0.0.1:5173,http://localhost:5173',
+    cast=Csv(),
+)
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173",
-    "https://crushme.com.co",
-    "https://www.crushme.com.co",
-]
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://127.0.0.1:5173,http://localhost:5173',
+    cast=Csv(),
+)
 
 # Configuraciones adicionales de CORS para desarrollo
 CORS_ALLOW_CREDENTIALS = True
@@ -139,16 +150,8 @@ WSGI_APPLICATION = 'crushme_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'crushme',
-        'USER': 'crushme_user',
-        'PASSWORD': 'CrushM3_S3cur3_P@ss2025!',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+        'ENGINE': config('DJANGO_DB_ENGINE', default='django.db.backends.sqlite3'),
+        'NAME': config('DJANGO_DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
     }
 }
 
@@ -217,8 +220,6 @@ REST_FRAMEWORK = {
 }
 
 # JWT settings
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
@@ -227,17 +228,23 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email settings - GoDaddy SMTP Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtpout.secureserver.net'  # GoDaddy SMTP server
-EMAIL_PORT = 465  # SSL port for GoDaddy
-EMAIL_USE_SSL = True  # GoDaddy uses SSL instead of TLS
-EMAIL_HOST_USER = 'support@crushme.com.co'
-EMAIL_HOST_PASSWORD = 'cRu$hM3/2025'
-DEFAULT_FROM_EMAIL = 'CrushMe Support <support@crushme.com.co>'
-SERVER_EMAIL = 'support@crushme.com.co'  # For error emails
+# Email settings
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtpout.secureserver.net')
+EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = f"CrushMe Support <{config('EMAIL_HOST_USER', default='support@crushme.com.co')}>"
+SERVER_EMAIL = config('EMAIL_HOST_USER', default='support@crushme.com.co')
 
-# Logging configuration
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+LOG_LEVEL = config('DJANGO_LOG_LEVEL', default='INFO')
+
+(BASE_DIR / 'logs').mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -252,19 +259,32 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'backup_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'backups.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': LOG_LEVEL,
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': LOG_LEVEL,
             'propagate': False,
         },
         'crushme_app': {
             'handlers': ['console'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'backups': {
+            'handlers': ['backup_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -279,33 +299,86 @@ THUMBNAIL_ALIASES = {
     },
 }
 
-# WooCommerce API settings
-WOOCOMMERCE_CONSUMER_KEY = 'ck_2064e964032e98cf9ec26b135eb91f0605cb59c9'
-WOOCOMMERCE_CONSUMER_SECRET = 'cs_bf5fe1355fe4a2d30dae5ce5f69b6ec4d296f53c'
+# ---------------------------------------------------------------------------
+# Payment gateways and external APIs
+# ---------------------------------------------------------------------------
+WOOCOMMERCE_CONSUMER_KEY = config('WOOCOMMERCE_CONSUMER_KEY', default='')
+WOOCOMMERCE_CONSUMER_SECRET = config('WOOCOMMERCE_CONSUMER_SECRET', default='')
 WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
 
-# PayPal API settings
-# TODO: Mover estas credenciales a variables de entorno en producción
-PAYPAL_CLIENT_ID = 'AXOC4gQsXk_e8NhrrZRorJzU3rld7lOJP5_2S8RYDKUgjkDT-2wfc-1Eu1AqYQseWTcJA_VBEnGUUGCQ'
-PAYPAL_CLIENT_SECRET = 'EK58LGYfmckc4T0TKyE7_mMWKWcNW8B47s2fQYqhOLe3_zIOZUiixU11r1LBnIe3P3PTGOLcVTW8NHwG'
-PAYPAL_MODE = 'live'  # Cambiar a 'live' en producción
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID', default='')
+PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET', default='')
+PAYPAL_MODE = config('PAYPAL_MODE', default='live')
 
-# Wompi API settings (Colombian payment gateway - COP only)
-# TODO: Mover estas credenciales a variables de entorno en producción
-# Obtener credenciales en: https://comercios.wompi.co/
-WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', 'pub_prod_yG6ag71rCqGUJmVfgrYPSOFQfkjGHXOT')
-WOMPI_PRIVATE_KEY = os.environ.get('WOMPI_PRIVATE_KEY', 'prv_prod_LuKNH2CnnkVpOWlaXFpFUBXJ4GrDbfpv')
-WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', 'prod_events_rNsdyOwA4n7bBe0zapMOynNB7vV7Dql0')
-WOMPI_INTEGRITY_KEY = os.environ.get('WOMPI_INTEGRITY_KEY', 'prod_integrity_OusORPFWl3nwhPa2q4FYpGwwosFWiMJ3')  # Para firmar transacciones
-WOMPI_BASE_URL = 'https://production.wompi.co/v1'  # Sandbox URL para testing
-WOMPI_ENVIRONMENT = 'production'  # 'test' o 'production'
+WOMPI_PUBLIC_KEY = config('WOMPI_PUBLIC_KEY', default='')
+WOMPI_PRIVATE_KEY = config('WOMPI_PRIVATE_KEY', default='')
+WOMPI_EVENTS_SECRET = config('WOMPI_EVENTS_SECRET', default='')
+WOMPI_INTEGRITY_KEY = config('WOMPI_INTEGRITY_KEY', default='')
+WOMPI_BASE_URL = config('WOMPI_BASE_URL', default='https://production.wompi.co/v1')
+WOMPI_ENVIRONMENT = config('WOMPI_ENVIRONMENT', default='production')
 
-# Production/Development environment flag
-# Set to True in production, False in development
-PRODUCTION = True
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
-# Frontend URLs based on environment
-if PRODUCTION:
-    FRONTEND_URL = 'https://crushme.com.co'
+# ---------------------------------------------------------------------------
+# Huey — task queue
+# ---------------------------------------------------------------------------
+HUEY = RedisHuey(
+    name='crushme_project',
+    url=config('REDIS_URL', default='redis://localhost:6379/2'),
+    immediate=not IS_PRODUCTION,
+)
+
+# ---------------------------------------------------------------------------
+# Backups (django-dbbackup)
+# ---------------------------------------------------------------------------
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': config('BACKUP_STORAGE_PATH', default='/var/backups/crushme_project'),
+}
+DBBACKUP_COMPRESS = True
+DBBACKUP_CLEANUP_KEEP = 4
+DBBACKUP_CLEANUP_KEEP_MEDIA = 4
+
+# ==============================================================================
+# SILK — query profiling (enabled via ENABLE_SILK env flag)
+# ==============================================================================
+
+ENABLE_SILK = config('ENABLE_SILK', default=False, cast=bool)
+
+if ENABLE_SILK:
+    INSTALLED_APPS.append('silk')
+    MIDDLEWARE.insert(0, 'silk.middleware.SilkyMiddleware')
+
+    SILKY_PYTHON_PROFILER = False
+    SILKY_PYTHON_PROFILER_BINARY = False
+    SILKY_META = False
+    SILKY_ANALYZE_QUERIES = True
+
+    SILKY_AUTHENTICATION = True
+    SILKY_AUTHORISATION = True
+
+    def silk_permissions(user):
+        return user.is_staff
+
+    SILKY_PERMISSIONS = silk_permissions
+
+    SILKY_MAX_RECORDED_REQUESTS = 10_000
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
+    SILKY_INTERCEPT_PERCENT = 50
+
+    SILKY_IGNORE_PATHS = ['/admin/', '/static/', '/media/', '/silk/']
+
+    SILKY_MAX_REQUEST_BODY_SIZE = 0
+    SILKY_MAX_RESPONSE_BODY_SIZE = 0
+
+    SLOW_QUERY_THRESHOLD_MS = 500
+    N_PLUS_ONE_THRESHOLD = 10
+
+
+# ---------------------------------------------------------------------------
+# Environment-specific settings (auto-imported)
+# ---------------------------------------------------------------------------
+if IS_PRODUCTION:
+    from .settings_prod import *  # noqa: F401, F403
 else:
-    FRONTEND_URL = 'http://localhost:5173'
+    from .settings_dev import *  # noqa: F401, F403

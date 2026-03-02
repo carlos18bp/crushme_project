@@ -353,6 +353,98 @@ npm run test
 - **Axios 1.11.0** - HTTP client
 - **Vite 6.3.5** - Build tool and dev server
 
-## 📄 License
+---
+
+## Environment Configuration
+
+This project uses environment variables for configuration. Copy the example file and configure:
+
+```bash
+cp backend/.env.example backend/.env
+# Edit .env with your values
+```
+
+See `backend/.env.example` for all available options.
+
+### Settings Structure
+
+| File | Purpose |
+|------|---------|
+| `backend/crushme_project/settings.py` | Base/shared settings |
+| `backend/crushme_project/settings_dev.py` | Development: DEBUG=True, SQLite, console email |
+| `backend/crushme_project/settings_prod.py` | Production: DEBUG=False, MySQL, SMTP, security headers |
+
+The active environment is controlled by `DJANGO_ENV` (`development` or `production`).
+
+---
+
+## Task Queue
+
+This project uses [Huey](https://huey.readthedocs.io/) with Redis for background tasks.
+
+- **Development**: Tasks run synchronously (no Redis required).
+- **Production**: Tasks run asynchronously via the Huey worker process.
+
+### Scheduled Tasks
+
+| Task | Schedule | Description |
+|------|----------|-------------|
+| `scheduled_backup` | Sundays 3:00 AM | Database and media backup with compression |
+| `silk_garbage_collection` | Daily 3:30 AM | Clean Silk profiling data older than 7 days |
+| `weekly_slow_queries_report` | Tuesdays 7:00 AM | Slow query and N+1 detection report |
+| `silk_reports_cleanup` | 1st of month 5:30 AM | Clean old Silk report logs |
+
+All tasks are defined in `backend/crushme_project/tasks.py`.
+
+---
+
+## Backups
+
+Automated backups run weekly via the `scheduled_backup` Huey task. Backups are stored in the path configured by the `BACKUP_STORAGE_PATH` environment variable (default: `/var/backups/crushme_project/`) with 90-day retention.
+
+Manual backup commands:
+
+```bash
+cd backend
+source venv/bin/activate
+python manage.py dbbackup --compress
+python manage.py mediabackup --compress
+```
+
+---
+
+## Performance Monitoring
+
+Query profiling with [django-silk](https://github.com/jazzband/django-silk) is available behind the `ENABLE_SILK` environment variable flag.
+
+Set `ENABLE_SILK=true` in your `.env` file to enable. Access at `/silk/` (staff users only).
+
+Garbage collection runs daily at 3:30 AM. Weekly slow-query reports are generated Tuesdays at 7:00 AM.
+
+---
+
+## Documentation & Standards
+
+Project standards and architecture guides are located in the `docs/` folder:
+
+- `docs/DJANGO_VUE_ARCHITECTURE_STANDARD.md` — Architecture and project structure reference
+- `docs/GLOBAL_RULES_GUIDELINES.md` — Development rules and engineering guidelines
+- `docs/TESTING_QUALITY_STANDARDS.md` — Test quality criteria, patterns, and anti-patterns
+- `docs/TEST_QUALITY_GATE_REFERENCE.md` — Quality gate tool reference and configuration
+- `docs/BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md` — Coverage report standards
+- `docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md` — E2E flow coverage tagging and report details
+- `docs/deployment-guide.md` — Production deployment guide
+
+---
+
+## Production
+
+- **Domain**: `crushme.com.co` / `www.crushme.com.co`
+- **Services**: `gunicorn.service`, `crushme-huey.service`
+- **Deploy**: See `docs/deployment-guide.md` or run `/deploy-and-check` workflow
+
+---
+
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
