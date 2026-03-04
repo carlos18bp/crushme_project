@@ -1,0 +1,16 @@
+[Unit]
+Description=Huey Task Queue for crushme_project
+After=network.target redis.service
+
+[Service]
+Type=simple
+User=ryzepeck
+Group=www-data
+WorkingDirectory=/home/ryzepeck/webapps/crushme_project/backend
+ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/python manage.py run_huey --workers 1
+Environment="DJANGO_SETTINGS_MODULE=crushme_project.settings"
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

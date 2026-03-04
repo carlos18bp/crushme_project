@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-04",
+  "flows": {
+    "auth-login": {
+      "name": "Login",
+      "module": "auth",
+      "roles": ["guest"],
+      "priority": "P1",
+      "description": "Authenticate with valid credentials and handle login errors."
+    },
+    "auth-register": {
+      "name": "Register",
+      "module": "auth",
+      "roles": ["guest"],
+      "priority": "P1",
+      "description": "Create a new account with email and password."
+    },
+    "public-home": {
+      "name": "Home Page",
+      "module": "public",
+      "roles": ["guest", "user"],
+      "priority": "P2",
+      "description": "View the public home/landing page."
+    }
+  }
+}
