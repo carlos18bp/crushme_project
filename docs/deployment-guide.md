@@ -12,11 +12,11 @@ Instructions for deploying crushme_project to production.
 
 ---
 
-## Deploy from master
+## Deploy from main
 
 ```bash
 cd /home/ryzepeck/webapps/crushme_project
-git pull origin master
+git pull origin main
 
 # Backend
 cd backend
