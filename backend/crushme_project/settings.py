@@ -201,6 +201,21 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+    'dbbackup': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': config('BACKUP_STORAGE_PATH', default='/var/backups/crushme_project'),
+        },
+    },
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -331,10 +346,7 @@ HUEY = RedisHuey(
 # ---------------------------------------------------------------------------
 # Backups (django-dbbackup)
 # ---------------------------------------------------------------------------
-DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-DBBACKUP_STORAGE_OPTIONS = {
-    'location': config('BACKUP_STORAGE_PATH', default='/var/backups/crushme_project'),
-}
+# Storage is configured via STORAGES['dbbackup'] above (new-style API).
 DBBACKUP_COMPRESS = True
 DBBACKUP_CLEANUP_KEEP = 4
 DBBACKUP_CLEANUP_KEEP_MEDIA = 4
