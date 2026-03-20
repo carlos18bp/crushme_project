@@ -71,6 +71,13 @@ sudo tail -20 /var/log/nginx/error.log
 - **Resource limits**: MemoryMax=650MB, CPUQuota=60%, OOMScoreAdjust=200
 - **Redis DB**: /2 (Huey), /1 (Cache)
 
+## Cleanup
+
+9. Remove `node_modules` to save disk space (frontend already compiled):
+```bash
+rm -rf /home/ryzepeck/webapps/crushme_project/frontend/node_modules
+```
+
 ## Notes
 
 - `~/scripts` is a symlink to `/home/ryzepeck/webapps/ops/vps/`.
