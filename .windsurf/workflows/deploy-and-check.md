@@ -11,7 +11,7 @@ Run these steps on the production server at `/home/ryzepeck/webapps/crushme_proj
 // turbo
 1. Quick status snapshot before deploy:
 ```bash
-bash ~/scripts/quick-status.sh
+bash /home/ryzepeck/webapps/ops/vps/scripts/diagnostics/quick-status.sh
 ```
 
 ## Deploy Steps
@@ -47,7 +47,7 @@ sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey
 // turbo
 7. Run post-deploy check:
 ```bash
-bash ~/scripts/post-deploy-check.sh crushme_project
+bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh crushme_project
 ```
 
 8. If something fails, check the logs:
@@ -80,6 +80,6 @@ rm -rf /home/ryzepeck/webapps/crushme_project/frontend/node_modules
 
 ## Notes
 
-- `~/scripts` is a symlink to `/home/ryzepeck/webapps/ops/vps/`.
+- VPS operations scripts live in `/home/ryzepeck/webapps/ops/vps/scripts/`.
 - This project uses `venv_cpu` (not `venv`) due to PyTorch CPU-only installation.
 - Frontend `npm ci` may take a few minutes; the backend stays up during build.

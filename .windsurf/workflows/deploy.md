@@ -11,7 +11,7 @@ Run these steps on the production server at `/home/ryzepeck/webapps/crushme_proj
 // turbo
 1. Quick status snapshot before deploy:
 ```bash
-bash ~/scripts/quick-status.sh
+bash /home/ryzepeck/webapps/ops/vps/scripts/diagnostics/quick-status.sh
 ```
 
 ## Deploy Steps
@@ -58,6 +58,6 @@ sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey
 
 ## Notes
 
-- `~/scripts` is a symlink to `/home/ryzepeck/webapps/ops/vps/`.
+- VPS operations scripts live in `/home/ryzepeck/webapps/ops/vps/scripts/`.
 - crushme uses `venv_cpu` instead of `venv` (CPU-only PyTorch build for ML features).
 - The gunicorn systemd service is named `gunicorn.service` (generic name, legacy).
