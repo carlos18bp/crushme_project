@@ -9,6 +9,7 @@ on:
       - 'scripts/test_quality_gate.py'
       - 'scripts/quality/**'
       - 'frontend/scripts/ast-parser.cjs'
+      - 'frontend/scripts/check-flow-definitions-sync.mjs'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
   push:
@@ -20,6 +21,7 @@ on:
       - 'scripts/test_quality_gate.py'
       - 'scripts/quality/**'
       - 'frontend/scripts/ast-parser.cjs'
+      - 'frontend/scripts/check-flow-definitions-sync.mjs'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
 
@@ -57,3 +59,14 @@ jobs:
         with:
           name: test-quality-report
           path: test-results/test-quality-report.json
+
+  e2e-flow-definitions-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify flow-definitions ↔ E2E @flow: tags
+        working-directory: frontend
+        run: node scripts/check-flow-definitions-sync.mjs
