@@ -1,6 +1,0 @@
-interface:
-  display_name: "Blog Ai Weekly"
-  short_description: "Help with Blog Ai Weekly tasks"
-
-policy:
-  allow_implicit_invocation: false

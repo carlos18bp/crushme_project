@@ -25,7 +25,7 @@ Full reference: `docs/BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md`
 
 ```ini
 [pytest]
-DJANGO_SETTINGS_MODULE = projectapp.settings
+DJANGO_SETTINGS_MODULE = crushme_project.settings
 python_files = test_*.py
 addopts = -q
 ```
