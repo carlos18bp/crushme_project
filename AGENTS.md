@@ -269,16 +269,23 @@ def validate_upload(file):
 
 ## Memory Bank System
 
-CrushMe does **not** currently maintain a Memory Bank under `docs/methodology/` or `tasks/`. Long-lived project context lives in `docs/`:
+CrushMe maintains a Memory Bank under `docs/methodology/` and `tasks/`:
 
-- `DJANGO_VUE_ARCHITECTURE_STANDARD.md`
-- `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md`
-- `E2E_FLOW_COVERAGE_REPORT_STANDARD.md`
-- `GLOBAL_RULES_GUIDELINES.md`
-- `TESTING_QUALITY_STANDARDS.md`
-- `CACHE_BUSTING_SETUP.md`
+**Methodology files** (`docs/methodology/`):
+- `product_requirement_docs.md` — Product vision, core features, non-functional requirements
+- `architecture.md` — System overview, backend/frontend architecture, infrastructure
+- `technical.md` — Technology stack, key decisions, environment setup, deployment
+- `error-documentation.md` — Known and resolved issues
+- `lessons-learned.md` — Patterns, preferences, tech debt
 
-If a Memory Bank is needed in the future, it should follow the canonical structure (`docs/methodology/{product_requirement_docs,architecture,technical,error-documentation,lessons-learned}.md` + `tasks/{tasks_plan,active_context}.md`) and be initialized via the `methodology-setup` skill.
+**Task tracking** (`tasks/`):
+- `tasks_plan.md` — Active tasks, backlog, completed
+- `active_context.md` — Current focus and recent changes
+
+**Standards files** (`docs/`):
+- `DJANGO_VUE_ARCHITECTURE_STANDARD.md`, `GLOBAL_RULES_GUIDELINES.md`, `TESTING_QUALITY_STANDARDS.md`, `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md`, `E2E_FLOW_COVERAGE_REPORT_STANDARD.md`
+
+Use the `methodology-setup` skill to refresh memory files when project structure changes materially.
 
 ---
 
