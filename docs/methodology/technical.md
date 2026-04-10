@@ -90,8 +90,8 @@ Managed via `python-decouple` reading `.env` file:
 
 ### Deploy Sequence
 1. `git pull origin main`
-2. `cd backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_SETTINGS_MODULE=crushme_project.settings_prod python manage.py migrate`
+2. `cd backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_ENV=production python manage.py migrate`
 3. `cd frontend && npm ci && npm run build`
-4. `cd backend && DJANGO_SETTINGS_MODULE=crushme_project.settings_prod python manage.py collectstatic --noinput`
+4. `cd backend && DJANGO_ENV=production python manage.py collectstatic --noinput`
 5. `sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey`
 6. `bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh crushme_project`

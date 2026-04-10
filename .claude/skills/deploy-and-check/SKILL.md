@@ -1,6 +1,6 @@
 ---
 name: deploy-and-check
-description: "Deploy latest master/main to the production server with pre-deploy checks, build, restart, and post-deploy verification."
+description: "Deploy latest main branch to the production server with pre-deploy checks, build, restart, and post-deploy verification."
 disable-model-invocation: true
 allowed-tools: Bash
 ---
@@ -29,7 +29,7 @@ cd /home/ryzepeck/webapps/crushme_project && git pull origin main
 
 3. Install backend dependencies and run migrations:
 ```bash
-cd /home/ryzepeck/webapps/crushme_project/backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_SETTINGS_MODULE=crushme_project.settings_prod python manage.py migrate
+cd /home/ryzepeck/webapps/crushme_project/backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_ENV=production python manage.py migrate
 ```
 
 4. Build the frontend (Vite build → Django static):
@@ -39,7 +39,7 @@ cd /home/ryzepeck/webapps/crushme_project/frontend && npm ci && npm run build
 
 5. Collect static files:
 ```bash
-cd /home/ryzepeck/webapps/crushme_project/backend && source venv_cpu/bin/activate && DJANGO_SETTINGS_MODULE=crushme_project.settings_prod python manage.py collectstatic --noinput
+cd /home/ryzepeck/webapps/crushme_project/backend && source venv_cpu/bin/activate && DJANGO_ENV=production python manage.py collectstatic --noinput
 ```
 
 6. Restart services:
@@ -65,7 +65,7 @@ sudo tail -20 /var/log/nginx/error.log
 ## Architecture Reference
 
 - **Domain**: `crushme.com.co` / `www.crushme.com.co`
-- **Backend**: Django (`crushme_project` module), settings selected via `DJANGO_SETTINGS_MODULE=crushme_project.settings_prod` in systemd unit
+- **Backend**: Django (`crushme_project` module), `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in server `.env`
 - **Frontend**: Vue 3 SPA (Vite build) → `backend/static/frontend/` + Django SPA fallback view
 - **Services**: `gunicorn.service` (Gunicorn via socket), `gunicorn.socket`, `crushme-huey.service`
 - **Nginx**: `/etc/nginx/sites-available/crushme_project`
@@ -85,4 +85,4 @@ rm -rf /home/ryzepeck/webapps/crushme_project/frontend/node_modules
 
 - VPS operations scripts live in `/home/ryzepeck/webapps/ops/vps/scripts/`.
 - Frontend uses `npm run build` which runs `vite build` and outputs to `backend/static/frontend/` (configured in `vite.config.js`).
-- `DJANGO_SETTINGS_MODULE=crushme_project.settings_prod` must be set for migrate and collectstatic commands (manage.py defaults to settings_dev).
+- `manage.py` defaults to `DJANGO_SETTINGS_MODULE=crushme_project.settings`. Production settings are activated by `DJANGO_ENV=production` (read by python-decouple from the server `.env` file). Never pass `crushme_project.settings_prod` as the settings module — it is not a standalone module, it is auto-imported by `settings.py`.

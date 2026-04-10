@@ -12,7 +12,7 @@
 - **Stack**: Django 5.1.5 + DRF (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
 - **Services**: `gunicorn.service` (Gunicorn), `gunicorn.socket`, `crushme-huey.service`
-- **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings_prod`
+- **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in `.env`
 - **Nginx**: `/etc/nginx/sites-available/crushme_project`
 - **Static**: `/home/ryzepeck/webapps/crushme_project/backend/staticfiles/`
 - **Media**: `/home/ryzepeck/webapps/crushme_project/backend/media/`
