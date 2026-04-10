@@ -34,7 +34,7 @@ This document defines the **mandatory quality criteria** for every test. Key sec
 
 1. **Activate virtual environment** before any command:
    ```bash
-   source venv/bin/activate
+   source venv_cpu/bin/activate
    ```
 
 2. **Run only modified test files** — never the entire suite:

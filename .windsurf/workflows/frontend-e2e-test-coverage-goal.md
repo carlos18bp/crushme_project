@@ -37,7 +37,7 @@ This document defines **all user flows** and the **mandatory quality criteria** 
 1. **Start necessary services** before testing:
    ```bash
    # Backend
-   source venv/bin/activate && python manage.py runserver
+   source venv_cpu/bin/activate && python manage.py runserver
    
    # Frontend
    npm run dev

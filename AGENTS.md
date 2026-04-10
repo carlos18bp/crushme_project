@@ -11,7 +11,7 @@
 - **Domain**: `crushme.com.co` / `www.crushme.com.co`
 - **Stack**: Django 5.1.5 + DRF (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
-- **Services**: `gunicorn.service` (Gunicorn), `crushme_project.socket`, `crushme-huey.service`
+- **Services**: `gunicorn.service` (Gunicorn), `gunicorn.socket`, `crushme-huey.service`
 - **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings_prod`
 - **Nginx**: `/etc/nginx/sites-available/crushme_project`
 - **Static**: `/home/ryzepeck/webapps/crushme_project/backend/staticfiles/`
@@ -308,9 +308,9 @@ flowchart TD
     Frontend --> FSrc[src/]
     FSrc --> FViews[views/ — Home, Login, Register, Products, Detail, Checkout, Profile, Wishlist]
     FSrc --> FComponents[components/]
-    FSrc --> FStores[stores/modules/ — Pinia Options API + persisted: auth, product, cart, order, wishlist, profile, payment, currency, i18n, crush]
-    FSrc --> FComposables[composables/ — usePlatformApi.js for JWT flows]
-    FSrc --> FServices[services/ — request_http.js for content/admin flows]
+    FSrc --> FStores[stores/modules/ — Pinia + persisted: auth, product, cart, order, wishlist, profile, payment, currency, i18n, crush, review, contact]
+    FSrc --> FComposables[composables/ — useAlert, useCart, useCheckout, useNotifications]
+    FSrc --> FServices[services/ — request_http.js: single HTTP client with CSRF + JWT]
     FSrc --> FRouter[router/ — vue-router 4 with locale prefixes]
     FSrc --> FLocales[locales/ — vue-i18n EN/ES]
     Frontend --> FTest[test/ — Jest unit specs]
@@ -355,7 +355,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 
 #### Single business app: `crushme_app`
 - All ~25 models, all views, all serializers, all services live in `backend/crushme_app/`.
-- Views are split into per-resource modules: `auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `review_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, `woocommerce_local_views.py`, `favorite_product_views.py`, `contact_views.py`, `feed_views.py`, `geolocation_views.py`, `discount_views.py`, `user_search_views.py`.
+- Views are split into per-resource modules: `auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `wishlist_woocommerce_views.py`, `review_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, `woocommerce_local_views.py`, `favorite_product_views.py`, `contact_views.py`, `feed_views.py`, `geolocation_views.py`, `discount_views.py`, `user_search_views.py`, `category_views.py`, `gift_views.py`.
 
 #### Service layer is real here
 - `crushme_app/services/` holds the bulk of the business logic:
@@ -370,7 +370,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 #### Dual auth strategy
 - **Public API** (`/api/auth/...`) uses **JWT via SimpleJWT** with `ACCESS_TOKEN_LIFETIME=30d`, `REFRESH_TOKEN_LIFETIME=60d`, refresh rotation enabled.
 - **Django admin** (`/admin/`) uses session + CSRF.
-- The frontend has **two HTTP clients** for this reason — see Code Style below.
+- The frontend uses a **single HTTP client** (`src/services/request_http.js`) that sends both `X-CSRFToken` and `Authorization: Bearer` headers, with automatic token refresh on 401.
 
 #### WooCommerce mirror + offline translation
 - The product catalog is **mirrored** from a remote WooCommerce store via `WooCommerceProduct` and `WooCommerceProductVariation` models.
@@ -408,15 +408,16 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 - Pattern: deserialize → `serializer.is_valid(raise_exception=True)` → `service_call()` (when applicable) → `Response(...)`.
 - Never convert to CBV/`APIView`/`ViewSets` unless explicitly requested.
 
-#### Frontend: dual HTTP clients
-- **Content/admin flows** (products, cart, checkout, public catalog) use `frontend/src/services/request_http.js` — Axios with CSRF cookie injection.
-- **Platform/auth flows** (login, profile, JWT-protected endpoints) use `frontend/src/composables/usePlatformApi.js` — Axios with JWT interceptors.
-- **Never mix the two clients in the same feature.** A given store either talks to the public catalog or the authenticated platform, not both.
+#### Frontend: single HTTP client with CSRF + JWT
+- All API requests go through `frontend/src/services/request_http.js` — a single Axios wrapper that sends both `X-CSRFToken` and `Authorization: Bearer` headers, injects `Accept-Language` and `X-Currency`, and handles automatic JWT refresh on 401 responses.
+- Exported helpers: `get_request`, `create_request`, `update_request`, `patch_request`, `delete_request`, `upload_request`.
+- There is no separate `usePlatformApi.js` composable.
 
-#### Frontend: Pinia Options API + persisted state
-- All Pinia stores in `frontend/src/stores/modules/` use the **Options API** shape (`{ state, getters, actions }`), not `setup()`.
+#### Frontend: Pinia stores (mixed API styles) + persisted state
+- Most Pinia stores use the **setup/Composition API** pattern (`defineStore('name', () => { ... })`): authStore, cartStore, crushStore, currencyStore, orderStore, paymentStore, productStore, profileStore, wishlistStore.
+- A few stores use the **Options API** pattern (`defineStore('name', { state, actions })`): i18nStore, reviewStore, contactStore.
 - `pinia-plugin-persistedstate` persists relevant slices (auth, cart, currency) to `localStorage`.
-- Active stores: `authStore`, `productStore`, `cartStore`, `orderStore`, `wishlistStore`, `profileStore`, `paymentStore`, `currencyStore`, `i18nStore`, `crushStore`.
+- All 12 stores: `authStore`, `productStore`, `cartStore`, `orderStore`, `wishlistStore`, `profileStore`, `paymentStore`, `currencyStore`, `i18nStore`, `crushStore`, `reviewStore`, `contactStore`.
 
 #### Naming
 - Pinia store files: camelCase (`authStore.js`, `productStore.js`, `cartStore.js`).

@@ -3,14 +3,14 @@
 ## Stack And Scope
 - Django 5.1.5 + DRF 3.15.2, Python 3.x.
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
-- Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt.token_blacklist`.
+- Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
 - Production settings module: `crushme_project.settings_prod`.
 - Database: **MySQL 8** (`mysqlclient`, `utf8mb4`, `STRICT_TRANS_TABLES`). Cache + queue: Redis (db 1 for cache, db 2 for Huey).
 - **venv**: `backend/venv_cpu/` (PyTorch CPU build) — **not** `backend/venv/`.
 
 ## Project Conventions
 - DRF views are **function-based** with `@api_view`. Pattern: deserialize → service call → respond. Do not convert to CBV/`APIView`/`ViewSets`.
-- View modules are split per resource: `auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `review_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, `woocommerce_local_views.py`, `favorite_product_views.py`, `contact_views.py`, `feed_views.py`, `geolocation_views.py`, `discount_views.py`, `user_search_views.py`.
+- View modules are split per resource: `auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `wishlist_woocommerce_views.py`, `review_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, `woocommerce_local_views.py`, `favorite_product_views.py`, `contact_views.py`, `feed_views.py`, `geolocation_views.py`, `discount_views.py`, `user_search_views.py`, `category_views.py`, `gift_views.py`.
 - **Service layer is real**: `crushme_app/services/` holds the bulk of business logic — `email_service`, `translation_service` (offline `argostranslate`), `translation_batch_service`, `woocommerce_service`, `woocommerce_sync_service`, `woocommerce_order_service`, `paypal_service`, `wompi_service`. Views are thin wrappers that call services.
 - Translation is **offline** via `argostranslate` and **cached at sync time** in a `TranslatedContent` model. There is no real-time MT.
 - The custom `User` model uses email as the username field and adds a "crush verification" workflow (`is_crush`, `crush_verification_status`, `crush_verified_at`).

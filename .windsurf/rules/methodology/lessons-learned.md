@@ -3,7 +3,7 @@ trigger: model_decision
 description: Project intelligence and lessons learned. Reference for project-specific patterns, preferences, and key insights discovered during development.
 ---
 
-# Lessons Learned — ProjectApp
+# Lessons Learned — CrushMe
 
 This file captures important patterns, preferences, and project intelligence that help work more effectively with this codebase. Updated as new insights are discovered.
 
@@ -11,21 +11,21 @@ This file captures important patterns, preferences, and project intelligence tha
 
 ## 1. Architecture Patterns
 
-### Content Storage: Structured JSON over CMS
-- Proposal sections, portfolio works, and blog posts use Django `JSONField` for content
-- Each proposal section's `content_json` maps directly to a Vue component's props schema
-- Blog supports dual format: structured JSON (preferred) with HTML fallback via `v-html`
-- This avoids the need for a full CMS while keeping content rich and structured
-
-### Single Django App: `content`
-- All models, views, serializers, and services live in the `content` app
+### Single Django App: `crushme_app`
+- All models, views, serializers, and services live in `crushme_app/`
+- Models are split into individual files under `crushme_app/models/`
+- Views are split per resource: `auth_views.py`, `product_views.py`, `cart_views.py`, etc.
 - This works for now but may need splitting if scope grows significantly
-- Models are already split into individual files under `content/models/`
 
 ### Service Layer Pattern
-- Business logic lives in `content/services/`, not in views
+- Business logic lives in `crushme_app/services/`, not in views
 - Views are thin FBV wrappers that call service methods
-- Services: `ProposalService`, `ProposalEmailService`, `ProposalPdfService`, `EmailTemplateRegistry`
+- Services: `email_service`, `translation_service`, `translation_batch_service`, `woocommerce_service`, `woocommerce_sync_service`, `woocommerce_order_service`, `paypal_service`, `wompi_service`
+
+### WooCommerce Mirror + Offline Translation
+- Products are mirrored from a remote WooCommerce store via `WooCommerceProduct` and `WooCommerceProductVariation` models
+- All text content is translated offline via `argostranslate` and cached in `TranslatedContent` model at sync time
+- There is no real-time MT
 
 ---
 
@@ -34,34 +34,38 @@ This file captures important patterns, preferences, and project intelligence tha
 ### Backend: Function-Based Views (FBV)
 - **All** DRF views use `@api_view` decorators, not class-based views
 - Never convert to CBV unless explicitly requested
-- Views file for proposals is very large (123K) — be careful with edits
+- Pattern: deserialize → service call → response
 
-### Frontend: Pinia Options API
-- **All** Pinia stores use Options API pattern: `{ state, getters, actions }`
-- Do NOT use Composition API (`setup()`) style for stores
-- HTTP requests go through `stores/services/request_http` centralized service
+### Frontend: Single HTTP Client
+- All requests go through `src/services/request_http.js` — Axios with CSRF + JWT + auto-refresh
+- Sends `X-CSRFToken`, `Authorization: Bearer`, `Accept-Language`, and `X-Currency` headers
+- There is no separate `usePlatformApi.js`
+
+### Frontend: Pinia Mixed API Styles
+- Most stores use setup/Composition API (`defineStore('name', () => { ... })`)
+- A few stores (i18nStore, reviewStore, contactStore) use Options API
+- All stores in `src/stores/modules/`, camelCase filenames
 
 ### Bilingual Content Pattern
-- Models have paired fields: `title_en`/`title_es`, `content_json_en`/`content_json_es`, etc.
-- Frontend reads the appropriate field based on current locale
-- Proposals have a `language` field (`es`/`en`) that determines which default content to use
+- Product/blog text is translated server-side at WooCommerce sync time via `argostranslate`
+- Frontend reads localized fields directly — do not translate client-side
+- UI strings go through `vue-i18n` locale files in `src/locales/`
 
 ### Naming Conventions
 - Backend: snake_case for everything (Python standard)
-- Frontend stores: snake_case file names (`portfolio_works.js`, `proposals.js`)
-- Frontend components: PascalCase (`BusinessProposal/Greeting.vue`)
-- Frontend composables: camelCase with `use` prefix (`useExpirationTimer.js`)
+- Frontend stores: camelCase file names (`authStore.js`, `productStore.js`)
+- Frontend components: PascalCase (`HomeView.vue`, `LoginView.vue`)
+- Frontend composables: camelCase with `use` prefix (`useAlert.js`, `useCart.js`)
 
 ---
 
 ## 3. Development Workflow
 
-### Backend Commands Always Need venv
+### Backend Commands Always Need venv_cpu
 ```bash
-source venv/bin/activate && <command>
-# or
-venv/bin/python <command>
+cd backend && source venv_cpu/bin/activate && <command>
 ```
+The venv is `venv_cpu/` (PyTorch CPU build), **not** `venv/`.
 
 ### Huey Immediate Mode in Development
 - When `DJANGO_ENV != 'production'`, Huey tasks execute synchronously
@@ -69,15 +73,15 @@ venv/bin/python <command>
 - Tasks still need to be importable and functional
 
 ### Frontend Dev Proxy
-- Nuxt proxies `/api`, `/admin`, `/static`, `/media` to Django at `127.0.0.1:8000`
+- Vite proxies `/api` and `/media` to Django at `localhost:8000`
 - Both servers must be running simultaneously for full functionality
-- In production, everything goes through Django (no separate Nuxt server)
+- In production, everything goes through Django (no separate frontend server)
 
 ### Test Execution Rules
 - Never run the full test suite — always specify files
-- Backend: `pytest backend/content/tests/<specific_file> -v`
-- Frontend: `npm test -- <specific_file>`
-- E2E: max 2 files per `npx playwright test` invocation
+- Backend: `cd backend && source venv_cpu/bin/activate && pytest crushme_app/tests/<specific_file> -v`
+- Frontend unit: `cd frontend && npm test -- <specific_file>`
+- Frontend E2E: `cd frontend && npx playwright test e2e/<specific_file>` — max 2 files per invocation
 - Use `E2E_REUSE_SERVER=1` when dev server is already running
 
 ---
@@ -85,165 +89,54 @@ venv/bin/python <command>
 ## 4. Production Deployment
 
 ### Build Flow
-1. Frontend: `npm run build:django` → generates `backend/static/frontend/`
+1. Frontend: `cd frontend && npm run build` → generates `backend/static/frontend/` (Vite build)
 2. Backend: `python manage.py collectstatic` → copies to `backend/staticfiles/`
-3. Restart: `sudo systemctl restart projectapp && sudo systemctl restart projectapp-huey`
+3. Restart: `sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey`
 
-### Django Serves Nuxt Pages
-- The `serve_nuxt` catch-all view in `projectapp/views.py` serves pre-rendered Nuxt pages
+### Django Serves Vue SPA
+- A SPA fallback view serves the Vue app for all non-API routes
 - This is the LAST URL pattern — all other routes take priority
-- CDN URL for assets configurable via `NUXT_APP_CDN_URL`
+- Static assets use hashed filenames for cache busting (configured in `vite.config.js`)
 
 ---
 
-## 5. Email System
+## 5. Dual Payment Gateways
 
-### Template Registry Pattern
-- All emails defined in `EmailTemplateRegistry` with default content
-- Admin can override content via `EmailTemplateConfig` model
-- Admin can disable specific emails via `is_active` flag
-- Preview rendering available for all templates
+### PayPal (International, USD)
+- `paypal_order_views.py` + `paypal_service.py`
+- Webhook endpoint updates `Order.status` based on payment events
 
-### 24h Cooldown Rule
-- `last_automated_email_at` field on `BusinessProposal` tracks last automated email
-- All automated email tasks check this before sending
-- Manual sends (admin clicks "Send") bypass the cooldown
-
-### Automations Pause
-- `automations_paused` flag on `BusinessProposal` stops all automated emails
-- Each Huey task checks this flag early and returns if paused
+### Wompi (Colombian, COP)
+- `wompi_order_views.py` + `wompi_service.py`
+- Webhook endpoint updates `Order.status` based on payment events
 
 ---
 
-## 6. Proposal System Specifics
-
-### Section Types Are Fixed
-- 12 section types defined in `ProposalSection.SectionType` choices
-- Each maps to a specific Vue component in `components/BusinessProposal/`
-- Unique together constraint: `(proposal, section_type)` — one of each per proposal
-
-### Heat Score (1-10)
-- Pre-computed and cached in `cached_heat_score` field
-- Updated by tracking endpoint and periodic task (`refresh_all_heat_scores`)
-- Based on: view count, section time, recency, engagement patterns
-
-### Change Log Types
-- 20+ change types in `ProposalChangeLog.ChangeType`
-- Includes: created, updated, sent, viewed, accepted, rejected, resent, expired, duplicated, commented, negotiating, reengagement, call, meeting, followup, note, calc_confirmed, calc_abandoned, auto_archived, status_change, cond_accepted, calc_followup
-
----
-
-## 7. Platform / Accounts App Patterns
-
-### Dual Auth Strategy
-- `/panel/` admin uses Django session + CSRF (same as before)
-- `/platform/` uses JWT via SimpleJWT (access + refresh tokens)
-- Platform stores use `composables/usePlatformApi.js` (axios instance with JWT interceptors)
-- Content stores use `stores/services/request_http` (axios with CSRF)
-- **Never mix these two HTTP clients**
-
-### Platform Store Naming
-- Platform stores use kebab-case: `platform-auth.js`, `platform-clients.js`, `platform-projects.js`, `platform-requirements.js`
-- Content stores use snake_case: `portfolio_works.js`, `proposals.js`
-
-### Accounts Services
-- `services/onboarding.py` — profile completion flow
-- `services/tokens.py` — JWT token generation/refresh
-- `services/verification.py` — OTP code generation and validation
-- `services/image_utils.py` — avatar processing
-
-### Platform Layout
-- `layouts/platform.vue` with collapsible sidebar, mobile drawer, theme toggle
-- Role-based navigation: admin sees all, client sees own projects only
-- Dark mode support via `usePlatformTheme` composable
-
----
-
-## 8. Testing Insights
+## 6. Testing Insights
 
 ### Backend conftest.py
 - Custom coverage report with Unicode progress bars replaces default pytest-cov output
-- `api_client` fixture provides unauthenticated DRF APIClient
-- Content tests have their own `conftest.py` with model-specific fixtures
+- Fixtures: `api_client`, `user`, `admin_user`, `authenticated_client`, `admin_client`
 
-### E2E Flow Definitions
-- Every navigation flow must be registered in `docs/USER_FLOW_MAP.md` and `frontend/e2e/flow-definitions.json`
-- E2E tests must reflect real user integrations
-- Follow quality standards from `docs/TESTING_QUALITY_STANDARDS.md`
-
-### CI Sharding
-- Playwright E2E tests are sharded into 5 parallel jobs
-- Blob reports are merged after all shards complete
-- Test quality gate runs after all test suites pass
-
-### Known Test Issues
-- `usePlatformApi.test.js` has 4 failing tests due to `window.location.href` assertions in JSDOM
-- JSDOM doesn't support real navigation; `window.location.href` stays as `http://localhost/` after assignment
-- Fix: use `delete window.location` + `Object.defineProperty` or mock `window.location` properly
-
-### Playwright + Nuxt Dev Server Patterns
-- **Never use `networkidle`** with Vite/Nuxt dev server — HMR WebSocket keeps connection alive, causing infinite hang
-- Use `{ waitUntil: 'domcontentloaded' }` in `page.goto()` + explicit element waits (`getByRole('heading').waitFor()`)
-- **Always add `test.setTimeout(60_000)`** to describe blocks for SPA routes — first visit triggers Vite on-demand compilation
-- **Strict mode violations** are common when sidebar navigation duplicates page content text. Fix patterns:
-  - Scope to `page.locator('main')` for page-specific content
-  - Use `getByRole('heading', { name: '...' })` instead of `getByText('...')`
-  - Use `{ exact: true }` when substring matching causes ambiguity (e.g., 'Activo' vs 'Activos')
-- **i18n prefix strategy** adds locale prefix to all `<NuxtLink>` hrefs — use regex in `toHaveAttribute('href', /\/platform\/...$/)`
-- **`<label>` without `for` attribute**: `getByLabel()` won't work. Use `page.locator('input[type="date"]')` or `page.locator('select').first()`
-- **HTML5 validation bypass**: For testing custom validators, add `novalidate` via `page.evaluate(() => document.querySelector('form').setAttribute('novalidate', ''))`
-- **Port conflicts**: Use `E2E_PORT=3001 E2E_REUSE_SERVER=1` when port 3000 is occupied
+### Playwright + Vite Dev Server Patterns
+- **Never use `networkidle`** with Vite dev server — HMR WebSocket keeps connection alive
+- Use `{ waitUntil: 'domcontentloaded' }` in `page.goto()` + explicit element waits
+- Use role-based locators and `data-testid` attributes
 
 ---
 
-## 10. Document System Patterns
+## 7. Auth Strategy
 
-### Generic PDF Service Architecture
-- `DocumentPdfService` handles PDF generation for generic branded documents (separate from proposals)
-- Shared PDF utilities extracted into `pdf_utils.py` (36K) — used by both `ProposalPdfService` and `DocumentPdfService`
-- `MarkdownParser` (`markdown_parser.py`, 9K) parses markdown content for Document rendering
-- Active work on branch `generate-pdf-with-template`
-
-### Document Model Conventions
-- `Document` model in `content/models/document.py` — follows same app as proposals, portfolio, blog
-- Status lifecycle: `draft → published → archived` (same pattern as other content models)
-- Language field mirrors proposal (`es`/`en`) for bilingual support
-- `cover_type` field: `generic`, `none`, `proposal` — determines PDF cover rendering
-- UUID field for public access (same pattern as `BusinessProposal`)
-
-### Frontend: Document Store + Composable
-- `documents.js` store uses `request_http` (same as `proposals.js`, `blog.js`) — NOT platform HTTP client
-- `useMarkdownPreview.js` composable for live markdown preview in the document editor
-- `usePlatformCustomTheme.js` composable for custom theme configuration in platform
+### Dual Auth
+- `/api/auth/...` uses JWT via SimpleJWT (30d access, 60d refresh, rotation + blacklist)
+- `/admin/` uses Django session + CSRF (default)
+- The single frontend HTTP client handles both — sends CSRF token + JWT Bearer header together
 
 ---
 
-## 11. Platform Expanded Module Patterns
-
-### New Platform Modules Follow Consistent Structure
-Each new platform module (Bug Reports, Change Requests, Deliverables, Notifications, Payments) follows:
-- Backend: model in `accounts/models.py`, DRF views, URL patterns in `accounts/urls.py`, test file in `accounts/tests/`
-- Frontend: store `platform-<module>.js` using `usePlatformApi` HTTP client, pages at `/platform/<module>` (global) and `/platform/projects/:id/<module>` (per-project)
-- Per-project views exist for: bugs, changes, deliverables, payments
-- Global-only views: notifications, board, profile
-
-### Accounts URL Count Growth
-- Accounts URL patterns grew from 15 → 48 after platform module expansion
-- Each new module adds ~5-7 URL patterns (list, create, detail, update, delete)
-- Never hardcode the count — verify with `grep -c "path(" backend/accounts/urls.py`
-
----
-
-## 12. Methodology Maintenance
-
-### Memory Bank Source
-- Methodology rules based on [rules_template](https://github.com/Bhartendu-Kumar/rules_template)
-- Original format is Cursor `.mdc` files; must be adapted to Windsurf `.md` format
-- Key adaptation: replace `mdc:` prefix links with standard paths, `.mdc` → `.md` references, `src/` → `backend/`+`frontend/`
-- `directory-structure.md` must be customized per project (the template uses generic `src/`, `test/`, etc.)
+## 8. Methodology Maintenance
 
 ### When to Refresh Memory Files
-- After adding a new Django app or major feature module
-- After significant changes to test infrastructure or counts
-- When file counts drift by >10% from documented values
-- After methodology rule updates from upstream template
+- After adding new models or major features
+- After significant changes to test infrastructure
+- When documented patterns drift from actual code

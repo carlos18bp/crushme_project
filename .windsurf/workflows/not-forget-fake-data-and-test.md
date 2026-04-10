@@ -266,4 +266,4 @@ await page.waitForTimeout(3000);
   - 3 commands per execution cycle
 
 # Backend - activate virtual environment (REQUIRED)
-source venv/bin/activate
+source venv_cpu/bin/activate

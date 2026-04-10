@@ -34,7 +34,7 @@ Correr cada test fallido para obtener el error real. No asumir la causa — leer
 
 **Backend:**
 ```bash
-cd backend && source venv/bin/activate && pytest <path>::<test_name> -v
+cd backend && source venv_cpu/bin/activate && pytest <path>::<test_name> -v
 ```
 
 **Frontend Unit:**
@@ -91,8 +91,8 @@ Entregar un resumen estructurado con: qué falló, causa raíz, qué cambió, y 
 
 | Tipo | Comando |
 |------|---------|
-| Backend — test específico | `cd backend && source venv/bin/activate && pytest path/to/test.py::TestClass::test_name -v` |
-| Backend — regresión módulo | `cd backend && source venv/bin/activate && pytest path/to/test_file.py -v` |
+| Backend — test específico | `cd backend && source venv_cpu/bin/activate && pytest path/to/test.py::TestClass::test_name -v` |
+| Backend — regresión módulo | `cd backend && source venv_cpu/bin/activate && pytest path/to/test_file.py -v` |
 | Frontend Unit — test específico | `cd frontend && npm test -- path/to/file.spec.ts` |
 | Frontend Unit — regresión módulo | `cd frontend && npm test -- path/to/file.spec.ts` |
 | E2E — test específico | `cd frontend && E2E_REUSE_SERVER=1 npx playwright test path/to/spec.spec.ts` |

@@ -45,7 +45,7 @@ The `conftest.py` contains 3 pytest hooks that:
 ### Run Command
 
 ```bash
-source venv/bin/activate && pytest --cov
+source venv_cpu/bin/activate && pytest --cov
 ```
 
 ### Report Sections

@@ -15,7 +15,7 @@ Before writing any test, consult: `docs/TESTING_QUALITY_STANDARDS.md`
 
 ## Execution Rules
 
-1. **Activate virtual environment**: `source venv/bin/activate`
+1. **Activate virtual environment**: `source venv_cpu/bin/activate`
 2. **Run only modified test files**: `pytest path/to/test_file.py -v`
 3. **Maximum per execution**: 20 tests per batch, 3 commands per cycle
 

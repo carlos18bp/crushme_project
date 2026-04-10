@@ -14,9 +14,8 @@ argument-hint: "[feature, refactor, bugfix, or concrete implementation request]"
 ## CrushMe Rules
 - Backend DRF views stay function-based unless the user explicitly asks otherwise.
 - Keep business logic out of views when a service, serializer, helper, or model method is the better fit.
-- Frontend stores use Pinia Options API.
-- Keep content/admin requests on `stores/services/request_http.js`.
-- Keep platform/auth requests on `usePlatformApi.js`.
+- Frontend stores use mixed API styles (most setup/Composition, some Options). Match the style of the store being edited.
+- All HTTP requests go through `src/services/request_http.js` (single client with CSRF + JWT).
 - Preserve existing public response shapes unless the task explicitly changes them.
 
 ## Implementation Sequence

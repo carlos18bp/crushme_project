@@ -53,4 +53,4 @@ Update `docs/USER_FLOW_MAP.md` if new user flows are created.
 
 ### Limits
 - Frontend E2E: max 20 tests per batch, 3 commands per cycle
-- Backend: activate venv first (`source venv/bin/activate`)
+- Backend: activate venv first (`source venv_cpu/bin/activate`)

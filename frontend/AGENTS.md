@@ -2,13 +2,11 @@
 
 ## Stack
 
-- **Vue 3.5.13** (`<script setup>`-style components OK; **Pinia stores must use Options API** — see below)
+- **Vue 3.5.13** (`<script setup>`-style components OK)
 - **Vite 7** as the dev server and bundler
-- **Pinia 3.0.3** + **`pinia-plugin-persistedstate`** for state management (Options API + localStorage persistence)
+- **Pinia 3.0.3** + **`pinia-plugin-persistedstate`** for state management (mixed API styles + localStorage persistence)
 - **Vue Router 4.5.1** with locale prefixes (`/en/...`, `/es/...`)
-- **Axios 1.12.2** wrapped by **two HTTP clients**:
-  - `src/services/request_http.js` — content/admin flows (CSRF cookie injected)
-  - `src/composables/usePlatformApi.js` — platform/auth flows (JWT interceptors)
+- **Axios 1.12.2** wrapped by a **single HTTP client**: `src/services/request_http.js` (CSRF + JWT + auto-refresh)
 - **vue-i18n 9.14.5** for EN/ES localization
 - **Tailwind CSS 4.1.13** + **Flowbite 3.1.2**
 - **Headless UI Vue 1.7.23**, **Heroicons 2.2**, **Bootstrap Icons 1.13**
@@ -22,44 +20,42 @@ This is a **Vue 3 + Vite SPA** — **NOT Nuxt**. There is no SSR.
 
 - The codebase is **JavaScript**, not TypeScript-first.
 - Use Composition API in components when adding new ones.
-- Use **Options API in Pinia stores** (`{ state, getters, actions }`) — this is a project invariant.
+- Most Pinia stores use the **setup/Composition API** (`defineStore('name', () => { ... })`). A few (i18nStore, reviewStore, contactStore) use the **Options API**. Match the style of the store you're editing.
 
 ## Naming Conventions
 
-- **Pinia store files**: camelCase (`authStore.js`, `productStore.js`, `cartStore.js`, `orderStore.js`, `wishlistStore.js`, `profileStore.js`, `paymentStore.js`, `currencyStore.js`, `i18nStore.js`, `crushStore.js`).
+- **Pinia store files**: camelCase (`authStore.js`, `productStore.js`, `cartStore.js`, `orderStore.js`, `wishlistStore.js`, `profileStore.js`, `paymentStore.js`, `currencyStore.js`, `i18nStore.js`, `crushStore.js`, `reviewStore.js`, `contactStore.js`).
 - **Component files**: PascalCase (`HomeView.vue`, `LoginView.vue`, `ProductDetailView.vue`).
-- **Composables**: camelCase with `use` prefix (`usePlatformApi.js`).
+- **Composables**: camelCase with `use` prefix (`useAlert.js`, `useCart.js`, `useCheckout.js`, `useNotifications.js`).
 - Stores live under `src/stores/modules/`.
 
-## State Management — Pinia (Options API + persisted)
+## State Management — Pinia (mixed API styles + persisted)
 
-- **Always Options API**:
+- Most stores use the **setup/Composition API**:
   ```javascript
   import { defineStore } from 'pinia'
+  import { ref, computed } from 'vue'
 
-  export const useCartStore = defineStore('cart', {
-    state: () => ({ items: [], totalCop: 0, totalUsd: 0 }),
-    getters: { itemCount: (state) => state.items.length },
-    actions: {
-      addItem(product, quantity) { /* ... */ }
-    },
-    persist: true  // pinia-plugin-persistedstate
+  export const useCartStore = defineStore('cart', () => {
+    const items = ref([])
+    const itemCount = computed(() => items.value.length)
+    function addItem(product, quantity) { /* ... */ }
+    return { items, itemCount, addItem }
   })
   ```
+- A few stores (i18nStore, reviewStore, contactStore) use the **Options API** (`{ state, getters, actions }`).
 - **Persisted state**: relevant slices (auth tokens, cart, currency, language) persist to `localStorage` automatically via `pinia-plugin-persistedstate`.
-- **Do not use `setup()` style stores** unless explicitly asked.
+- Match the style of the store you're editing.
 
-## HTTP — Two clients, never mix
+## HTTP — Single client with CSRF + JWT
 
-This codebase has **two HTTP clients** because the backend has a dual auth scheme:
+All API requests go through **`src/services/request_http.js`** — a single Axios wrapper that:
+- Sends `X-CSRFToken` (from cookie) and `Authorization: Bearer` (from localStorage) headers on every request
+- Injects `Accept-Language` and `X-Currency` headers from the i18n and currency stores
+- Handles automatic JWT refresh on 401 responses (retries the original request with a new token)
+- Exports: `get_request`, `create_request`, `update_request`, `patch_request`, `delete_request`, `upload_request`
 
-| Use case | Client | Auth |
-|----------|--------|------|
-| Public catalog, products, blog, content | `src/services/request_http.js` | CSRF cookie |
-| Auth (login/signup/profile), wishlists, orders, JWT-protected endpoints | `src/composables/usePlatformApi.js` | JWT (Bearer) |
-
-- **Never call `fetch()` or raw `axios` directly** in stores or components. Always use one of the two wrappers.
-- **Never mix the two clients in the same store/feature.** Choose one based on whether the endpoint requires JWT or not.
+- **Never call `fetch()` or raw `axios` directly** in stores or components. Always use the `request_http.js` helpers.
 
 ## Routing — vue-router 4 with locale prefixes
 
@@ -69,7 +65,7 @@ This codebase has **two HTTP clients** because the backend has a dual auth schem
 
 ## i18n — vue-i18n 9.14
 
-- Locale files live in `src/locales/` (`en.json`, `es.json`).
+- Locale files live in `src/locales/` organized by domain (e.g., `auth/login/{en,es}.json`, `products/{en,es}.json`, `shared/{en,es}.json`).
 - The `i18nStore` Pinia store toggles the active locale.
 - **Never hardcode user-facing strings** — everything goes through `t('key')`.
 - **Product/blog content from the backend is already translated** at WooCommerce sync time via `argostranslate`. The frontend just picks up the localized field — do not translate it again client-side.
@@ -93,7 +89,7 @@ Use `@apply` only for base component styles that repeat 5+ times. Prefer utility
 ## Currency Handling
 
 - The `currencyStore` Pinia store tracks the active currency (COP for Wompi, USD for PayPal).
-- The backend respects a custom **`x-currency` header** (CORS-allowed). The platform HTTP client injects it from the active store.
+- The backend respects a custom **`x-currency` header** (CORS-allowed). `request_http.js` injects it from the `currencyStore` on every request.
 - Prices come back from the backend already converted; do not convert client-side.
 
 ## Component Patterns
@@ -120,8 +116,6 @@ Use `@apply` only for base component styles that repeat 5+ times. Prefer utility
 ## What NOT to do
 
 - Do **not** introduce Nuxt or any SSR layer.
-- Do **not** convert Pinia stores to `setup()` style.
-- Do **not** call `fetch()` or raw `axios` outside of `request_http.js` / `usePlatformApi.js`.
-- Do **not** mix `request_http.js` and `usePlatformApi.js` in the same store.
+- Do **not** call `fetch()` or raw `axios` outside of `request_http.js`.
 - Do **not** translate product/blog content client-side — it's already translated at sync time.
 - Do **not** introduce TypeScript-first patterns into JS files.
