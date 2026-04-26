@@ -1,0 +1,23 @@
+[Unit]
+Description=Gunicorn daemon for crushme_project
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+Type=notify
+User=ryzepeck
+Group=www-data
+WorkingDirectory=/home/ryzepeck/webapps/crushme_project/backend
+ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/gunicorn \
+    --workers 2 \
+    --max-requests 800 \
+    --max-requests-jitter 80 \
+    --timeout 120 \
+    --bind unix:/run/gunicorn.sock \
+    crushme_project.wsgi:application
+Environment="DJANGO_SETTINGS_MODULE=crushme_project.settings"
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

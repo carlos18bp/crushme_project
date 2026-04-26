@@ -13,10 +13,36 @@ export default defineConfig({
   },
   define: {
     // Wompi public key
-    'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify('pub_test_lHrCKMGf7JVnO4DgnYrdDPgj1DSqJ0OR'),
+    'import.meta.env.VITE_WOMPI_PUBLIC_KEY': JSON.stringify('pub_prod_yG6ag71rCqGUJmVfgrYPSOFQfkjGHXOT'),
     // PayPal client ID
-    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AfoqONwK05N0j548Xeff7ZdHfg699MJQj79RYRdCaGvN3ZQCA4Yu6ioEHD0zF1vdnLo_2UKaCqrwRAok'),
+    'import.meta.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify('AXOC4gQsXk_e8NhrrZRorJzU3rld7lOJP5_2S8RYDKUgjkDT-2wfc-1Eu1AqYQseWTcJA_VBEnGUUGCQ'),
   },
+  
+  // Configuración para build con cache busting
+  build: {
+    outDir: '../backend/static/frontend',
+    emptyOutDir: true,
+    manifest: true, // Genera manifest.json para mapear archivos con hash
+    rollupOptions: {
+      output: {
+        // Genera archivos JS con hash en el nombre
+        entryFileNames: 'assets/[name].[hash].js',
+        // Genera archivos CSS con hash en el nombre
+        chunkFileNames: 'assets/[name].[hash].js',
+        // Genera otros assets (imágenes, fuentes) con hash
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'assets/[name].[hash].css'
+          }
+          return 'assets/[name].[hash].[ext]'
+        }
+      }
+    }
+  },
+  
+  // Base URL para los assets en producción
+  base: '/static/frontend/',
+  
   server: {
     port: 5173,
     proxy: {
