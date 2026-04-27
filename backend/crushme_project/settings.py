@@ -349,6 +349,11 @@ HUEY = RedisHuey(
 # Storage is configured via STORAGES['dbbackup'] above (new-style API).
 DBBACKUP_COMPRESS = True
 DBBACKUP_CLEANUP_KEEP = 4
+
+# Backups: permite desactivar la tarea programada en staging via .env
+BACKUPS_ENABLED = config('BACKUPS_ENABLED', default=True, cast=bool)
+# Slow queries report: solo tiene sentido con tráfico real (desactivar en staging)
+ENABLE_SLOW_QUERIES_REPORT = config('ENABLE_SLOW_QUERIES_REPORT', default=True, cast=bool)
 DBBACKUP_CLEANUP_KEEP_MEDIA = 4
 
 # ==============================================================================
