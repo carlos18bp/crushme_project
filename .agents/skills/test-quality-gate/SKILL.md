@@ -1,6 +1,6 @@
 ---
 name: test-quality-gate
-description: "Improve CrushMe's test-quality gate by fixing the highest-value issues first with targeted test runs only."
+description: "Improve Azurita's test-quality gate by fixing the highest-value issues first with targeted test runs only."
 ---
 
 # Test Quality Gate Workflow

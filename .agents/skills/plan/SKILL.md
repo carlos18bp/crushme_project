@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Create a decision-complete implementation plan for a CrushMe change. Use when the user asks to plan, design, scope, or compare approaches before coding."
+description: "Create a decision-complete implementation plan for a Azurita change. Use when the user asks to plan, design, scope, or compare approaches before coding."
 argument-hint: "[feature, refactor, bugfix, or workflow to plan]"
 ---
 
@@ -18,7 +18,7 @@ Produce a plan another engineer or agent can implement without making new produc
 1. Inspect the repo first. Do not ask for facts that can be derived from the codebase or docs.
 2. Clarify only the product or tradeoff decisions that cannot be discovered locally.
 3. Map the affected data flow, APIs, state, and test surface.
-4. Prefer existing CrushMe conventions over generic framework patterns.
+4. Prefer existing Azurita conventions over generic framework patterns.
 5. Call out migrations, compatibility constraints, and rollout risks when they matter.
 
 ## Output Contract

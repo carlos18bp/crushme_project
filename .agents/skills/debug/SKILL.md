@@ -1,6 +1,6 @@
 ---
 name: debug
-description: "Read-only diagnosis workflow for CrushMe bugs, failing flows, or unexpected behavior. Use when the user asks for investigation without applying a fix yet."
+description: "Read-only diagnosis workflow for Azurita bugs, failing flows, or unexpected behavior. Use when the user asks for investigation without applying a fix yet."
 argument-hint: "[error message, failing behavior, or suspected regression]"
 ---
 

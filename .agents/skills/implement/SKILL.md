@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Implement a CrushMe feature or fix using the repo's existing architecture and minimal targeted verification. Use when the user asks to build, code, or fix something."
+description: "Implement a Azurita feature or fix using the repo's existing architecture and minimal targeted verification. Use when the user asks to build, code, or fix something."
 argument-hint: "[feature, refactor, bugfix, or concrete implementation request]"
 ---
 
@@ -11,11 +11,12 @@ argument-hint: "[feature, refactor, bugfix, or concrete implementation request]"
 - Read only the memory files that materially affect the change.
 - Identify the smallest useful verification commands before changing code.
 
-## CrushMe Rules
+## Azurita Rules
 - Backend DRF views stay function-based unless the user explicitly asks otherwise.
 - Keep business logic out of views when a service, serializer, helper, or model method is the better fit.
-- Frontend stores use mixed API styles (most setup/Composition, some Options). Match the style of the store being edited.
-- All HTTP requests go through `src/services/request_http.js` (single client with CSRF + JWT).
+- Frontend stores use Pinia Options API.
+- Keep content/admin requests on `stores/services/request_http.js`.
+- Keep platform/auth requests on `usePlatformApi.js`.
 - Preserve existing public response shapes unless the task explicitly changes them.
 
 ## Implementation Sequence

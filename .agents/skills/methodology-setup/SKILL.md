@@ -1,6 +1,6 @@
 ---
 name: methodology-setup
-description: "Initialize or refresh CrushMe memory-bank files when the user asks for it or when verified repo/runtime guidance has drifted after major changes."
+description: "Initialize or refresh Azurita memory-bank files when the user asks for it or when verified repo/runtime guidance has drifted after major changes."
 ---
 
 # Methodology Setup / Refresh
