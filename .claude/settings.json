@@ -12,5 +12,18 @@
     "defaultMode": "auto"
   },
   "effortLevel": "high",
-  "model": "sonnet"
+  "model": "sonnet",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 20 bash /home/ryzepeck/webapps/ops/vps/scripts/maintenance/session-start-git-status.sh 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
 }
