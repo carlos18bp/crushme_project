@@ -1,7 +1,6 @@
 ---
 name: git-sync
 description: "Sync the current branch with its remote: fetch, pull with rebase, and resolve conflicts if any arise."
-disable-model-invocation: true
 allowed-tools: Bash
 ---
 
