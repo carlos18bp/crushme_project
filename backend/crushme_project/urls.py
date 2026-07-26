@@ -1,6 +1,8 @@
 """
 URL configuration for CrushMe e-commerce project
 Main URL router that includes app URLs and serves media files in development"""
+import os
+
 from django.contrib import admin
 from django.conf import settings
 from django.http import JsonResponse
@@ -11,7 +13,19 @@ from crushme_app.views.frontend_views import FrontendView
 
 
 def health_check(request):
-    return JsonResponse({'status': 'ok'})
+    # 'project'/'environment' let external probes verify WHO answered: a shared
+    # codebase means the project name alone cannot tell prod from staging
+    # (measured: /qa pilot #3).
+    return JsonResponse({
+        'status': 'ok',
+        'project': settings.BASE_DIR.parent.name,
+        # settings first: DJANGO_ENV lives in backend/.env and is read by
+        # decouple, and the systemd units never export it, so os.getenv alone
+        # would report 'development' in production.
+        'environment': getattr(
+            settings, 'DJANGO_ENV', os.getenv('DJANGO_ENV', 'development')
+        ),
+    })
 
 
 urlpatterns = [
