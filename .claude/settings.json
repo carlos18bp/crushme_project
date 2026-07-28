@@ -1,16 +1,4 @@
 {
-  "permissions": {
-    "allow": [
-      "Read",
-      "Edit",
-      "Write",
-      "Glob",
-      "Grep",
-      "Bash",
-      "WebSearch"
-    ],
-    "defaultMode": "auto"
-  },
   "effortLevel": "high",
   "model": "sonnet",
   "hooks": {
