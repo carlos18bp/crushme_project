@@ -43,3 +43,15 @@ Señales visibles de éxito: un mensaje de confirmación, un cambio en pantalla,
 - **Sin** preámbulos tipo "Aquí tienes la guía:". Empieza directo con el encabezado `### 1. ¿Qué es y para qué sirve?`.
 - Mantén cada bloque breve: el usuario debería poder leer toda la guía en menos de 2 minutos.
 - Si la funcionalidad aún no existe o no se puede identificar en el sistema, dilo con claridad y pide más contexto en lugar de inventar pasos.
+
+---
+
+## Output final
+
+Excepción output-es-el-producto de [[_output-protocol]]: la guía ES el entregable (para un usuario final no técnico). El cierre técnico se separa de la guía con la línea `— fin de la guía —` y se reduce a SÓLO la línea de veredicto, sin tabla de dimensiones ni Next steps técnicos:
+
+— fin de la guía —
+
+🟢 user-walkthrough OK   (🟡 si quedaron dudas abiertas listadas o no se pudo identificar bien la funcionalidad — con dudas abiertas el veredicto NUNCA es 🟢)
+
+Los next steps de esta skill son para el usuario final (sin comandos): viven dentro de la guía misma ("Paso a paso", "Cómo sabes que funcionó", "Si algo no sale como esperabas").

@@ -1,6 +1,7 @@
 interface:
   display_name: "Git Status Report"
-  short_description: "Git status of all server projects"
+  short_description: "Muestra el estado git de los proyectos (limpio/cambios..."
+  default_prompt: "Use $git-status-report to handle this task with its documented workflow."
 
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
