@@ -33,7 +33,9 @@ These instructions extend the root `AGENTS.md` for files under `backend/`.
 - Shared settings: `crushme_project.settings`.
 - Production: `DJANGO_ENV=production` with the shared module.
 - Staging: `DJANGO_SETTINGS_MODULE=crushme_project.settings_staging`.
-- Tests/E2E: `DJANGO_SETTINGS_MODULE=crushme_project.settings_test`.
+- Pytest: `DJANGO_SETTINGS_MODULE=crushme_project.settings_test`.
+- Playwright: `DJANGO_SETTINGS_MODULE=crushme_project.settings_e2e`.
+- MySQL compatibility CI: `DJANGO_SETTINGS_MODULE=crushme_project.settings_ci_mysql`.
 - Never let tests inherit `backend/.env` deployment resources.
 - Fake-data commands must call `ensure_fake_data_allowed()` before reading or
   mutating database rows. There is no production override flag.
@@ -65,8 +67,8 @@ The runtime venv is `backend/venv_cpu/`, not `backend/venv/`.
 
 - Never run the full suite. Run at most 20 tests per invocation and no more
   than three test commands per cycle.
-- Tests must use `settings_test`, isolated SQLite, in-memory cache/Huey, and
-  sandboxed integrations.
+- Pytest uses `settings_test`; Playwright uses `settings_e2e`; MySQL migration
+  compatibility uses `settings_ci_mysql`. All three isolate deployment resources.
 - One test verifies one observable behavior. Use Arrange/Act/Assert, deterministic
   data, and mocks only at system boundaries.
 - Add regression coverage for authorization, payment/webhook idempotency,

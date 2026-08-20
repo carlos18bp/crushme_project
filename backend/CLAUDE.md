@@ -5,7 +5,9 @@
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
 - Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
 - Production uses `crushme_project.settings` with `DJANGO_ENV=production`.
-- Staging uses `crushme_project.settings_staging`; tests use `crushme_project.settings_test`.
+- Staging uses `crushme_project.settings_staging`; pytest uses `settings_test`,
+  Playwright uses `settings_e2e`, and MySQL compatibility CI uses
+  `settings_ci_mysql`.
 - Database: **MySQL 8** (`mysqlclient`, `utf8mb4`, `STRICT_TRANS_TABLES`). Cache + queue: Redis (db 1 for cache, db 2 for Huey).
 - **venv**: `backend/venv_cpu/` (PyTorch CPU build) — **not** `backend/venv/`.
 

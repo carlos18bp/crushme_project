@@ -17,24 +17,23 @@ protocol is `.agents/skills/deploy-and-check/SKILL.md` and the fleet registry is
 | Nginx site | `/etc/nginx/sites-available/crushme` |
 | Settings | `crushme_project.settings` with `DJANGO_ENV=production` |
 
-## Versioned Runtime Templates
+## Versioned Runtime References
 
-The canonical runtime templates are:
+The project-local production references are:
 
 - `scripts/nginx/crushme.conf`
 - `scripts/systemd/crushme_project.socket`
 - `scripts/systemd/crushme_project.service`
 - `scripts/systemd/huey.service`
 
-Files formerly stored under `backend/` and the historical
-`scripts/systemd/gunicorn.service` name were removed to avoid divergent sources
-of truth. The Nginx template caches hashed frontend assets for one year, other
-static/media assets for seven days, and prevents caching of SPA HTML.
+The fleet's canonical deployable files live in `vps-ops-toolkit/config/systemd/`
+and `vps-ops-toolkit/config/nginx/sites-available/`. The local copies document
+application-specific constraints and must be compared with the toolkit before a
+release; they are not an independent source of operational truth.
 
-Templates are not installed automatically. Before a controlled release, compare
-them with the active files, copy them to their canonical `/etc` destinations,
-run `systemd-analyze verify` and `nginx -t`, then use `daemon-reload`/reload only
-inside the deployment rollback window.
+Toolkit templates are not installed automatically. Before a controlled release,
+compare them with the active files, run `systemd-analyze verify` and `nginx -t`,
+then use `daemon-reload`/reload only inside the deployment rollback window.
 
 ## Release Gate
 
