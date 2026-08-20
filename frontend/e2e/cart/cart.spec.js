@@ -16,7 +16,7 @@ async function preloadCart(page) {
 }
 
 async function openCart(page) {
-  await page.goto('/en');
+  await page.goto('/en/terms');
   await page.getByRole('button', { name: 'Cart', exact: true }).click();
   return page.getByRole('dialog');
 }
@@ -39,10 +39,26 @@ test('adds the deterministic in-stock product to the cart', {
 test('renders one persisted cart line after opening the drawer', {
   tag: ['@flow:cart-open', '@role:guest', '@outcome:display'],
 }, async ({ page }) => {
+  // quality: allow-deep-link (terms only hosts Navbar; the drawer still opens through the Cart button)
   await preloadCart(page);
   const cartDialog = await openCart(page);
 
   await expect(cartDialog.getByRole('listitem')).toHaveCount(1);
+});
+
+// Bug caught: the drawer appears to start checkout but does not navigate with a valid cart.
+test('navigates to checkout from a persisted non-empty cart', {
+  tag: ['@flow:cart-checkout-validation', '@role:guest', '@outcome:success'],
+}, async ({ page }) => {
+  await preloadCart(page);
+  const cartDialog = await openCart(page);
+
+  await Promise.all([
+    page.waitForURL('/en/checkout'),
+    cartDialog.getByRole('button', { name: 'Checkout', exact: true }).click(),
+  ]);
+
+  await expect(page).toHaveURL('/en/checkout');
 });
 
 // Bug caught: increasing a drawer line only changes the display and not checkout state.
