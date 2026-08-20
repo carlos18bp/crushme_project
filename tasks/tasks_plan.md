@@ -2,14 +2,19 @@
 
 ## Active
 
+- [ ] Land and deploy Wave 7 stage 1: pinned CTranslate2 static-int8 models,
+  Torch-free daemon, Unix client, explicit Argos rollback, focused QA, and
+  production runtime probe.
+- [ ] Observe Wave 7 stage 1 for 48 hours and one representative WooCommerce
+  sync with zero translation errors, OOM events, or restart loops.
+- [ ] Execute Wave 7 stage 2 only after observation: remove Argos/Torch/Stanza/
+  spaCy, rebuild the canonical backend venv, delete old models, and recertify.
 - [ ] Close the Wave 6 production observation after 2026-08-21 15:13:06 UTC,
   re-run the closing health/log/backup/capacity gates, and promote the fleet
   lifecycle only if the complete interval is green.
 
 ## Deferred Decisions
 
-- [ ] Re-evaluate the Argos/Stanza translation dependency chain monthly and
-  only change it with real translation regressions and memory measurements.
 - [ ] Isolate frontend framework majors (Flowbite, Pinia, Vite, Vue I18n, and
   Vue Router) as compatibility projects rather than bundling them into security
   maintenance.

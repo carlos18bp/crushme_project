@@ -238,7 +238,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - **Views are 100% function-based** with `@api_view`, split per resource (`auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, etc.). Do not convert to CBV/`APIView`/`ViewSets`.
 - **Service layer is real**: business logic lives in `crushme_app/services/` (email, translation, woocommerce sync, paypal, wompi). Views are thin wrappers that call services — do not inline business rules into views.
 - **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (15m access, 7d refresh, serialized rotation + blacklist, logout revocation). `/admin/` uses session + CSRF.
-- **Offline translation**: `argostranslate` translates ES↔EN at WooCommerce sync time and caches results in a `TranslatedContent` model. No real-time machine translation.
+- **Offline translation**: a local CTranslate2 CPU-only daemon translates ES↔EN and caches sync-time results in `TranslatedContent`; Argos is stage-1 rollback only.
 - **Custom `User` model**: email-as-username, crush verification fields (`is_crush`, `crush_verification_status`). `GuestUser` model supports anonymous checkout via session.
 - **Two payment gateways**: PayPal (USD, international) and Wompi (COP, Colombian). Server-calculated `PaymentSession` state is authoritative; captures/webhooks must match it before updating `Order.status`.
 - **WooCommerce mirror**: products are pulled from a remote WooCommerce store and mirrored locally with translated content.
@@ -257,8 +257,10 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Base settings: `backend/crushme_project/settings.py`. It imports `settings_dev` by default and `settings_prod` only when `DJANGO_ENV=production`.
 - Pytest uses isolated `settings_test.py`; Playwright uses `settings_e2e.py`. Neither may inherit production database, Redis, email, or payment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
-- Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
-- Memory limit: 650M (PyTorch is in requirements but unused in code).
+- Production systemd units: `crushme_project.service`, `crushme-huey.service`,
+  and `crushme-translation.service`. Sockets: `/run/gunicorn.sock` and
+  `/run/crushme-translation/translation.sock`.
+- Service memory limits: web 650M, Huey 450M, translation 256M.
 
 ### Deployment Flow
 1. `git pull origin main`
@@ -586,7 +588,7 @@ flowchart TD
     Backend --> BCrushApp[crushme_app/ — single business app]
     Backend --> BCrushProj[crushme_project/ — Django project module]
     Backend --> BAttachments[django_attachments/ — gallery library]
-    Backend --> BVenvCpu[venv_cpu/ — PyTorch CPU build venv]
+    Backend --> BVenvCpu[venv_cpu/ — stage-1 Django/Argos rollback venv]
     Backend --> BMedia[media/ + staticfiles/]
 
     BCrushApp --> Models[models/ — User, Product, Cart, Order, WishList, Review, etc.]
@@ -609,7 +611,9 @@ flowchart TD
 ```
 
 **Important paths**:
-- The Python venv lives at `backend/venv_cpu/` (PyTorch CPU build), **not** `backend/venv/`. Activate with `cd backend && source venv_cpu/bin/activate`.
+- The main Python venv remains at `backend/venv_cpu/` during stage-1 rollback,
+  **not** `backend/venv/`. Activate with
+  `cd backend && source venv_cpu/bin/activate`.
 - The production systemd unit is `crushme_project.service`.
 - Gunicorn binds to `/run/gunicorn.sock`.
 
@@ -621,7 +625,7 @@ flowchart TD
 
 - **Never run the full test suite** — always specify files.
 - **Maximum per execution**: 20 tests per batch, 3 commands per cycle.
-- **Backend**: `cd backend && source venv_cpu/bin/activate && pytest crushme_app/tests/path/to/test_file.py -v`. Note the venv is `venv_cpu` (PyTorch CPU build), not `venv`.
+- **Backend**: `cd backend && source venv_cpu/bin/activate && pytest crushme_app/tests/path/to/test_file.py -v`. Note the main venv remains `venv_cpu` during stage 1, not `venv`.
 - **Frontend unit (Jest)**: `cd frontend && npm test -- path/to/file.spec.js`
 - **Frontend E2E (Playwright)**: `cd frontend && npx playwright test e2e/path/to/spec.js` — max 2 files per invocation. Use `E2E_REUSE_SERVER=1` when a Vite dev server is already running.
 
@@ -649,7 +653,8 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 #### Service layer is real here
 - `crushme_app/services/` holds the bulk of the business logic:
   - `email_service.py` — SMTP (GoDaddy), template rendering.
-  - `translation_service.py` — **offline** ES↔EN translation via `argostranslate` (no external API calls). Auto-detects target locale from `Accept-Language`.
+  - `translation_service.py` — **offline** ES↔EN translation through the local
+    CTranslate2 Unix daemon. Auto-detects target locale from `Accept-Language`.
   - `translation_batch_service.py` — bulk translation used by the WooCommerce sync.
   - `woocommerce_service.py` + `woocommerce_sync_service.py` — pull product catalog from a remote WooCommerce store, mirror it locally, sync variants.
   - `woocommerce_order_service.py` — convert local `Order` rows back into WooCommerce orders.
@@ -664,10 +669,10 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 #### WooCommerce mirror + offline translation
 - The product catalog is **mirrored** from a remote WooCommerce store via `WooCommerceProduct` and `WooCommerceProductVariation` models.
 - A `CategoryPriceMargin` model lets the user override pricing per category.
-- When products are synced, **all text content is translated offline** via `argostranslate` and cached in a `TranslatedContent` model. This is what `translation_batch_service.py` does.
+- When products are synced, text content is translated offline through the
+  CTranslate2 CPU daemon and cached in `TranslatedContent`.
 - Sync-time translations are persisted. Dynamic/user content retains the
-  existing request-time fallback, but Argos is imported only when that fallback
-  is actually needed.
+  existing request-time fallback over the same local daemon.
 
 #### Custom user model with crush verification
 - `User` extends `AbstractUser` with email-as-username and a "crush verification" workflow (`is_crush`, `crush_verification_status`, `crush_verified_at`). This is a domain feature: users can verify themselves as "crushes" eligible to receive gifted wishlists.
@@ -728,7 +733,9 @@ they must not be moved back into Huey.
 ```bash
 cd backend && source venv_cpu/bin/activate
 ```
-This is the **PyTorch CPU build venv** — not a regular `venv/`. PyTorch is currently installed but **unused** in code (legacy or future ML feature).
+This remains the stage-1 main venv while Argos rollback is available. The
+Torch-free translation process uses `backend/venv_translation/` and must never
+share the main venv.
 
 #### Huey immediate mode in dev
 - `HUEY['immediate'] = True` in dev settings — tasks run synchronously, no Redis/worker required.
@@ -763,8 +770,10 @@ Deploy summary:
 
 ### Tech Debt / Things to Be Aware Of
 
-- **PyTorch is in `requirements.txt` but unused** — `torch`, `stanza`, and `ctranslate2` do not appear in application code. The `venv_cpu` and the 650M memory limit exist because of their footprint.
-- `stanza` and `ctranslate2` are also installed without active integration (probably future translation upgrades).
+- **Argos/Torch/Stanza/spaCy are temporary stage-1 rollback dependencies**.
+  Remove them only after the 48-hour Wave 7 observation gate.
+- CTranslate2 inference is active only in the isolated `venv_translation` and
+  is hardcoded to CPU/int8 with one model resident at a time.
 - The single `crushme_app` is large; consider splitting if it grows further.
 
 ---

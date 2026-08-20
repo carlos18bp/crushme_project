@@ -1,0 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+-r requirements-translation.txt
+
+# Build-only dependencies. This environment is deleted after model conversion.
+scipy==1.16.3
+torch==2.13.0+cpu
+transformers==5.15.1

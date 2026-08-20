@@ -21,8 +21,8 @@ python-decouple==3.8
 redis==7.1.0
 requests==2.34.2
 
-# Offline translation. Argos currently pins Stanza 1.10.1; settings.py forces
-# MiniSBD so Stanza's vulnerable model loader is not reachable.
+# Stage-1 rollback engine only. Production can switch back explicitly while the
+# isolated CTranslate2 runtime is observed; these packages leave in stage 2.
 argostranslate==1.11.0
 torch==2.13.0+cpu
 

@@ -27,8 +27,8 @@ turning the project into a different product or creating a second runtime.
 - Products and variants mirrored from WooCommerce.
 - Category pricing overrides through `CategoryPriceMargin`.
 - Product galleries through the vendored `django_attachments` app.
-- Offline ES/EN translation at synchronization time through Argos Translate,
-  cached in `TranslatedContent`.
+- Offline ES/EN translation at synchronization time through a CPU-only local
+  engine, cached in `TranslatedContent`.
 
 ### 3. Cart, Wishlists, And Gifting
 
@@ -73,5 +73,5 @@ turning the project into a different product or creating a second runtime.
   MySQL-specific CI gates with hermetic settings.
 - **Performance**: Redis cache DB 1, Huey queue DB 2, conditional Silk, and at
   least 30 percent measured production headroom before lifecycle promotion.
-- **Translation safety**: Argos runs with MiniSBD on CPU while its Stanza pin is
-  affected by `PYSEC-2026-3075`; Stanza model loading remains unreachable.
+- **Translation safety**: production inference is CPU-only, offline, isolated
+  from web/worker cgroups, integrity-verified, and must not load Torch/CUDA.

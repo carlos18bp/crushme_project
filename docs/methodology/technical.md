@@ -13,8 +13,9 @@
 | MySQL | 8 | Database (`mysqlclient` 2.2.8) |
 | Redis | 7.1.0 | Cache DB 1 and Huey DB 2 |
 | Huey | 2.6.0 | Async/periodic work |
-| Argos Translate | 1.11.0 | Offline ES/EN translation |
-| Torch | 2.13.0+cpu | Argos dependency, CPU wheel |
+| CTranslate2 | 4.8.1 | Isolated offline ES/EN CPU inference |
+| Argos Translate | 1.11.0 | Temporary stage-1 rollback only |
+| Torch | 2.13.0+cpu | Temporary Argos/build dependency pending stage 2 |
 | Gunicorn | 23.0.0 | WSGI server |
 | django-silk | 5.5.2 | Conditional profiling |
 | django-dbbackup | 5.3.0 | Backup integration |
@@ -50,10 +51,10 @@
   late persistence after logout.
 - Treat `PaymentSession` as the durable authority for payment amounts and
   gateway confirmation.
-- Translate offline during WooCommerce sync and retain the existing fallback
-  for dynamic content, but load Argos only when that fallback is exercised.
-- Force Argos MiniSBD on CPU until Argos no longer pins vulnerable Stanza
-  1.10.1. Enabling Stanza chunking is prohibited.
+- Translate offline through one local CTranslate2 static-int8 CPU daemon while
+  retaining the existing dynamic-content fallback and API behavior.
+- Keep Argos/MiniSBD CPU available only for explicit rollback during stage 1;
+  never auto-fallback into Torch inside Gunicorn or Huey.
 - Keep exact backend pins and lock frontend transitive versions through
   `package-lock.json`. Framework majors are separate compatibility work.
 - Pin security-relevant reachable backend transitives explicitly when their
@@ -100,7 +101,9 @@ only. Relevant groups are:
   endpoints. Production requires PayPal `live` and Wompi `production`.
 - Commerce: WooCommerce API URL/key/secret and dropshipping customer ID.
 - Uploads: maximum bytes, pixels, and files per request.
-- Translation: `ARGOS_CHUNK_TYPE=MINISBD` and `ARGOS_DEVICE_TYPE=cpu`.
+- Translation: `TRANSLATION_ENGINE`, `TRANSLATION_SOCKET_PATH`,
+  `TRANSLATION_MODEL_DIR`, and `TRANSLATION_TIMEOUT_SECONDS`; `ARGOS_*` remains
+  only through the stage-1 rollback window.
 - Optional profiling: `ENABLE_SILK=False` by default.
 
 Secrets remain mode 600 in runtime/protected stores and never enter frontend

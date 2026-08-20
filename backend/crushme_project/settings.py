@@ -24,8 +24,8 @@ DJANGO_ENV = config('DJANGO_ENV', default='development')
 IS_PRODUCTION = DJANGO_ENV == 'production'
 IS_TEST = DJANGO_ENV in {'test', 'e2e'}
 
-# Stanza remains a transitive Argos dependency, but its unsafe model loader is
-# not reachable when sentence splitting is forced through MiniSBD.
+# Argos remains available only as an explicit stage-1 rollback engine. Its
+# unsafe Stanza model loader stays unreachable while rollback is available.
 ARGOS_CHUNK_TYPE = config('ARGOS_CHUNK_TYPE', default='MINISBD').upper()
 ARGOS_DEVICE_TYPE = config('ARGOS_DEVICE_TYPE', default='cpu').lower()
 if ARGOS_CHUNK_TYPE != 'MINISBD':
@@ -34,6 +34,27 @@ if ARGOS_DEVICE_TYPE != 'cpu':
     raise ImproperlyConfigured('ARGOS_DEVICE_TYPE must remain cpu')
 os.environ['ARGOS_CHUNK_TYPE'] = ARGOS_CHUNK_TYPE
 os.environ['ARGOS_DEVICE_TYPE'] = ARGOS_DEVICE_TYPE
+
+TRANSLATION_ENGINE = config('TRANSLATION_ENGINE', default='argos').lower()
+if TRANSLATION_ENGINE not in {'argos', 'ctranslate2_cpu'}:
+    raise ImproperlyConfigured(
+        'TRANSLATION_ENGINE must be argos or ctranslate2_cpu'
+    )
+TRANSLATION_SOCKET_PATH = config(
+    'TRANSLATION_SOCKET_PATH',
+    default='/run/crushme-translation/translation.sock',
+)
+TRANSLATION_MODEL_DIR = config(
+    'TRANSLATION_MODEL_DIR',
+    default=str(Path.home() / '.local/share/crushme/translation-models'),
+)
+TRANSLATION_TIMEOUT_SECONDS = config(
+    'TRANSLATION_TIMEOUT_SECONDS', default=30.0, cast=float
+)
+if TRANSLATION_TIMEOUT_SECONDS <= 0 or TRANSLATION_TIMEOUT_SECONDS > 60:
+    raise ImproperlyConfigured(
+        'TRANSLATION_TIMEOUT_SECONDS must be greater than 0 and at most 60'
+    )
 
 # ---------------------------------------------------------------------------
 # Core Django settings

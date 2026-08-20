@@ -14,8 +14,19 @@ This file records reusable failures, risks, and resolutions.
 - **Mitigation**: Startup rejects any other chunk/device setting, and a
   regression test against real Argos 1.11 proves MiniSBD is selected even when
   a package advertises a Stanza model path.
-- **Follow-up**: Re-evaluate monthly. Re-enabling Stanza chunking or removing
-  the guard is a release blocker until the dependency is fixed.
+- **Follow-up**: Wave 7 stage 1 keeps this mitigation only for explicit
+  rollback. Close this issue by removing Argos/Stanza after the CTranslate2
+  observation gate passes.
+
+### [KNOWN-002] Translation dependency retirement is observation-gated
+
+- **Date**: 2026-08-20
+- **Context**: The CPU-only CTranslate2 daemon is implemented with static-int8
+  models, but Argos/Torch must remain available for the stage-1 rollback.
+- **Risk**: Removing rollback dependencies before representative production
+  sync and traffic would combine a model change with an irreversible release.
+- **Gate**: 48 hours, one representative WooCommerce sync, zero translation
+  errors/OOM/restarts, public ES/EN parity, and at least 25% daemon headroom.
 
 ## Resolved Issues
 

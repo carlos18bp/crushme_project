@@ -53,6 +53,11 @@
 - Importing Argos from URL/serializer modules loads Torch/ONNX into every web
   worker and Huey before it is needed. A local import at the translation call
   preserves behavior while restoring ordinary-request memory headroom.
+- A CPU wheel does not make a dependency lightweight. CTranslate2 imports
+  optional converter integrations when Torch shares its environment, so the
+  inference daemon needs a separate minimal venv to prove Torch is absent.
+- Static-int8 models plus one Unix-socket daemon avoid multiplying model memory
+  across two Gunicorn workers and Huey while preserving offline behavior.
 - Updating a requirements file does not remove stale site-packages from a
   long-lived production venv. Compare the installed graph with the resolved
   manifest, remove only proven-unreachable packages, then run `pip check`,
@@ -64,10 +69,8 @@
 
 ## Remaining Debt
 
-- Argos 1.11 pins vulnerable Stanza 1.10.1. MiniSBD/CPU makes the path
-  unreachable, but the dependency must be reviewed monthly.
-- PyTorch remains a heavy Argos dependency and drives disk/memory cost when an
-  offline translation is executed.
+- Argos/Torch remains temporarily installed only for Wave 7 stage-1 rollback;
+  retirement is blocked on the 48-hour production observation.
 - Vite still reports existing large-chunk warnings; measured production
   latency is the trigger for a separate code-splitting change.
 - Critical business-flow gaps remain explicitly tracked by the Wave 4 flow

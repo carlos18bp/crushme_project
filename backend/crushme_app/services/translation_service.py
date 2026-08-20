@@ -1,16 +1,19 @@
-"""
-Translation Service using argostranslate (100% offline)
-Translates text between Spanish and English based on Accept-Language header
-"""
+"""Offline ES/EN translation selected from the request language."""
 
 import logging
+from pathlib import Path
 from typing import ClassVar
+
+from django.conf import settings
+
+from .translation_client import TranslationClient
+from .translation_manifest import ENGINE_ID
 
 logger = logging.getLogger(__name__)
 
 
 def _translate_with_argos(text: str, source_language: str, target_language: str) -> str:
-    """Load the offline engine only when a request actually needs translation."""
+    """Load the stage-1 rollback engine only when it is explicitly selected."""
     import argostranslate.translate
 
     return argostranslate.translate.translate(
@@ -18,6 +21,30 @@ def _translate_with_argos(text: str, source_language: str, target_language: str)
         source_language,
         target_language,
     )
+
+
+def _translate_with_cpu_service(
+    text: str, source_language: str, target_language: str
+) -> str:
+    """Send one translation to the isolated local CPU-only daemon."""
+    client = TranslationClient(
+        socket_path=Path(settings.TRANSLATION_SOCKET_PATH),
+        timeout_seconds=settings.TRANSLATION_TIMEOUT_SECONDS,
+    )
+    return client.translate(text, source_language, target_language)
+
+
+def _translate_offline(text: str, source_language: str, target_language: str) -> str:
+    if settings.TRANSLATION_ENGINE == 'argos':
+        return _translate_with_argos(text, source_language, target_language)
+    return _translate_with_cpu_service(text, source_language, target_language)
+
+
+def get_translation_engine_id() -> str:
+    """Return the durable identifier stored with newly generated content."""
+    if settings.TRANSLATION_ENGINE == 'argos':
+        return 'argostranslate'
+    return ENGINE_ID
 
 
 class TranslationService:
@@ -49,7 +76,7 @@ class TranslationService:
 
     def translate(self, text: str | None, source_language: str = "auto") -> str | None:
         """
-        Translate text to target language using argostranslate (offline).
+        Translate text to the target language using the configured offline engine.
 
         Args:
             text (str): Text to translate
@@ -137,8 +164,7 @@ class TranslationService:
             if source_language == self.target_language:
                 return text
 
-            # Traducir usando argostranslate (offline)
-            translated = _translate_with_argos(
+            translated = _translate_offline(
                 text,
                 source_language,
                 self.target_language,
@@ -149,9 +175,11 @@ class TranslationService:
         except Exception as error:  # noqa: BLE001 - translation must fail open.
             # En caso de error, retornar el texto original
             logger.warning(
-                "Translation failed for text '%s...': %s",
-                text[:50],
-                error,
+                "Translation failed source=%s target=%s characters=%d error_type=%s",
+                source_language,
+                self.target_language,
+                len(text),
+                type(error).__name__,
             )
             return text
 
