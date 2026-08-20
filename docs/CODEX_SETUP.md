@@ -11,7 +11,7 @@
 | Skill metadata | `.agents/skills/<skill>/agents/openai.yaml` | Display name + invocation policy |
 | Project config | `.codex/config.toml` | Codex project defaults |
 | Memory bank | `docs/methodology/*`, `tasks/*` | Long-lived project context |
-| Compatibility (read-only) | `CLAUDE.md`, `.claude/`, `.windsurf/` | Mixed-tool team support only |
+| Claude Code compatibility | `CLAUDE.md`, `.claude/` | Shared guidance for Claude Code |
 
 ## `.codex/config.toml` Fields
 

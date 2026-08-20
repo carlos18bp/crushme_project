@@ -1,6 +1,6 @@
 # CrushMe Codex Methodology Guide
 
-CrushMe uses a **Codex-native repo runtime**. Claude Code and Windsurf are maintained as compatibility layers only — they must stay aligned with the Codex-native source of truth, not redefine it.
+CrushMe uses a **Codex-native repo runtime**. Claude Code is maintained as a compatibility layer only — they must stay aligned with the Codex-native source of truth, not redefine it.
 
 ---
 
@@ -13,7 +13,7 @@ CrushMe uses a **Codex-native repo runtime**. Claude Code and Windsurf are maint
 | Skill metadata | `.agents/skills/<skill>/agents/openai.yaml` | Display name + invocation policy |
 | Project config | `.codex/config.toml` | Project-scoped Codex defaults |
 | Long-lived context | `docs/methodology/*`, `tasks/*` | Memory bank and current state |
-| Compatibility only | `CLAUDE.md`, `.claude/`, `.windsurf/` | Mixed-tool team support |
+| Claude Code compatibility | `CLAUDE.md`, `.claude/` | Shared Claude Code guidance |
 
 ---
 
@@ -70,9 +70,6 @@ crushme_project/
 │   ├── settings.local.json
 │   ├── commands/
 │   └── skills/                  ← mirrors .agents/skills/
-└── .windsurf/                   ← Windsurf compatibility
-    ├── rules/
-    └── workflows/
 ```
 
 ---
@@ -115,7 +112,7 @@ These have `disable-model-invocation: true` in SKILL.md and `allow_implicit_invo
 1. Put durable repo rules in `AGENTS.md`, not in skills.
 2. Put repeatable procedures in `.agents/skills/`.
 3. Update memory files only when a task actually changes architecture, runtime guidance, or verified project context. Never churn memory on routine code edits.
-4. Keep Claude/Windsurf materials aligned with the Codex-native source of truth — they must not redefine it.
+4. Keep Claude materials aligned with the Codex-native source of truth — they must not redefine it.
 5. If cross-repo distribution is needed later, package the existing `.agents/skills/` tree as a plugin — do not make the plugin the runtime again.
 
 ---
@@ -150,17 +147,17 @@ Both guards must be present and must never be removed without explicit user conf
 
 ---
 
-## Compatibility Surfaces (Claude Code + Windsurf)
+## Compatibility Surfaces (Claude Code)
 
-The `.claude/` and `.windsurf/` directories are **read-only mirrors** of the Codex runtime. They must stay in sync but must not be the authoritative source.
+The `.claude/` directory mirrors the shared Codex guidance for Claude Code without becoming the authoritative source.
 
-| Codex (canonical) | Claude Code (mirror) | Windsurf (mirror) |
-|-------------------|----------------------|-------------------|
-| `AGENTS.md` | `CLAUDE.md` | `.windsurf/rules/` |
-| `.agents/skills/<s>/SKILL.md` | `.claude/skills/<s>/SKILL.md` | `.windsurf/workflows/<s>.md` |
-| `.codex/config.toml` | `.claude/settings.json` | — |
+| Codex (canonical) | Claude Code (mirror) |
+|-------------------|----------------------|
+| `AGENTS.md` | `CLAUDE.md` |
+| `.agents/skills/<s>/SKILL.md` | `.claude/skills/<s>/SKILL.md` |
+| `.codex/config.toml` | `.claude/settings.json` |
 
-When skills are added or modified, update all three surfaces.
+When shared guidance changes, update both active surfaces.
 
 ---
 
