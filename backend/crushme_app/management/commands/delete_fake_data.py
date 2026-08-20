@@ -10,6 +10,8 @@ from crushme_app.models import (
 )
 from django_attachments.models import Library, Attachment
 
+from crushme_app.fake_data_guard import ensure_fake_data_allowed
+
 
 class Command(BaseCommand):
     help = 'Delete all fake data for users, products, carts, orders, and wishlists'
@@ -22,6 +24,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ensure_fake_data_allowed('delete_fake_data')
         if not options['confirm']:
             self.stdout.write(
                 self.style.ERROR(

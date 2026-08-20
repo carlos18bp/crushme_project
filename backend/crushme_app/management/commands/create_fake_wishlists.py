@@ -8,6 +8,8 @@ from faker import Faker
 from crushme_app.models import User, Product, WishList, WishListItem, FavoriteWishList
 import random
 
+from crushme_app.fake_data_guard import ensure_fake_data_allowed
+
 
 class Command(BaseCommand):
     help = 'Create fake wishlists for testing purposes'
@@ -21,6 +23,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ensure_fake_data_allowed('create_fake_wishlists')
         fake = Faker()
         num_wishlists = options['num_wishlists']
 

@@ -6,6 +6,8 @@ Usage: python manage.py create_fake_data [--users 20] [--products 50] [--carts 1
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
+from crushme_app.fake_data_guard import ensure_fake_data_allowed
+
 
 class Command(BaseCommand):
     help = 'Create comprehensive fake data for the CrushMe e-commerce platform'
@@ -43,6 +45,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ensure_fake_data_allowed('create_fake_data')
         users = options['users']
         products = options['products']
         carts = options['carts']
