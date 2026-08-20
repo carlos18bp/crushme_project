@@ -103,7 +103,7 @@ Managed via `python-decouple` reading `.env` file:
   strict quality gate, current-tree secret detection, and Bandit medium/high
   scanning.
 - Current executable inventory: 18 backend behavior files / 49 test functions,
-  7 frontend-unit files / 16 tests, and 11 E2E specs / 21 tests.
+  7 frontend-unit files / 18 tests, and 11 E2E specs / 21 tests.
 - Canonical flow read-out: 4 covered, 16 partial, 36 missing, 0 junk-only, and
   0 unvalidated across 56 declared outcomes. This is yellow, not promotion-ready.
 

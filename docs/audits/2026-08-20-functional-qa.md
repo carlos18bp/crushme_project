@@ -17,7 +17,7 @@ outcomes=56/56 negative_case_gaps=1 gate_errors=0 gate_warnings=0
 | Layer | Files | Test declarations | Runtime |
 |---|---:|---:|---|
 | Backend behavior | 18 | 49 | pytest + isolated SQLite |
-| Frontend unit | 7 | 16 | Jest |
+| Frontend unit | 7 | 18 | Jest |
 | Frontend E2E | 11 | 21 | Playwright + guarded SQLite |
 
 Six historical Python scripts outside `backend/crushme_app/tests/` are not
@@ -62,10 +62,12 @@ does not contaminate the scenario.
 | Check | Result |
 |---|---|
 | Canonical `qa-agent.sh --verify` on final four specs | 0 errors, 0 warnings |
+| Frontend unit batch | 7 suites, 18 tests passed |
 | Auth + checkout Playwright batch | 6 passed |
 | Cart + wishlist Playwright batch | 6 passed in 58.0s; cleanup DELETE 200 |
 | Final test-quality pre-commit | Pass |
 | Canonical QA read-out | 0 junk-only, 0 unvalidated, 36 missing |
+| Project AI catalogs | Claude 35/35, Codex 35/35, Windsurf 32/32; no project drift |
 | Production data/runtime | Not accessed or modified |
 
 ## Remaining Work

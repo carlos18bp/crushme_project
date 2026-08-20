@@ -27,7 +27,7 @@ Patterns, preferences, and project intelligence discovered during development.
 ## Testing
 
 - The executable inventory is 18 backend behavior files / 49 test functions,
-  7 frontend-unit files / 16 tests, and 11 E2E specs / 21 tests. Historical
+  7 frontend-unit files / 18 tests, and 11 E2E specs / 21 tests. Historical
   scripts outside `crushme_app/tests` do not count as behavior coverage.
 - Literal Playwright tags are required on each test: `@flow`, `@role`, and
   `@outcome`. The static auditor does not resolve imported tag constants.

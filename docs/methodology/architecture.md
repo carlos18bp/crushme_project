@@ -106,7 +106,7 @@ Views are thin wrappers. Business logic lives in services:
 - GitHub Actions partitions backend, frontend unit/build, E2E, and MySQL
   migration compatibility into independent jobs.
 - The executable inventory contains 18 backend behavior files / 49 test
-  functions, 7 frontend-unit files / 16 tests, and 11 Playwright specs / 21
+  functions, 7 frontend-unit files / 18 tests, and 11 Playwright specs / 21
   tests. Static flow tags map them to 56 declared outcomes.
 - The E2E database is shared and guarded, so Playwright runs one worker. Stable
   selectors use `data-testid` for controls and accessible role/name elsewhere.
