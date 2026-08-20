@@ -5,7 +5,6 @@
  */
 import axios from "axios";
 import { useI18nStore } from '@/stores/modules/i18nStore';
-import { useCurrencyStore } from '@/stores/modules/currencyStore';
 
 /**
  * Get current language from i18n store
@@ -28,13 +27,10 @@ function getCurrentLanguage() {
  * @returns {string} - Current currency code (COP/USD)
  */
 function getCurrentCurrency() {
-  try {
-    const currencyStore = useCurrencyStore();
-    return currencyStore?.currentCurrency || 'USD';
-  } catch (error) {
-    console.warn("Could not access currency store, defaulting to 'USD':", error);
-    return 'USD';
-  }
+  const storedCurrency = localStorage.getItem('currency');
+  return storedCurrency === 'COP' || storedCurrency === 'USD'
+    ? storedCurrency
+    : 'USD';
 }
 
 /**

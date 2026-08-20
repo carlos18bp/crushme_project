@@ -159,11 +159,11 @@
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.wishlist.name') }}</label>
-            <input v-model="newWishlist.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-pink-medium focus:border-transparent" :placeholder="$t('profile.wishlist.namePlaceholder')" />
+            <input v-model="newWishlist.name" data-testid="wishlist-name-input" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-pink-medium focus:border-transparent" :placeholder="$t('profile.wishlist.namePlaceholder')" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.wishlist.description') }}</label>
-            <textarea v-model="newWishlist.description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-pink-medium focus:border-transparent" :placeholder="$t('profile.wishlist.descriptionPlaceholder')"></textarea>
+            <textarea v-model="newWishlist.description" data-testid="wishlist-description-input" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-pink-medium focus:border-transparent" :placeholder="$t('profile.wishlist.descriptionPlaceholder')"></textarea>
           </div>
           <div class="flex items-center">
             <input v-model="newWishlist.is_public" type="checkbox" id="is_public" class="h-4 w-4 text-brand-pink-medium focus:ring-brand-pink-medium border-gray-300 rounded" />
@@ -444,4 +444,3 @@ onMounted(async () => {
   background-color: var(--color-brand-pink-medium);
 }
 </style>
-

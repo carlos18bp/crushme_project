@@ -2,8 +2,6 @@
 
 ## Active
 
-- [ ] Merge the frame-protection deployment blocker, rotate the Django signing
-  key, and complete Wave 3 production deployment/post-deploy checks.
 - [ ] Land Wave 4 QA coverage and test-quality PR.
 - [ ] Land Wave 5 production operations/performance PR and deployment.
 - [ ] Complete Wave 6 certification and lifecycle promotion after the required
@@ -40,3 +38,9 @@
 - [x] Rotated the exposed production database credential, revoked the former
   account, and synchronized the protected fleet credential source.
 - [x] Passed all six Wave 3 CI gates and merged PR #10.
+- [x] Merged frame-protection PR #11, rotated the Django signing key, deployed
+  Wave 3, and passed the production post-deploy checks.
+- [x] Restored the real COP/USD preference and geolocation flow instead of the
+  temporary forced-COP behavior.
+- [x] Added behavior tests across backend, frontend-unit, and hermetic E2E;
+  validated all touched tests with zero junk-only or unvalidated flows.

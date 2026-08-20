@@ -4,7 +4,8 @@ const shouldLogErrors = process.env.E2E_LOG_ERRORS === "1";
 
 export const test = base.extend({
   page: async ({ page, request }, use) => {
-    page.setDefaultTimeout(10000);
+    // Cold Vite workers may compile large lazy routes during the first UI action.
+    page.setDefaultTimeout(20000);
     page.setDefaultNavigationTimeout(25000);
 
     const health = await request.get('/api/health/');

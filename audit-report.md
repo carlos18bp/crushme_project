@@ -12,8 +12,8 @@ rotation
 
 ## Verdict
 
-**YELLOW - no unmitigated critical/high finding remains; CI, merge, and the
-controlled application deployment are still pending.**
+**GREEN - no unmitigated critical/high finding remains; CI, merge, signing-key
+rotation, and the controlled production deployment passed.**
 
 | Surface | Initial | Current |
 |---|---:|---:|
@@ -186,6 +186,9 @@ history still requires immediate rotation and separate remediation.
 | Bandit medium/high | Pass, 0 findings |
 | Backup restore rehearsal | Pass |
 | Credential cutover health | Web active, Huey active, public health OK |
+| Six partitioned CI jobs | Pass on PR #10 and PR #11 |
+| Production deployment | Pass; migrations applied and services restarted |
+| Canonical post-deploy check | 14 pass, 0 fail |
 
 The complete test suite was not run locally, per project policy. CI owns the
 partitioned complete run and the production-engine concurrent JWT test.
@@ -196,10 +199,14 @@ No dependency or application rollback was required. MySQL rejected the first
 generated password before any user or environment mutation; the corrected
 candidate then completed the guarded cutover successfully.
 
-## Release Gate Remaining
+## Deployment Closure
 
-- Push the wave branch and pass all six CI jobs, including MySQL concurrent JWT
-  rotation.
-- Merge the wave PR to `main`.
-- Install exact production dependencies from the CPU index, apply migrations,
-  build/collect static files, restart services, and run post-deploy checks.
+- PR #10 and frame-protection hotfix PR #11 are merged into `main`.
+- Production runs commit `68f5d1b`; migrations 0019/0020 and token blacklist
+  migrations are applied.
+- Exact backend/frontend dependencies, build, and static collection passed.
+- `crushme_project.service` and `crushme-huey.service` restarted cleanly.
+- Public health, compiled assets, payment configuration contracts, and hardened
+  HTTP headers return the expected responses.
+- The rollback artifacts remain retained until the final observation window
+  closes.
