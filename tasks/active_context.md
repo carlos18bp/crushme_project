@@ -2,8 +2,8 @@
 
 ## Current Focus
 
-Wave-based modernization of the existing production project. There is no
-CrushMe staging environment and none will be created for this program.
+Wave 2 repository cleanup and hermetic development/test foundations. Wave 1
+aligned all AI ecosystems without changing production runtime behavior.
 
 ## Current Coordinate
 
@@ -23,5 +23,6 @@ CrushMe staging environment and none will be created for this program.
 
 ## Next Gate
 
-Land Wave 0, then create Wave 1 from the resulting `main` and synchronize the
-three AI ecosystems against the canonical toolkit and Vue scaffold.
+Audit and land Wave 2 from the resulting `main`: verified repository cleanup,
+isolated test settings, deterministic fake-data guards, partitioned CI, lint,
+and the test-quality platform.

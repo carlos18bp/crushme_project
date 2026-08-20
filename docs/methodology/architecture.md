@@ -24,7 +24,7 @@ All business logic lives in one app. Modules are split by responsibility:
 
 | Layer | Location | Count | Role |
 |-------|----------|-------|------|
-| Models | `crushme_app/models/` | 12 files | Data layer: User, Product, Cart, Order, WishList, Review, etc. |
+| Models | `crushme_app/models/` | 12 files / 28 classes | Data layer: User, Product, Cart, Order, WishList, Review, etc. |
 | Views | `crushme_app/views/` | 20 files | API endpoints, 100% FBV with `@api_view` |
 | Services | `crushme_app/services/` | 8 files | Business logic: email, translation, woocommerce, paypal, wompi |
 | Serializers | `crushme_app/serializers/` | 10 files | Input validation and response formatting |
@@ -60,8 +60,9 @@ Views are thin wrappers. Business logic lives in services:
 ### Settings
 - Base: `crushme_project/settings.py` (shared)
 - Dev override: `settings_dev.py` (DEBUG=True, loaded when `DJANGO_ENV=development`)
-- Prod override: `settings_prod.py` (HSTS, secure cookies, loaded when `DJANGO_ENV=production`)
-- Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings` (from pytest.ini)
+- Prod override: `settings_prod.py` (HSTS and secure cookies, loaded only for production)
+- Dev override: `settings_dev.py` (loaded outside production)
+- Pytest currently uses `DJANGO_SETTINGS_MODULE=crushme_project.settings`; Wave 2 introduces an isolated test entry point.
 
 ## Frontend Architecture
 
@@ -70,11 +71,11 @@ Views are thin wrappers. Business logic lives in services:
 | Layer | Location | Count | Role |
 |-------|----------|-------|------|
 | Stores | `src/stores/modules/` | 12 files | Pinia state management (mixed setup/Options API) |
-| Views | `src/views/` | 6 dirs + 4 root files | Page-level components |
-| Components | `src/components/` | 9 dirs | Reusable UI components |
-| Composables | `src/composables/` | 4 files | useAlert, useCart, useCheckout, useNotifications |
+| Views | `src/views/` | 25 files | Page-level components |
+| Components | `src/components/` | 26 files | Reusable UI components |
+| Composables | `src/composables/` | 3 files | useAlert, useCart, useNotifications |
 | Services | `src/services/` | 1 file | request_http.js — single HTTP client |
-| Router | `src/router/` | 1 file | vue-router 4 with locale prefixes |
+| Router | `src/router/` | 1 file / 33 route records | vue-router 4 with locale prefixes |
 | Locales | `src/locales/` | nested by domain | vue-i18n EN/ES translation files |
 
 ### Single HTTP Client
@@ -96,8 +97,8 @@ Views are thin wrappers. Business logic lives in services:
 ## Infrastructure
 
 ### Systemd Services
-- `gunicorn.service` — App server (NOT `crushme_project.service`)
-- `gunicorn.socket` — Socket at `/run/gunicorn.sock`
+- `crushme_project.service` — Production app server
+- Gunicorn binds to `/run/gunicorn.sock`
 - `crushme-huey.service` — Async task worker
 
 ### Huey Periodic Tasks

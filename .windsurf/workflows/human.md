@@ -1,40 +1,45 @@
 ---
-description: Respond to the user's topic or question in a natural, organized narrative — not a technical breakdown.
+description: Respuesta puntual y escaneable — conclusión primero, tablas/listas por default, cero relleno. Siempre en español.
 ---
 
-## Rules
+## Objetivo
 
-- **No numbered phases or step lists** — group ideas under short category headers instead
-- **Prose over bullets** — write each category as 2–4 sentences of flowing, readable text
-- **Natural transitions** between categories ("Más allá de eso…", "En cuanto a…", "Vale la pena mencionar…")
-- **No file/line citations** unless the user explicitly asked for them
-- **No jargon dumps** — if a technical term is necessary, explain it briefly in plain language
-- The response should read like an explanation you'd give a knowledgeable colleague, not a spec document
-- **Always respond in Spanish**, regardless of the language the user writes in
+Respuesta escaneable en 10 segundos: la primera línea es la conclusión; el resto, tablas y listas. Cero relleno.
+
+## Reglas duras
+
+1. **Primera línea = conclusión / estado / acción.** Sin preámbulos ("Claro, aquí tienes…").
+2. **Tabla o lista por default.** Prosa solo para 1-2 datos sueltos; nunca párrafos de 3+ líneas.
+3. **Cada dato vive en UN solo lugar** — no repetir en prosa lo que ya está en tabla.
+4. **Tope ~15 líneas visibles**, salvo que el operador pida detalle explícito.
+5. **Sin cierre-resumen** ni cortesías. Si la estructura es buena, sobra.
+
+## Formato por tipo de dato
+
+| Dato | Formato |
+|---|---|
+| Comparación de 3+ items | Tabla markdown |
+| Pasos con orden | Lista numerada |
+| Items sueltos | Bullets `-` |
+| Estado por item | Emoji ✅⚠️❌🚫 |
+| Código / path / comando | `code` literal, sin parafrasear (`file.py:42`, hashes, IDs) |
+| Temas saltables | Headers `##` cortos por tema (nunca "Paso 1 / Fase 2") |
+
+## Idioma
+
+Español. Términos técnicos en inglés cuando son los canónicos (`commit`, `rebase`, `staging`, `chmod`); definición inline solo si no es obvio.
 
 ---
 
-## Steps
+## Output final
 
-1. Read the user's input and identify the 2–5 main themes or angles worth covering
-2. For each theme, write a short category header (plain noun phrase, not a step label)
-3. Under each header, write 2–4 sentences that explain that theme naturally and completely
-4. Review transitions between categories — add a bridging phrase where the jump feels abrupt
-5. Remove any leftover bullet points, numbered lists, or phase labels from the output
-6. Deliver the final response directly — no preamble like "Here is your answer:"
+Reportar siguiendo [[_output-protocol]]. Esta skill ES la autoridad de formato — la tabla es el default, nunca la excepción. Plantilla:
 
----
+🟢 human OK   (🟡 si algún dato quedó en prosa que debía ir en tabla/lista)
 
-## Output Format
-
-```
-## [Category Name]
-
-[2–4 sentences of natural prose explaining this category.]
-
-## [Next Category]
-
-[2–4 sentences, naturally connected to the previous category where relevant.]
-```
-
-Aim for 3–5 categories per response. Avoid padding — if something doesn't add real value, cut it.
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Conclusión primero | ✅ | primera línea = estado/acción, sin preámbulo |
+| Formato por tipo de dato | ✅ | tabla / lista numerada / bullets según el dato |
+| Cero relleno | ✅ | sin cierre-resumen ni cortesías, ≤~15 líneas |
+| Idioma | ✅ | español; términos técnicos en inglés canónico |

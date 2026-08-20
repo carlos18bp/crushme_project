@@ -15,8 +15,22 @@ This file tracks known errors, their context, and resolutions. When a reusable f
 
 ## Known Issues
 
-_No known issues recorded yet._
+### [KNOWN-001] Production database credential exists in Git history
+- **Date**: 2026-08-20
+- **Context**: Repository cleanup found a literal credential in the former `backend/setup_db.sql`.
+- **Root Cause**: Initial deployment bootstrap SQL was committed with a real password.
+- **Impact**: The tracked value matches the active production database credential.
+- **Required Resolution**: Rotate credentials, update protected stores atomically, verify services, and purge or explicitly accept Git-history exposure.
+- **Files Affected**: Git history for `backend/setup_db.sql`; production environment and fleet credential store.
 
 ## Resolved Issues
 
-_No resolved issues recorded yet._
+### [ERR-001] Accidental staging coordinate
+- **Date**: 2026-08-20
+- **Context**: The first modernization attempt created a work clone and fleet
+  artifacts as if CrushMe required a permanent staging deployment.
+- **Root Cause**: A safe authoring coordinate was incorrectly modeled as a
+  second runtime coordinate.
+- **Resolution**: Removed the clone, registry entry, DNS assumptions, and
+  Nginx/systemd/env artifacts. Modernization now uses a temporary Git worktree
+  while production remains on `main`.

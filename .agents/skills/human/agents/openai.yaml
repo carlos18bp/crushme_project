@@ -1,5 +1,7 @@
 interface:
   display_name: "Human"
-  short_description: "Responde en español de forma natural y narrativa, sin desglose técnico."
+  short_description: "Respuesta puntual y escaneable: conclusión primero..."
+  default_prompt: "Use $human to handle this task with its documented workflow."
+
 policy:
   allow_implicit_invocation: true

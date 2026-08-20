@@ -2,8 +2,6 @@
 
 ## Active
 
-- [ ] Land Wave 0 foundation PR.
-- [ ] Land Wave 1 AI ecosystem and methodology PR.
 - [ ] Land Wave 2 repository and test-platform PR.
 - [ ] Land Wave 3 dependency/security PR and controlled deployment.
 - [ ] Land Wave 4 QA PR.
@@ -24,3 +22,6 @@
 - [x] Recovered disk space while preserving backups, media, Argos, Playwright,
   and the production venv.
 - [x] Established a temporary Git worktree while production remains on `main`.
+- [x] Landed Wave 0 foundation through PR #4.
+- [x] Synchronized Codex, Claude Code, Windsurf, shared skills, project guidance,
+  and Memory Bank in Wave 1.
