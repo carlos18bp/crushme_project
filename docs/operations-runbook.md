@@ -41,7 +41,9 @@ Backups do not depend on Huey:
 
 - `crushme-dbbackup.timer` runs daily at 02:10 UTC with up to five minutes of
   randomized delay. It writes compressed MySQL and media backups to
-  `/var/backups/crushme_project` and retains four copies.
+  `/var/backups/crushme_project` and retains four copies. The backup directory
+  is owner-only (`0700`) and Django storage creates every archive and metadata
+  file as owner-only (`0600`).
 - `vps-backup.timer` creates the independent weekly fleet snapshot, including
   database and media, under `/home/ryzepeck/backups/vps`.
 - `vps-backup-restore-test.timer` performs the monthly fleet restore test.

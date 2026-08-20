@@ -54,3 +54,6 @@
 - [x] Completed the immediate Wave 6 AI, QA, vulnerability, deployment,
   restore, public-contract, service, and capacity certification without
   creating a staging coordinate.
+- [x] Restricted production backup artifacts to owner-only access and added a
+  regression contract so Django storage cannot override the secure systemd
+  umask with permissive defaults.
