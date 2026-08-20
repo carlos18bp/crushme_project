@@ -15,6 +15,7 @@ from django.core.exceptions import ImproperlyConfigured
 from huey import RedisHuey
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_NAME = 'crushme_project'
 
 # ---------------------------------------------------------------------------
 # Environment detection
@@ -335,14 +336,6 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'backup_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'backups.log',
-            'maxBytes': 5 * 1024 * 1024,
-            'backupCount': 3,
-            'formatter': 'verbose',
-        },
     },
     'root': {
         'handlers': ['console'],
@@ -357,11 +350,6 @@ LOGGING = {
         'crushme_app': {
             'handlers': ['console'],
             'level': LOG_LEVEL,
-            'propagate': False,
-        },
-        'backups': {
-            'handlers': ['backup_file', 'console'],
-            'level': 'INFO',
             'propagate': False,
         },
     },
@@ -424,8 +412,6 @@ FAKE_DATA_PROTECTED_DATABASES = config(
 DBBACKUP_COMPRESS = True
 DBBACKUP_CLEANUP_KEEP = 4
 
-# Backups: permite desactivar la tarea programada en entornos no productivos.
-BACKUPS_ENABLED = config('BACKUPS_ENABLED', default=True, cast=bool)
 # El reporte de queries lentas solo tiene sentido con trafico real.
 ENABLE_SLOW_QUERIES_REPORT = config('ENABLE_SLOW_QUERIES_REPORT', default=True, cast=bool)
 DBBACKUP_CLEANUP_KEEP_MEDIA = 4

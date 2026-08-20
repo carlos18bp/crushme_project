@@ -1,17 +1,24 @@
 [Unit]
-Description=Huey consumer for crushme_project
-After=network.target redis-server.service
-Requires=redis-server.service
+Description=Gunicorn daemon for crushme_project
+Requires=crushme_project.socket
+After=network.target
 
 [Service]
-Type=simple
+Type=notify
 User=ryzepeck
 Group=www-data
 WorkingDirectory=/home/ryzepeck/webapps/crushme_project/backend
 EnvironmentFile=/home/ryzepeck/webapps/crushme_project/backend/.env
 Environment="DJANGO_SETTINGS_MODULE=crushme_project.settings"
 Environment="DJANGO_ENV=production"
-ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/python manage.py run_huey --workers 1
+ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/gunicorn \
+    --workers 2 \
+    --max-requests 800 \
+    --max-requests-jitter 80 \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    --bind unix:/run/gunicorn.sock \
+    crushme_project.wsgi:application
 StandardOutput=journal
 StandardError=journal
 Restart=on-failure

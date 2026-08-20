@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily backup schedule for crushme_project
+
+[Timer]
+OnCalendar=*-*-* 02:10:00 UTC
+RandomizedDelaySec=300
+Persistent=true
+Unit=crushme-dbbackup.service
+
+[Install]
+WantedBy=timers.target

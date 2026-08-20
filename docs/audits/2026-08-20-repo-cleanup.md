@@ -16,6 +16,7 @@ preserved.
 | Unreferenced frontend code | Removed | Four files with zero imports; checkout behavior remains in `CheckoutView.vue` |
 | Required frontend assets | Relocated | 18 generated copies moved to canonical `frontend/src` or `frontend/public` paths |
 | Ignore coverage | Hardened | SQL dumps, coverage, Playwright, Vite cache, and GeoLite archives |
+| Runtime configuration | Consolidated in Wave 5 | Historical root/backend Nginx and Gunicorn copies removed after comparison with live `/etc`; canonical templates remain under `scripts/` |
 
 The final cleanup removes 288 tracked files and reclaims 12,574,416 bytes from
 the working tree after preserving the required source assets. Generated assets
@@ -40,9 +41,6 @@ Production runtime was not changed during this cleanup.
 
 ## Deferred Review
 
-- Root and `backend/` operational scripts contain overlapping historical
-  deployment approaches. Consolidate them in Wave 5 only after each script is
-  compared against the live production units.
 - GeoLite uses a dated directory embedded in application code. A future update
   should move the path to configuration or a stable symlink before automating
   monthly database refreshes.

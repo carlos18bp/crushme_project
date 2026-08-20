@@ -2,7 +2,6 @@
 
 ## Active
 
-- [ ] Land Wave 4 QA coverage and test-quality PR.
 - [ ] Land Wave 5 production operations/performance PR and deployment.
 - [ ] Complete Wave 6 certification and lifecycle promotion after the required
   production observation window.
@@ -44,3 +43,5 @@
   temporary forced-COP behavior.
 - [x] Added behavior tests across backend, frontend-unit, and hermetic E2E;
   validated all touched tests with zero junk-only or unvalidated flows.
+- [x] Merged Wave 4 through PR #12, passed all six CI jobs, and deployed it
+  with fresh database/media backups and a green production post-deploy gate.

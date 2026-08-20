@@ -36,7 +36,6 @@ PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 HUEY = MemoryHuey(name='crushme-tests', immediate=True)
 
 MEDIA_ROOT = Path(tempfile.gettempdir()) / 'crushme-test-media'
-BACKUPS_ENABLED = False
 ENABLE_SLOW_QUERIES_REPORT = False
 ENABLE_SILK = False
 FAKE_DATA_ALLOWED = True

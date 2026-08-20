@@ -1,10 +1,12 @@
 """Operational periodic tasks for crushme_project.
 
 Infrastructure tasks scheduled via Huey:
-- scheduled_backup: DB + media backup weekly (Sunday at 03:00 AM UTC)
 - silk_garbage_collection: Daily cleanup of Silk data older than 7 days (03:30 AM)
 - weekly_slow_queries_report: Tuesday 07:00 AM performance report
 - silk_reports_cleanup: Monthly cleanup of Silk report files older than 6 months
+
+Database and media backups run independently through
+``crushme-dbbackup.timer`` so a stalled task queue cannot suppress them.
 """
 
 import logging
@@ -17,45 +19,7 @@ from django.utils import timezone
 from huey import crontab
 from huey.contrib.djhuey import periodic_task
 
-logger = logging.getLogger('backups')
-
-
-# ---------------------------------------------------------------------------
-# Backup — weekly, Sunday at 03:00 UTC
-# ---------------------------------------------------------------------------
-@periodic_task(crontab(day_of_week='0', hour='3', minute='0'))
-def scheduled_backup():
-    """Automated weekly backup of database and media files (Sunday 03:00 UTC).
-
-    Storage: configured via ``BACKUP_STORAGE_PATH`` env var.
-    Retention: 4 weeks (~1 month).
-    """
-    if not getattr(settings, 'BACKUPS_ENABLED', True):
-        logger.info("scheduled_backup skipped: BACKUPS_ENABLED=False")
-        return
-
-    from django.core.management import call_command
-
-    timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S')
-    logger.info('=== Starting scheduled backup %s ===', timestamp)
-
-    try:
-        output = StringIO()
-        logger.info('Running database backup...')
-        call_command('dbbackup', '--compress', '--clean', stdout=output)
-        logger.info(output.getvalue())
-
-        output = StringIO()
-        logger.info('Running media backup...')
-        call_command('mediabackup', '--compress', '--clean', stdout=output)
-        logger.info(output.getvalue())
-
-        logger.info('=== Backup completed successfully ===')
-        return True
-
-    except Exception:
-        logger.exception('Backup failed')
-        raise
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------

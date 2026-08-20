@@ -13,7 +13,9 @@
 - DRF views are **function-based** with `@api_view`. Pattern: deserialize → service call → respond. Do not convert to CBV/`APIView`/`ViewSets`.
 - View modules are split per resource: `auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `wishlist_woocommerce_views.py`, `review_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, `woocommerce_local_views.py`, `favorite_product_views.py`, `contact_views.py`, `feed_views.py`, `geolocation_views.py`, `discount_views.py`, `user_search_views.py`, `category_views.py`, `gift_views.py`.
 - **Service layer is real**: `crushme_app/services/` holds the bulk of business logic — `email_service`, `translation_service` (offline `argostranslate`), `translation_batch_service`, `woocommerce_service`, `woocommerce_sync_service`, `woocommerce_order_service`, `paypal_service`, `wompi_service`. Views are thin wrappers that call services.
-- Translation is **offline** via `argostranslate` and **cached at sync time** in a `TranslatedContent` model. There is no real-time MT.
+- Translation is **offline** via `argostranslate` and primarily cached at sync
+  time in `TranslatedContent`. Dynamic content retains the existing request-time
+  fallback, with Argos imported only when a translation is actually required.
 - The custom `User` model uses email as the username field and adds a "crush verification" workflow (`is_crush`, `crush_verification_status`, `crush_verified_at`).
 - `GuestUser` model supports anonymous checkout via session.
 - Prefer Django ORM. Raw SQL only when strictly necessary, always parameterized.
