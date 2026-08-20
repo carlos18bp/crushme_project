@@ -203,7 +203,7 @@ por ecosistema. La fuente de verdad es `vps-ops-toolkit/workflows/`.
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.2.17 LTS + DRF 3.17.2 (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
+CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.2.17 LTS + DRF 3.18.0 (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
 
 ## Commands
 ```bash
@@ -237,7 +237,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 ### Backend — Single Django App (`crushme_app`)
 - **Views are 100% function-based** with `@api_view`, split per resource (`auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, etc.). Do not convert to CBV/`APIView`/`ViewSets`.
 - **Service layer is real**: business logic lives in `crushme_app/services/` (email, translation, woocommerce sync, paypal, wompi). Views are thin wrappers that call services — do not inline business rules into views.
-- **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (30d access, 60d refresh, rotation + blacklist). `/admin/` uses session + CSRF.
+- **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (15m access, 7d refresh, rotation + blacklist). `/admin/` uses session + CSRF.
 - **Offline translation**: `argostranslate` translates ES↔EN at WooCommerce sync time and caches results in a `TranslatedContent` model. No real-time machine translation.
 - **Custom `User` model**: email-as-username, crush verification fields (`is_crush`, `crush_verification_status`). `GuestUser` model supports anonymous checkout via session.
 - **Two payment gateways**: PayPal (USD, international) and Wompi (COP, Colombian). Each has webhook endpoints that update `Order.status`.
@@ -290,14 +290,14 @@ Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_te
 
 - **Name**: CrushMe
 - **Domain**: `crushme.com.co` / `www.crushme.com.co`
-- **Stack**: Django 5.2.17 LTS + DRF 3.17.2 (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
+- **Stack**: Django 5.2.17 LTS + DRF 3.18.0 (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
 - **Services**: `crushme_project.service` (Gunicorn), `crushme-huey.service`
 - **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in `.env`
 - **Nginx**: `/etc/nginx/sites-available/crushme`
 - **Static**: `/home/ryzepeck/webapps/crushme_project/backend/staticfiles/`
 - **Media**: `/home/ryzepeck/webapps/crushme_project/backend/media/`
-- **Resource limits**: MemoryMax=650M, CPUQuota=40%, OOMScoreAdjust=300
+- **Resource limits**: MemoryMax=650M, CPUQuota=60%, OOMScoreAdjust=200
 
 ---
 
@@ -656,7 +656,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
   - `wompi_service.py` — Wompi (Colombian gateway) integration, webhook handlers.
 
 #### Dual auth strategy
-- **Public API** (`/api/auth/...`) uses **JWT via SimpleJWT** with `ACCESS_TOKEN_LIFETIME=30d`, `REFRESH_TOKEN_LIFETIME=60d`, refresh rotation enabled.
+- **Public API** (`/api/auth/...`) uses **JWT via SimpleJWT** with `ACCESS_TOKEN_LIFETIME=15m`, `REFRESH_TOKEN_LIFETIME=7d`, refresh rotation enabled.
 - **Django admin** (`/admin/`) uses session + CSRF.
 - The frontend uses a **single HTTP client** (`src/services/request_http.js`) that sends both `X-CSRFToken` and `Authorization: Bearer` headers, with automatic token refresh on 401.
 

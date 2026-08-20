@@ -1,7 +1,7 @@
 # Backend Rules — CrushMe
 
 ## Stack And Scope
-- Django 5.2.17 LTS + DRF 3.17.2, Python 3.12.
+- Django 5.2.17 LTS + DRF 3.18.0, Python 3.12.
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
 - Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
 - Production uses `crushme_project.settings` with `DJANGO_ENV=production`.
@@ -19,7 +19,7 @@
 - Prefer Django ORM. Raw SQL only when strictly necessary, always parameterized.
 
 ## Auth And Security
-- **API auth**: JWT via SimpleJWT — `ACCESS_TOKEN_LIFETIME=30d`, `REFRESH_TOKEN_LIFETIME=60d`, refresh rotation enabled, blacklist after rotation.
+- **API auth**: JWT via SimpleJWT — `ACCESS_TOKEN_LIFETIME=15m`, `REFRESH_TOKEN_LIFETIME=7d`, refresh rotation enabled, blacklist after rotation.
 - **Admin auth**: Django session + CSRF (default).
 - `settings_prod.py` enforces HSTS (1y), `SECURE_SSL_REDIRECT=True`, secure cookies, NOSNIFF, `X_FRAME_OPTIONS=SAMEORIGIN`.
 - `CORS_ALLOW_CREDENTIALS=True` and a custom CORS-allowed header `x-currency` for the multi-currency frontend.

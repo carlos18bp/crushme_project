@@ -7,7 +7,7 @@ CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform. Verified 
 
 ### 1. User Authentication & Profiles
 - Email-based registration with custom User model (email-as-username)
-- JWT authentication (30d access, 60d refresh, rotation + blacklist)
+- JWT authentication (15m access, 7d refresh, rotation + blacklist)
 - Crush verification workflow: users can request verification to become "crushes" eligible for gifted wishlists (`is_crush`, `crush_verification_status`, `crush_verified_at`)
 - Guest checkout via `GuestUser` model (session-based, no registration required)
 

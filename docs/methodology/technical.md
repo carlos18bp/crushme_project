@@ -7,7 +7,7 @@
 |-----------|---------|---------|
 | Python | 3.12.3 | Runtime |
 | Django | 5.2.17 LTS | Web framework |
-| DRF | 3.17.2 | REST API |
+| DRF | 3.18.0 | REST API |
 | SimpleJWT | 5.5.1 | JWT authentication |
 | MySQL | 8 | Database (mysqlclient 2.2.8) |
 | Redis | 7.1.0 | Cache (db 1) + task queue (db 2) |
@@ -78,12 +78,28 @@ cd frontend && npm run dev  # :5173, proxies /api/ and /media/ to :8000
 ### Environment Variables
 Managed via `python-decouple` reading `.env` file:
 - `DJANGO_ENV` — `development` (default), `staging`, `test`, or `production`
-- `DJANGO_SETTINGS_MODULE` — use `settings_staging` for staging and `settings_test` for tests/E2E
+- `DJANGO_SETTINGS_MODULE` — use `settings_staging` for staging, `settings_test` for pytest, and `settings_e2e` for Playwright
 - `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`
 - `REDIS_CACHE_URL` (default: `redis://127.0.0.1:6379/1`)
 - `REDIS_URL` (default: `redis://127.0.0.1:6379/2`)
 - `FAKE_DATA_ALLOWED` — enables fake-data commands only on isolated non-production databases
 - `ENABLE_SILK` — Enable django-silk profiling (default: False)
+
+## Testing And CI
+
+- Backend tests use in-memory SQLite through `settings_test`; CI separately
+  applies all migrations to an ephemeral MySQL 8.4 service through
+  `settings_ci_mysql`.
+- Playwright uses `settings_e2e`, a deterministic file-backed SQLite database,
+  local Django/Vite servers, one worker, and production-host refusal guards.
+- Test settings pin the COP-to-USD rate and disable unconfigured external
+  clients, so QA cannot call currency, WooCommerce, payment, SMTP, Redis, or
+  translation services.
+- `.github/workflows/ci.yml` has four independent jobs: backend coverage,
+  frontend unit/build, hermetic E2E, and MySQL migration compatibility.
+- `.github/workflows/test-quality-gate.yml` and pre-commit enforce the canonical
+  strict quality gate, current-tree secret detection, and Bandit medium/high
+  scanning.
 
 ## Deployment
 
