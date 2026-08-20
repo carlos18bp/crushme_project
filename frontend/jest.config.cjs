@@ -22,6 +22,7 @@ module.exports = {
         '/e2e/',
     ],
     moduleNameMapper: {
+        '^@/(.*\\.svg)\\?url$': 'jest-transform-stub',
         '^@/(.*)$': '<rootDir>/src/$1',
         '\\.(css|less|scss|sass|png|jpg|webp|ttf|woff|woff2)$': 'identity-obj-proxy',
     },

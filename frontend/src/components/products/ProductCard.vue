@@ -68,7 +68,7 @@
               class="btn-gift text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 whitespace-nowrap flex-1"
               style="background-color: #DA9DFF;">
               <span v-if="isCheckingStock">⏳</span>
-              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.outOfStock') || 'Out of stock' }}</span>
               <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
               <span v-else>{{ $t('products.product.buyAsGift') || 'Buy as Gift' }}</span>
             </button>
@@ -80,7 +80,7 @@
               class="btn-buy text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
               style="background-color: #DA9DFF;">
               <span v-if="isCheckingStock">⏳</span>
-              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.outOfStock') || 'Out of stock' }}</span>
               <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
               <span v-else>{{ $t('products.product.buyNow') || 'Buy now' }}</span>
             </button>
@@ -90,7 +90,7 @@
               class="btn-cart text-white px-3 md:px-4 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-poppins hover:opacity-90 flex-1"
               style="background-color: #DA9DFF;">
               <span v-if="isCheckingStock">⏳</span>
-              <span v-else-if="isOutOfStock">{{ $t('products.product.outOfStock') || 'Out of stock' }}</span>
+              <span v-else-if="isOutOfStock">{{ $t('products.outOfStock') || 'Out of stock' }}</span>
               <span v-else-if="cartStore.isUpdating">{{ $t('products.product.adding') || 'Adding...' }}</span>
               <span v-else>{{ $t('products.product.addToCart') || 'Add to cart' }}</span>
             </button>

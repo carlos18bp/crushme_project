@@ -2,15 +2,15 @@
 
 ## Current Focus
 
-Converge CrushMe on the exact Base Vue development-standard snapshot, then run
-`qa --apply` across backend, frontend-unit, and E2E in isolated worktrees.
-Wave 7 stage-1 code is on `main`, but production deployment remains a separate
-future operation.
+Close QA across backend, frontend-unit, and E2E after the Base Vue standards
+convergence. A focused product-card i18n regression found during hermetic E2E is
+being fixed before QA resumes. Production deployment remains a separate future
+operation.
 
 ## Current Coordinate
 
 - Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`;
-  repository head `3217c5f`, deployed application release `1d476d8`.
+  repository head `8ea34f2`, deployed application release `1d476d8`.
 - Authoring isolation: fresh temporary Git worktrees only; no database, domain,
   environment file, socket, service, or permanent staging coordinate.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
@@ -27,8 +27,7 @@ future operation.
 - Toolkit translation-runtime PR #41 merged as `3d8ff16` after the approved
   complete local CI substitute and propagated to all reachable fleet hosts.
 - Base Vue standards source is fixed at `c580ea8`; canonical files, a CrushMe
-  profile, and a hash gate are being integrated before the new three-layer QA
-  pass.
+  profile, and a hash gate merged through PR #18 as `8ea34f2`.
 - Wave 5 PR #13 is deployed. Health, daily backup, journald observability,
   restore, and capacity gates passed; web-memory headroom improved from 25.2%
   to 81.1% without raising the 650 MiB limit.
@@ -71,8 +70,8 @@ future operation.
 
 ## Next Gate
 
-Merge the Base Vue standards convergence after focused local and CI checks,
-then complete and integrate `qa --apply` for backend, frontend-unit, and E2E.
-No deployment is part of either gate. Wave 7 deployment later requires fresh
-recovery artifacts and starts a new 48-hour translation observation;
-lifecycle remains `modernizing` until all observation gates close.
+Merge the focused product-card stock-label fix, then complete and integrate
+`qa --apply` for backend, frontend-unit, and E2E. No deployment is part of
+either gate. Wave 7 deployment later requires fresh recovery artifacts and
+starts a new 48-hour translation observation; lifecycle remains `modernizing`
+until all observation gates close.
