@@ -1,10 +1,10 @@
-"""
-Currency conversion utilities for price handling
-"""
-import requests
-from django.core.cache import cache
-from decimal import Decimal
+"""Currency conversion utilities for price handling."""
+
 import logging
+
+import requests
+from django.conf import settings
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,10 @@ class CurrencyConverter:
         Returns:
             float: Exchange rate (COP to USD)
         """
+        fixed_rate = getattr(settings, 'CURRENCY_FIXED_COP_TO_USD_RATE', None)
+        if fixed_rate is not None:
+            return float(fixed_rate)
+
         # Try to get from cache first
         cached_rate = cache.get(cls.CACHE_KEY)
         if cached_rate:

@@ -26,6 +26,7 @@
               :key="index"
               :ref="el => codeInputs[index] = el"
               v-model="codeDigits[index]"
+              :data-testid="`verification-code-${index}`"
               type="text"
               maxlength="1"
               :placeholder="$t('verification.codePlaceholder')"
@@ -40,6 +41,7 @@
           <!-- Submit Button -->
           <button
             type="submit"
+            data-testid="verification-submit"
             class="submit-btn"
             :disabled="isLoading || !isCodeComplete"
           >
@@ -59,6 +61,7 @@
           <span class="resend-text">{{ $t('verification.didntReceive') }}</span>
           <button 
             @click="handleResend" 
+            data-testid="verification-resend"
             class="resend-link"
             :disabled="isResending || resendCooldown > 0"
           >

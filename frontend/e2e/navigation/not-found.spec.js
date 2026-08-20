@@ -1,8 +1,7 @@
 import { test, expect } from '../helpers/test.js';
-import { NAVIGATION_NOT_FOUND } from '../helpers/flow-tags.js';
 
 test('shows the not-found view for an unknown route', {
-  tag: [...NAVIGATION_NOT_FOUND, '@role:guest', '@outcome:display'],
+  tag: ['@flow:navigation-not-found', '@role:guest', '@outcome:display'],
 }, async ({ page }) => {
   // quality: allow-no-interaction (a 404 is triggered by requesting an unknown URL)
   // quality: allow-deep-link (the unknown URL itself is the user action under test)

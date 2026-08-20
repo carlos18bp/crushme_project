@@ -57,11 +57,15 @@ will not be merged wholesale.
 - Wave 2: complete through PR #6; repository cleanup, hermetic test settings,
   guarded fake data, six partitioned CI jobs, lint, and test-quality foundations
   are on `main`.
-- Wave 3: implementation complete on its dedicated branch. Dependency audits,
-  application hardening, fresh backups, restore rehearsals, and production
-  database credential rotation passed. CI, merge, and controlled application
-  deployment remain.
-- Waves 4-6: pending their independent PRs and gates.
+- Wave 3: complete through PR #10 and frame-protection hotfix PR #11. Fresh
+  backups, restore rehearsals, credential rotations, six CI jobs, migrations,
+  dependency installation, static build, controlled restart, and post-deploy
+  checks passed in production on 2026-08-20.
+- Wave 4: release candidate implemented on its dedicated branch. The test
+  quality gate has zero findings; 23 focused backend tests, 15 frontend-unit
+  tests, and 21 Playwright tests pass. The executable map has no junk-only or
+  unvalidated flow; 36 explicit coverage gaps remain visible for continuous QA.
+- Waves 5-6: pending their independent PRs and gates.
 
 ## Wave Delivery
 
