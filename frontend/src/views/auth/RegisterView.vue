@@ -22,6 +22,7 @@
           <div class="input-group">
             <input
               v-model="form.username"
+              data-testid="signup-username"
               type="text"
               :placeholder="$t('signup.usernamePlaceholder')"
               class="form-input"
@@ -33,6 +34,7 @@
           <div class="input-group">
             <input
               v-model="form.email"
+              data-testid="signup-email"
               type="email"
               :placeholder="$t('signup.emailPlaceholder')"
               class="form-input"
@@ -45,6 +47,7 @@
             <div class="password-input-container">
               <input
                 v-model="form.password"
+                data-testid="signup-password"
                 :type="showPassword ? 'text' : 'password'"
                 :placeholder="$t('signup.passwordPlaceholder')"
                 class="form-input password-input"
@@ -101,6 +104,7 @@
             <div class="password-input-container">
               <input
                 v-model="form.confirmPassword"
+                data-testid="signup-confirm-password"
                 :type="showConfirmPassword ? 'text' : 'password'"
                 :placeholder="$t('signup.confirmPasswordPlaceholder')"
                 class="form-input password-input"
@@ -142,6 +146,7 @@
           <!-- Submit Button -->
           <button
             type="submit"
+            data-testid="signup-submit"
             class="submit-btn"
             :disabled="isLoading"
           >
