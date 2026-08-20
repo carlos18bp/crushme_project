@@ -347,37 +347,6 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Google OAuth login
-   * @param {string} googleToken - Google OAuth token
-   */
-  async function googleLogin(googleToken) {
-    isLoading.value = true;
-    error.value = null;
-
-    try {
-      const response = await create_request('auth/google_login/', { google_token: googleToken });
-      
-      if (response.data.access && response.data.user) {
-        // Store tokens
-        setTokens(response.data.access, response.data.refresh);
-        
-        // Store user data
-        user.value = response.data.user;
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
-        
-        return { success: true, data: response.data };
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (err) {
-      error.value = err.response?.data || 'Google login failed';
-      return { success: false, error: error.value };
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /**
    * Clear error state
    */
   function clearError() {
@@ -414,7 +383,6 @@ export const useAuthStore = defineStore('auth', () => {
     guestCheckout,
     checkUsername,
     checkGuest,
-    googleLogin,
     clearError,
     initializeAuth
   };

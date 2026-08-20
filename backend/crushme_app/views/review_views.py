@@ -2,8 +2,9 @@
 Views for Review model
 Handles CRUD operations for WooCommerce product reviews
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from ..throttles import PublicWriteRateThrottle
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -72,6 +73,7 @@ def get_review_detail(request, review_id):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicWriteRateThrottle])
 def create_review(request):
     """
     Create a new review for a WooCommerce product
@@ -204,6 +206,5 @@ def check_user_review(request, woocommerce_product_id):
         'has_reviewed': False,
         'review': None
     }, status=status.HTTP_200_OK)
-
 
 

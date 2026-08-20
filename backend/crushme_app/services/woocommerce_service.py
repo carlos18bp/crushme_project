@@ -50,12 +50,14 @@ class WooCommerceService:
                     'headers': dict(response.headers)
                 }
             else:
-                logger.error(f"WooCommerce API error: {response.status_code} - {response.text}")
+                logger.error(
+                    'WooCommerce API returned status %s',
+                    response.status_code,
+                )
                 return {
                     'success': False,
                     'error': f"API returned status {response.status_code}",
                     'status_code': response.status_code,
-                    'response_text': response.text
                 }
                 
         except requests.exceptions.Timeout:
@@ -72,11 +74,11 @@ class WooCommerceService:
                 'error': 'Connection error',
                 'status_code': None
             }
-        except Exception as e:
-            logger.error(f"WooCommerce API unexpected error: {str(e)}")
+        except Exception:
+            logger.exception('WooCommerce API request failed unexpectedly')
             return {
                 'success': False,
-                'error': f'Unexpected error: {str(e)}',
+                'error': 'Unexpected API request error',
                 'status_code': None
             }
     
@@ -187,5 +189,4 @@ class WooCommerceService:
 
 # Singleton instance
 woocommerce_service = WooCommerceService()
-
 

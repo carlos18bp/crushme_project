@@ -6,19 +6,29 @@ Handles user registration, login, password management, and profile updates
 import random
 import logging
 from rest_framework import status
-from django.http import JsonResponse
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import update_last_login
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..models import Feed, GuestUser, PasswordCode, User
-from ..utils import generate_auth_tokens
 from ..services.email_service import email_service
 from ..services.translation_service import get_language_from_request
+from ..throttles import (
+    LoginRateThrottle,
+    PasswordResetRateThrottle,
+    PublicSearchRateThrottle,
+    RegistrationRateThrottle,
+    UploadRateThrottle,
+    VerificationRateThrottle,
+)
+from ..validators import validate_image_upload
 from ..serializers.user_serializers import (
     UserRegistrationSerializer, UserLoginSerializer,
     EmailVerificationSerializer, PasswordResetSerializer,
@@ -29,6 +39,7 @@ from ..serializers.user_serializers import (
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegistrationRateThrottle])
 def signup(request):
     """
     Handle user registration - Step 1: Create user and send verification email.
@@ -193,6 +204,7 @@ def signup(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([VerificationRateThrottle])
 def verify_email(request):
     """
     Handle email verification - Step 2: Verify code and activate user account.
@@ -240,6 +252,7 @@ def verify_email(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([VerificationRateThrottle])
 def resend_verification_code(request):
     """
     Resend verification code to user's email.
@@ -308,6 +321,7 @@ def resend_verification_code(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login(request):
     """
     Handle user login with username and password.
@@ -346,60 +360,9 @@ def login(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def google_login(request):
-    """
-    Handle user login via Google data.
-
-    This view processes POST requests containing user information from Google,
-    and uses it to authenticate the user. If the user does not exist, it creates a new one
-    with the provided information, then returns a JWT token.
-
-    Args:
-        request (Request): The HTTP request object containing user data from Google.
-
-    Returns:
-        JsonResponse: A JsonResponse object with JWT tokens if authentication is successful,
-                      or an error message if authentication fails.
-    """
-    if request.method == 'POST':
-        # Extract user data from the request body
-        email = request.data.get('email')
-        given_name = request.data.get('given_name')
-        family_name = request.data.get('family_name')
-
-        # Validate that all required data is present
-        if not email or not given_name or not family_name:
-            return JsonResponse({'status': 'error', 'error_message': 'Required fields are missing'}, status=400)
-        
-        try:
-            # Get or create the user based on the email
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={'first_name': given_name, 'last_name': family_name}
-            )
-            
-            # Generate authentication token
-            tokens = generate_auth_tokens(user)
-
-            # Return the generated authentication tokens
-            return JsonResponse(tokens, status=200)
-
-        except Exception:
-            # Handle unexpected exceptions
-            logging.getLogger(__name__).exception('Google login failed')
-            return JsonResponse({
-                'status': 'error',
-                'error_message': 'Authentication failed',
-            }, status=500)
-    else:
-        # Handle invalid request methods
-        return JsonResponse({'status': 'error', 'error_message': 'Invalid request method'}, status=405)
-
-
 @api_view(['POST', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([UploadRateThrottle])
 def update_profile(request):
     """
     Handle updating the authenticated user's profile.
@@ -455,6 +418,25 @@ def update_profile(request):
     gallery_photos_to_process = None
     if gallery_photos:
         gallery_photos_to_process = gallery_photos
+
+    if len(gallery_photos) > settings.MAX_GALLERY_UPLOADS_PER_REQUEST:
+        return Response({
+            'gallery_photos': ['Too many gallery images in one request.']
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    for photo_data in gallery_photos:
+        image = photo_data.get('image')
+        if image:
+            try:
+                validate_image_upload(image)
+            except ValidationError as exc:
+                return Response({
+                    'gallery_photos': exc.messages
+                }, status=status.HTTP_400_BAD_REQUEST)
+        if len(photo_data.get('caption', '')) > 255:
+            return Response({
+                'gallery_photos': ['Gallery captions cannot exceed 255 characters.']
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     # Remove gallery_photos from data if present (will be handled manually)
     data.pop('gallery_photos', None)
@@ -464,29 +446,32 @@ def update_profile(request):
     
     # Validate the serialized data
     if serializer.is_valid():
-        # Save the updated user data
-        user = serializer.save()
-        
-        # Handle gallery_photos manually after successful validation
-        if gallery_photos_to_process:
-            from ..models import UserGallery
-            
-            for photo_data in gallery_photos_to_process:
-                try:
-                    # If setting as profile picture, unset others first
-                    if photo_data.get('is_profile_picture'):
-                        UserGallery.objects.filter(user=user, is_profile_picture=True).update(is_profile_picture=False)
-                    
-                    # Create new photo
-                    UserGallery.objects.create(
-                        user=user,
-                        image=photo_data.get('image'),
-                        caption=photo_data.get('caption', ''),
-                        is_profile_picture=photo_data.get('is_profile_picture', False)
-                    )
-                except Exception:
-                    # Silent fail - could add proper error logging here if needed
-                    pass
+        try:
+            with transaction.atomic():
+                user = serializer.save()
+
+                if gallery_photos_to_process:
+                    from ..models import UserGallery
+
+                    for photo_data in gallery_photos_to_process:
+                        if photo_data.get('is_profile_picture'):
+                            UserGallery.objects.filter(
+                                user=user,
+                                is_profile_picture=True,
+                            ).update(is_profile_picture=False)
+
+                        UserGallery.objects.create(
+                            user=user,
+                            image=photo_data.get('image'),
+                            caption=photo_data.get('caption', ''),
+                            is_profile_picture=photo_data.get('is_profile_picture', False),
+                        )
+        except Exception:
+            logging.getLogger(__name__).exception('Profile update failed')
+            return Response(
+                {'error': 'Profile update failed'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         
         # Update the last login timestamp for the user
         update_last_login(None, user)
@@ -542,6 +527,7 @@ def update_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def forgot_password(request):
     """
     Handle password recovery by sending a 4-digit reset code to user's email.
@@ -610,6 +596,7 @@ def forgot_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def reset_password(request):
     """
     Verify the 4-digit reset code and set new password.
@@ -659,6 +646,7 @@ def reset_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegistrationRateThrottle])
 def guest_checkout(request):
     """
     Handle guest checkout by creating a guest user and address.
@@ -715,6 +703,7 @@ def get_user_profile(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def check_username_availability(request):
     """
     Check if a username is available for registration.
@@ -745,6 +734,7 @@ def check_username_availability(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def check_guest_user(request):
     """
     Check if there's a guest user with the provided email for registration conversion.
@@ -868,6 +858,7 @@ def cancel_crush_request(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_crush_public_profile(request, username):
     """
     Get public profile information for any user by username.
@@ -913,6 +904,7 @@ def get_crush_public_profile(request, username):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_random_crush(request):
     """
     Get a random verified Crush user profile.
@@ -952,6 +944,7 @@ def get_random_crush(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def search_users(request):
     """
     Search for users by username.
@@ -1013,6 +1006,7 @@ def search_users(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def list_crushes(request):
     """
     Get list of all verified Crushes.
@@ -1080,6 +1074,7 @@ def list_crushes(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_random_crushes(request):
     """
     Get 7 random verified Crushes for discovery/carousel display.

@@ -3,7 +3,7 @@ Product views for CrushMe e-commerce application
 Handles product CRUD operations, search, and category management
 """
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 import json
@@ -15,7 +15,7 @@ from django.conf import settings
 from ..models import Product
 from ..serializers.product_serializers import (
     ProductListSerializer, ProductDetailSerializer, ProductCreateUpdateSerializer,
-    ProductSearchSerializer, ProductCategorySerializer, ProductStockUpdateSerializer
+    ProductCategorySerializer, ProductStockUpdateSerializer
 )
 from ..services.woocommerce_service import woocommerce_service
 from ..services.translation_service import create_translator_from_request
@@ -682,7 +682,7 @@ def get_woocommerce_products_batch(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])  # Endpoint público para probar conexión con WooCommerce
+@permission_classes([IsAdminUser])
 def test_woocommerce_connection(request):
     """
     Endpoint para probar la conexión con WooCommerce
@@ -712,12 +712,12 @@ def test_woocommerce_connection(request):
                 'details': result.get('response_text')
             }, status=status.HTTP_502_BAD_GATEWAY)
             
-    except Exception as e:
+    except Exception:
         return Response({
             'success': False,
             'message': 'Error interno en prueba de conexión',
             'connection_status': 'ERROR',
-            'error': str(e)
+            'error': 'Internal server error'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

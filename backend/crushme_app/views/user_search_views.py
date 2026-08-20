@@ -2,16 +2,16 @@
 User search views for gift sending
 Provides user search with crush status and shipping cost
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 import logging
 
 from ..models import UserAddress
 from ..utils import calculate_shipping_cost
+from ..throttles import PublicSearchRateThrottle
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def search_users_for_gift(request):
     """
     Search users by username for gift sending
@@ -38,7 +39,12 @@ def search_users_for_gift(request):
     try:
         # Get search query
         search_query = request.GET.get('q', '').strip()
-        limit = int(request.GET.get('limit', 10))
+        try:
+            limit = max(1, min(int(request.GET.get('limit', 10)), 20))
+        except (TypeError, ValueError):
+            return Response({
+                'error': 'Limit must be an integer'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         if not search_query:
             return Response({
@@ -46,11 +52,7 @@ def search_users_for_gift(request):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Remove @ symbol if present (common in username searches)
-        original_query = search_query
         search_query = search_query.lstrip('@')
-        
-        if original_query != search_query:
-            logger.info(f"🔍 Removed @ from search query: '{original_query}' -> '{search_query}'")
         
         if len(search_query) < 2:
             return Response({
@@ -64,14 +66,17 @@ def search_users_for_gift(request):
             is_active=False
         )[:limit]
         
-        logger.info(f"🔍 User search for '{search_query}': found {users.count()} results")
-        
         # Build response with minimal user info
         results = []
         for user in users:
             # Get user's shipping cost
             try:
-                user_address = UserAddress.objects.get(user=user)
+                user_address = UserAddress.objects.filter(
+                    user=user,
+                    is_default_shipping=True,
+                ).first() or UserAddress.objects.filter(user=user).first()
+                if not user_address:
+                    raise UserAddress.DoesNotExist
                 has_shipping_info = all([
                     user_address.address_line_1,
                     user_address.city,
@@ -106,9 +111,8 @@ def search_users_for_gift(request):
             'results': results
         }, status=status.HTTP_200_OK)
     
-    except Exception as e:
-        logger.error(f"❌ Error searching users: {str(e)}")
+    except Exception:
+        logger.exception('Gift recipient search failed')
         return Response({
-            'error': 'Internal server error',
-            'details': str(e)
+            'error': 'Internal server error'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

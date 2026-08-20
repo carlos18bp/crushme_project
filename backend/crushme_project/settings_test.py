@@ -15,7 +15,7 @@ IS_PRODUCTION = False
 IS_STAGING = False
 IS_TEST = True
 
-SECRET_KEY = 'test-only-secret-key'
+SECRET_KEY = 'test-only-secret-key-with-at-least-32-bytes'
 DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
@@ -54,4 +54,3 @@ WOMPI_EVENTS_SECRET = ''
 WOMPI_INTEGRITY_KEY = ''
 WOMPI_BASE_URL = 'https://sandbox.wompi.co/v1'
 WOMPI_ENVIRONMENT = 'sandbox'
-

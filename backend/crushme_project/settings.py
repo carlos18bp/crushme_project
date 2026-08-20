@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'rest_framework',
     'easy_thumbnails',
@@ -246,16 +247,63 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_THROTTLE_RATES': {
+        'auth_login': config('THROTTLE_AUTH_LOGIN', default='10/min'),
+        'auth_registration': config('THROTTLE_AUTH_REGISTRATION', default='5/hour'),
+        'auth_verification': config('THROTTLE_AUTH_VERIFICATION', default='10/hour'),
+        'auth_password_reset': config('THROTTLE_AUTH_PASSWORD_RESET', default='5/hour'),
+        'auth_token_refresh': config('THROTTLE_AUTH_TOKEN_REFRESH', default='30/hour'),
+        'payment_create': config('THROTTLE_PAYMENT_CREATE', default='20/hour'),
+        'payment_confirm': config('THROTTLE_PAYMENT_CONFIRM', default='60/hour'),
+        'payment_webhook': config('THROTTLE_PAYMENT_WEBHOOK', default='120/min'),
+        'upload': config('THROTTLE_UPLOAD', default='30/hour'),
+        'public_write': config('THROTTLE_PUBLIC_WRITE', default='20/hour'),
+        'public_search': config('THROTTLE_PUBLIC_SEARCH', default='60/min'),
+    },
 }
 
 # JWT settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(
+        minutes=config('JWT_ACCESS_TOKEN_MINUTES', default=15, cast=int)
+    ),
+    'REFRESH_TOKEN_LIFETIME': timedelta(
+        days=config('JWT_REFRESH_TOKEN_DAYS', default=7, cast=int)
+    ),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Upload limits are enforced again at serializer level after content inspection.
+MAX_IMAGE_UPLOAD_SIZE = config(
+    'MAX_IMAGE_UPLOAD_SIZE',
+    default=5 * 1024 * 1024,
+    cast=int,
+)
+MAX_IMAGE_PIXELS = config('MAX_IMAGE_PIXELS', default=25_000_000, cast=int)
+DATA_UPLOAD_MAX_MEMORY_SIZE = config(
+    'DATA_UPLOAD_MAX_MEMORY_SIZE',
+    default=10 * 1024 * 1024,
+    cast=int,
+)
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_IMAGE_UPLOAD_SIZE
+DATA_UPLOAD_MAX_NUMBER_FIELDS = config(
+    'DATA_UPLOAD_MAX_NUMBER_FIELDS',
+    default=200,
+    cast=int,
+)
+DATA_UPLOAD_MAX_NUMBER_FILES = config(
+    'DATA_UPLOAD_MAX_NUMBER_FILES',
+    default=12,
+    cast=int,
+)
+MAX_GALLERY_UPLOADS_PER_REQUEST = config(
+    'MAX_GALLERY_UPLOADS_PER_REQUEST',
+    default=10,
+    cast=int,
+)
+DROPSHIPPING_PRODUCT_ID = config('DROPSHIPPING_PRODUCT_ID', default=48500, cast=int)
 
 # Email settings
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')

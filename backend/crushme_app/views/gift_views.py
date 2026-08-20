@@ -2,7 +2,7 @@
 Gift sending views for CrushMe e-commerce application
 Handles gift sending between users with shipping verification
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 
 from ..models import UserAddress
 from .paypal_order_views import create_paypal_order_data
+from ..throttles import PaymentCreateRateThrottle
 import logging
 
 User = get_user_model()
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentCreateRateThrottle])
 def send_gift(request):
     """
     Send a gift to another user

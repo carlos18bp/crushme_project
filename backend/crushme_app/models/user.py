@@ -3,11 +3,10 @@ User authentication models based on the signin_signon_feature and gym_project re
 Extends Django's AbstractUser for custom authentication with JWT support
 """
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
-from django.utils import timezone
 from django.core.validators import RegexValidator
-import random
-import string
+from django.db import models
+
+from ..validators import validate_image_upload
 
 
 class UserManager(BaseUserManager):
@@ -128,6 +127,7 @@ class User(AbstractUser):
     # Profile picture
     profile_picture = models.ImageField(
         upload_to='profile_pictures/%Y/%m/%d/',
+        validators=[validate_image_upload],
         blank=True,
         null=True,
         verbose_name="Profile Picture",
@@ -137,6 +137,7 @@ class User(AbstractUser):
     # Cover image
     cover_image = models.ImageField(
         upload_to='cover_images/%Y/%m/%d/',
+        validators=[validate_image_upload],
         blank=True,
         null=True,
         verbose_name="Cover Image",
@@ -285,7 +286,7 @@ class PasswordCode(models.Model):
     # The verification code, restricted to a maximum length of 4 digits
     code = models.CharField(
         max_length=4,
-        validators=[RegexValidator(regex='^\d{4}$', message='Code must be 4 digits', code='invalid_code')]
+        validators=[RegexValidator(regex=r'^\d{4}$', message='Code must be 4 digits', code='invalid_code')]
     )
     
     # Type of verification code
@@ -443,6 +444,7 @@ class UserGallery(models.Model):
     )
     image = models.ImageField(
         upload_to='user_gallery/%Y/%m/%d/',
+        validators=[validate_image_upload],
         verbose_name="Gallery Image"
     )
     caption = models.CharField(

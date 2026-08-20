@@ -92,6 +92,26 @@ export function clearTokens() {
   localStorage.removeItem("user");
 }
 
+let tokenRefreshPromise = null;
+
+async function refreshAccessToken(refreshToken) {
+  if (!tokenRefreshPromise) {
+    tokenRefreshPromise = axios.post('/api/auth/token/refresh/', {
+      refresh: refreshToken
+    }).then((response) => {
+      setTokens(
+        response.data.access,
+        response.data.refresh || refreshToken
+      );
+      return response.data.access;
+    }).finally(() => {
+      tokenRefreshPromise = null;
+    });
+  }
+
+  return tokenRefreshPromise;
+}
+
 /**
  * Check if user is authenticated
  * @returns {boolean} - True if authenticated
@@ -184,12 +204,7 @@ async function makeRequest(method, url, params = {}, config = {}) {
       try {
         const refreshToken = getRefreshToken();
         if (refreshToken) {
-          const refreshResponse = await axios.post('/api/auth/token/refresh/', {
-            refresh: refreshToken
-          });
-          
-          const newAccessToken = refreshResponse.data.access;
-          localStorage.setItem("access_token", newAccessToken);
+          const newAccessToken = await refreshAccessToken(refreshToken);
           
           // Retry original request with new token
           const newHeaders = {

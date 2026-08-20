@@ -2,8 +2,9 @@
 Views for Contact model
 Handles contact form submissions
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
+from ..throttles import PublicWriteRateThrottle
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -17,6 +18,7 @@ from ..serializers.contact_serializers import (
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicWriteRateThrottle])
 def create_contact(request):
     """
     Create a new contact message
@@ -146,6 +148,5 @@ def delete_contact(request, contact_id):
         'success': True,
         'message': f'Mensaje de contacto de {contact_name} eliminado exitosamente'
     }, status=status.HTTP_200_OK)
-
 
 

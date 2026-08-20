@@ -3,7 +3,7 @@ from .user_serializers import (
     UserSerializer, UserRegistrationSerializer, EmailVerificationSerializer,
     UserLoginSerializer, PasswordCodeSerializer,
     SendPasscodeSerializer, PasswordResetSerializer, 
-    PasswordChangeSerializer, GoogleLoginSerializer,
+    PasswordChangeSerializer,
     UserAddressSerializer, GuestCheckoutSerializer,
     UserGallerySerializer, UserLinkSerializer,
     GuestUserSerializer, UserProfileSerializer
@@ -26,7 +26,7 @@ from .review_serializers import (
 __all__ = [
     'UserSerializer', 'UserRegistrationSerializer', 'EmailVerificationSerializer', 'UserLoginSerializer',
     'PasswordCodeSerializer', 'SendPasscodeSerializer', 'PasswordResetSerializer', 
-    'PasswordChangeSerializer', 'GoogleLoginSerializer', 'UserAddressSerializer',
+    'PasswordChangeSerializer', 'UserAddressSerializer',
     'GuestCheckoutSerializer', 'UserGallerySerializer', 'UserLinkSerializer',
     'GuestUserSerializer', 'UserProfileSerializer',
     'ProductListSerializer', 'ProductDetailSerializer', 'ProductCreateUpdateSerializer',
