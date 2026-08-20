@@ -9,6 +9,7 @@ from .contact import Contact
 from .feed import Feed
 from .favorite_product import FavoriteProduct
 from .discount import DiscountCode
+from .payment import PaymentSession
 from .woocommerce_models import (
     WooCommerceCategory,
     WooCommerceProduct,
@@ -33,6 +34,7 @@ __all__ = [
     'Feed',
     'FavoriteProduct',
     'DiscountCode',
+    'PaymentSession',
     'WooCommerceCategory',
     'WooCommerceProduct',
     'WooCommerceProductImage',

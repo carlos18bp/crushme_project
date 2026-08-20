@@ -5,6 +5,7 @@ API Documentation: https://docs.wompi.co/
 """
 import requests
 import hashlib
+import hmac
 import logging
 from django.conf import settings
 
@@ -51,7 +52,6 @@ class WompiService:
             integrity_signature = hashlib.sha256(integrity_string.encode()).hexdigest()
             
             logger.info(f"🔐 [WOMPI] Integrity string: {reference}{amount_in_cents}{currency}[INTEGRITY_KEY]")
-            logger.info(f"🔐 [WOMPI] Integrity signature: {integrity_signature}")
             logger.info(f"🔗 [WOMPI] Redirect URL: {redirect_url}")
             
             # Return widget configuration data
@@ -100,11 +100,11 @@ class WompiService:
                 'status': 'PENDING'
             }
         
-        except Exception as e:
-            logger.error(f"❌ [WOMPI] Transaction creation error: {str(e)}")
+        except Exception:
+            logger.exception('[WOMPI] Transaction preparation failed')
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Transaction preparation failed'
             }
     
     def get_transaction(self, transaction_id):
@@ -149,55 +149,92 @@ class WompiService:
                     'data': transaction_data
                 }
             else:
-                logger.error(f"❌ [WOMPI] Get transaction failed: {response.status_code} - {response.text}")
+                logger.error(
+                    '[WOMPI] Transaction lookup failed with status %s',
+                    response.status_code,
+                )
                 return {
                     'success': False,
                     'error': f"Get transaction failed: {response.status_code}",
-                    'details': response.text
                 }
         
-        except Exception as e:
-            logger.error(f"❌ [WOMPI] Get transaction error: {str(e)}")
+        except Exception:
+            logger.exception('[WOMPI] Transaction lookup request failed')
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Transaction lookup request failed'
             }
     
-    def verify_signature(self, event_data, signature):
+    @staticmethod
+    def _resolve_signature_property(data, property_path):
+        """Resolve a Wompi signature property relative to the event data object."""
+        value = data
+        for segment in property_path.split('.'):
+            if not isinstance(value, dict) or segment not in value:
+                raise ValueError('Signature property is missing from event data')
+            value = value[segment]
+
+        if value is None or isinstance(value, (dict, list)):
+            raise ValueError('Signature properties must resolve to scalar values')
+        if isinstance(value, bool):
+            return 'true' if value else 'false'
+        return str(value)
+
+    def verify_signature(self, event_data, signature=None):
         """
         Verify webhook signature from Wompi
         
         Args:
             event_data: Event data from webhook
-            signature: Signature from webhook headers
+            signature: Optional checksum from the X-Event-Checksum header
         
         Returns:
             bool: True if signature is valid
         """
         try:
-            # Wompi sends signature in format: timestamp.signature
-            # We need to verify using events_secret
-            # Format: timestamp.event_id.status.amount_in_cents
-            
+            if not self.events_secret or not isinstance(event_data, dict):
+                return False
+
+            signature_data = event_data.get('signature')
+            data = event_data.get('data')
             timestamp = event_data.get('timestamp')
-            event_id = event_data.get('event', {}).get('id')
-            status = event_data.get('data', {}).get('status')
-            amount = event_data.get('data', {}).get('amount_in_cents')
-            
-            verification_string = f"{timestamp}.{event_id}.{status}.{amount}.{self.events_secret}"
-            calculated_signature = hashlib.sha256(verification_string.encode()).hexdigest()
-            
-            is_valid = calculated_signature == signature
-            
-            if is_valid:
-                logger.info(f"✅ [WOMPI] Webhook signature verified")
-            else:
-                logger.warning(f"⚠️ [WOMPI] Invalid webhook signature")
-            
+            if not isinstance(signature_data, dict) or not isinstance(data, dict):
+                return False
+            if timestamp is None or isinstance(timestamp, bool):
+                return False
+
+            properties = signature_data.get('properties')
+            payload_checksum = signature_data.get('checksum')
+            if not isinstance(properties, list) or not properties:
+                return False
+            if not all(isinstance(path, str) and path for path in properties):
+                return False
+
+            provided_checksum = signature or payload_checksum
+            if not isinstance(provided_checksum, str) or not provided_checksum:
+                return False
+            if signature and payload_checksum and not hmac.compare_digest(
+                signature.lower(), str(payload_checksum).lower()
+            ):
+                return False
+
+            signed_values = ''.join(
+                self._resolve_signature_property(data, path)
+                for path in properties
+            )
+            verification_string = f'{signed_values}{timestamp}{self.events_secret}'
+            calculated_checksum = hashlib.sha256(
+                verification_string.encode('utf-8')
+            ).hexdigest()
+
+            is_valid = hmac.compare_digest(
+                calculated_checksum.lower(), provided_checksum.lower()
+            )
+            if not is_valid:
+                logger.warning('[WOMPI] Rejected webhook with invalid checksum')
             return is_valid
-        
-        except Exception as e:
-            logger.error(f"❌ [WOMPI] Signature verification error: {str(e)}")
+        except (TypeError, ValueError):
+            logger.warning('[WOMPI] Rejected malformed webhook signature payload')
             return False
 
 
