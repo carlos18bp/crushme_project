@@ -31,6 +31,8 @@ env/
 .venv/
 venv_cpu/
 backend/venv_cpu/
+backend/venv_translation/
+backend/translation_models/
 
 # Backup files
 *.bak

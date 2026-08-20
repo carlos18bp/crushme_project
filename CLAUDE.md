@@ -236,7 +236,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - **Views are 100% function-based** with `@api_view`, split per resource (`auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, etc.). Do not convert to CBV/`APIView`/`ViewSets`.
 - **Service layer is real**: business logic lives in `crushme_app/services/` (email, translation, woocommerce sync, paypal, wompi). Views are thin wrappers that call services — do not inline business rules into views.
 - **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (15m access, 7d refresh, serialized rotation + blacklist, logout revocation). `/admin/` uses session + CSRF.
-- **Offline translation**: `argostranslate` translates ES↔EN at WooCommerce sync time and caches results in a `TranslatedContent` model. No real-time machine translation.
+- **Offline translation**: a local CTranslate2 CPU-only daemon translates ES↔EN and caches sync-time results in `TranslatedContent`; Argos is stage-1 rollback only.
 - **Custom `User` model**: email-as-username, crush verification fields (`is_crush`, `crush_verification_status`). `GuestUser` model supports anonymous checkout via session.
 - **Two payment gateways**: PayPal (USD, international) and Wompi (COP, Colombian). Server-calculated `PaymentSession` state is authoritative; captures/webhooks must match it before updating `Order.status`.
 - **WooCommerce mirror**: products are pulled from a remote WooCommerce store and mirrored locally with translated content.
@@ -255,8 +255,10 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Base settings: `backend/crushme_project/settings.py`. It imports `settings_dev` by default and `settings_prod` only when `DJANGO_ENV=production`.
 - Pytest uses isolated `settings_test.py`; Playwright uses `settings_e2e.py`. Neither may inherit production database, Redis, email, or payment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
-- Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
-- Memory limit: 650M (PyTorch is in requirements but unused in code).
+- Production systemd units: `crushme_project.service`, `crushme-huey.service`,
+  and `crushme-translation.service`. Sockets: `/run/gunicorn.sock` and
+  `/run/crushme-translation/translation.sock`.
+- Service memory limits: web 650M, Huey 450M, translation 256M.
 
 ### Deployment Flow
 1. `git pull origin main`

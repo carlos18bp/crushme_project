@@ -4,7 +4,6 @@ Pre-translates all content for fast delivery
 """
 import logging
 from django.db import transaction
-from django.db.models import Q
 
 from ..models import (
     WooCommerceProduct,
@@ -16,7 +15,7 @@ from ..utils.html_helpers import (
     should_strip_html,
     extract_text_from_html
 )
-from .translation_service import TranslationService
+from .translation_service import TranslationService, get_translation_engine_id
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ class TranslationBatchService:
             # Traducir productos
             self._translate_products(force_retranslate)
             
-            logger.info(f"✅ Batch translation completed!")
+            logger.info("✅ Batch translation completed!")
             logger.info(f"   Products: {self.stats['products_translated']}")
             logger.info(f"   Categories: {self.stats['categories_translated']}")
             logger.info(f"   Total fields: {self.stats['fields_translated']}")
@@ -224,7 +223,7 @@ class TranslationBatchService:
                         'source_language': 'es',
                         'source_text': text_to_translate,  # Guardar el texto limpio
                         'translated_text': translated_text,
-                        'translation_engine': 'argostranslate'
+                        'translation_engine': get_translation_engine_id()
                     }
                 )
                 

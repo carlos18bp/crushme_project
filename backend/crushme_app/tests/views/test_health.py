@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.test import override_settings
 from django.urls import reverse
 
 pytestmark = pytest.mark.django_db
@@ -18,6 +19,8 @@ def test_health_reports_runtime_dependencies(client):
         "app": "ok",
         "database": "ok",
         "redis": "ok",
+        "translation": "ok",
+        "translation_engine": "argos",
         "project": "crushme_project",
         "environment": "test",
     }
@@ -47,4 +50,15 @@ def test_health_returns_503_when_redis_is_unavailable(client):
 
     assert response.status_code == 503
     assert response.json()["redis"] == "error"
+    assert response.json()["status"] == "error"
+
+
+@patch("crushme_project.health.TranslationClient.health", side_effect=OSError)
+@override_settings(TRANSLATION_ENGINE="ctranslate2_cpu")
+def test_health_returns_503_when_translation_daemon_is_unavailable(health, client):
+    """A missing configured daemon must make readiness fail closed."""
+    response = client.get(reverse("health-check"))
+
+    assert response.status_code == 503
+    assert response.json()["translation"] == "error"
     assert response.json()["status"] == "error"

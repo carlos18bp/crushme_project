@@ -47,6 +47,7 @@ will not be merged wholesale.
 | 4 | Close backend, frontend-unit, and E2E behavior gaps and audit test quality | No junk-only or unvalidated critical flow; quality gate and CI pass |
 | 5 | Align production operations, backups, observability, restore, and performance with the fleet standard | Post-deploy, restore, timers, logs, and representative load show at least 30% headroom |
 | 6 | Run final read-only certification and promote lifecycle | QA, vulnerability, AI sync, full audit, and 24-hour production observation are green |
+| 7 | Isolate offline translation in a CPU-only CTranslate2 runtime and retire the Argos/Torch chain | ES/EN parity, 48-hour observation, zero Torch/CUDA in runtime, and at least 25% translation-service memory headroom |
 
 ## Execution Status
 
@@ -76,6 +77,11 @@ will not be merged wholesale.
   passed. The final 24-hour observation started at 2026-08-20 15:13:06 UTC and
   remains open until at least 2026-08-21 15:13:06 UTC; lifecycle therefore
   remains `modernizing`.
+- Wave 7: implementation in progress on
+  `chore/20082026-crushme-cpu-translation`. Stage 1 introduces pinned
+  static-int8 models, a Torch-free local daemon, explicit Argos rollback, and
+  focused QA. Stage 2 removes the heavyweight dependency chain only after the
+  new 48-hour observation gate passes.
 
 ## Wave Delivery
 

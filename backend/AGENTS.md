@@ -14,8 +14,8 @@ These instructions extend the root `AGENTS.md` for files under `backend/`.
   introduce Django's default user model.
 - Use Django ORM and parameterized queries. Avoid raw SQL unless profiling
   demonstrates a concrete need.
-- Preserve offline ES/EN translation during WooCommerce sync. Do not introduce
-  real-time machine translation in request paths.
+- Preserve offline ES/EN translation through the local CTranslate2 CPU daemon.
+  Dynamic fallback uses the same socket; do not load models in web/Huey.
 
 ## Integrations
 
@@ -60,6 +60,8 @@ python manage.py makemigrations --check --dry-run
 ```
 
 The runtime venv is `backend/venv_cpu/`, not `backend/venv/`.
+The translation daemon has a separate `backend/venv_translation/`; Torch must
+not be importable there.
 
 ## Testing
 

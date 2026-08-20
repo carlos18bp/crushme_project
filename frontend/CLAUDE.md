@@ -20,7 +20,7 @@
   - Components → PascalCase (`HomeView.vue`, `LoginView.vue`).
   - Composables → camelCase with `use` prefix (`useAlert.js`, `useCart.js`).
   - Stores live under `src/stores/modules/`.
-- **Bilingual content**: product/blog text is **already translated server-side** at WooCommerce sync time (via `argostranslate`). The frontend just picks up the localized field — do not translate client-side.
+- **Bilingual content**: product/blog text is already translated server-side at WooCommerce sync time by the offline backend engine. Do not translate it client-side.
 - **UI strings** (buttons, labels, errors) must go through `vue-i18n` — never hardcode user-facing text.
 - **Currency**: the `currencyStore` tracks COP/USD. `request_http.js` injects an `x-currency` header (a custom CORS-allowed header) so the backend returns prices in the right currency.
 

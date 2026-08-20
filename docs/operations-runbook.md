@@ -11,6 +11,7 @@ CrushMe has one runtime coordinate:
 | Database | MySQL `crushme` |
 | Cache / queue | Redis DB 1 / DB 2 |
 | Web / worker | `crushme_project.service` / `crushme-huey.service` |
+| Offline translation | `crushme-translation.service` over a local Unix socket |
 | Socket | `crushme_project.socket` -> `/run/gunicorn.sock` |
 | Daily backup | `crushme-dbbackup.timer` |
 
@@ -29,6 +30,7 @@ The project copies below mirror the deployable fleet configuration:
 - `scripts/systemd/crushme-huey.override.conf`
 - `scripts/systemd/crushme-dbbackup.service`
 - `scripts/systemd/crushme-dbbackup.timer`
+- `scripts/systemd/crushme-translation.service`
 
 There are no alternate Nginx or Gunicorn files under `backend/`. Before
 installing a release, preserve the active `/etc` files, compare them with these
@@ -79,6 +81,7 @@ Web, Huey, and backup output is centralized in journald:
 ```bash
 journalctl -u crushme_project.service --since '30 minutes ago' --no-pager
 journalctl -u crushme-huey.service --since '30 minutes ago' --no-pager
+journalctl -u crushme-translation.service --since '30 minutes ago' --no-pager
 journalctl -u crushme-dbbackup.service --since '2 days ago' --no-pager
 ```
 
@@ -107,10 +110,20 @@ gate requires no HTTP failures, p95 at or below two seconds, at least 30%
 headroom against both the service memory limit and CPU quota, and at least 20%
 host memory available. Preserve its JSON output in the wave audit.
 
-Argos is imported lazily: Spanish requests and ordinary worker startup do not
-load Torch/ONNX. A request that genuinely needs offline translation still uses
-the same Argos models and may increase one worker's memory; the existing
-resource limits and worker recycling remain in force.
+Offline models live only in `crushme-translation.service`. Validate both
+directions, Torch absence, and at least 25% memory headroom with:
+
+```bash
+python3 scripts/operations/translation_runtime_probe.py
+```
+
+During the Wave 7 stage-1 window, Argos is an explicit rollback only. A socket
+failure returns the original text and logs bounded metadata; it never loads
+Argos automatically inside web/Huey.
+
+For an engine-only rollback, set `TRANSLATION_ENGINE=argos`, restart web and
+Huey, then stop `crushme-translation.service`. The stop comes last because the
+web/Huey units declare the daemon as a wanted dependency during restart.
 
 ## Controlled Release And Rollback
 

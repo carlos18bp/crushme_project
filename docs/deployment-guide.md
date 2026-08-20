@@ -13,6 +13,7 @@ protocol is `.agents/skills/deploy-and-check/SKILL.md` and the fleet registry is
 | Domain | `crushme.com.co`, `www.crushme.com.co` |
 | Django service | `crushme_project.service` |
 | Huey service | `crushme-huey.service` |
+| Translation service | `crushme-translation.service` |
 | Gunicorn socket | `/run/gunicorn.sock` |
 | Nginx site | `/etc/nginx/sites-available/crushme` |
 | Settings | `crushme_project.settings` with `DJANGO_ENV=production` |
@@ -27,6 +28,8 @@ Deploy only an integration commit that has passed:
 4. Frontend build and Django system/migration checks.
 5. Backup restore rehearsal, focused smoke tests, and the roadmap observation window.
 6. Explicit lifecycle/release authorization in the fleet registry.
+7. Translation model hashes, Torch-free runtime, and socket probe when the
+   release changes offline translation.
 
 ## Canonical Sequence
 
@@ -52,6 +55,7 @@ sudo systemctl restart crushme_project.service
 sudo systemctl restart crushme-huey.service
 
 bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh crushme_project
+python3 scripts/operations/translation_runtime_probe.py
 ```
 
 Do not use this snippet to bypass the skill's branch, registry, health, rollback,
@@ -75,10 +79,16 @@ The canonical project-side copies are:
 - `scripts/systemd/crushme-huey.override.conf`
 - `scripts/systemd/crushme-dbbackup.service`
 - `scripts/systemd/crushme-dbbackup.timer`
+- `scripts/systemd/crushme-translation.service`
 
 The fleet deployable copies live in `vps-ops-toolkit/config/systemd/`. Compare
 both sources with the installed `/etc` files before each operational change.
 Obsolete Gunicorn/Nginx copies under `backend/` are deliberately unsupported.
+
+Wave 7 stage 1 must complete the model/runtime installation and socket probe in
+`docs/translation-runtime.md` before the first translation-service restart.
+The translation unit is `PartOf=crushme_project.service`, so the guarded web
+restart also reloads daemon code before the public health check.
 
 Detailed backup, restore, observability, capacity, and rollback procedures are
 in `docs/operations-runbook.md`.

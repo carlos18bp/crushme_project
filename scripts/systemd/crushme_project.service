@@ -1,7 +1,8 @@
 [Unit]
 Description=Gunicorn daemon for crushme_project
 Requires=crushme_project.socket
-After=network.target
+Wants=crushme-translation.service
+After=network.target crushme-translation.service
 
 [Service]
 Type=notify

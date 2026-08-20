@@ -69,7 +69,7 @@ All API requests go through **`src/services/request_http.js`** — a single Axio
 - Locale files live in `src/locales/` organized by domain (e.g., `auth/login/{en,es}.json`, `products/{en,es}.json`, `shared/{en,es}.json`).
 - The `i18nStore` Pinia store toggles the active locale.
 - **Never hardcode user-facing strings** — everything goes through `t('key')`.
-- **Product/blog content from the backend is already translated** at WooCommerce sync time via `argostranslate`. The frontend just picks up the localized field — do not translate it again client-side.
+- **Product/blog content from the backend is already translated** at WooCommerce sync time by the offline backend engine. The frontend just picks up the localized field — do not translate it again client-side.
 
 ## UI and Styling — Tailwind 4 + Flowbite
 

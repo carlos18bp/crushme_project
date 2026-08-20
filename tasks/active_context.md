@@ -2,9 +2,11 @@
 
 ## Current Focus
 
-Waves 5 and 6 are merged and deployed. Immediate certification is complete;
-the only modernization gate still open is the real 24-hour production
-observation before lifecycle promotion.
+Wave 7 stage 1 is implemented and under review in PR #17 on
+`chore/20082026-crushme-cpu-translation`. It moves
+offline ES/EN inference into a pinned, Torch-free CTranslate2 daemon while
+retaining Argos only as explicit rollback. Production remains unchanged on
+clean `main` until review and release gates pass.
 
 ## Current Coordinate
 
@@ -15,9 +17,16 @@ observation before lifecycle promotion.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
 - Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
 - Runtime services: `crushme_project.service` and `crushme-huey.service`.
+- Candidate service: `crushme-translation.service`; it is not installed in
+  production until Wave 7 stage 1 deploys.
 
 ## Wave State
 
+- Wave 7 stage-1 authoring passes 23 focused backend tests across six files,
+  QA verify with zero findings, clean runtime/builder dependency audits,
+  reproducible model hashes, a 156 MiB Torch-free daemon proof, and all six
+  application PR CI jobs. Toolkit PR #41 passes the equivalent local gates but
+  still requires a real CI run after the GitHub billing block is resolved.
 - Wave 5 PR #13 is deployed. Health, daily backup, journald observability,
   restore, and capacity gates passed; web-memory headroom improved from 25.2%
   to 81.1% without raising the 650 MiB limit.
@@ -49,6 +58,10 @@ observation before lifecycle promotion.
   exemptions or draft credit.
 - Keep the 650M/450M service limits; earn headroom by avoiding unnecessary
   heavyweight imports rather than masking usage with larger limits.
+- Isolate CTranslate2 in `backend/venv_translation`, hardcode CPU/int8 and one
+  thread, and reject any runtime that can import Torch.
+- Keep Argos rollback explicit during stage 1; never auto-fallback from a dead
+  translation socket into a constrained Gunicorn/Huey process.
 - Keep backup availability independent from Huey and preserve the weekly fleet
   snapshot as a second mechanism.
 - Keep fleet lifecycle `modernizing` and retain Wave 3 through Wave 6 rollback
@@ -56,7 +69,7 @@ observation before lifecycle promotion.
 
 ## Next Gate
 
-After 2026-08-21 15:13:06 UTC, inspect the complete service journals, public
-health/contracts, newest daily backup and timer result, capacity, Git/runtime
-state, vulnerability status, and AI drift. Promote lifecycle from
-`modernizing` to `active` only if every closing check is green.
+Resolve the external GitHub Actions billing block and obtain green CI for
+toolkit PR #41, then review and merge both stage-1 PRs. Deployment requires
+fresh recovery artifacts and starts a new 48-hour translation observation;
+lifecycle remains `modernizing` throughout both Wave 6 and Wave 7 gates.

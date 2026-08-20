@@ -1,6 +1,7 @@
 [Unit]
 Description=Huey consumer for crushme_project
-After=network.target redis-server.service
+Wants=crushme-translation.service
+After=network.target redis-server.service crushme-translation.service
 Requires=redis-server.service
 
 [Service]

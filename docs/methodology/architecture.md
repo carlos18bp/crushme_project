@@ -61,12 +61,12 @@ writes, and public search.
 
 ### Translation Boundary
 
-Argos Translate primarily performs offline translation during WooCommerce
-sync; dynamic/user content can use the same engine as a request-time fallback.
-The engine is imported only when a translation is actually required, so normal
-Spanish traffic and worker startup do not load Torch/ONNX. Runtime settings
-force `ARGOS_CHUNK_TYPE=MINISBD` and `ARGOS_DEVICE_TYPE=cpu`; no application
-path creates a Stanza pipeline.
+Offline translation primarily runs during WooCommerce sync; dynamic/user
+content retains the same request-time fallback. Wave 7 routes both paths over a
+local Unix socket to one `crushme-translation.service` process using pinned
+CTranslate2 static-int8 ES/EN models. Gunicorn and Huey therefore do not load
+models or ML frameworks. Argos remains available only as an explicit stage-1
+rollback and is removed after the observation gate.
 
 ### Settings
 
@@ -100,6 +100,7 @@ server-priced currency responses remain unchanged business contracts.
 |---|---:|---:|---:|---:|---:|
 | `crushme_project.service` | 500M | 650M | 60% | 80 | 200 |
 | `crushme-huey.service` | 350M | 450M | 30% | 50 | 400 |
+| `crushme-translation.service` | 200M | 256M | 40% | 32 | 300 |
 
 ### Periodic Work
 

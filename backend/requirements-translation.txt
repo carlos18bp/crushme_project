@@ -1,0 +1,8 @@
+# Minimal production runtime for the isolated CPU-only translation daemon.
+ctranslate2==4.8.1
+numpy==2.3.3
+pip==26.2.1
+pysbd==0.3.4
+PyYAML==6.0.3
+sentencepiece==0.2.2
+setuptools==83.0.0

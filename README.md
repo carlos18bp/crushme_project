@@ -25,9 +25,9 @@ tasks/                Active context and backlog
 .codex/               Codex project configuration
 ```
 
-The Python environment is `backend/venv_cpu/`; there is no `backend/venv/`.
-Frontend builds are generated in `backend/static/frontend/` and must not be
-committed.
+The stage-1 Django environment is `backend/venv_cpu/`; the CPU-only translation
+daemon uses the separate `backend/venv_translation/`. Frontend builds are
+generated in `backend/static/frontend/` and must not be committed.
 
 ## Local Setup
 
@@ -51,6 +51,9 @@ npm run dev
 
 Development defaults to SQLite and sandbox/disabled integrations. Never reuse a
 production `.env` for tests or E2E.
+
+Offline model build, installation, service validation, and rollback are
+documented in `docs/translation-runtime.md`.
 
 ## Focused Verification
 
@@ -89,6 +92,7 @@ rows. They still belong only in an isolated development database.
 - [Wave 3 vulnerability report](audit-report.md)
 - [Testing standard](docs/TESTING_QUALITY_STANDARDS.md)
 - [Deployment guide](docs/deployment-guide.md)
+- [CPU-only translation runtime](docs/translation-runtime.md)
 - [Active work](tasks/active_context.md)
 
 Production deployments and verification must use the canonical
