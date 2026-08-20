@@ -48,6 +48,12 @@ CURATED_RUFF_SELECTORS: tuple[str, ...] = (
     "D",
 )
 
+# Deprecated alias. Pre-canonical forks of this module exported the constant as
+# CURATED_RUFF_RULE_SELECTORS, and at least one fleet project (gym_project's
+# tooling regression test) imports that name — removing it breaks their suite
+# when the canonical core is synced over the fork.
+CURATED_RUFF_RULE_SELECTORS = CURATED_RUFF_SELECTORS
+
 
 # Normalized IDs used for cross-engine dedupe where meaningful.
 NORMALIZED_RULE_OVERRIDES: dict[tuple[str, str], str] = {
@@ -313,7 +319,9 @@ class ExternalLintRunner:
             return None
 
         normalized = "\n".join(" ".join(item.strip().split()) for item in snippet)
-        digest = hashlib.sha1(normalized.encode("utf-8")).hexdigest()[:16]
+        digest = hashlib.sha1(
+            normalized.encode("utf-8"), usedforsecurity=False
+        ).hexdigest()[:16]
         return digest
 
     def _read_cached(self, relative_file: str) -> list[str] | None:

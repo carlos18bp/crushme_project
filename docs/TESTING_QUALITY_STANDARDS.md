@@ -1196,6 +1196,52 @@ def test_validation_error_messages():
 await page.locator('.external-datepicker .day-15').click();
 ```
 
+### Junk-rule allow markers (2026-07)
+
+The junk detectors have their own opt-out markers. Each one silences exactly one
+rule, must live **inside the block of the test it exempts** (the detectors read
+the test's source slice, not the file header), and the reason in parentheses is
+**mandatory**. Active markers appear in the gate report's `active_exceptions`
+and are audited like any other exception.
+
+| Marker | Rule silenced | Legitimate when |
+|--------|---------------|-----------------|
+| `// quality: allow-no-interaction (reason)` | `no_user_interaction` | the flow genuinely has no interactable step (e.g. a redirect/guard whose whole behavior is navigation) |
+| `// quality: allow-deep-link (reason)` | `deep_link_entry` | the URL itself is the documented entry point of the display flow (e.g. an emailed permalink) |
+| `// quality: allow-render-only (reason)` | `no_data_assertion` | the view under test is deliberately static and its content is pinned by another test |
+| `// quality: allow-duplicate (reason)` | `duplicate_coverage` | the same body must run twice by design (e.g. a per-role or per-viewport contract) |
+| `// quality: allow-mock-only (reason)` | `mock_only_assertion` | the outbound call IS the contract (e.g. telemetry/analytics emission with no observable state) |
+| `// quality: allow-negation-only (reason)` | `negation_only_assertion` | absence IS the contract and nothing else renders in that state to anchor on (e.g. a `return null` guard), or a pure function's null case whose positive twin is pinned by an adjacent test |
+| `// quality: allow-reimpl (reason)` | `reimplements_sut` | recomputing is the spec itself (e.g. a property/identity the test intentionally re-states) |
+| `// quality: allow-flow-tag-mismatch (reason)` | `flow_tag_mismatch` | the spec legitimately exercises the tagged flow through vocabulary the heuristic cannot map (e.g. the UI copy names the action differently than the flow id) |
+| `// quality: allow-url-alternation (reason)` | `tautological_url` | the test genuinely accepts two destinations (e.g. a geo-dependent localized home) — the default shape `toHaveURL(/sign-in\|<navigated-segment>/)` cannot fail and is junk |
+
+### Draft marker — `// qa: draft-unvalidated` (2026-07)
+
+Different family from the `quality: allow-*` markers: those are block-scoped
+exemptions that **promote** (silence one rule); this one is **file-scoped** and
+**demotes**. The /qa e2e engineer writes it at the top of any spec authored
+while no app was reachable:
+
+```javascript
+// qa: draft-unvalidated (2026-07-26 — app not running)
+```
+
+Semantics:
+
+- Every test in the file counts as `unvalidated` evidence in the flow coverage
+  audit: it never buys coverage credit (a flow backed only by drafts reports
+  `unvalidated`, not `covered`) and never subtracts from credit earned by real
+  tests in other files. A draft test that is also junk stays junk — junk wins.
+- The marker means "**never executed green once**", NOT "green forever". It is
+  removed only after the spec first runs green against a live app (the /qa
+  Phase 5b validation); a validated spec that later regresses is an ordinary
+  red test, never re-marked.
+- **Never add non-draft tests to a marked file** — the marker taints the whole
+  file. Validate-and-unmark first, or use a new file.
+- Inert everywhere else by design: the junk detectors and the quality gate
+  ignore it, so repos on an older core see a plain comment.
+
 ### Exception Tracking
 
 All exceptions are tracked and reported:
@@ -1392,6 +1438,40 @@ While this document focuses on quality over quantity, reasonable coverage target
 | E2E | Critical paths | Login, checkout, main workflows |
 
 > **Remember:** Coverage measures lines executed, not behavior verified. A test with no assertions gives coverage but no value.
+
+### Flow coverage states (`flow_coverage_audit.py`)
+
+Every flow declared in `flow-definitions.json` resolves to exactly one state.
+Precedence, worst-signal first when evidence mixes:
+
+| State | Meaning | Counts as covered? |
+|-------|---------|--------------------|
+| `covered` | every declared outcome class has a **qualifying, executed** test | ✅ |
+| `partial` | some declared classes qualified, others not (the gaps may be junk, drafted or absent — see `junk_only_outcomes` / `unvalidated_outcomes`) | ❌ |
+| `junk-only` | tests exist, **none qualify** (`no_user_interaction` / `flow_tag_mismatch`). Worse than `missing`: it reports green in the runtime reporter | ❌ |
+| `unvalidated` | only draft evidence (`// qa: draft-unvalidated` files): authored, structurally sound, **never executed**. Junk in the same evidence wins (`junk-only`) | ❌ |
+| `missing` | declared, no test references it | ❌ |
+| `exempt` | `expectedSpecs: 0` — intentionally uncovered, not a gap | n/a |
+
+Real qualifying tests are never demoted by drafts elsewhere: a flow with a
+green test in one file and a draft twin in another stays `covered`.
+
+**Zero-assertion evidence is disqualified (F49):** a test whose full reach
+(helpers resolved, comments stripped) contains no `expect(` proves nothing —
+the audit treats it exactly like junk, so a flow backed only by such tests
+reads `junk-only`, never `covered`. **Outcome tags resolve through constants
+(F48):** `@outcome:` entries inside an imported/aliased tag constant now
+credit their class just like inline tags; the inline call-site idiom remains
+the recommended convention.
+
+**Suspect flag (F47, orthogonal to the state):** an outcome-untagged test
+credits only `success`, so a flow whose declared classes exclude `success`
+can report `missing`/`partial` while flow-tagged evidence exists in the
+wrong bucket — masking either junk or real coverage. The audit flags these
+with per-flow `stray_evidence_outcomes`, the `suspect` summary counter and a
+`SUSPECT FLOWS` report section. The state itself does not change (warning
+only; `covered` and `exempt` are never flagged): apply the `@outcome`
+tagging pass, then trust the recomputed state.
 
 ---
 

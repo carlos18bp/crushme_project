@@ -22,6 +22,7 @@
           <div class="input-group">
             <input
               v-model="form.username"
+              data-testid="login-username"
               type="text"
               :placeholder="$t('login.usernamePlaceholder')"
               class="form-input"
@@ -34,6 +35,7 @@
             <div class="password-input-container">
               <input
                 v-model="form.password"
+                data-testid="login-password"
                 :type="showPassword ? 'text' : 'password'"
                 :placeholder="$t('login.passwordPlaceholder')"
                 class="form-input password-input"
@@ -90,6 +92,7 @@
           <!-- Submit Button -->
           <button
             type="submit"
+            data-testid="login-submit"
             class="submit-btn"
             :disabled="isLoading"
           >

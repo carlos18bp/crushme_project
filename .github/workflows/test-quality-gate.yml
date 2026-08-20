@@ -2,6 +2,10 @@ name: Test Quality Gate
 
 on:
   pull_request:
+    branches:
+      - main
+      - master
+      - 'release/**'
     paths:
       - 'backend/crushme_app/tests/**'
       - 'frontend/test/**'
@@ -10,10 +14,16 @@ on:
       - 'scripts/quality/**'
       - 'frontend/scripts/ast-parser.cjs'
       - 'frontend/scripts/check-flow-definitions-sync.mjs'
+      - '.testquality.yml'
+      - '.junk-baseline.json'
+      - 'docs/TESTING_QUALITY_STANDARDS.md'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
+      - 'release/**'
     paths:
       - 'backend/crushme_app/tests/**'
       - 'frontend/test/**'
@@ -22,8 +32,18 @@ on:
       - 'scripts/quality/**'
       - 'frontend/scripts/ast-parser.cjs'
       - 'frontend/scripts/check-flow-definitions-sync.mjs'
+      - '.testquality.yml'
+      - '.junk-baseline.json'
+      - 'docs/TESTING_QUALITY_STANDARDS.md'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-quality-gate:
@@ -47,11 +67,18 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: npm ci
 
       - name: Run test quality gate
         run: |
-          python3 scripts/test_quality_gate.py --repo-root . --report-path test-results/test-quality-report.json --verbose
+          mkdir -p test-results
+          python3 scripts/test_quality_gate.py \
+            --repo-root . \
+            --report-path test-results/test-quality-report.json \
+            --junk-severity=error \
+            --no-color
 
       - name: Upload gate report
         if: always()
@@ -59,6 +86,7 @@ jobs:
         with:
           name: test-quality-report
           path: test-results/test-quality-report.json
+          if-no-files-found: error
 
   e2e-flow-definitions-sync:
     runs-on: ubuntu-latest
@@ -67,6 +95,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify flow-definitions ↔ E2E @flow: tags
+      - name: 'Verify flow definitions against E2E @flow tags'
         working-directory: frontend
         run: node scripts/check-flow-definitions-sync.mjs

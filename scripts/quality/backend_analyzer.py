@@ -61,7 +61,16 @@ class ASTAnalyzer:
         "assertContains", "assertNotContains", "assertRedirects",
         "assertTemplateUsed", "assertTemplateNotUsed",
     }
-    
+
+    # Assertions expressed as context managers. `with pytest.raises(X):` states
+    # that the call must raise — the assertion is the construct itself, with no
+    # `assert` statement anywhere. Omitting these made the gate report correct
+    # tests as having no assertions.
+    CONTEXT_ASSERTION_PATTERNS = {
+        "raises", "warns", "deprecated_call",
+    }
+
+
     # Mock assertion methods
     MOCK_ASSERTIONS = {
         "assert_called", "assert_called_once", "assert_called_with",
@@ -119,18 +128,32 @@ class ASTAnalyzer:
             Tuple of (count, list of assertion source representations).
         """
         assertions = []
-        
+
         for child in ast.walk(node):
             # pytest assert
             if isinstance(child, ast.Assert):
                 assertions.append(ast.unparse(child) if hasattr(ast, 'unparse') else "assert ...")
-            
+
             # unittest self.assert*
             elif isinstance(child, ast.Call):
                 if isinstance(child.func, ast.Attribute):
                     if child.func.attr in cls.ASSERTION_PATTERNS:
                         assertions.append(child.func.attr)
-        
+                    # `with pytest.raises(X):` is the assertion — the test states
+                    # that the call must raise. Counting only `assert` statements
+                    # reported 72 such tests in one repo as having no assertions,
+                    # which is a rule slandering correct tests.
+                    elif child.func.attr in cls.CONTEXT_ASSERTION_PATTERNS:
+                        assertions.append(f"{child.func.attr}()")
+                    # `m.assert_called_once_with(...)` is an assertion too. The
+                    # gate already knows this — `mock_call_contract_only` exists
+                    # precisely to flag tests that assert ONLY mock calls — so
+                    # reporting them as having none was self-contradictory.
+                    # Structural emptiness and weak-but-present are different
+                    # findings and each has its own rule.
+                    elif child.func.attr in cls.MOCK_ASSERTIONS:
+                        assertions.append(child.func.attr)
+
         return len(assertions), assertions
     
     @classmethod
@@ -403,6 +426,28 @@ class ASTAnalyzer:
         return signals
 
 
+def location_is_allowed(area: str, allowed: "frozenset[str]") -> bool:
+    """Is a test file sitting in a folder this repo accepts?
+
+    `area` is the first path segment under tests/, or "" for a file lying
+    directly in tests/. That root case had no way to be spelled in
+    py_allowed_folders — the list names subfolders, and an empty entry does not
+    survive config parsing — so a repo whose apps keep their tests flat could
+    only accept them one `# quality: disable misplaced_file` marker per file.
+    That is what blocked multi-app scanning (F53): the app a repo declared was
+    invariably the one organised in subfolders, and every sibling app it had
+    never scanned was flat, so widening the scan turned the gate red on layout
+    rather than on quality.
+
+    "." names the tests/ root, matching the meaning frontend_unit_dir already
+    gives it. It stays opt-in: a repo that wants tests to mirror the source tree
+    simply does not list it.
+    """
+    if area in allowed:
+        return True
+    return area == "" and "." in allowed
+
+
 class PythonAnalyzer:
     """
     Analyzes Python test files for quality issues.
@@ -469,7 +514,7 @@ class PythonAnalyzer:
         # Determine area and location validity
         relative = path.relative_to(tests_root)
         area = relative.parts[0] if len(relative.parts) > 1 else ""
-        location_ok = area in self.config.py_allowed_folders
+        location_ok = location_is_allowed(area, self.config.py_allowed_folders)
         
         file_result = FileResult(file=rel_path, area=area, location_ok=location_ok)
         
@@ -546,12 +591,13 @@ class PythonAnalyzer:
         return file_result
     
     def _analyze_test_function(
-        self, 
-        node: ast.FunctionDef, 
-        file: str, 
+        self,
+        node: ast.FunctionDef,
+        file: str,
         result: FileResult,
         class_name: str | None = None,
         source: str | None = None,
+        class_frozen: bool = False,
     ) -> TestInfo:
         """Analyze a single test function for quality issues."""
         full_name = f"{class_name}.{node.name}" if class_name else node.name
@@ -761,7 +807,7 @@ class PythonAnalyzer:
 
         # 16. Non-deterministic sources without explicit control
         nondeterministic_signals = ASTAnalyzer.get_nondeterministic_signals(node)
-        if nondeterministic_signals and not ASTAnalyzer.has_determinism_control(node):
+        if nondeterministic_signals and not ASTAnalyzer.has_determinism_control(node) and not class_frozen:
             detected = ", ".join(sorted(nondeterministic_signals))
             result.issues.append(Issue(
                 file=file,
@@ -855,13 +901,21 @@ class PythonAnalyzer:
                 identifier=cls.name,
             ))
         
+        # Detect class-level @freeze_time so methods inside don't get flagged
+        class_frozen = any(
+            (isinstance(d, ast.Call) and ASTAnalyzer._call_name(d) in {"freeze_time", "freezegun.freeze_time"})
+            or (isinstance(d, ast.Name) and d.id in {"freeze_time"})
+            or (isinstance(d, ast.Attribute) and d.attr in {"freeze_time"})
+            for d in cls.decorator_list
+        )
+
         # Track method names for duplicates
         method_names: dict[str, list[int]] = {}
-        
+
         for node in cls.body:
             if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
                 method_names.setdefault(node.name, []).append(node.lineno)
-                test_info = self._analyze_test_function(node, file, result, cls.name, source)
+                test_info = self._analyze_test_function(node, file, result, cls.name, source, class_frozen=class_frozen)
                 result.tests.append(test_info)
         
         # Check for duplicates within class
