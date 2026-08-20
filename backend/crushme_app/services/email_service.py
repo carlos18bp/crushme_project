@@ -5,7 +5,6 @@ Handles all email sending with HTML templates
 import logging
 import re
 from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
 from django.conf import settings
 from pathlib import Path
 
@@ -86,16 +85,14 @@ class EmailService:
             # Send email
             email.send(fail_silently=False)
             
-            logger.info(f"✅ Email sent successfully to {to_email}: {subject}")
+            logger.info('Templated email accepted by the configured backend')
             return True
             
         except FileNotFoundError:
             logger.error(f"❌ Email template not found: {template_name}")
             return False
-        except Exception as e:
-            logger.error(f"❌ Error sending email to {to_email}: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
+        except Exception:
+            logger.exception('Templated email delivery failed')
             return False
     
     @staticmethod

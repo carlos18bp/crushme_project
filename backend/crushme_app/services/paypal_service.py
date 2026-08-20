@@ -4,6 +4,7 @@ Handles PayPal Orders API integration for payment processing
 """
 import requests
 import base64
+from decimal import Decimal, InvalidOperation
 from django.conf import settings
 import logging
 
@@ -71,7 +72,7 @@ class PayPalService:
         self.client_id = getattr(settings, 'PAYPAL_CLIENT_ID', '')
         self.client_secret = getattr(settings, 'PAYPAL_CLIENT_SECRET', '')
         self.mode = getattr(settings, 'PAYPAL_MODE', 'sandbox')
-        
+
         # Set API URL based on mode
         if self.mode == 'live':
             self.base_url = 'https://api-m.paypal.com'
@@ -145,17 +146,17 @@ class PayPalService:
                     'access_token': token_data.get('access_token')
                 }
             else:
-                logger.error(f"PayPal auth failed: {response.status_code} - {response.text}")
+                logger.error('PayPal authentication failed with status %s', response.status_code)
                 return {
                     'success': False,
                     'error': f"Authentication failed: {response.status_code}"
                 }
         
-        except Exception as e:
-            logger.error(f"PayPal auth error: {str(e)}")
+        except Exception:
+            logger.exception('PayPal authentication request failed')
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Authentication request failed'
             }
     
     def create_order(self, cart_items, shipping_info, total_amount, shipping_cost=0, discount_amount=0):
@@ -191,7 +192,6 @@ class PayPalService:
             }
             
             logger.info("Creating PayPal order...")
-            logger.debug(f"Payload: {payload}")
             
             response = requests.post(
                 url,
@@ -210,18 +210,20 @@ class PayPalService:
                     'data': order_data
                 }
             else:
-                logger.error(f"❌ PayPal order creation failed: {response.status_code} - {response.text}")
+                logger.error(
+                    'PayPal order creation failed with status %s',
+                    response.status_code,
+                )
                 return {
                     'success': False,
                     'error': f"Order creation failed: {response.status_code}",
-                    'details': response.text
                 }
         
-        except Exception as e:
-            logger.error(f"❌ PayPal order creation error: {str(e)}")
+        except Exception:
+            logger.exception('PayPal order creation request failed')
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Order creation request failed'
             }
     
     def capture_order(self, order_id):
@@ -246,7 +248,8 @@ class PayPalService:
             url = f"{self.base_url}/v2/checkout/orders/{order_id}/capture"
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {access_token}'
+                'Authorization': f'Bearer {access_token}',
+                'PayPal-Request-Id': f'crushme-capture-{order_id}',
             }
             
             logger.info(f"Capturing PayPal order: {order_id}")
@@ -257,36 +260,102 @@ class PayPalService:
                 timeout=self.timeout
             )
             
-            if response.status_code == 201:
-                capture_data = response.json()
-                logger.info(f"✅ PayPal payment captured: {order_id}")
-                
-                # Extract payment details
-                payment_status = capture_data.get('status')
-                payer = capture_data.get('payer', {})
-                
-                return {
-                    'success': True,
-                    'order_id': order_id,
-                    'status': payment_status,
-                    'payer_email': payer.get('email_address'),
-                    'payer_name': payer.get('name', {}).get('given_name', '') + ' ' + payer.get('name', {}).get('surname', ''),
-                    'data': capture_data
-                }
-            else:
-                logger.error(f"❌ PayPal capture failed: {response.status_code} - {response.text}")
-                return {
-                    'success': False,
-                    'error': f"Payment capture failed: {response.status_code}",
-                    'details': response.text
-                }
-        
-        except Exception as e:
-            logger.error(f"❌ PayPal capture error: {str(e)}")
+            if response.status_code in {200, 201}:
+                return self._extract_capture_result(response.json(), order_id)
+
+            # A retry can arrive after PayPal captured the order but before the
+            # application persisted it. Reading the order makes that path safe.
+            order_result = self.get_order(order_id, access_token=access_token)
+            if order_result['success']:
+                return order_result
+
+            logger.error('PayPal capture failed with status %s', response.status_code)
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'Payment capture failed: {response.status_code}',
             }
+
+        except Exception:
+            logger.exception('PayPal capture request failed')
+            return {
+                'success': False,
+                'error': 'Payment capture request failed'
+            }
+
+    def get_order(self, order_id, access_token=None):
+        """Retrieve an order and return its completed capture details."""
+        try:
+            if not access_token:
+                auth_result = self._get_access_token()
+                if not auth_result['success']:
+                    return auth_result
+                access_token = auth_result['access_token']
+
+            response = requests.get(
+                f'{self.base_url}/v2/checkout/orders/{order_id}',
+                headers={'Authorization': f'Bearer {access_token}'},
+                timeout=self.timeout,
+            )
+            if response.status_code != 200:
+                return {
+                    'success': False,
+                    'error': f'Order lookup failed: {response.status_code}',
+                }
+            return self._extract_capture_result(response.json(), order_id)
+        except Exception as exc:
+            logger.error('PayPal order lookup error: %s', exc)
+            return {'success': False, 'error': 'Order lookup failed'}
+
+    @staticmethod
+    def _extract_capture_result(capture_data, order_id):
+        captures = []
+        for purchase_unit in capture_data.get('purchase_units', []):
+            captures.extend(
+                purchase_unit.get('payments', {}).get('captures', [])
+            )
+
+        if (
+            capture_data.get('status') != 'COMPLETED'
+            or not captures
+            or any(capture.get('status') != 'COMPLETED' for capture in captures)
+        ):
+            return {
+                'success': False,
+                'error': 'PayPal order is not fully captured',
+                'status': capture_data.get('status'),
+            }
+
+        currencies = {
+            capture.get('amount', {}).get('currency_code')
+            for capture in captures
+        }
+        if None in currencies or len(currencies) != 1:
+            return {'success': False, 'error': 'Invalid PayPal capture currency'}
+
+        try:
+            captured_amount = sum(
+                Decimal(capture['amount']['value'])
+                for capture in captures
+            ).quantize(Decimal('0.01'))
+        except (InvalidOperation, KeyError, TypeError):
+            return {'success': False, 'error': 'Invalid PayPal capture amount'}
+
+        payer = capture_data.get('payer', {})
+        payer_name = ' '.join(filter(None, [
+            payer.get('name', {}).get('given_name'),
+            payer.get('name', {}).get('surname'),
+        ]))
+        return {
+            'success': True,
+            'order_id': order_id,
+            'capture_id': captures[0].get('id'),
+            'status': capture_data.get('status'),
+            'captured_amount': str(captured_amount),
+            'currency': currencies.pop(),
+            'payer_email': payer.get('email_address'),
+            'payer_name': payer_name,
+            'data': capture_data,
+        }
     
     def _build_order_payload(self, cart_items, shipping_info, total_amount, shipping_cost=0, discount_amount=0):
         """
@@ -385,12 +454,8 @@ class PayPalService:
             }
         }
         
-        logger.info(f"💰 [PAYPAL PAYLOAD] Total: {total_amount}, Items: {items_total}, Shipping: {shipping_cost}, Discount: {discount_amount}")
-        logger.info(f"💰 [PAYPAL PAYLOAD] Validation: {items_total} + {shipping_cost} - {discount_amount} = {total_amount}")
-        
         return payload
 
 
 # Singleton instance
 paypal_service = PayPalService()
-

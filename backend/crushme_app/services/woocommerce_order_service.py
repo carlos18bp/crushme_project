@@ -140,7 +140,6 @@ class WooCommerceOrderService:
             
             # Log request
             logger.info(f"Sending order {order.order_number} to WooCommerce")
-            logger.debug(f"Payload: {payload}")
             
             # Make request
             url = f"{self.base_url}/orders"
@@ -164,20 +163,22 @@ class WooCommerceOrderService:
                     'data': wc_order
                 }
             else:
-                logger.error(f"❌ WooCommerce order creation failed: {response.status_code} - {response.text}")
+                logger.error(
+                    'WooCommerce order creation failed with status %s',
+                    response.status_code,
+                )
                 
                 return {
                     'success': False,
                     'error': f"API returned status {response.status_code}",
                     'status_code': response.status_code,
-                    'response_text': response.text
                 }
         
-        except Exception as e:
-            logger.error(f"❌ Error sending order to WooCommerce: {str(e)}")
+        except Exception:
+            logger.exception('WooCommerce order request failed')
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'WooCommerce order request failed'
             }
     
     def _build_order_payload(self, order, shipping_cost=None):
@@ -467,7 +468,6 @@ class WooCommerceOrderService:
 
 # Singleton instance
 woocommerce_order_service = WooCommerceOrderService()
-
 
 
 

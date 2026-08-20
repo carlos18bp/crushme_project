@@ -3,12 +3,10 @@ Authentication views for CrushMe e-commerce application
 Based on signin_signon_feature repository implementation
 Handles user registration, login, password management, and profile updates
 """
-import secrets
 import random
+import logging
 from rest_framework import status
 from django.http import JsonResponse
-from django.contrib.auth import authenticate
-from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import update_last_login
 from django.utils import timezone
@@ -17,14 +15,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from ..models import User, PasswordCode, Feed
+from ..models import Feed, GuestUser, PasswordCode, User
 from ..utils import generate_auth_tokens
 from ..services.email_service import email_service
 from ..services.translation_service import get_language_from_request
 from ..serializers.user_serializers import (
-    UserSerializer, UserRegistrationSerializer, UserLoginSerializer,
-    EmailVerificationSerializer, SendPasscodeSerializer, PasswordResetSerializer, 
-    PasswordChangeSerializer, GuestCheckoutSerializer, UserProfileSerializer,
+    UserRegistrationSerializer, UserLoginSerializer,
+    EmailVerificationSerializer, PasswordResetSerializer,
+    GuestCheckoutSerializer, UserProfileSerializer,
     CrushPublicProfileSerializer, UserSearchSerializer, CrushCardSerializer
 )
 
@@ -68,7 +66,7 @@ def signup(request):
     
     # If user exists but email NOT verified, update their data and resend code
     if existing_user and not existing_user.email_verified:
-        print(f"📧 Usuario inactivo encontrado: {email}. Actualizando datos y reenviando código...")
+        logging.getLogger(__name__).info('Refreshing an inactive registration')
         
         # Check if new username is already taken by another user
         if username and username != existing_user.username:
@@ -122,12 +120,12 @@ def signup(request):
                 'updated': True
             }, status=status.HTTP_200_OK)
             
-        except Exception as e:
-            import traceback
-            print(f"Email sending error: {str(e)}")
-            print(traceback.format_exc())
+        except Exception:
+            logging.getLogger(__name__).exception(
+                'Registration verification delivery failed'
+            )
             return Response({
-                'error': f'Failed to send verification email: {str(e)}'
+                'error': 'Failed to send verification email. Please try again.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # New user registration flow
@@ -169,9 +167,10 @@ def signup(request):
                     action='signup',
                     lang=lang
                 )
-            except Exception as feed_error:
-                # Log but don't fail the signup if feed creation fails
-                print(f"Feed creation error: {str(feed_error)}")
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    'Registration feed creation failed'
+                )
             
             return Response({
                 'message': 'Registration successful. Please check your email for verification code.',
@@ -179,14 +178,14 @@ def signup(request):
                 'requires_verification': True
             }, status=status.HTTP_201_CREATED)
             
-        except Exception as e:
+        except Exception:
             # If email fails, delete the user and return error
-            import traceback
-            print(f"Email sending error: {str(e)}")
-            print(traceback.format_exc())
+            logging.getLogger(__name__).exception(
+                'Registration verification delivery failed'
+            )
             user.delete()
             return Response({
-                'error': f'Failed to send verification email: {str(e)}'
+                'error': 'Failed to send verification email. Please try again.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -301,7 +300,7 @@ def resend_verification_code(request):
             'message': 'New verification code sent to your email.'
         }, status=status.HTTP_200_OK)
         
-    except Exception as e:
+    except Exception:
         return Response({
             'error': 'Failed to send verification email. Please try again.'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -387,9 +386,13 @@ def google_login(request):
             # Return the generated authentication tokens
             return JsonResponse(tokens, status=200)
 
-        except Exception as e:
+        except Exception:
             # Handle unexpected exceptions
-            return JsonResponse({'status': 'error', 'error_message': str(e)}, status=500)
+            logging.getLogger(__name__).exception('Google login failed')
+            return JsonResponse({
+                'status': 'error',
+                'error_message': 'Authentication failed',
+            }, status=500)
     else:
         # Handle invalid request methods
         return JsonResponse({'status': 'error', 'error_message': 'Invalid request method'}, status=405)
@@ -599,7 +602,7 @@ def forgot_password(request):
             'message': 'Password reset code sent to your email.'
         }, status=status.HTTP_200_OK)
         
-    except Exception as e:
+    except Exception:
         return Response({
             'error': 'Failed to send reset email. Please try again.'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -621,11 +624,6 @@ def reset_password(request):
         Response: A Response object with a success message if the password reset is successful,
                   or an error message if the code is invalid or expired.
     """
-    # Log request data for debugging
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"🔐 [RESET PASSWORD] Request data: {request.data}")
-    
     serializer = PasswordResetSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -649,15 +647,13 @@ def reset_password(request):
                 action='password_reset',
                 lang=lang
             )
-        except Exception as feed_error:
-            print(f"Feed creation error: {str(feed_error)}")
+        except Exception:
+            logging.getLogger(__name__).exception('Password reset feed creation failed')
         
         return Response({
             'message': 'Password reset successful. You can now login with your new password.'
         }, status=status.HTTP_200_OK)
     
-    # Log validation errors
-    logger.error(f"🔐 [RESET PASSWORD] Validation errors: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
