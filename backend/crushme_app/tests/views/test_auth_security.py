@@ -1,4 +1,10 @@
+from types import SimpleNamespace
+
 import pytest
+from argostranslate import settings as argos_settings
+from argostranslate.sbd import MiniSBDSentencizer
+from argostranslate.translate import PackageTranslation
+from django.conf import settings
 from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -71,3 +77,17 @@ def test_woocommerce_connection_requires_admin():
     response = APIClient().get('/api/products/woocommerce/test/')
 
     assert response.status_code == 401
+
+
+def test_stanza_model_loader_is_disabled(tmp_path):
+    package = SimpleNamespace(
+        from_code='en',
+        package_path=tmp_path,
+        packaged_sbd_path=tmp_path / 'stanza',
+    )
+
+    translation = PackageTranslation(object(), object(), package)
+
+    assert settings.ARGOS_CHUNK_TYPE == 'MINISBD'
+    assert argos_settings.chunk_type is argos_settings.ChunkType.MINISBD
+    assert isinstance(translation.sentencizer, MiniSBDSentencizer)
