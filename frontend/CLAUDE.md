@@ -8,13 +8,13 @@
 - HTTP: **Axios** wrapped by a **single client** `src/services/request_http.js` (CSRF + JWT + auto-refresh).
 - i18n: **vue-i18n 9.14** with `src/locales/` organized by domain.
 - Styling: **Tailwind 4** + **Flowbite 3** + **Headless UI** + **Heroicons**.
-- Animations: **GSAP 3.13**.
+- Animations: **GSAP 3.15**.
 - Tests: **Jest** for unit, **Playwright** for E2E.
 
 ## Project Conventions
 - **Pinia stores use mixed API styles**: most use setup/Composition API (`defineStore('name', () => { ... })`); a few (i18nStore, reviewStore, contactStore) use Options API. Match the style of the store you're editing.
 - **Persisted state**: relevant slices (auth tokens, cart, currency, language) persist to localStorage via `pinia-plugin-persistedstate`.
-- **Single HTTP client**: all requests go through `frontend/src/services/request_http.js` — Axios with CSRF + JWT + `X-Currency` + `Accept-Language` headers and automatic token refresh on 401. Never call `fetch()` or raw `axios` directly.
+- **Single HTTP client**: all requests go through `frontend/src/services/request_http.js` — Axios with CSRF + JWT + `X-Currency` + `Accept-Language` headers and coordinated token refresh on 401. Never call `fetch()` or raw `axios` directly.
 - **Filename conventions**:
   - Pinia stores → camelCase (`authStore.js`, `productStore.js`, `cartStore.js`).
   - Components → PascalCase (`HomeView.vue`, `LoginView.vue`).

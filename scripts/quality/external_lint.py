@@ -320,7 +320,8 @@ class ExternalLintRunner:
 
         normalized = "\n".join(" ".join(item.strip().split()) for item in snippet)
         digest = hashlib.sha1(
-            normalized.encode("utf-8"), usedforsecurity=False
+            normalized.encode("utf-8"),
+            usedforsecurity=False,
         ).hexdigest()[:16]
         return digest
 

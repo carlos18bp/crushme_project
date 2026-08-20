@@ -2,28 +2,36 @@
 PayPal Order Views
 Handles PayPal payment integration for order creation
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from django.db import transaction
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 import logging
 import secrets
-import threading
 
-from ..models import Order, OrderItem
+from ..models import PaymentSession
 from ..serializers.order_serializers import OrderDetailSerializer
+from ..services.checkout_service import build_checkout_order
+from ..services.payment_session_service import (
+    mark_session_paid,
+    mark_session_processed,
+    payment_matches_session,
+)
 from ..services.paypal_service import paypal_service
-from ..services.woocommerce_order_service import woocommerce_order_service
-from ..services.email_service import email_service
+from ..throttles import (
+    PaymentConfirmRateThrottle,
+    PaymentCreateRateThrottle,
+    PublicSearchRateThrottle,
+)
 
 # Initialize logger
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def create_paypal_order_data(data_dict):
+def create_paypal_order_data(data_dict, authenticated_user=None, language='en'):
     """
     Create PayPal order from data dictionary (internal function)
 
@@ -38,284 +46,55 @@ def create_paypal_order_data(data_dict):
         Response-like object with status_code and data attributes
     """
     try:
-        # Extract data from dictionary
-        items = data_dict.get('items', [])
-        customer_name = data_dict.get('customer_name', 'Guest')
-        customer_email = data_dict.get('customer_email', '')
-        discount_code_raw = data_dict.get('discount_code', '')
-        discount_code = discount_code_raw.strip().upper() if discount_code_raw else ''
-
-        # Log received items for debugging
-        logger.info(f"📦 [PAYPAL] Received {len(items)} items from frontend")
-        if discount_code:
-            logger.info(f"🎟️ [PAYPAL] Discount code received: {discount_code}")
-        for idx, item in enumerate(items):
-            logger.info(f"  Item {idx + 1}: {item}")
-
-        # Validate items
-        if not items or len(items) == 0:
-            from rest_framework.response import Response
-            return Response({'error': 'Cart is empty'}, status=400)
-
-        # Filter out empty or invalid items and validate
-        valid_items = []
-        for item in items:
-            # Check if item has all required keys
-            if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
-                logger.warning(f"⚠️ Skipping invalid item (missing keys): {item}")
-                continue
-            
-            # Check if values are not empty/null
-            if not item.get('woocommerce_product_id') or not item.get('product_name'):
-                logger.warning(f"⚠️ Skipping item with empty values: {item}")
-                continue
-            
-            # Check if quantity and price are valid numbers
-            try:
-                quantity = int(item['quantity'])
-                unit_price = float(item['unit_price'])
-                
-                if quantity <= 0 or unit_price <= 0:
-                    logger.warning(f"⚠️ Skipping item with invalid quantity/price: {item}")
-                    continue
-                
-                valid_items.append(item)
-            except (ValueError, TypeError) as e:
-                logger.warning(f"⚠️ Skipping item with invalid numeric values: {item} - Error: {e}")
-                continue
-        
-        # Check if we have any valid items after filtering
-        if not valid_items:
-            from rest_framework.response import Response
-            return Response({
-                'error': 'No valid items in cart. All items were filtered out due to invalid data.'
-            }, status=400)
-        
-        # Replace items with valid_items
-        items = valid_items
-        logger.info(f"✅ Validated {len(items)} items for PayPal order")
-
-        # Get shipping info
+        order_data = build_checkout_order(
+            data_dict,
+            currency='USD',
+            authenticated_user=authenticated_user,
+            language=language,
+        )
         shipping_info = {
-            'name': customer_name,
-            'address_line_1': data_dict.get('shipping_address', ''),
-            'city': data_dict.get('shipping_city', ''),
-            'state': data_dict.get('shipping_state', ''),
-            'zipcode': data_dict.get('shipping_postal_code', ''),
-            'country': data_dict.get('shipping_country', 'CO'),
-            'phone': data_dict.get('phone_number', '')
+            'name': order_data['customer_name'],
+            'address_line_1': order_data['shipping_address'],
+            'city': order_data['shipping_city'],
+            'state': order_data['shipping_state'],
+            'zipcode': order_data['shipping_postal_code'],
+            'country': order_data['shipping_country'],
+            'phone': order_data['phone_number'],
         }
-
-        # Validate required shipping fields
-        if not all([shipping_info['address_line_1'], shipping_info['city'],
-                   shipping_info['state'], shipping_info['zipcode']]):
-            from rest_framework.response import Response
-            return Response({'error': 'Missing required shipping information'}, status=400)
-
-        # Build cart items for PayPal and calculate items_total
-        cart_items = []
-        items_total = 0
-        
-        for item in items:
-            item_price = round(float(item['unit_price']), 2)
-            item_quantity = item['quantity']
-            
-            cart_items.append({
-                'product_name': item['product_name'],
-                'quantity': item_quantity,
-                'unit_price': item_price,
-                'woocommerce_product_id': item['woocommerce_product_id']
-            })
-            
-            items_total += item_price * item_quantity
-        
-        items_total = round(items_total, 2)
-        
-        # Get values from frontend
-        shipping_cost = round(float(data_dict.get('shipping', 0)), 2)
-        total_amount = round(float(data_dict.get('total', 0)), 2)
-        
-        # Calculate discount amount: items_total + shipping - total
-        discount_amount = round(items_total + shipping_cost - total_amount, 2)
-        
-        # Validate discount code if provided (for usage tracking)
-        discount_percentage = 0
-        
-        if discount_code and discount_amount > 0:
-            from ..models import DiscountCode
-            try:
-                discount = DiscountCode.objects.get(code=discount_code, is_active=True)
-                
-                if discount.is_valid():
-                    discount_percentage = float(discount.discount_percentage)
-                    logger.info(f"✅ [PAYPAL] Discount code validated: {discount_code} ({discount_percentage}%)")
-                    logger.info(f"💰 [PAYPAL] Discount amount: ${discount_amount}")
-                    
-                    # Increment usage counter
-                    discount.increment_usage()
-                else:
-                    logger.warning(f"⚠️ [PAYPAL] Discount code invalid or expired: {discount_code}")
-            except DiscountCode.DoesNotExist:
-                logger.warning(f"⚠️ [PAYPAL] Discount code not found: {discount_code}")
-        
-        # Log para debugging
-        logger.info(f"💰 [PAYPAL] Items total: ${items_total}")
-        logger.info(f"💰 [PAYPAL] Shipping: ${shipping_cost}")
-        logger.info(f"💰 [PAYPAL] Discount: ${discount_amount}")
-        logger.info(f"💰 [PAYPAL] Total from frontend: ${total_amount}")
-        logger.info(f"💰 [PAYPAL] Validation: {items_total} + {shipping_cost} - {discount_amount} = {total_amount}")
-
-        # Create PayPal order
         paypal_result = paypal_service.create_order(
-            cart_items=cart_items,
+            cart_items=order_data['items'],
             shipping_info=shipping_info,
-            total_amount=total_amount,
-            shipping_cost=shipping_cost,
-            discount_amount=discount_amount
+            total_amount=order_data['total'],
+            shipping_cost=order_data['shipping'],
+            discount_amount=order_data['discount_amount'],
         )
 
         if paypal_result['success']:
-            # Store gift data and discount info in cache for later retrieval during capture
-            from django.core.cache import cache
-            gift_data = {
-                'is_gift': data_dict.get('is_gift', False),
-                'sender_username': data_dict.get('sender_username'),
-                'receiver_username': data_dict.get('receiver_username'),
-                'gift_message': data_dict.get('gift_message', ''),
-                'discount_code': discount_code if discount_code else None,
-                'discount_percentage': discount_percentage
-            }
-
-            # Store gift data with PayPal order ID as key (expires in 1 hour)
-            cache.set(f'gift_data_{paypal_result["order_id"]}', gift_data, 3600)
-
-            from rest_framework.response import Response
+            PaymentSession.objects.create(
+                provider=PaymentSession.PROVIDER_PAYPAL,
+                reference=paypal_result['order_id'],
+                external_id=paypal_result['order_id'],
+                expected_amount=order_data['total'],
+                currency='USD',
+                order_data=order_data,
+            )
             return Response({
                 'success': True,
                 'message': 'PayPal order created successfully',
                 'paypal_order_id': paypal_result['order_id'],
-                'total': str(total_amount),
-                'items_count': len(cart_items),
-                'discount_applied': bool(discount_code)
+                'total': order_data['total'],
+                'items_count': len(order_data['items']),
+                'discount_applied': bool(order_data['discount_code']),
             }, status=201)
-        else:
-            from rest_framework.response import Response
-            return Response({
-                'error': 'Failed to create PayPal order',
-                'details': paypal_result.get('error')
-            }, status=500)
-
-    except Exception as e:
-        from rest_framework.response import Response
+        return Response({'error': 'Failed to create PayPal order'}, status=502)
+    except ValidationError as exc:
         return Response({
-            'error': 'Internal server error',
-            'details': str(e)
-        }, status=500)
-
-
-def send_to_woocommerce_async(order_id, shipping_cost_cents=0):
-    """
-    Send order to WooCommerce in background thread
-    This prevents blocking the response to the frontend
-
-    Args:
-        order_id: ID of the order to send to WooCommerce
-        shipping_cost_cents: Shipping cost in cents for WooCommerce
-    """
-    import sys
-    import time
-
-    # Force flush to ensure logs appear immediately
-    print(f"\n{'='*80}", file=sys.stderr, flush=True)
-    print(f"🚀 [WOOCOMMERCE THREAD] Thread iniciado para Order ID: {order_id}", file=sys.stderr, flush=True)
-    print(f"{'='*80}\n", file=sys.stderr, flush=True)
-
-    try:
-        # Small delay to ensure the main transaction is committed
-        time.sleep(0.1)
-
-        print(f"📊 [WOOCOMMERCE THREAD] Obteniendo orden de la base de datos...", file=sys.stderr, flush=True)
-
-        # Check if order exists before trying to get it
-        if not Order.objects.filter(id=order_id).exists():
-            print(f"❌ [WOOCOMMERCE THREAD] Orden {order_id} no existe en la base de datos", file=sys.stderr, flush=True)
-            print(f"{'='*80}\n", file=sys.stderr, flush=True)
-            return
-
-        # Get the order (fresh query in this thread)
-        order = Order.objects.get(id=order_id)
-        
-        print(f"✅ [WOOCOMMERCE THREAD] Orden obtenida: {order.order_number}", file=sys.stderr, flush=True)
-        
-        logger.info("=" * 80)
-        logger.info(f"🔄 [WOOCOMMERCE SYNC] Iniciando sincronización...")
-        logger.info(f"📦 [WOOCOMMERCE SYNC] Orden Local: {order.order_number}")
-        logger.info(f"💰 [WOOCOMMERCE SYNC] Total: ${order.total}")
-        logger.info(f"📧 [WOOCOMMERCE SYNC] Cliente: {order.name} ({order.email})")
-        logger.info(f"📍 [WOOCOMMERCE SYNC] Destino: {order.city}, {order.state}, {order.country}")
-        
-        print(f"🔄 [WOOCOMMERCE THREAD] Enviando a WooCommerce...", file=sys.stderr, flush=True)
-        # Use shipping cost passed as parameter
-        print(f"📦 [WOOCOMMERCE THREAD] Shipping cost: {shipping_cost_cents} cents", file=sys.stderr, flush=True)
-        wc_result = woocommerce_order_service.send_order(order, shipping_cost=shipping_cost_cents)
-        
-        if wc_result['success']:
-            try:
-                # Update order with WooCommerce ID (check if order still exists)
-                if Order.objects.filter(id=order.id).exists():
-                    order.woocommerce_order_id = wc_result.get('woocommerce_order_id')
-                    order.save(update_fields=['woocommerce_order_id'])
-
-                    logger.info("=" * 80)
-                    logger.info(f"✅ [WOOCOMMERCE SYNC] ¡ORDEN ENVIADA EXITOSAMENTE!")
-                    logger.info(f"🆔 [WOOCOMMERCE SYNC] WooCommerce Order ID: {wc_result.get('woocommerce_order_id')}")
-                    logger.info(f"🔢 [WOOCOMMERCE SYNC] WooCommerce Order Number: {wc_result.get('woocommerce_order_number')}")
-                    logger.info(f"📦 [WOOCOMMERCE SYNC] Orden Local: {order.order_number}")
-                    logger.info(f"🔗 [WOOCOMMERCE SYNC] URL: {wc_result.get('woocommerce_url', 'N/A')}")
-                    logger.info("=" * 80)
-
-                    print(f"\n{'='*80}", file=sys.stderr, flush=True)
-                    print(f"✅ [WOOCOMMERCE THREAD] ÉXITO! WC Order ID: {wc_result.get('woocommerce_order_id')}", file=sys.stderr, flush=True)
-                    print(f"{'='*80}\n", file=sys.stderr, flush=True)
-                else:
-                    logger.warning(f"⚠️ [WOOCOMMERCE SYNC] Orden {order.order_number} ya no existe para actualizar ID de WooCommerce")
-                    logger.warning(f"🆔 [WOOCOMMERCE SYNC] WooCommerce Order ID: {wc_result.get('woocommerce_order_id')} (pero orden local eliminada)")
-
-                    print(f"\n{'='*80}", file=sys.stderr, flush=True)
-                    print(f"⚠️ [WOOCOMMERCE THREAD] Orden eliminada después de envío a WooCommerce", file=sys.stderr, flush=True)
-                    print(f"🆔 [WOOCOMMERCE THREAD] WC Order ID: {wc_result.get('woocommerce_order_id')}", file=sys.stderr, flush=True)
-                    print(f"{'='*80}\n", file=sys.stderr, flush=True)
-            except Exception as update_error:
-                logger.error(f"❌ [WOOCOMMERCE SYNC] Error actualizando orden con WC ID: {update_error}")
-
-                print(f"\n{'='*80}", file=sys.stderr, flush=True)
-                print(f"❌ [WOOCOMMERCE THREAD] Error actualizando orden: {update_error}", file=sys.stderr, flush=True)
-                print(f"{'='*80}\n", file=sys.stderr, flush=True)
-        else:
-            logger.error("=" * 80)
-            logger.error(f"❌ [WOOCOMMERCE SYNC] ERROR AL ENVIAR ORDEN")
-            logger.error(f"📦 [WOOCOMMERCE SYNC] Orden Local: {order.order_number}")
-            logger.error(f"⚠️  [WOOCOMMERCE SYNC] Error: {wc_result.get('error')}")
-            logger.error(f"📝 [WOOCOMMERCE SYNC] Detalles: {wc_result.get('details', 'N/A')}")
-            logger.error("=" * 80)
-            
-            print(f"\n{'='*80}", file=sys.stderr, flush=True)
-            print(f"❌ [WOOCOMMERCE THREAD] ERROR: {wc_result.get('error')}", file=sys.stderr, flush=True)
-            print(f"{'='*80}\n", file=sys.stderr, flush=True)
-            
-    except Exception as e:
-        logger.error("=" * 80)
-        logger.error(f"❌ [WOOCOMMERCE SYNC] EXCEPCIÓN EN THREAD")
-        logger.error(f"📦 [WOOCOMMERCE SYNC] Order ID: {order_id}")
-        logger.error(f"⚠️  [WOOCOMMERCE SYNC] Error: {str(e)}")
-        logger.error("=" * 80)
-        import traceback
-        logger.error(traceback.format_exc())
-        
-        print(f"\n{'='*80}", file=sys.stderr, flush=True)
-        print(f"❌ [WOOCOMMERCE THREAD] EXCEPCIÓN: {str(e)}", file=sys.stderr, flush=True)
-        print(f"{'='*80}\n", file=sys.stderr, flush=True)
-        traceback.print_exc(file=sys.stderr)
+            'error': 'Invalid checkout data',
+            'fields': exc.detail,
+        }, status=400)
+    except Exception:
+        logger.exception('[PAYPAL] Failed to create payment session')
+        return Response({'error': 'Internal server error'}, status=500)
 
 
 def get_or_create_user(email, name):
@@ -334,11 +113,11 @@ def get_or_create_user(email, name):
         user = User.objects.filter(email=email).first()
         
         if user:
-            logger.info(f"✅ Usuario existente encontrado: {email}")
+            logger.info('Existing checkout user resolved')
             return user
         
         # Email doesn't exist, create new user
-        logger.info(f"📝 Creando nuevo usuario para: {email}")
+        logger.info('Creating checkout user')
         
         # Generate username from email
         username_base = email.split('@')[0]
@@ -367,11 +146,11 @@ def get_or_create_user(email, name):
             last_name=last_name
         )
         
-        logger.info(f"✅ Nuevo usuario creado: {username} ({email})")
+        logger.info('Checkout user created')
         return user
         
-    except Exception as e:
-        logger.error(f"❌ Error al obtener/crear usuario: {str(e)}")
+    except Exception:
+        logger.exception('Checkout user resolution failed')
         raise
 
 
@@ -418,6 +197,7 @@ def _update_user_history_and_gifts(order, receiver_username=None):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentCreateRateThrottle])
 def create_paypal_order(request):
     """
     Step 1: Create PayPal order for payment (PUBLIC ENDPOINT)
@@ -448,315 +228,113 @@ def create_paypal_order(request):
     Returns PayPal order_id for frontend to show PayPal popup
     """
     # Convert request.data to dict and call helper function
-    result = create_paypal_order_data(dict(request.data))
+    result = create_paypal_order_data(
+        dict(request.data),
+        authenticated_user=request.user,
+        language=request.headers.get('Accept-Language', 'en'),
+    )
 
     if result.status_code == 201:
         logger.info(f"✅ PayPal order created: {result.data.get('paypal_order_id')}")
         return Response(result.data, status=status.HTTP_201_CREATED)
-    else:
-        logger.error(f"❌ PayPal order creation failed: {result.data}")
-        return Response(result.data, status=result.status_code)
+    logger.warning('PayPal order creation was rejected')
+    return Response(result.data, status=result.status_code)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@transaction.atomic
+@throttle_classes([PaymentConfirmRateThrottle])
 def capture_paypal_order(request):
-    """
-    Step 2: Capture PayPal payment and create order (PUBLIC ENDPOINT)
-    
-    This is called AFTER user approves payment in PayPal popup
-    
-    Request Body:
-    {
-        "paypal_order_id": "PAYPAL-ORDER-ID",
-        "customer_email": "customer@example.com",
-        "customer_name": "John Doe",
-        "items": [
-            {
-                "woocommerce_product_id": 1234,
-                "product_name": "Product Name",
-                "quantity": 2,
-                "unit_price": 25.99,
-                "variation_id": 5679  // Optional - for product variations
-            }
-        ],
-        "shipping_address": "Carrera 80 #50-25",
-        "shipping_address_line_2": "Apto 301",  // Optional - Additional address details
-        "shipping_city": "Medellín",
-        "shipping_state": "Antioquia",
-        "shipping_postal_code": "050031",
-        "shipping_country": "CO",
-        "phone_number": "+57 300 1234567",
-        "shipping": 15000,  // ← Costo de envío en pesos colombianos (opcional)
-        "notes": "Optional notes or additional delivery instructions",
-        "gift_message": "¡Feliz cumpleaños! Espero que te guste este regalo ❤️"
-    }
-    
-    Flow:
-    1. Capture PayPal payment
-    2. Get or create user account (auto-register if new email)
-    3. If successful → Create local order
-    4. Return immediate response to frontend (fast)
-    5. Send order to WooCommerce in background (slow, non-blocking)
-    
-    Note: WooCommerce sync happens asynchronously to prevent timeout issues.
-    """
+    """Capture a PayPal order after verifying its durable checkout session."""
+    paypal_order_id = request.data.get('paypal_order_id')
+    if not paypal_order_id:
+        return Response(
+            {'error': 'PayPal order ID is required'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     try:
-        paypal_order_id = request.data.get('paypal_order_id')
-        
-        if not paypal_order_id:
-            return Response({
-                'error': 'PayPal order ID is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Get cart items from request
-        items = request.data.get('items', [])
-        
-        if not items or len(items) == 0:
-            return Response({
-                'error': 'Cart is empty'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate items structure
-        for item in items:
-            if not all(key in item for key in ['woocommerce_product_id', 'product_name', 'quantity', 'unit_price']):
-                return Response({
-                    'error': 'Invalid item format'
-                }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # STEP 1: Capture PayPal payment
-        logger.info(f"Capturing PayPal payment: {paypal_order_id}")
+        session = PaymentSession.objects.select_related('order').get(
+            provider=PaymentSession.PROVIDER_PAYPAL,
+            external_id=paypal_order_id,
+        )
+    except PaymentSession.DoesNotExist:
+        return Response(
+            {'error': 'Payment session not found'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if session.status == PaymentSession.STATUS_PROCESSED and session.order:
+        return Response({
+            'success': True,
+            'message': 'Order already processed',
+            'order': OrderDetailSerializer(session.order).data,
+            'payment': {
+                'provider': PaymentSession.PROVIDER_PAYPAL,
+                'paypal_order_id': paypal_order_id,
+                'status': 'COMPLETED',
+            },
+        }, status=status.HTTP_200_OK)
+
+    try:
         capture_result = paypal_service.capture_order(paypal_order_id)
-        
         if not capture_result['success']:
-            logger.error(f"❌ PayPal capture failed: {capture_result.get('error')}")
+            logger.warning('[PAYPAL] Capture was not completed for order %s', paypal_order_id)
             return Response({
                 'error': 'Payment capture failed',
-                'details': capture_result.get('error'),
-                'paypal_status': 'FAILED'
+                'paypal_status': capture_result.get('status', 'FAILED'),
             }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Payment captured successfully!
-        logger.info(f"✅ PayPal payment captured: {paypal_order_id}")
-        
-        # Calculate total (productos + envío para orden local)
-        items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
-        shipping_cost = float(request.data.get('shipping', 0))
-        total_amount = items_total + shipping_cost
-        
-        # Get customer info
-        customer_email = request.data.get('customer_email', capture_result.get('payer_email', 'guest@example.com'))
-        customer_name = request.data.get('customer_name', capture_result.get('payer_name', 'Guest'))
-        
-        # STEP 2: Get or create user
-        user = get_or_create_user(customer_email, customer_name)
-        
-        # STEP 3: Try to get gift data from cache (from PayPal order creation)
-        from django.core.cache import cache
-        gift_data = cache.get(f'gift_data_{paypal_order_id}', {})
 
-        # STEP 3: Create local order (incluye costo de envío en el total)
-        shipping_cost_for_order = float(request.data.get('shipping', 0))
-        order_total_with_shipping = total_amount + shipping_cost_for_order
-        order = Order.objects.create(
-            user=user,  # Use obtained/created user
-            email=customer_email,
-            name=customer_name,
-            total=order_total_with_shipping,
-            address_line_1=request.data.get('shipping_address', ''),
-            address_line_2=request.data.get('shipping_address_line_2', ''),  # Capture address_line_2 from frontend
-            city=request.data.get('shipping_city', ''),
-            state=request.data.get('shipping_state', ''),
-            zipcode=request.data.get('shipping_postal_code', ''),
-            country=request.data.get('shipping_country', 'CO'),
-            phone=request.data.get('phone_number', ''),
-            notes=request.data.get('notes', ''),
-            gift_message=gift_data.get('gift_message', request.data.get('gift_message', '')),  # From cache or request
-            is_gift=gift_data.get('is_gift', request.data.get('is_gift', False)),  # From cache or request
-            sender_username=gift_data.get('sender_username', request.data.get('sender_username')),  # From cache or request
-            receiver_username=gift_data.get('receiver_username', request.data.get('receiver_username')),  # From cache or request
-            status='processing'  # Payment confirmed, processing order
-        )
-
-        # Clean up cache after successful order creation
-        if gift_data:
-            cache.delete(f'gift_data_{paypal_order_id}')
-        
-        # Create order items
-        for item in items:
-            OrderItem.objects.create(
-                order=order,
-                woocommerce_product_id=item['woocommerce_product_id'],
-                woocommerce_variation_id=item.get('variation_id'),  # Optional field
-                quantity=item['quantity'],
-                unit_price=item['unit_price'],
-                product_name=item['product_name'],
-                product_description=f"Price: ${item['unit_price']}"
+        if not payment_matches_session(
+            session,
+            capture_result.get('captured_amount'),
+            capture_result.get('currency'),
+        ):
+            logger.error('[PAYPAL] Rejected capture with mismatched amount or currency')
+            return Response(
+                {'error': 'Payment does not match checkout session'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        logger.info(f"✅ Order {order.order_number} created locally")
 
-        # STEP 4: Update user history and gift tracking
-        receiver_username_value = gift_data.get('receiver_username', request.data.get('receiver_username'))
-        _update_user_history_and_gifts(order, receiver_username_value)
-        
-        # STEP 4.5: Send email notifications
-        try:
-            # Get language from request (default to 'en')
-            lang = request.GET.get('lang', 'en')
-            
-            # PayPal always uses USD
-            currency = 'USD'
-            
-            # Prepare items for email (filter out dropshipping products)
-            from ..models import WooCommerceProduct
-            email_items = []
-            dropshipping_cost = 0
-            
-            for item in items:
-                # Check if product is dropshipping (ID 48500 or contains "dropshipping" in name)
-                is_dropshipping = (
-                    item.get('woocommerce_product_id') == 48500 or
-                    'dropshipping' in item.get('product_name', '').lower()
-                )
-                
-                if is_dropshipping:
-                    # Add dropshipping cost to shipping
-                    dropshipping_cost += float(item['unit_price']) * item['quantity']
-                    logger.info(f"📦 Dropshipping product found: {item['product_name']} - Adding ${dropshipping_cost} to shipping")
-                else:
-                    # Use product name from request (frontend sends it)
-                    product_name = item.get('product_name', 'Product')
-                    # Price with margin (unit_price already includes margin from frontend)
-                    unit_price = round(float(item['unit_price']), 2)
-                    logger.info(f"📧 Adding product to email: {product_name} x{item['quantity']} @ ${unit_price}")
-                    
-                    # Format price for USD (2 decimals)
-                    formatted_price = f"{unit_price:.2f}"
-                    
-                    # Add regular product to email items (name, quantity, and price)
-                    email_items.append({
-                        'name': product_name,
-                        'quantity': item['quantity'],
-                        'price': formatted_price
-                    })
-            
-            # Calculate shipping for email (includes dropshipping cost)
-            email_shipping = round(shipping_cost + dropshipping_cost, 2)
-            
-            # Calculate subtotal (only regular products)
-            email_subtotal = round(sum(float(item['unit_price']) * item['quantity'] for item in items if not (
-                item.get('woocommerce_product_id') == 48500 or 'dropshipping' in item.get('product_name', '').lower()
-            )), 2)
-            
-            # Format amounts for USD (2 decimals)
-            email_total = round(total_amount, 2)
-            
-            # DEBUG: Log email items
-            logger.info(f"📧 [EMAIL DEBUG] Items count: {len(email_items)}")
-            logger.info(f"📧 [EMAIL DEBUG] Items: {email_items}")
-            logger.info(f"📧 [EMAIL DEBUG] Subtotal: {email_subtotal}, Shipping: {email_shipping}, Total: {email_total}")
-            
-            # Send order confirmation to purchaser
-            email_service.send_order_confirmation(
-                to_email=customer_email,
-                order_number=order.order_number,
-                total=f"{email_total:.2f}",
-                subtotal=f"{email_subtotal:.2f}",
-                shipping=f"{email_shipping:.2f}",
-                currency=currency,
-                items=email_items,
-                username=user.username,
-                lang=lang
+        if not mark_session_paid(session, external_id=paypal_order_id):
+            return Response(
+                {'error': 'Payment session conflict'},
+                status=status.HTTP_409_CONFLICT,
             )
-            logger.info(f"📧 Order confirmation email sent to {customer_email} (lang: {lang}, currency: {currency})")
-            
-            # If it's a gift, send notifications
-            if order.is_gift and receiver_username_value:
-                try:
-                    receiver_user = User.objects.get(username=receiver_username_value)
-                    
-                    # Send gift received notification to receiver
-                    email_service.send_gift_received_notification(
-                        to_email=receiver_user.email,
-                        sender_username=user.username,
-                        gift_message=order.gift_message or '',
-                        order_number=order.order_number,
-                        username=receiver_user.username,
-                        lang=lang
-                    )
-                    logger.info(f"📧 Gift received notification sent to {receiver_user.email} (lang: {lang})")
-                    
-                    # Send gift sent confirmation to sender
-                    email_service.send_gift_sent_confirmation(
-                        to_email=customer_email,
-                        receiver_username=receiver_user.username,
-                        order_number=order.order_number,
-                        username=user.username,
-                        lang=lang
-                    )
-                    logger.info(f"📧 Gift sent confirmation sent to {customer_email} (lang: {lang})")
-                    
-                except User.DoesNotExist:
-                    logger.warning(f"⚠️ Receiver user {receiver_username_value} not found for gift notifications")
-        except Exception as e:
-            logger.error(f"❌ Error sending email notifications: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
-            # Don't fail the order if email fails
 
-        # STEP 5: Send order to WooCommerce in background (non-blocking)
-        # This prevents timeout issues - WooCommerce sync can take time
+        from .order_helpers import process_order_after_payment
 
-        # Build response first (immediate, doesn't wait for WooCommerce)
-        order_serializer = OrderDetailSerializer(order)
-
-        response_data = {
-            'success': True,
-            'message': 'Order created successfully',
-            'order': order_serializer.data,
-            'payment': {
-                'provider': 'paypal',
-                'paypal_order_id': paypal_order_id,
-                'status': capture_result.get('status'),
-                'payer_email': capture_result.get('payer_email'),
-                'payer_name': capture_result.get('payer_name')
-            },
-            'woocommerce_integration': {
-                'status': 'pending',
-                'message': 'Order is being sent to WooCommerce in background'
-            }
+        payment_info = {
+            'transaction_id': capture_result.get('capture_id') or paypal_order_id,
+            'status': capture_result.get('status'),
+            'payer_email': capture_result.get('payer_email'),
+            'payer_name': capture_result.get('payer_name'),
         }
-
-        # Start WooCommerce sync in background AFTER building response
-        # This ensures the transaction is committed before the thread tries to read
-        shipping_cost_cents = int(request.data.get('shipping', 0))
-        woocommerce_thread = threading.Thread(
-            target=send_to_woocommerce_async,
-            args=(order.id, shipping_cost_cents),
-            name=f"WooCommerce-Sync-{order.order_number}"
+        result = process_order_after_payment(
+            request_data=session.order_data,
+            payment_info=payment_info,
+            payment_provider=PaymentSession.PROVIDER_PAYPAL,
+            lang=session.order_data.get('language', 'en'),
         )
-        woocommerce_thread.daemon = False  # Allow thread to complete even if main thread ends
-
-        logger.info(f"🔧 [DEBUG] Iniciando thread DESPUÉS de preparar respuesta...")
-        woocommerce_thread.start()
-        logger.info(f"🔧 [DEBUG] Thread iniciado! Thread name: {woocommerce_thread.name}, is_alive: {woocommerce_thread.is_alive()}")
-
-        logger.info(f"⏳ WooCommerce sync started in background for order {order.order_number}")
-
-        return Response(response_data, status=status.HTTP_201_CREATED)
-    
-    except Exception as e:
-        logger.error(f"❌ Error capturing PayPal order: {str(e)}")
-        return Response({
-            'error': 'Internal server error',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if result.status_code in {status.HTTP_200_OK, status.HTTP_201_CREATED}:
+            if not mark_session_processed(session, result):
+                logger.error('[PAYPAL] Could not link processed order to payment session')
+                return Response(
+                    {'error': 'Payment was captured but order finalization failed'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        return result
+    except Exception:
+        logger.exception('[PAYPAL] Unexpected capture processing failure')
+        return Response(
+            {'error': 'Internal server error'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_paypal_config(request):
     """
     Get PayPal configuration for frontend (PUBLIC ENDPOINT)
@@ -769,79 +347,3 @@ def get_paypal_config(request):
         'currency': 'USD',  # Cambiar según tu moneda
         'mode': settings.PAYPAL_MODE
     }, status=status.HTTP_200_OK)
-
-
-def test_paypal_woocommerce_flow():
-    """
-    Función de prueba para verificar el flujo completo
-    Crea una orden de prueba y la envía a WooCommerce
-    """
-    from decimal import Decimal
-
-    print("🧪 Iniciando prueba del flujo completo...")
-
-    # Crear orden de prueba
-    order = Order.objects.create(
-        user=User.objects.first() if User.objects.exists() else User.objects.create_user(
-            username='test_user', email='test@example.com', password='test123'
-        ),
-        email='test@example.com',
-        name='Usuario de Prueba',
-        total=Decimal('100.00'),
-        address_line_1='Carrera 80 #50-25',
-        city='Medellín',
-        state='Antioquia',
-        zipcode='050031',
-        country='CO',
-        phone='+57 300 1234567',
-        status='processing'
-    )
-
-    # Crear item de prueba
-    OrderItem.objects.create(
-        order=order,
-        woocommerce_product_id=123,
-        quantity=1,
-        unit_price=Decimal('100.00'),
-        product_name='Producto de Prueba'
-    )
-
-    print(f"📦 Orden de prueba creada: {order.order_number} (ID: {order.id})")
-    print(f"🎁 is_gift: {order.is_gift}")
-    print(f"👤 sender_username: {order.sender_username}")
-    print(f"🎯 receiver_username: {order.receiver_username}")
-    print(f"💌 gift_message: {order.gift_message}")
-
-    # Simular el flujo del hilo de WooCommerce
-    print("🔄 Simulando envío a WooCommerce...")
-
-    # Probar envío a WooCommerce con costo de envío real
-    shipping_cost_cents = int(request.data.get('shipping', 0))
-    result = woocommerce_order_service.send_order(order, shipping_cost=shipping_cost_cents)
-
-    if result['success']:
-        print(f"✅ Orden enviada exitosamente a WooCommerce")
-        print(f"🆔 WooCommerce Order ID: {result['woocommerce_order_id']}")
-
-        # Actualizar orden local
-        order.woocommerce_order_id = result['woocommerce_order_id']
-        order.save(update_fields=['woocommerce_order_id'])
-        print("✅ Orden local actualizada con ID de WooCommerce")
-
-        # Verificar que la orden existe en la base de datos
-        check_order = Order.objects.filter(id=order.id).first()
-        if check_order:
-            print(f"✅ Orden verificada en BD: {check_order.order_number}")
-            print(f"🆔 WC ID en BD: {check_order.woocommerce_order_id}")
-            print(f"🎁 is_gift en BD: {check_order.is_gift}")
-            print(f"👤 sender_username en BD: {check_order.sender_username}")
-            print(f"🎯 receiver_username en BD: {check_order.receiver_username}")
-            print(f"💌 gift_message en BD: {check_order.gift_message}")
-        else:
-            print("❌ Orden no encontrada en BD después de actualizar")
-    else:
-        print(f"❌ Error enviando orden a WooCommerce: {result['error']}")
-
-    print("✅ Prueba completada")
-    return order
-

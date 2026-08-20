@@ -7,7 +7,7 @@ modernization.
 
 ## Stack
 
-- Python 3.12, Django 5.1.5, Django REST Framework 3.15
+- Python 3.12, Django 5.2.17, Django REST Framework 3.18
 - Vue 3.5, Vite 7, Pinia 3, Vue Router, vue-i18n
 - MySQL 8, Redis, Huey, Gunicorn, Nginx
 - WooCommerce catalog mirror with offline ES/EN translation
@@ -22,7 +22,7 @@ emails/               Bilingual email source templates
 docs/                 Architecture, standards, audits, and roadmap
 tasks/                Active context and backlog
 .agents/ .claude/     Codex and Claude skills/configuration
-.codex/              Codex project configuration
+.codex/               Codex project configuration
 ```
 
 The Python environment is `backend/venv_cpu/`; there is no `backend/venv/`.
@@ -69,15 +69,16 @@ npx playwright test e2e/path/to/flow.spec.js
 npm run build
 ```
 
-The current fake-data commands predate the modernization guard. Do not run them
-outside an isolated local database; Wave 2 adds an enforced production refusal.
+Fake-data commands enforce a production refusal before reading or mutating
+rows. They still belong only in an isolated development database.
 
 ## Environments
 
 | Environment | Settings | Data/integrations |
 |---|---|---|
 | Development | `crushme_project.settings` | Local DB; sandbox defaults |
-| Current pytest | `crushme_project.settings` | Must be supplied an isolated local environment |
+| Pytest | `crushme_project.settings_test` | Isolated SQLite/cache/Huey/email; disabled gateways |
+| Playwright E2E | `crushme_project.settings_e2e` | Isolated SQLite and seeded E2E data |
 | Production | `crushme_project.settings` + `DJANGO_ENV=production` | Production MySQL/Redis and explicit live credentials |
 
 ## Documentation
@@ -85,6 +86,7 @@ outside an isolated local database; Wave 2 adds an enforced production refusal.
 - [Modernization roadmap](docs/MODERNIZATION_ROADMAP.md)
 - [Architecture](docs/methodology/architecture.md)
 - [Technical context](docs/methodology/technical.md)
+- [Wave 3 vulnerability report](audit-report.md)
 - [Testing standard](docs/TESTING_QUALITY_STANDARDS.md)
 - [Deployment guide](docs/deployment-guide.md)
 - [Active work](tasks/active_context.md)

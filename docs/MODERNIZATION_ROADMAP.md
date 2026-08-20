@@ -51,9 +51,17 @@ will not be merged wholesale.
 ## Execution Status
 
 - Wave 0: complete through PR #4; accidental staging retired and disk gate met.
-- Wave 1: complete in its dedicated PR; all three AI ecosystems and the Memory
-  Bank are synchronized without runtime changes.
-- Waves 2-6: pending their independent PRs and gates.
+- Wave 1: complete through PR #5; Codex, Claude Code, and the Memory Bank are
+  synchronized without runtime changes. Windsurf was subsequently retired
+  fleet-wide through PR #9.
+- Wave 2: complete through PR #6; repository cleanup, hermetic test settings,
+  guarded fake data, six partitioned CI jobs, lint, and test-quality foundations
+  are on `main`.
+- Wave 3: implementation complete on its dedicated branch. Dependency audits,
+  application hardening, fresh backups, restore rehearsals, and production
+  database credential rotation passed. CI, merge, and controlled application
+  deployment remain.
+- Waves 4-6: pending their independent PRs and gates.
 
 ## Wave Delivery
 

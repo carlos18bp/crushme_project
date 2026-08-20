@@ -2,15 +2,15 @@
 Gift sending views for CrushMe e-commerce application
 Handles gift sending between users with shipping verification
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 
 from ..models import UserAddress
 from .paypal_order_views import create_paypal_order_data
+from ..throttles import PaymentCreateRateThrottle
 import logging
 
 User = get_user_model()
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentCreateRateThrottle])
 def send_gift(request):
     """
     Send a gift to another user
@@ -69,7 +70,6 @@ def send_gift(request):
                 'missing_fields': shipping_info['missing_fields'],
                 'user_info': {
                     'username': receiver_user.username,
-                    'email': receiver_user.email,
                     'has_shipping_address': shipping_info['has_address']
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -94,23 +94,11 @@ def send_gift(request):
         if discount_code:
             logger.info(f"🎟️ [GIFT] Discount code received: {discount_code}")
 
-        # Get shipping cost from request
-        shipping_cost = round(float(request.data.get('shipping', 0)), 2)
-        
-        # Calculate total (items + shipping)
-        items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
-        items_total = round(items_total, 2)
-        total_amount = round(items_total + shipping_cost, 2)
-        
-        # Log for debugging
-        logger.info(f"🎁 [GIFT] Items total: {items_total}, Shipping: {shipping_cost}, Total: {total_amount}")
-
         # Prepare PayPal order data using receiver's shipping info
         paypal_data = {
             'customer_email': receiver_user.email,
             'customer_name': receiver_user.get_full_name() or receiver_username,
             'items': items,
-            'shipping': shipping_cost,
             'shipping_address': shipping_info['address']['address_line_1'],
             'shipping_city': shipping_info['address']['city'],
             'shipping_state': shipping_info['address']['state'],
@@ -126,31 +114,35 @@ def send_gift(request):
         }
 
         # Create PayPal order
-        paypal_response = create_paypal_order_for_gift(paypal_data)
+        paypal_response = create_paypal_order_for_gift(
+            paypal_data,
+            authenticated_user=request.user,
+            language=request.headers.get('Accept-Language', 'en'),
+        )
 
         if paypal_response.status_code == 201:
             return Response({
                 'success': True,
                 'message': f'Gift order created successfully for {receiver_username}',
                 'paypal_order_id': paypal_response.data.get('paypal_order_id'),
-                'total': str(total_amount),
+                'total': paypal_response.data.get('total'),
                 'receiver_info': {
                     'username': receiver_username,
-                    'email': receiver_user.email,
                     'name': receiver_user.get_full_name()
                 }
             }, status=status.HTTP_201_CREATED)
         else:
-            return Response({
-                'error': 'Failed to create PayPal order',
-                'details': paypal_response.data
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                paypal_response.data,
+                status=paypal_response.status_code,
+            )
 
-    except Exception as e:
-        return Response({
-            'error': 'Internal server error',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception('Gift checkout preparation failed')
+        return Response(
+            {'error': 'Internal server error'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 def _get_user_shipping_info(user):
@@ -223,8 +215,12 @@ def _get_user_shipping_info(user):
     }
 
 
-def create_paypal_order_for_gift(paypal_data):
+def create_paypal_order_for_gift(paypal_data, authenticated_user=None, language='en'):
     """
     Create PayPal order for gift using the helper function
     """
-    return create_paypal_order_data(paypal_data)
+    return create_paypal_order_data(
+        paypal_data,
+        authenticated_user=authenticated_user,
+        language=language,
+    )

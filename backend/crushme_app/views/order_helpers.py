@@ -4,15 +4,16 @@ Shared logic for order processing across different payment providers (PayPal, Wo
 """
 from rest_framework.response import Response
 from rest_framework import status
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.db.models import F
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 import logging
-import threading
 
 from ..models import Order, OrderItem, Feed
 from ..serializers.order_serializers import OrderDetailSerializer
 from ..services.email_service import email_service
-from ..services.translation_service import get_language_from_request
+from ..tasks import sync_order_to_woocommerce
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -39,6 +40,25 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
         Response object with order data or error
     """
     try:
+        transaction_id = payment_info.get('transaction_id')
+        if not transaction_id:
+            return Response({
+                'error': 'Payment transaction ID is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        existing_order = Order.objects.filter(transaction_id=transaction_id).first()
+        if existing_order:
+            return Response({
+                'success': True,
+                'message': 'Order already processed',
+                'order': OrderDetailSerializer(existing_order).data,
+                'payment': {
+                    'provider': payment_provider,
+                    'transaction_id': transaction_id,
+                    'status': payment_info.get('status'),
+                },
+            }, status=status.HTTP_200_OK)
+
         # Get cart items from request
         items = request_data.get('items', [])
         
@@ -54,10 +74,14 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                     'error': 'Invalid item format'
                 }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Calculate total (productos + envío)
+        # The checkout service already computed the discounted, gateway-verified total.
         items_total = sum(float(item['unit_price']) * item['quantity'] for item in items)
         shipping_cost = float(request_data.get('shipping', 0))
-        total_amount = items_total + shipping_cost
+        total_amount = float(request_data.get('total', items_total + shipping_cost))
+        if total_amount <= 0:
+            return Response({
+                'error': 'Invalid order total'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         # Get customer info (from request or payment info)
         customer_email = request_data.get('customer_email', payment_info.get('payer_email', 'guest@example.com'))
@@ -69,7 +93,6 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
         
         # STEP 2: Get gift data from cache (if exists)
         from django.core.cache import cache
-        transaction_id = payment_info.get('transaction_id')
         gift_data = cache.get(f'gift_data_{transaction_id}', {})
         
         # STEP 3: Create local order
@@ -105,13 +128,25 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                 OrderItem.objects.create(
                     order=order,
                     woocommerce_product_id=item['woocommerce_product_id'],
-                    woocommerce_variation_id=item.get('variation_id'),
+                    woocommerce_variation_id=(
+                        item.get('woocommerce_variation_id')
+                        or item.get('variation_id')
+                    ),
                     quantity=item['quantity'],
                     unit_price=item['unit_price'],
                     product_name=item['product_name'],
                     product_description=f"Price: ${item['unit_price']}"
                 )
             
+            discount_code = request_data.get('discount_code')
+            if discount_code:
+                from ..models import DiscountCode
+
+                DiscountCode.objects.filter(code=discount_code).update(
+                    times_used=F('times_used') + 1,
+                    updated_at=timezone.now(),
+                )
+
             logger.info(f"✅ Order {order.order_number} created locally")
         
         # STEP 4: Remove purchased items from wishlist (if purchase is from wishlist)
@@ -140,7 +175,6 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
             currency = 'COP' if payment_provider == 'wompi' else 'USD'
             
             # Prepare items for email (filter out dropshipping products)
-            from ..models import WooCommerceProduct
             email_items = []
             dropshipping_cost = 0
             
@@ -160,8 +194,6 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                     product_name = item.get('product_name', 'Product')
                     # Price with margin (unit_price already includes margin from frontend)
                     unit_price = float(item['unit_price'])
-                    logger.info(f"📧 Adding product to email: {product_name} x{item['quantity']} @ ${unit_price}")
-                    
                     # Format price based on currency
                     if currency == 'COP':
                         formatted_price = f"{int(round(unit_price))}"
@@ -207,7 +239,10 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                 username=user.username,
                 lang=lang
             )
-            logger.info(f"📧 Order confirmation email sent to {customer_email} (lang: {lang}, currency: {currency})")
+            logger.info(
+                'Order confirmation email accepted for order %s',
+                order.order_number,
+            )
             
             # Create feed entry for order confirmation
             try:
@@ -233,7 +268,10 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                         username=receiver_user.username,
                         lang=lang
                     )
-                    logger.info(f"📧 Gift received notification sent to {receiver_user.email}")
+                    logger.info(
+                        'Gift recipient notification accepted for order %s',
+                        order.order_number,
+                    )
                     
                     # Create feed entry for gift received
                     try:
@@ -254,7 +292,10 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                         username=user.username,
                         lang=lang
                     )
-                    logger.info(f"📧 Gift sent confirmation sent to {customer_email}")
+                    logger.info(
+                        'Gift sender notification accepted for order %s',
+                        order.order_number,
+                    )
                     
                     # Create feed entry for gift sent
                     try:
@@ -269,13 +310,11 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
                     
                 except User.DoesNotExist:
                     logger.warning(f"⚠️ Receiver user {receiver_username} not found for gift notifications")
-        except Exception as e:
-            logger.error(f"❌ Error sending email notifications: {str(e)}")
+        except Exception:
+            logger.exception('Order notification processing failed')
             # Don't fail the order if email fails
         
         # STEP 6: Send order to WooCommerce in background (non-blocking)
-        from .paypal_order_views import send_to_woocommerce_async
-        
         # Build response first (immediate, doesn't wait for WooCommerce)
         order_serializer = OrderDetailSerializer(order)
         
@@ -297,25 +336,29 @@ def process_order_after_payment(request_data, payment_info, payment_provider='pa
         }
         
         # Start WooCommerce sync in background
-        shipping_cost_cents = int(request_data.get('shipping', 0))
-        woocommerce_thread = threading.Thread(
-            target=send_to_woocommerce_async,
-            args=(order.id, shipping_cost_cents),
-            name=f"WooCommerce-Sync-{order.order_number}"
+        shipping_cost_value = request_data.get('shipping', '0')
+        transaction.on_commit(
+            lambda: sync_order_to_woocommerce(order.id, str(shipping_cost_value))
         )
-        woocommerce_thread.daemon = False
-        
-        logger.info(f"🔧 [ORDER HELPER] Iniciando thread WooCommerce para orden {order.order_number}")
-        woocommerce_thread.start()
-        logger.info(f"⏳ WooCommerce sync started in background for order {order.order_number}")
         
         return Response(response_data, status=status.HTTP_201_CREATED)
     
-    except Exception as e:
-        logger.error(f"❌ Error processing order after payment: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
+    except IntegrityError:
+        existing_order = Order.objects.filter(
+            transaction_id=payment_info.get('transaction_id')
+        ).first()
+        if existing_order:
+            return Response({
+                'success': True,
+                'message': 'Order already processed',
+                'order': OrderDetailSerializer(existing_order).data,
+            }, status=status.HTTP_200_OK)
+        logger.exception('Payment order persistence conflict')
         return Response({
-            'error': 'Internal server error',
-            'details': str(e)
+            'error': 'Order persistence conflict'
+        }, status=status.HTTP_409_CONFLICT)
+    except Exception:
+        logger.exception('Order post-payment processing failed')
+        return Response({
+            'error': 'Internal server error'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

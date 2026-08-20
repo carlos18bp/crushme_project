@@ -915,11 +915,8 @@ function getImageUrl(imagePath) {
   if (imagePath.startsWith('http')) {
     return imagePath
   }
-  // Otherwise, prepend the API base URL
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  // Remove /api from base URL if exists for media files
-  const mediaBaseUrl = baseUrl.replace('/api', '')
-  return `${mediaBaseUrl}${imagePath}`
+  // Relative media URLs work through Vite's dev proxy and Django/Nginx in deploys.
+  return imagePath.startsWith('/') ? imagePath : `/${imagePath}`
 }
 
 function removeExistingPhoto(photoId) {
@@ -1306,4 +1303,3 @@ async function handleSubmit() {
   font-family: 'Comfortaa', cursive;
 }
 </style>
-

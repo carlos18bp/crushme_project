@@ -26,18 +26,17 @@ These instructions extend the root `AGENTS.md` for files under `backend/`.
 - Verify webhook signatures before changing order state. Webhook endpoints are
   the only acceptable CSRF exemptions.
 - Long-running and periodic work uses Huey. Production uses Redis DB 2; tests
-  must isolate or mock that boundary until dedicated test settings land.
+  use in-memory immediate Huey or mock only the external boundary.
 
 ## Settings
 
 - Shared settings: `crushme_project.settings`.
 - Production: `DJANGO_ENV=production` with the shared module.
 - Development: shared module with the default `settings_dev` override.
-- Tests currently use the shared module declared in `pytest.ini`; they must run
-  with isolated local resources until Wave 2 adds dedicated settings.
+- Backend tests select `settings_test.py`; E2E selects `settings_e2e.py`.
 - Never let tests inherit `backend/.env` deployment resources.
-- Never run fake-data commands against production; Wave 2 adds a code-level
-  refusal before any rows are read or mutated.
+- Never run fake-data commands against production; code-level guards refuse
+  before any rows are read or mutated.
 
 ## Security
 
@@ -66,8 +65,8 @@ The runtime venv is `backend/venv_cpu/`, not `backend/venv/`.
 
 - Never run the full suite. Run at most 20 tests per invocation and no more
   than three test commands per cycle.
-- Tests must use isolated local data and sandboxed integrations; dedicated
-  SQLite/cache/Huey settings are delivered in Wave 2.
+- Tests must use isolated SQLite/cache/Huey/email data and disabled or sandboxed
+  integrations.
 - One test verifies one observable behavior. Use Arrange/Act/Assert, deterministic
   data, and mocks only at system boundaries.
 - Add regression coverage for authorization, payment/webhook idempotency,

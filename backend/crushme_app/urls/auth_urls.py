@@ -6,13 +6,14 @@ Handles user registration, login, password management, and profile updates
 from django.urls import path
 from ..views.auth_views import (
     signup, verify_email, resend_verification_code, login, 
-    forgot_password, reset_password, google_login,
+    forgot_password, reset_password,
     update_profile, update_password, guest_checkout,
     get_user_profile, check_username_availability, check_guest_user,
     request_crush_verification, cancel_crush_request,
     get_crush_public_profile, get_random_crush, search_users, list_crushes,
     get_random_crushes
 )
+from ..views.token_views import logout, refresh_token
 
 urlpatterns = [
     # User registration flow
@@ -22,6 +23,8 @@ urlpatterns = [
     
     # User authentication
     path('login/', login, name='login'),
+    path('logout/', logout, name='logout'),
+    path('token/refresh/', refresh_token, name='token_refresh'),
     
     # Password recovery
     path('forgot-password/', forgot_password, name='forgot_password'),
@@ -48,6 +51,4 @@ urlpatterns = [
     path('crush/list/', list_crushes, name='list_crushes'),
     path('search/', search_users, name='search_users'),
     
-    # OAuth2 login
-    path('google_login/', google_login, name='google_login'),
 ]

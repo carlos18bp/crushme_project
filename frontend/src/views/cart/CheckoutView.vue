@@ -1013,16 +1013,24 @@ const loadPayPalScript = async () => {
 
     console.log('💳 [PAYPAL] Cargando SDK...');
     
-    // Usar client ID desde vite.config.js
-    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    if (!paymentStore.hasPayPalConfig) {
+      const configResult = await paymentStore.fetchPayPalConfig();
+      if (!configResult.success) {
+        throw new Error(configResult.error || 'PayPal configuration is unavailable');
+      }
+    }
+
+    const clientId = paymentStore.paypalClientId;
+    if (!clientId) {
+      throw new Error('PayPal client ID is unavailable');
+    }
+
     const currency = currencyStore.currentCurrency; // USD
-    
-    console.log('💳 [PAYPAL] Client ID:', clientId);
     console.log('💳 [PAYPAL] Currency:', currency);
     
     const script = document.createElement('script');
     // SDK v6 - Parámetros simplificados (buyer-country y enable-funding causan error 400)
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&components=buttons`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&components=buttons`;
     script.setAttribute('data-sdk-integration-source', 'developer-studio');
     
     script.onload = () => {
