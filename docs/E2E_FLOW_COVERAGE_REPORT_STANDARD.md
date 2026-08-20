@@ -821,7 +821,7 @@ The terminal report contains up to **six sections**. Some sections are **conditi
 - **Always displayed.** Groups all flows by their `module` field and shows a progress bar.
 - Modules are sorted alphabetically.
 - Color coding: red (<20%), orange (20–39%), yellow (40–59%), green (60–79%), bright green (≥80%).
-- **Module-scoped runs:** if you tag tests with `@module:<name>`, you can run a single module via Playwright `--grep` (e.g., `npx playwright test --grep @module:auth`). When a subset is executed, the report will still list other modules as missing because their flows were not run.
+- **Module-scoped runs:** If tests include `@module:<name>` tags, you can filter a single module with Playwright's `--grep` (e.g., `npx playwright test --grep @module:auth`). When running a subset, the report will list other modules/flows as missing because they were not executed.
 
 ### 9.6 Tests Without Flow Tag (conditional)
 
@@ -1030,15 +1030,15 @@ The JSON file is a **build artifact**, not source code. Generate it fresh on eve
 
 ### What is NOT a user flow
 
-Not every quality concern qualifies as a user flow. The following are **design quality attributes**, not user journeys, and must not be defined as flow IDs in `flow-definitions.json`:
+Responsive/viewport layout is a **design quality attribute**, not a user journey. Do not define flow IDs for cross-cutting concerns like responsive layout, performance, or accessibility.
 
-| Concern | Why it is not a flow | Correct validation approach |
+| Concern | Why it is NOT a flow | Correct validation approach |
 |---|---|---|
-| Responsive/viewport layout | Cross-cutting design property with no user-initiated action | Playwright multi-project viewports (`devices["Pixel 5"]`, `devices["iPad Mini"]`) |
-| Performance (load time, LCP) | Non-functional metric, not a user journey | Lighthouse CI or Web Vitals monitoring |
-| Accessibility (a11y) | Cross-cutting compliance requirement | axe-core integration or Playwright accessibility snapshots |
+| Responsive layout | Design property — no user action or observable state change | Playwright multi-project viewports (§3.9.4.8 in `DJANGO_VUE_ARCHITECTURE_STANDARD.md`) |
+| Performance budgets | Non-functional requirement | Lighthouse CI, Web Vitals |
+| Accessibility compliance | Non-functional requirement | axe-core, Playwright accessibility snapshots |
 
-**Exception:** If a viewport change triggers **different behavior** (e.g., mobile hamburger menu replaces desktop nav bar), that specific interaction **is** a flow and belongs in the relevant functional module (e.g., `e2e/components/layouts/mobile.spec.js` tagged with `@flow:layout-header-mobile-menu`).
+**Exception:** If a viewport change triggers different **behavior** (e.g., a mobile hamburger menu replaces the desktop navbar, a sidebar collapses), that specific interaction **is** a flow and belongs in the relevant functional module (e.g., `e2e/navigation/navigation-mobile-menu.spec.js`).
 
 ---
 

@@ -1,5 +1,13 @@
 # Architecture - CrushMe
 
+## Standards Relationship
+
+The normative development baseline is the six-document Base Vue snapshot
+recorded in `.standards-baseline.json`. Project-specific architecture and
+allowed legacy differences are defined in
+`docs/CRUSHME_ARCHITECTURE_PROFILE.md`. This methodology file describes the
+current implementation; it does not override either source.
+
 ## System Overview
 
 ```text

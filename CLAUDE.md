@@ -230,6 +230,16 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Backend fixtures in `backend/conftest.py`: `api_client`, `user`, `admin_user`, `authenticated_client`, `admin_client`.
 - Pre-commit hook: `test-quality-gate` runs on staged test files with `--semantic-rules strict`.
 
+## Standards Contract
+- Canonical development standards are the six hashed documents listed in
+  `.standards-baseline.json`, sourced from Base Vue commit `c580ea8`.
+- `docs/CRUSHME_ARCHITECTURE_PROFILE.md` maps generic template examples to the
+  real CrushMe architecture and runtime without relaxing security or testing.
+- Never edit a canonical standard only in CrushMe. Update Base Vue first, copy
+  the approved file, update the manifest, and run
+  `python3 scripts/check_standards_baseline.py --repo-root .`.
+- Preserve the precedence and deviation rules in the project profile.
+
 ## Architecture
 
 ### Backend — Single Django App (`crushme_app`)

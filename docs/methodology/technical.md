@@ -42,6 +42,9 @@
 - Frontend: Jest, Vue Test Utils, Playwright, ESLint, npm audit.
 - Repository: pre-commit, detect-secrets, semantic test-quality gate, six
   partitioned GitHub Actions jobs, and a MySQL auth-concurrency regression.
+- Standards: `.standards-baseline.json` pins the Base Vue source commit and
+  `scripts/check_standards_baseline.py` rejects missing or modified canonical
+  documents in pre-commit and CI.
 
 ## Key Decisions
 
