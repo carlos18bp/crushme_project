@@ -1,10 +1,83 @@
 ---
 name: server-diagnostic
 description: "Diagnóstico integral del servidor de producción basado en las 15 buenas prácticas para servidores saludables"
-allowed-tools: Bash
+argument-hint: "[--target=<alias>|local] [--all-vps] [--no-pause]"
+allowed-tools: Bash, AskUserQuestion
 ---
+
+## Cuándo usar cuál (familia de auditoría)
+
+| Skill | Úsala cuando | Cadencia típica |
+|---|---|---|
+| `/full-audit` | Veredicto integral 🟢/🟡/🔴 del VPS o del fleet (`--all`): configs, drift, envs, timers, health, email — 12 fases automatizadas, ~4 min | Post-cambio grande, post-incidente, trimestral |
+| `/server-diagnostic` | Informe profundo por las 15 buenas prácticas con score y recomendaciones por proyecto — más narrativo y granular que full-audit | Semanal automático (cron) / a demanda |
+| `/vuln-audit` | Dependencias y CVEs de UN proyecto (pip + npm), con updates aplicados | Por proyecto, mensual o ante CVE |
+
+No se orquestan entre sí (cada una es independiente); full-audit NO corre a las otras dos.
+
 # DIAGNÓSTICO INTEGRAL DE SERVIDOR DE PRODUCCIÓN
 ## Basado en las 15 Buenas Prácticas para Servidores Saludables
+---
+
+## Cómo invocar este skill
+
+Gating ([[_output-protocol]] §4): (1) flags explícitos → ejecutar directo, sin
+menú; (2) intención clara por la sesión (p.ej. "diagnosticá vps-gym" →
+`--target=vps-gym`) → proponer el comando en una línea y esperar confirmación;
+(3) sin argumentos / intención difusa → UNA sola AskUserQuestion con Q1;
+(4) nunca en headless/cron ni dentro de un barrido fleet — sólo en sesión
+interactiva single-target.
+
+**Q1 — Target** (`multiSelect: false` — `--all-vps` y `--target` son mutuamente excluyentes):
+
+| label | description | preview |
+|---|---|---|
+| Este host (Recommended) | las 14 fases sólo en el VPS donde estás parado; desde la dev machine no es válido (usar --all-vps o --target) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=local` |
+| --all-vps (fleet) | los 3 VPS secuencialmente vía tailscale, con pausa de aprobación si un VPS deja fases críticas (🔴, score <7) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps` |
+| Un VPS específico | elegir "Other" y tipear `--target=<alias>` (vps-projectapp-staging · vps-projectapp-prod · vps-gym) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=<alias>` |
+
+**Qué NO se pregunta:** `--no-pause` — tuning simétrico (corre el fleet de un
+tirón, sin pausar ante fases críticas); se tipea a propósito cuando el operador
+ya decidió no supervisar host por host.
+
+## PROTOCOLO DE EJECUCIÓN POR DEFECTO
+
+**Antes de leer la guía manual de 15 prácticas que sigue**, invoca el orquestador. Detecta automáticamente si estás en la dev machine o dentro de un VPS y hace lo correcto.
+
+```bash
+bash scripts/diagnostics/run-fleet-diagnostic.sh
+```
+
+### Comportamiento automático
+
+- **Desde la dev machine** (detecta `/home/dev-env/webapps` o `/home/dev_env/webapps`) → orquesta secuencialmente los VPS del fleet — la lista sale de `fleet_vps_aliases` (`scripts/lib/bootstrap-common.sh`, registry `config/tailscale/expected-nodes.yml`; hoy 3: vps-projectapp-staging, vps-projectapp-prod, vps-gym), no la hardcodees:
+  - En cada VPS corre las 14 FASES automatizadas del diagnóstico vía SSH.
+  - Si un VPS deja fases críticas (🔴, score <7), pausa y pide aprobación antes de continuar con el siguiente VPS.
+  - Genera un `reports/server-diagnostic-<alias>-YYYY-MM-DD.md` por VPS.
+
+- **Desde un VPS** (cualquiera del fleet) → ejecuta el diagnóstico **solo en ese VPS**, genera `reports/Diagnostic-Report-<HOSTNAME>.md`.
+
+### Overrides en lenguaje natural del operador
+
+- "solo vps-gym" / "solo vps-projectapp-staging" → invocar con `--target=<alias>`.
+- "solo este vps" / "diagnóstico local" → invocar con `--target=local` (solo válido desde un VPS).
+- "sin pausas" / "corré todo de un tirón" → agregar `--no-pause`.
+
+### Después de que el orquestador termina
+
+Lee los reportes `.md` generados (rutas que imprimió el RESUMEN FINAL del orquestador). Para CADA reporte:
+
+1. Extrae el score por fase (formato `## FASE N: NOMBRE — 🟢/🟡/🔴 X/10`) y los hallazgos rojos.
+2. Sintetiza en chat siguiendo la skill `human` (tablas, jerga técnica, español, sin verbosidad):
+   - **Veredicto por VPS** (1 línea): `✅ verde` | `⚠️ N warnings` | `🔴 N críticos`.
+   - **Tabla cross-VPS**: fase × VPS con score y emoji.
+   - **Top 3 acciones prioritarias** del fleet (cross-VPS).
+   - Path de cada reporte para que el operador pueda profundizar.
+
+### Cuándo usar la guía manual de abajo
+
+**Aclaración de numeración (los dos números coexisten a propósito):** el orquestador corre **14 FASES automatizadas**; la guía manual documenta **15 PRÁCTICAS** — la práctica 15 (Estandarización de Proyecto: settings split + decouple) se revisa con la guía manual y el validador `validate-settings-selector.sh`, no como fase propia del orquestador. El orquestador ya cubre las 14 fases con scoring automático (la **FASE 14 — projects.yml ↔ Realidad** valida `server:`/`branch:` de cada proyecto local contra el clon real: `branch:` drift → `resolve-work-coordinate.sh --fix` si es yml-stale; `server:` corriendo en host ajeno → migrate-project, nunca auto). **Ojo con la etiqueta «FASE N»:** los headings `## FASE N` de la guía manual de abajo numeran las **15 PRÁCTICAS**, no las 14 fases del orquestador — en particular, la FASE 14 del orquestador (projects.yml ↔ Realidad) NO es la «FASE 14: Reportes periódicos» de la guía. La guía manual de las 15 prácticas que sigue es para **profundizar** en un hallazgo específico — por ejemplo, si el reporte dice "Fase 7 score 3/10" y el operador pide "explicame qué pasó con backups en vps-projectapp-staging", entonces se entra al detalle manual de Fase 7 abajo, ejecutando los comandos correspondientes vía `tailscale ssh ryzepeck@vps-projectapp-staging '<comando>'`.
+
 ---
 
 ## CONTEXTO DE MI INFRAESTRUCTURA
@@ -32,8 +105,8 @@ allowed-tools: Bash
 - **Configuración Nginx**: `/etc/nginx/sites-available/` y `/etc/nginx/sites-enabled/`
 - **Servicios Systemd**: `/etc/systemd/system/`
 - **Certificados SSL**: `/etc/letsencrypt/`
-- **Scripts de monitoreo**: `/home/ryzepeck/webapps/ops/vps/scripts/`
-- **Reportes generados**: `/home/ryzepeck/webapps/ops/vps/reports/`
+- **Scripts de monitoreo**: `/home/ryzepeck/webapps/vps-ops-toolkit/scripts/`
+- **Reportes generados**: `/home/ryzepeck/webapps/vps-ops-toolkit/reports/`
 - **Backups django-dbbackup**: `/var/backups/<proyecto>/`
 - **Cron de monitoreo**: `/etc/cron.d/srv-monitoring`
 - **Config msmtp**: `/home/ryzepeck/.config/msmtp/config`
@@ -91,7 +164,14 @@ STAGING_PROJECTS=$(awk '/^\s+-\s+name:/{name=$3} /^\s+environment:\s*staging/{pr
 - Falta `BACKUPS_ENABLED` o `ENABLE_SLOW_QUERIES_REPORT` en `.env` de un staging.
 - Hay un problema real (servicio caído, SSL expirando crítico, código corrupto).
 
-Proyectos staging actuales en el fleet: `azurita`, `candle_staging_project`, `fernando_aragon_project`, `mimittos_project`, `taptag`, `tuhuella_project`, `xpandia_project` (en `srv571894`); `gym_project_staging` (en `srv614758`). Verificar con el comando de arriba en cada corrida.
+La lista de proyectos staging NO se hardcodea acá (se pudre): derivarla en cada corrida con el comando awk de arriba, o con el helper canónico `is_staging` sobre `LOCAL_PROJECTS`:
+
+```bash
+OPS_ROOT="$HOME/webapps/vps-ops-toolkit"
+source "$OPS_ROOT/scripts/lib/bootstrap-common.sh"
+PROJECT_DEFS_QUIET=1 source "$OPS_ROOT/scripts/lib/project-definitions.sh"
+for p in "${LOCAL_PROJECTS[@]}"; do is_staging "$p" && echo "$p [staging]"; done
+```
 
 ### Detección de Proyectos Nuevos
 
@@ -1704,3 +1784,39 @@ Listar las acciones ordenadas por prioridad (🔴 Crítica > 🟠 Alta > 🟡 Me
 
 ### E4: Proyectos Nuevos Detectados
 Si se detectó algún proyecto nuevo en la sección 0, listar aquí con checklist completo de lo que necesita para cumplir el estándar.
+
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de [[_output-protocol]] §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| --target=<alias> | drill-down de UN VPS del fleet (read-only) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=<alias>` |
+| --all-vps | los 3 VPS secuencialmente, con pausa entre críticos (read-only) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps` |
+| --no-pause | fleet de un tirón, sin pausar ante fases críticas | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps --no-pause` |
+| Profundizar una fase | drill-down manual con la guía de 15 prácticas (elegir práctica + VPS) | `tailscale ssh ryzepeck@vps-<alias> '<comando de la práctica>'` |
+
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Esta skill ya implementa las tres
+secciones del protocolo — solo aclarar el mapeo:
+
+1. **Veredicto:** una línea, derivada del **PROMEDIO E1** con el mismo
+   umbral del scoring canónico:
+   - PROMEDIO E1 ≥ 9.0/10 → `🟢 server-diagnostic — <alias> sano (X/10)`
+   - PROMEDIO E1 7.0–8.9   → `🟡 server-diagnostic — <alias> operativo con mejoras menores (X/10)`
+   - PROMEDIO E1 < 7.0     → `🔴 server-diagnostic — <alias> requiere acción inmediata (X/10)`
+
+2. **Tabla:** las dos tablas existentes cumplen la sección 2 del protocolo:
+   - **E1** = veredicto por práctica (15 filas + PROMEDIO — prácticas, no las 14 FASES del orquestador).
+   - **E2** = cross-VPS × componente estándar.
+   - Si E1 supera 15 filas, agregar `### Top 3 acciones prioritarias`
+     ENTRE veredicto y tabla (regla del protocolo).
+
+3. **Next steps:** E3 ya es la sección de acciones prioritarias (con
+   prioridad 🔴 Crítica > 🟠 Alta > 🟡 Media + comando exacto + Fase X).
+
+Asegurar al cerrar: emojis del set canónico (✅⚠️❌⏭️ℹ️🚫⏸️ para celdas,
+🟢🟡🔴 solo para veredicto), comandos exactos en E3, sin prosa redundante
+después de las tablas.

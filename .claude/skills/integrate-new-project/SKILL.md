@@ -2,7 +2,28 @@
 name: integrate-new-project
 description: "Integrar un nuevo proyecto Django al ecosistema VPS (14 pasos: DB, venv, build frontend, .env, migrations, systemd incl. Next.js, nginx + SSL 2-fase, backups, logrotate, health, projects.yml, verificación)"
 argument-hint: "[project_name domain light|standard] [--frontend-kind=nextjs-runtime|bake-into-django|none]"
-allowed-tools: Bash, Read, Edit, Write
+allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
+---
+
+## Entorno requerido
+
+**Esta skill SOLO funciona desde un VPS** — necesita `mysql`, `systemctl`, `certbot`, `nginx`, y paths `/home/ryzepeck/webapps/...`. Si la invocás desde la dev machine, los primeros pasos van a fallar con "command not found" o pueden dejar archivos huérfanos en `/etc/...`.
+
+**Verificación obligatoria ANTES de cualquier otro paso**:
+
+```bash
+if [[ -d /home/dev-env/webapps || -d /home/dev_env/webapps ]]; then
+  echo "❌ Esta skill no se puede ejecutar desde la dev machine."
+  echo "   SSH primero al VPS destino:"
+  echo "     ssh vps-projectapp-staging   (o vps-gym)"
+  echo "     cd ~/webapps/vps-ops-toolkit && claude → /integrate-new-project ..."
+  exit 2
+fi
+echo "✅ Entorno VPS detectado, procediendo."
+```
+
+Si el bloque aborta con ❌, **NO continuar** con los pasos siguientes — SSH al VPS destino y re-invocar la skill allí.
+
 ---
 
 Argumentos recibidos: **$ARGUMENTS**
@@ -14,6 +35,28 @@ Si `$ARGUMENTS` está vacío o incompleto, pedir al usuario antes de continuar:
 - **frontend-kind** — `nextjs-runtime` (servicio dedicado en puerto), `bake-into-django` (build:django + collectstatic), `none`
 
 > **Regla DB:** producción = MySQL. Solo staging (con "staging" en nombre o dominio) puede usar SQLite. Si el usuario pide SQLite para prod, advertir y recomendar MySQL.
+
+---
+
+## Cómo invocar este skill (picker pre-run — §4)
+
+Gating ([[_output-protocol]] §4):
+
+1. Args completos (`<project> <domain> light|standard`) → ejecutar directo, sin menú.
+2. Faltan `<project>`/`<domain>` → pedirlos en **texto plano, una sola vez, ≤3
+   bullets** — son datos, no flags; nunca un picker para tipearlos.
+3. Con project + domain pero sin modo → UNA `AskUserQuestion` (Q1). Nunca en modo
+   fleet/headless/cron.
+
+**Q1 — Modo (perfil de recursos)** (single-select):
+
+| label | description | preview |
+|---|---|---|
+| light (Recommended) | el default del Paso 6e: MemoryHigh 150M / MemoryMax 250M / CPU 40% — proyectos chicos | `/integrate-new-project <project> <domain> light` |
+| standard | MemoryHigh 300M / MemoryMax 512M / CPU 50% — proyectos con más tráfico o carga | `/integrate-new-project <project> <domain> standard` |
+
+**Qué NO se pregunta:** `--frontend-kind=` — se tipea sólo si el proyecto trae un
+frontend no estándar (`nextjs-runtime|bake-into-django|none`).
 
 ---
 
@@ -45,7 +88,7 @@ Verificar con `ss -lntp | grep -E ':300[0-9]'` antes de asignar.
 
 ### Redis DB slots (srv571894)
 
-Slots 0–10 usados (0 kore, 1 candle, 2 crushme, 3 taptag, 4 tenndalux-suspended, 5 projectapp, 6 azurita, 7 fernando, 8 candle_staging, 9 tuhuella, 10 mimittos). **Próximo libre: 11.**
+Slots 0–10 usados (0 kore, 1 candle, 2 crushme, 3 taptag, 4 tenndalux, 5 projectapp, 6 azurita, 7 fernando, 8 candle_staging, 9 tuhuella, 10 mimittos). **Próximo libre: 11.**
 
 Confirmar con `redis-cli INFO keyspace`.
 
@@ -146,7 +189,7 @@ Editar con valores reales. Variables **obligatorias**:
 
 ### 4b. Template versionado para el repo ops
 ```bash
-mkdir -p /home/ryzepeck/webapps/ops/vps/config/project-env-templates/<PROJECT>
+mkdir -p /home/ryzepeck/webapps/vps-ops-toolkit/config/project-env-templates/<PROJECT>
 # copiar backend/.env.example → backend.env reemplazando valores por <placeholders>
 ```
 
@@ -165,7 +208,7 @@ DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py collectst
 
 ## Paso 6: Systemd services
 
-Crear cada unit file en `/etc/systemd/system/` **Y DUPLICAR en `/home/ryzepeck/webapps/ops/vps/config/systemd/`** (idéntica, sin comentarios distintos). Si no lo duplicás, `verify-state.sh` reporta drift.
+Crear cada unit file en `/etc/systemd/system/` **Y DUPLICAR en `/home/ryzepeck/webapps/vps-ops-toolkit/config/systemd/`** (idéntica, sin comentarios distintos). Si no lo duplicás, `verify-state.sh` reporta drift.
 
 ### 6a. Socket (gunicorn)
 Archivo `/etc/systemd/system/<PROJECT>.socket`:
@@ -301,7 +344,7 @@ systemctl is-active <PROJECT> <HUEY_SERVICE> [<FRONTEND_SERVICE>]   # deben ser 
 
 ### 7a. Instalar config final en el repo (no habilitarla aún)
 
-Crear `/home/ryzepeck/webapps/ops/vps/config/nginx/sites-available/<PROJECT>` copiando el patrón de `tuhuella_project`:
+Crear `/home/ryzepeck/webapps/vps-ops-toolkit/config/nginx/sites-available/<PROJECT>` copiando el patrón de `tuhuella_project`:
 - `server_name <DOMAIN>`
 - `/static/` → `backend/staticfiles/`
 - `/media/` → `backend/media/`
@@ -369,7 +412,7 @@ sudo chmod 755 /var/backups/<PROJECT>
 
 ```bash
 sudo sed 's/{PROJECT}/<PROJECT>/g' \
-    /home/ryzepeck/webapps/ops/vps/config/logrotate/project-debug.template \
+    /home/ryzepeck/webapps/vps-ops-toolkit/config/logrotate/project-debug.template \
     | sudo tee /etc/logrotate.d/<PROJECT>-debug >/dev/null
 ```
 
@@ -407,7 +450,7 @@ Estos cambios viven en el **repo del proyecto clonado** (`/home/ryzepeck/webapps
 
 3. **Shift crontab Huey** para evitar colisiones con otros proyectos. Ejecutar:
    ```bash
-   bash /home/ryzepeck/webapps/ops/vps/scripts/ci/validate-huey-schedules.sh   # (si existe)
+   bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-huey-schedules.sh   # (si existe)
    ```
    o manualmente:
    ```bash
@@ -419,7 +462,7 @@ Estos cambios viven en el **repo del proyecto clonado** (`/home/ryzepeck/webapps
 
 ## Paso 12: Registrar en `projects.yml`
 
-Archivo: `/home/ryzepeck/webapps/ops/vps/projects.yml` (NO `/home/ryzepeck/webapps/projects.yml`, ese path está obsoleto en docs antiguos).
+Archivo: `/home/ryzepeck/webapps/vps-ops-toolkit/projects.yml` (NO `/home/ryzepeck/webapps/projects.yml`, ese path está obsoleto en docs antiguos).
 
 Añadir bajo `active:`:
 ```yaml
@@ -480,17 +523,17 @@ DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py dbbackup 
 ls /var/backups/<PROJECT>/
 
 # 4. Post-deploy check (solo el proyecto, sin ruido global)
-bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh --project-only <PROJECT>
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh --project-only <PROJECT>
 
 # 5. Sin drift / missing
-bash /home/ryzepeck/webapps/ops/vps/scripts/bootstrap/verify-state.sh | tail -3
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/bootstrap/verify-state.sh | tail -3
 #    Debe mostrar: DRIFT=0 | MISSING=0
 
 # 6. projects.yml OK
-bash /home/ryzepeck/webapps/ops/vps/scripts/ci/validate-projects-yml.sh
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-projects-yml.sh
 
 # 7. Sin colisiones de Huey (si existe el script)
-bash /home/ryzepeck/webapps/ops/vps/scripts/ci/validate-huey-schedules.sh
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-huey-schedules.sh
 ```
 
 Reportar:
@@ -531,3 +574,59 @@ Estos bugs rompen `npm run build` de producción y se detectan en **Paso 3**. Si
 | Backup dir | `/var/backups/<dir>` | `/var/backups/mimittos_project` |
 | Socket | `/run/<dir>.sock` | `/run/mimittos_project.sock` |
 | Logrotate | `/etc/logrotate.d/<dir>-debug` | `/etc/logrotate.d/mimittos_project-debug` |
+
+---
+
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de [[_output-protocol]] §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| Verificar drift (Recommended) | read-only: confirma `DRIFT=0 \| MISSING=0` tras duplicar units/nginx en el repo ops | `bash scripts/bootstrap/verify-state.sh \| tail -3` |
+| Validar projects.yml | read-only: valida el schema del registro agregado en el Paso 12 | `bash scripts/ci/validate-projects-yml.sh` |
+| Validar crontabs Huey | read-only: detecta colisiones de horario con los otros proyectos (Paso 11) | `bash scripts/ci/validate-huey-schedules.sh` |
+
+Blocklist §4: `post-deploy-check.sh` / `/deploy-and-check` van SÓLO como texto en
+`## Next steps` (manual-only por política), nunca como fila clickeable; la entrega
+de credenciales por canal seguro es acción manual del operador.
+
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de
+`/integrate-new-project`:
+
+```markdown
+🟢 integrate-new-project OK — <PROJECT> @ <DOMAIN>
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| MySQL DB + Redis slot | ✅ | DB/user creados, slot Redis libre confirmado |
+| Backend venv + deps | ✅ | venv + requirements + gunicorn/mysqlclient |
+| Frontend build | ✅ | `npm ci && build` OK (⏭️ si frontend-kind=none) |
+| `.env` producción (chmod 600) | ✅ | vars obligatorias + template versionado en repo ops |
+| Migraciones + collectstatic | ✅ | migrate + collectstatic con settings_prod |
+| Systemd services | ✅ | socket/gunicorn/huey [+frontend] active + drop-ins |
+| Nginx + SSL (2-phase) | ✅ | site habilitado, cert emitido, smoke test 200 |
+| Backups + logrotate | ✅ | /var/backups/<PROJECT> + logrotate.d instalados |
+| Health endpoint | ✅ | /api/health/ responde {"status":"ok"} |
+| Ajustes código proyecto | ✅ | HUEY name único, retención, crontab sin colisión |
+| Registro en projects.yml | ✅ | conecta monitoring/backups/healthcheck/diagnóstico |
+| Deploy workflow del proyecto | ✅ | deploy-and-check creado en el repo del proyecto |
+| Verificación final | ✅ | post-deploy-check PASS, verify-state DRIFT=0 |
+```
+
+Si la verificación de entorno falla (corriendo en dev-machine), reportar
+`🚫 integrate-new-project — REFUSED (dev machine)` con `## Next steps`
+indicando el SSH al VPS destino — **no es error**, es safety gate. Si un
+servicio no levanta, el cert no emite, o post-deploy-check FALLA, reemplazar
+el ✅ correspondiente por ⚠️/❌, omitir la línea ✨ y agregar `## Next steps`
+con el comando exacto (`journalctl -u <PROJECT> -n 50`,
+`bash scripts/bootstrap/emit-ssl-cert.sh <DOMAIN>`, etc.).
+
+## Next steps (si aplica)
+- `bash scripts/deployment/post-deploy-check.sh <PROJECT>` — verifica servicios + health del proyecto
+- `bash scripts/bootstrap/verify-state.sh | tail -3` — confirma DRIFT=0 | MISSING=0
+- (manual, operador) entregar SECRET_KEY + DB_PASSWORD por canal seguro; documentar claves sandbox en projects.yml notes

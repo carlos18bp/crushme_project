@@ -77,6 +77,3 @@ backend/geolocalization/*.tar.gz
 # OS
 .DS_Store
 Thumbs.db
-
-# Windsurf
-.windsurf/plans/

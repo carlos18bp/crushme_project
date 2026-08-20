@@ -22,7 +22,7 @@ emails/               Bilingual email source templates
 docs/                 Architecture, standards, audits, and roadmap
 tasks/                Active context and backlog
 .agents/ .claude/     Codex and Claude skills/configuration
-.windsurf/ .codex/    Windsurf workflows and Codex project configuration
+.codex/              Codex project configuration
 ```
 
 The Python environment is `backend/venv_cpu/`; there is no `backend/venv/`.
