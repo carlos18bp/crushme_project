@@ -227,6 +227,8 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
         'OPTIONS': {
             'location': config('BACKUP_STORAGE_PATH', default='/var/backups/crushme_project'),
+            'file_permissions_mode': 0o600,
+            'directory_permissions_mode': 0o700,
         },
     },
 }

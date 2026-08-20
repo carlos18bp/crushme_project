@@ -33,6 +33,7 @@ Observation started at **2026-08-20 15:13:06 UTC** and cannot close before
 | Runtime capacity | 32 requests, 0 failures, 179.8 ms p95, 81.2% web-memory headroom, 76.3% CPU headroom, and 60.8% host memory available |
 | Fleet post-deploy | 14 pass, 0 fail, 2 known non-blocking warnings; service warning journals were empty and the daily backup timer was active |
 | Restore rehearsal | 1/1 weekly database, 1/1 media archive, and 1/1 fresh daily database restored; temporary databases and extraction directories were removed |
+| Backup confidentiality | Existing daily artifacts corrected to `0600`, backup root corrected to `0700`, and Django storage configured and regression-tested to preserve those modes |
 
 The QA result is intentionally not represented as complete behavioral
 coverage. Its yellow classification is the explicit continuous-QA backlog,
@@ -80,6 +81,12 @@ Toolkit commit `92f2d71` preserves the QA and full-audit read-outs. Its GitHub
 Actions run was prevented from starting by the repository account's billing or
 spending-limit state; the equivalent local configuration validators passed.
 Project PR #14 CI was unaffected and fully green.
+
+A final permission review found that Django's default filesystem-storage mode
+had overridden the systemd `UMask` and created daily backup files as `0644`.
+Existing artifacts were immediately restricted to `0600` under a `0700`
+backup directory. The storage backend now sets file and directory modes
+explicitly, with focused regression coverage; no backup contents changed.
 
 ## Promotion Gate
 
