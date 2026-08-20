@@ -57,16 +57,15 @@ describe('authStore', () => {
     });
   });
 
-  test('clears the local session when logout request fails', async () => {
-    // Fails if a failed optional logout request leaves the browser authenticated.
+  test('clears the local session without a backend logout request', async () => {
+    // Fails if stateless JWT logout depends on an endpoint that does not exist.
     setTokens('access-1', 'refresh-1');
     localStorage.setItem('user', '{"id":7,"username":"maya"}');
-    mock.onPost('/api/auth/logout/').networkError();
     const store = useAuthStore();
 
     await store.logout();
 
-    expect(mock.history.post.map((request) => request.url)).toEqual(['/api/auth/logout/']);
+    expect(mock.history.post).toEqual([]);
     expect(store.user).toBeNull();
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();

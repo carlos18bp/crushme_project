@@ -110,17 +110,10 @@ export const useAuthStore = defineStore('auth', () => {
    * Logout user
    */
   async function logout() {
-    try {
-      // Call logout endpoint (optional, since JWT is stateless)
-      await create_request('auth/logout/', {});
-    } catch (err) {
-      // Silent error handling
-    } finally {
-      // Clear local state regardless of API call result
-      user.value = null;
-      clearTokens();
-      localStorage.removeItem(STORAGE_KEYS.USER);
-    }
+    // JWT logout is local; no backend logout endpoint exists.
+    user.value = null;
+    clearTokens();
+    localStorage.removeItem(STORAGE_KEYS.USER);
   }
 
   /**

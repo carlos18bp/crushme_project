@@ -28,6 +28,7 @@ describe('request_http', () => {
 
   test('builds the contextual request headers', async () => {
     document.cookie = 'csrftoken=csrf-value; path=/';
+    localStorage.setItem('currency', 'COP');
     setTokens('access-value', 'refresh-value');
     mock.onGet('/api/products/?lang=en').reply(200, { results: [] });
 
