@@ -62,3 +62,23 @@ or production confirmation gates.
 CrushMe has one runtime coordinate: the production project described above.
 Modernization worktrees are Git authoring surfaces only and must never receive
 DNS, deployment credentials, databases, sockets, or services.
+
+## Versioned Runtime Templates
+
+The canonical project-side copies are:
+
+- `scripts/nginx/crushme.conf`
+- `scripts/systemd/crushme_project.service`
+- `scripts/systemd/crushme_project.socket`
+- `scripts/systemd/crushme_project.override.conf`
+- `scripts/systemd/huey.service`
+- `scripts/systemd/crushme-huey.override.conf`
+- `scripts/systemd/crushme-dbbackup.service`
+- `scripts/systemd/crushme-dbbackup.timer`
+
+The fleet deployable copies live in `vps-ops-toolkit/config/systemd/`. Compare
+both sources with the installed `/etc` files before each operational change.
+Obsolete Gunicorn/Nginx copies under `backend/` are deliberately unsupported.
+
+Detailed backup, restore, observability, capacity, and rollback procedures are
+in `docs/operations-runbook.md`.

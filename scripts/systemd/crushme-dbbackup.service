@@ -1,22 +1,24 @@
 [Unit]
-Description=Huey consumer for crushme_project
-After=network.target redis-server.service
-Requires=redis-server.service
+Description=Daily Django database and media backup for crushme_project
+After=network.target mysql.service
+Requires=mysql.service
 
 [Service]
-Type=simple
+Type=oneshot
 User=ryzepeck
 Group=www-data
 WorkingDirectory=/home/ryzepeck/webapps/crushme_project/backend
 EnvironmentFile=/home/ryzepeck/webapps/crushme_project/backend/.env
 Environment="DJANGO_SETTINGS_MODULE=crushme_project.settings"
 Environment="DJANGO_ENV=production"
-ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/python manage.py run_huey --workers 1
+ExecStart=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/python manage.py dbbackup --compress --clean
+ExecStartPost=/home/ryzepeck/webapps/crushme_project/backend/venv_cpu/bin/python manage.py mediabackup --compress --clean
 StandardOutput=journal
 StandardError=journal
-Restart=on-failure
-RestartSec=5
-UMask=0027
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
 
 NoNewPrivileges=true
 PrivateDevices=true
@@ -35,9 +37,8 @@ RestrictRealtime=true
 RestrictSUIDSGID=true
 LockPersonality=true
 CapabilityBoundingSet=
-ReadWritePaths=-/home/ryzepeck/webapps/crushme_project/backend/media
+ReadWritePaths=/var/backups/crushme_project
 ReadWritePaths=-/home/ryzepeck/webapps/crushme_project/backend/logs
-ReadWritePaths=-/home/ryzepeck/.cache/Microsoft/DeveloperTools/.onnxruntime
 
 [Install]
 WantedBy=multi-user.target

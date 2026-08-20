@@ -293,6 +293,7 @@ Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_te
 - **Stack**: Django 5.2.17 + DRF 3.18 (backend) / Vue 3.5.41 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
 - **Services**: `crushme_project.service` (Gunicorn), `crushme-huey.service`
+- **Backup timer**: `crushme-dbbackup.timer` (daily DB + media, independent of Huey)
 - **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in `.env`
 - **Nginx**: `/etc/nginx/sites-available/crushme`
 - **Static**: `/home/ryzepeck/webapps/crushme_project/backend/staticfiles/`
@@ -664,7 +665,9 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 - The product catalog is **mirrored** from a remote WooCommerce store via `WooCommerceProduct` and `WooCommerceProductVariation` models.
 - A `CategoryPriceMargin` model lets the user override pricing per category.
 - When products are synced, **all text content is translated offline** via `argostranslate` and cached in a `TranslatedContent` model. This is what `translation_batch_service.py` does.
-- There is **no real-time MT** — translations happen at sync time and are persisted.
+- Sync-time translations are persisted. Dynamic/user content retains the
+  existing request-time fallback, but Argos is imported only when that fallback
+  is actually needed.
 
 #### Custom user model with crush verification
 - `User` extends `AbstractUser` with email-as-username and a "crush verification" workflow (`is_crush`, `crush_verification_status`, `crush_verified_at`). This is a domain feature: users can verify themselves as "crushes" eligible to receive gifted wishlists.
@@ -684,10 +687,12 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 - `django-silk` is gated by `ENABLE_SILK=True`. Off by default.
 
 #### Huey periodic tasks
-- `scheduled_backup` — Sun 03:00 UTC (DB + media, weekly retention 4).
 - `silk_garbage_collection` — daily 03:30 UTC (no-op when Silk is off).
 - `weekly_slow_queries_report` — Tue 07:00 UTC.
 - `silk_reports_cleanup` — 1st of month 05:30 UTC.
+
+Database/media backups run through `crushme-dbbackup.timer` daily at 02:10 UTC;
+they must not be moved back into Huey.
 
 ### Code Style & Conventions
 

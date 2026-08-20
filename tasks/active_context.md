@@ -2,32 +2,34 @@
 
 ## Current Focus
 
-Wave 3 is deployed and healthy. Wave 4 is preparing its QA release candidate:
-behavior tests, executable flow coverage, test quality, and the restoration of
-the real currency-detection path.
+Wave 4 is merged and deployed. Wave 5 is aligning the production runtime,
+backups, restore evidence, observability, and measured capacity without
+changing CrushMe's business flows.
 
 ## Current Coordinate
 
 - Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`
-  at `68f5d1b`.
-- Authoring: temporary worktree `/home/ryzepeck/webapps/.wt/crushme-wave4-qa`
-  on `qa/20082026-crushme-wave-4`.
+  at `98adad8`.
+- Authoring: temporary worktree `/home/ryzepeck/webapps/.wt/crushme-wave5-ops`
+  on `ops/20082026-crushme-wave-5`.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
 - Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
 - Runtime services: `crushme_project.service` and `crushme-huey.service`.
 
 ## Wave State
 
-- Wave 3 passed deployment with 14 post-deploy controls, zero failures, and
-  production health/assets/payment configuration checks returning HTTP 200.
-- The Wave 4 quality gate reports zero findings across all test layers.
-- Focused verification has 23 backend tests passing, one MySQL-only concurrency
-  test skipped locally, 15 frontend-unit tests passing, and 21 Playwright tests
-  passing against isolated SQLite E2E data.
-- The flow registry has 56 real browser flows: 4 covered, 16 partial, 36
-  missing, zero junk-only, and zero unvalidated.
-- Currency initialization now respects a valid browser preference or uses the
-  backend geolocation recommendation; the temporary forced-COP path is gone.
+- Wave 4 PR #12 passed all six CI jobs and its production deploy passed 14
+  post-deploy checks with zero failures.
+- Wave 5 baseline load had zero HTTP failures and 223 ms p95, but only 25.2%
+  web-memory headroom (486.3 MiB / 650 MiB), below the 30% gate.
+- Argos/ONNX/PyTorch was traced to eager URL/serializer imports in every web
+  worker and Huey. The engine now loads only for actual translation work.
+- Candidate health checks app/MySQL/Redis; candidate systemd and Nginx syntax
+  pass static verification.
+- The Wave 5 release-candidate evidence and production acceptance checklist are
+  recorded in `docs/audits/2026-08-20-operations-performance.md`.
+- Daily DB/media backup is moving from Huey's weekly schedule to the independent
+  persistent `crushme-dbbackup.timer`.
 
 ## Active Decisions
 
@@ -43,9 +45,13 @@ the real currency-detection path.
 - Never run QA, E2E, or fake-data commands against production data.
 - Keep missing flows explicit. Wave 4 does not convert uncovered behavior into
   exemptions or draft credit.
+- Keep the 650M/450M service limits; earn headroom by avoiding unnecessary
+  heavyweight imports rather than masking usage with larger limits.
+- Keep backup availability independent from Huey and preserve the weekly fleet
+  snapshot as a second mechanism.
 
 ## Next Gate
 
-Run the CI-parity quality verifier over every touched test, pass the six CI
-jobs, merge the Wave 4 PR, and confirm the production checkout remains healthy
-before starting Wave 5 operations and performance work.
+Finish focused regression and runtime-template validation, synchronize the
+toolkit copies, pass CI, deploy with fresh snapshots/rollback files, then prove
+backup restore, timer/log health, and at least 30% measured service headroom.

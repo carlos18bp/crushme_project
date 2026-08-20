@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn socket for crushme_project
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+SocketUser=ryzepeck
+SocketGroup=www-data
+SocketMode=0660
+RemoveOnStop=true
+
+[Install]
+WantedBy=sockets.target

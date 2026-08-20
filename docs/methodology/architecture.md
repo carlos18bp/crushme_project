@@ -61,9 +61,12 @@ writes, and public search.
 
 ### Translation Boundary
 
-Argos Translate performs offline translation during WooCommerce sync. Runtime
-settings force `ARGOS_CHUNK_TYPE=MINISBD` and `ARGOS_DEVICE_TYPE=cpu`; no
-application path creates a Stanza pipeline.
+Argos Translate primarily performs offline translation during WooCommerce
+sync; dynamic/user content can use the same engine as a request-time fallback.
+The engine is imported only when a translation is actually required, so normal
+Spanish traffic and worker startup do not load Torch/ONNX. Runtime settings
+force `ARGOS_CHUNK_TYPE=MINISBD` and `ARGOS_DEVICE_TYPE=cpu`; no application
+path creates a Stanza pipeline.
 
 ### Settings
 
@@ -100,10 +103,12 @@ server-priced currency responses remain unchanged business contracts.
 
 ### Periodic Work
 
-- Weekly database/media backup through Huey with four-copy retention.
+- Daily database/media backup through `crushme-dbbackup.timer`, independent of
+  Huey, with four-copy retention plus the weekly VPS snapshot.
 - Silk garbage collection and reports only when profiling is enabled.
 - Slow-query reporting and monthly Silk cleanup.
 
-Wave 5 owns final alignment of timers, log retention, restore automation,
-observability, and measured headroom; it must operate on this production
-coordinate rather than create a staging runtime.
+The dependency-aware health endpoint verifies the app, MySQL, and Redis.
+Gunicorn, Huey, and backup output goes to journald; the fleet healthcheck,
+weekly report, monthly restore test, and project capacity probe provide the
+operational gates.

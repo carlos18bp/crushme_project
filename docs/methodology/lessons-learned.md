@@ -47,14 +47,20 @@
 - Runtime documentation must be derived from deployed service units, not old
   naming assumptions. The active units are `crushme_project.service` and
   `crushme-huey.service`.
+- Infrastructure backups must not share the availability boundary of the task
+  queue. A dedicated persistent systemd timer is independently observable and
+  restore-testable.
+- Importing Argos from URL/serializer modules loads Torch/ONNX into every web
+  worker and Huey before it is needed. A local import at the translation call
+  preserves behavior while restoring ordinary-request memory headroom.
 
 ## Remaining Debt
 
 - Argos 1.11 pins vulnerable Stanza 1.10.1. MiniSBD/CPU makes the path
   unreachable, but the dependency must be reviewed monthly.
-- PyTorch remains a heavy Argos dependency and drives disk/memory cost even
-  though application modules do not import it directly.
-- Vite reports existing large-chunk warnings; Wave 5 must measure before any
-  code-splitting change.
-- Critical business-flow coverage is still incomplete and is the scope of
-  Wave 4.
+- PyTorch remains a heavy Argos dependency and drives disk/memory cost when an
+  offline translation is executed.
+- Vite still reports existing large-chunk warnings; measured production
+  latency is the trigger for a separate code-splitting change.
+- Critical business-flow gaps remain explicitly tracked by the Wave 4 flow
+  map and continuous QA backlog.

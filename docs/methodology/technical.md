@@ -50,7 +50,8 @@
   late persistence after logout.
 - Treat `PaymentSession` as the durable authority for payment amounts and
   gateway confirmation.
-- Translate offline during WooCommerce sync, never in request paths.
+- Translate offline during WooCommerce sync and retain the existing fallback
+  for dynamic content, but load Argos only when that fallback is exercised.
 - Force Argos MiniSBD on CPU until Argos no longer pins vulnerable Stanza
   1.10.1. Enabling Stanza chunking is prohibited.
 - Keep exact backend pins and lock frontend transitive versions through
@@ -118,3 +119,8 @@ Production path: `/home/ryzepeck/webapps/crushme_project`.
 7. Restart `crushme_project.service` and `crushme-huey.service`.
 8. Run the toolkit post-deploy check, public health/payment-config smoke checks,
    service/log inspection, and retain rollback artifacts through observation.
+
+Runtime templates are versioned under `scripts/nginx/` and `scripts/systemd/`.
+Backups run through `crushme-dbbackup.timer`, not Huey. The restore,
+observability, rollback, and capacity procedures are defined in
+`docs/operations-runbook.md`.

@@ -61,11 +61,15 @@ will not be merged wholesale.
   backups, restore rehearsals, credential rotations, six CI jobs, migrations,
   dependency installation, static build, controlled restart, and post-deploy
   checks passed in production on 2026-08-20.
-- Wave 4: release candidate implemented on its dedicated branch. The test
-  quality gate has zero findings; 23 focused backend tests, 15 frontend-unit
-  tests, and 21 Playwright tests pass. The executable map has no junk-only or
-  unvalidated flow; 36 explicit coverage gaps remain visible for continuous QA.
-- Waves 5-6: pending their independent PRs and gates.
+- Wave 4: complete through PR #12 and deployed on 2026-08-20. All six CI jobs
+  passed; 23 focused backend tests, 15 frontend-unit tests, and 21 Playwright
+  tests passed before merge. The executable map retains 36 explicit gaps for
+  continuous QA without granting draft or junk-only credit.
+- Wave 5: implementation in progress on `ops/20082026-crushme-wave-5`.
+  Dependency-aware health, independent daily backups, canonical hardened
+  runtime templates, lazy Argos loading, and a reproducible capacity gate are
+  being validated against production.
+- Wave 6: pending final certification and its real 24-hour observation window.
 
 ## Wave Delivery
 
