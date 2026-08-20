@@ -160,8 +160,9 @@ if (data.is_colombia) {
 2. ✅ `crushme_app/views/auth_views.py` - Made diary endpoints public
 
 ### Database Files:
-1. ✅ `geolocalization/GeoLite2-Country_20251024.tar.gz` - Original archive
-2. ✅ `geolocalization/GeoLite2-Country_20251024/GeoLite2-Country.mmdb` - Extracted database
+1. ✅ `geolocalization/GeoLite2-Country_20251024/GeoLite2-Country.mmdb` - Runtime database
+
+The downloaded `.tar.gz` archive is temporary and must not be committed.
 
 ## Benefits Over Previous Solution
 
@@ -225,11 +226,11 @@ The geolocation endpoints integrate seamlessly with:
 MaxMind updates the GeoLite2 database monthly. To update:
 
 ```bash
-# 1. Download latest database from MaxMind
-wget https://download.maxmind.com/app/geoip_download?...
+# 1. Download latest database from MaxMind to a temporary location
+wget -O /tmp/GeoLite2-Country.tar.gz https://download.maxmind.com/app/geoip_download?...
 
 # 2. Extract
-tar -xzf GeoLite2-Country_YYYYMMDD.tar.gz
+tar -xzf /tmp/GeoLite2-Country.tar.gz -C /tmp
 
 # 3. Move to geolocalization folder
 mv GeoLite2-Country_YYYYMMDD geolocalization/
@@ -237,6 +238,9 @@ mv GeoLite2-Country_YYYYMMDD geolocalization/
 # 4. Update path in geolocation.py if needed
 
 # 5. Restart Django
+
+# 6. Delete the temporary archive
+rm /tmp/GeoLite2-Country.tar.gz
 ```
 
 ## Documentation

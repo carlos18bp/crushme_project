@@ -61,8 +61,7 @@ Views are thin wrappers. Business logic lives in services:
 - Base: `crushme_project/settings.py` (shared)
 - Dev override: `settings_dev.py` (DEBUG=True, loaded when `DJANGO_ENV=development`)
 - Prod override: `settings_prod.py` (HSTS and secure cookies, loaded only for production)
-- Dev override: `settings_dev.py` (loaded outside production)
-- Pytest currently uses `DJANGO_SETTINGS_MODULE=crushme_project.settings`; Wave 2 introduces an isolated test entry point.
+- Test override: `settings_test.py` (SQLite, in-memory cache/Huey and local email)
 
 ## Frontend Architecture
 
@@ -71,8 +70,8 @@ Views are thin wrappers. Business logic lives in services:
 | Layer | Location | Count | Role |
 |-------|----------|-------|------|
 | Stores | `src/stores/modules/` | 12 files | Pinia state management (mixed setup/Options API) |
-| Views | `src/views/` | 25 files | Page-level components |
-| Components | `src/components/` | 26 files | Reusable UI components |
+| Views | `src/views/` | 6 dirs + 4 root files | Page-level components |
+| Components | `src/components/` | 9 dirs | Reusable UI components |
 | Composables | `src/composables/` | 3 files | useAlert, useCart, useNotifications |
 | Services | `src/services/` | 1 file | request_http.js — single HTTP client |
 | Router | `src/router/` | 1 file / 33 route records | vue-router 4 with locale prefixes |
