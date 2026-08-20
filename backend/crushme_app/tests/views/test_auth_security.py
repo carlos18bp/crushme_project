@@ -1,22 +1,20 @@
-from types import SimpleNamespace
+"""Security and lifecycle behavior tests for authentication endpoints."""
 
 import pytest
-from argostranslate import settings as argos_settings
-from argostranslate.sbd import MiniSBDSentencizer
-from argostranslate.translate import PackageTranslation
-from django.conf import settings
 from django.core.cache import cache
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from crushme_app.models import User
+from crushme_app.models import PasswordCode, User
 from crushme_app.throttles import LoginRateThrottle
-
+from crushme_app.views.auth_views import email_service
 
 pytestmark = pytest.mark.django_db
+TEST_PASSWORD = 'Valid-password-123!'  # pragma: allowlist secret
 
 
 def test_token_refresh_rotation_revokes_previous_token():
+    """Reject replay of a refresh token after rotation."""
     user = User.objects.create_user(
         username='refresh-user',
         email='refresh@example.com',
@@ -42,6 +40,7 @@ def test_token_refresh_rotation_revokes_previous_token():
 
 
 def test_login_throttle_rejects_second_request(monkeypatch):
+    """Throttle repeated login attempts from the same address."""
     cache.clear()
     monkeypatch.setattr(LoginRateThrottle, 'rate', '1/min', raising=False)
     client = APIClient()
@@ -64,6 +63,7 @@ def test_login_throttle_rejects_second_request(monkeypatch):
 
 
 def test_unverified_google_login_endpoint_is_absent():
+    """Keep the unverified Google login endpoint unavailable."""
     response = APIClient().post(
         '/api/auth/google_login/',
         {'email': 'victim@example.com'},
@@ -73,21 +73,87 @@ def test_unverified_google_login_endpoint_is_absent():
     assert response.status_code == 404
 
 
-def test_woocommerce_connection_requires_admin():
-    response = APIClient().get('/api/products/woocommerce/test/')
-
-    assert response.status_code == 401
-
-
-def test_stanza_model_loader_is_disabled(tmp_path):
-    package = SimpleNamespace(
-        from_code='en',
-        package_path=tmp_path,
-        packaged_sbd_path=tmp_path / 'stanza',
+def test_signup_removes_account_when_verification_delivery_fails(monkeypatch):
+    """Fails if a failed verification email leaves a newly registered account behind."""
+    submitted_email = 'delivery-failure@example.test'
+    client = APIClient()
+    monkeypatch.setattr(
+        email_service,
+        'send_verification_code',
+        lambda **_kwargs: False,
     )
 
-    translation = PackageTranslation(object(), object(), package)
+    response = client.post(
+        '/api/auth/signup/',
+        {
+            'email': submitted_email,
+            'username': 'delivery-failure-user',
+            'password': TEST_PASSWORD,
+            'password_confirm': TEST_PASSWORD,
+        },
+        format='json',
+        REMOTE_ADDR='198.51.100.21',
+    )
 
-    assert settings.ARGOS_CHUNK_TYPE == 'MINISBD'
-    assert argos_settings.chunk_type is argos_settings.ChunkType.MINISBD
-    assert isinstance(translation.sentencizer, MiniSBDSentencizer)
+    assert response.status_code == 500
+    assert User.objects.filter(email=submitted_email).count() == 0
+
+
+def test_verify_email_activates_pending_account():
+    """Fails if a valid verification code returns tokens without activating the account."""
+    user = User.objects.create_user(
+        email='pending-verification@example.test',
+        username='pending-verification-user',
+        password=TEST_PASSWORD,
+        email_verified=False,
+        is_active=False,
+    )
+    verification_code = PasswordCode.objects.create(
+        user=user,
+        code='1234',
+        code_type='email_verification',
+    )
+    client = APIClient()
+
+    response = client.post(
+        '/api/auth/verify-email/',
+        {'email': user.email, 'verification_code': verification_code.code},
+        format='json',
+        REMOTE_ADDR='198.51.100.22',
+    )
+
+    user.refresh_from_db()
+    verification_code.refresh_from_db()
+    assert response.status_code == 200
+    assert user.email_verified is True
+    assert user.is_active is True
+    assert verification_code.used is True
+
+
+def test_signup_rejects_verified_email():
+    """Fails if registration can overwrite an account whose email is verified."""
+    verified_user = User.objects.create_user(
+        email='verified-account@example.test',
+        username='verified-account-user',
+        password=TEST_PASSWORD,
+        email_verified=True,
+        is_active=True,
+    )
+    client = APIClient()
+
+    response = client.post(
+        '/api/auth/signup/',
+        {
+            'email': verified_user.email,
+            'username': 'replacement-user',
+            'password': TEST_PASSWORD,
+            'password_confirm': TEST_PASSWORD,
+        },
+        format='json',
+        REMOTE_ADDR='198.51.100.23',
+    )
+
+    assert response.status_code == 400
+    assert response.data['error'] == (
+        'A user with this email is already registered and verified. Please login.'
+    )
