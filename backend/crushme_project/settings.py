@@ -1,9 +1,9 @@
 """Django base settings for crushme_project.
 
 Shared settings used by both development and production environments.
-Environment-specific overrides are auto-imported at the end of this file
-from ``settings_dev.py`` or ``settings_prod.py`` based on the
-``DJANGO_ENV`` environment variable.
+Environment-specific overrides are auto-imported at the end of this file.
+Production and staging share the hardened production baseline; tests use the
+explicit ``settings_test`` module so they never inherit deployment resources.
 """
 
 import os
@@ -20,6 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------------------------------
 DJANGO_ENV = config('DJANGO_ENV', default='development')
 IS_PRODUCTION = DJANGO_ENV == 'production'
+IS_STAGING = DJANGO_ENV == 'staging'
+IS_TEST = DJANGO_ENV in {'test', 'e2e'}
 
 # ---------------------------------------------------------------------------
 # Core Django settings
@@ -319,18 +321,38 @@ THUMBNAIL_ALIASES = {
 # ---------------------------------------------------------------------------
 WOOCOMMERCE_CONSUMER_KEY = config('WOOCOMMERCE_CONSUMER_KEY', default='')
 WOOCOMMERCE_CONSUMER_SECRET = config('WOOCOMMERCE_CONSUMER_SECRET', default='')
-WOOCOMMERCE_API_URL = 'https://distrisexcolombia.com/wp-json/wc/v3'
+WOOCOMMERCE_API_URL = config(
+    'WOOCOMMERCE_API_URL',
+    default=(
+        'https://distrisexcolombia.com/wp-json/wc/v3'
+        if IS_PRODUCTION
+        else ''
+    ),
+)
 
 PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID', default='')
 PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET', default='')
-PAYPAL_MODE = config('PAYPAL_MODE', default='live')
+PAYPAL_MODE = config(
+    'PAYPAL_MODE',
+    default='live' if IS_PRODUCTION else 'sandbox',
+)
 
 WOMPI_PUBLIC_KEY = config('WOMPI_PUBLIC_KEY', default='')
 WOMPI_PRIVATE_KEY = config('WOMPI_PRIVATE_KEY', default='')
 WOMPI_EVENTS_SECRET = config('WOMPI_EVENTS_SECRET', default='')
 WOMPI_INTEGRITY_KEY = config('WOMPI_INTEGRITY_KEY', default='')
-WOMPI_BASE_URL = config('WOMPI_BASE_URL', default='https://production.wompi.co/v1')
-WOMPI_ENVIRONMENT = config('WOMPI_ENVIRONMENT', default='production')
+WOMPI_BASE_URL = config(
+    'WOMPI_BASE_URL',
+    default=(
+        'https://production.wompi.co/v1'
+        if IS_PRODUCTION
+        else 'https://sandbox.wompi.co/v1'
+    ),
+)
+WOMPI_ENVIRONMENT = config(
+    'WOMPI_ENVIRONMENT',
+    default='production' if IS_PRODUCTION else 'sandbox',
+)
 
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
@@ -340,7 +362,20 @@ FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 HUEY = RedisHuey(
     name='crushme_project',
     url=config('REDIS_URL', default='redis://localhost:6379/2'),
-    immediate=not IS_PRODUCTION,
+    immediate=not (IS_PRODUCTION or IS_STAGING),
+)
+
+# Destructive seed commands additionally reject production and protected
+# database names. This flag is opt-in outside local development and tests.
+FAKE_DATA_ALLOWED = config(
+    'FAKE_DATA_ALLOWED',
+    default=DJANGO_ENV in {'development', 'test', 'e2e'},
+    cast=bool,
+)
+FAKE_DATA_PROTECTED_DATABASES = config(
+    'FAKE_DATA_PROTECTED_DATABASES',
+    default='crushme,crushme_db,crushme_production',
+    cast=Csv(),
 )
 
 # ---------------------------------------------------------------------------
@@ -395,7 +430,7 @@ if ENABLE_SILK:
 # ---------------------------------------------------------------------------
 # Environment-specific settings (auto-imported)
 # ---------------------------------------------------------------------------
-if IS_PRODUCTION:
+if IS_PRODUCTION or IS_STAGING:
     from .settings_prod import *  # noqa: F401, F403
 else:
     from .settings_dev import *  # noqa: F401, F403

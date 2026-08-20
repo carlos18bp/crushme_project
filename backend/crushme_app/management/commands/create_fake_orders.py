@@ -10,6 +10,8 @@ from django.utils import timezone
 import random
 from decimal import Decimal
 
+from crushme_app.fake_data_guard import ensure_fake_data_allowed
+
 
 class Command(BaseCommand):
     help = 'Create fake orders for testing purposes'
@@ -23,6 +25,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ensure_fake_data_allowed('create_fake_orders')
         fake = Faker()
         num_orders = options['num_orders']
 
