@@ -1,6 +1,7 @@
 ---
 name: test-quality-gate
 description: "Phased plan to raise the Test Quality Gate score by refactoring high-impact backend and frontend tests. Use when the user wants to improve test quality or fix quality gate failures."
+argument-hint: "[--include-file <archivo> …] [--include-glob '<patrón>'] [--external-lint run] [--junk-severity=error]"
 ---
 
 # Test Quality Improvement Strategy
@@ -8,6 +9,24 @@ description: "Phased plan to raise the Test Quality Gate score by refactoring hi
 ## Goal
 
 Create and execute a phased strategy to improve test quality by selecting a critical, meaningful subset of tests (backend + frontend) to refactor/fix first, rather than trying to fix everything.
+
+## Relationship to the other test skills
+
+| Skill | Question it answers |
+|---|---|
+| [[test-audit]] | Which of these tests should exist at all? |
+| [[fix-broken-tests]] | Why is this specific test failing? |
+| [[qa]] | Runs this gate as its Phase 5 via `qa-agent.sh --verify` |
+| **test-quality-gate** | **How do I raise the gate score on tests I am keeping?** |
+
+## Cómo invocar este skill
+
+Sin picker por diseño: los flags son tuning del gate; --write-junk-baseline se
+TIPEA (el ratchet sólo se congela deliberadamente — blocklist §4).
+
+Con flags o intención clara → ejecutar directo. Invocada por [[qa]] (Phase 5,
+vía `qa-agent.sh --verify`): hereda su gating y ahí NUNCA pregunta; tampoco en
+fleet/headless/cron.
 
 ## Non-negotiable Constraints
 
@@ -20,13 +39,41 @@ Create and execute a phased strategy to improve test quality by selecting a crit
 
 Before refactoring any test, you **must consult**: `docs/TESTING_QUALITY_STANDARDS.md`
 
+## Las 9 reglas anti-basura y el ratchet
+
+Besides the form checks, the gate runs the nine junk rules from the canonical
+core: `no_user_interaction` · `flow_tag_mismatch` · `deep_link_entry` ·
+`no_data_assertion` · `weak_assertion` · `duplicate_coverage` ·
+`tautological_selector` · `mock_only_assertion` · `reimplements_sut`.
+
+Their severity is decided against `.junk-baseline.json` (the ratchet): with
+`--junk-severity=error`, any finding **not** in the baseline is an error and
+**breaks the gate**; baselined findings stay warnings. The baseline only ever
+shrinks — after cleaning a batch, regenerate it with
+`--semantic-rules strict --write-junk-baseline`.
+
+A false positive is excused with a `quality: allow-*` marker. The registry
+lives in the canonical table (`TESTING_QUALITY_STANDARDS.md` §Junk-rule allow
+markers) plus the gate-local set in `test_quality_gate.py`
+`ALLOW_MARKER_RULE_IDS` — consult those, never a list copied here (F104: a
+hardcoded "six exist" survived two registry expansions). The reason in
+parentheses is **mandatory**, and the marker goes **inside the test block**:
+`// quality: allow-mock-only (fire-and-forget; the effect lives in the collaborator)`.
+
+Governance: the core is canonical in the toolkit — **never patch it locally**;
+anything per-project goes in `.testquality.yml`.
+
 ## Severity Levels
 
 | Severity | Gate Impact | When to Fix |
 |----------|-------------|-------------|
 | **error** | Fails the gate | Phase 0-3 |
-| **warning** | Lowers the score | Phase 4 |
+| **warning** | Lowers the score | Phase 1.5 (junk) / Phase 4 |
 | **info** | Style | Phase 5 |
+
+The gate PASSES/FAILS on `errors == 0` (with `--strict`, warnings fail too).
+The 0-100 Quality Score is informational and dilutes on large suites — it is
+**not** the pass criterion.
 
 ## Selection Rules (Priority Order)
 
@@ -44,6 +91,12 @@ Fix ESLint/jest-dom rule mismatches.
 
 ### Phase 1 — Backend Determinism
 Fix tests using `timezone.now` or other nondeterministic sources.
+
+### Phase 1.5 — Junk Sweep
+Baselined junk findings surface as WARNING — do **not** leave them for the
+warning sweep: they are the debt that lies the most. Attack them here, rule by
+rule, starting with the two disqualifying ones (`no_user_interaction`,
+`flow_tag_mismatch`).
 
 ### Phase 2 — E2E Fragile Locators
 Refactor critical Playwright specs to use stable locators.
@@ -71,11 +124,55 @@ npx playwright test path/to/spec.spec.js
 
 # Quality Gate
 python3 scripts/test_quality_gate.py --repo-root . --external-lint run --semantic-rules strict
+
+# Scope it to what you touched: --include-file <file> (repeatable) or --include-glob '<pattern>'
+python3 scripts/test_quality_gate.py --repo-root . --external-lint run --semantic-rules strict \
+    --include-file backend/core_app/tests/models/test_x.py \
+    --include-glob 'frontend/e2e/auth-*.spec.js'
 ```
 
-## Deliverable
+The JSON report lands at `test-results/test-quality-report.json` by default.
 
-- A phased plan (Phase 0-5)
-- Done conditions for each phase
-- Per-phase test-run commands (only changed tests)
-- Severity breakdown from initial gate run
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de [[_output-protocol]] §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| Gate strict (Recommended) | read-only: gate completo, reporte JSON en `test-results/test-quality-report.json` | `python3 scripts/test_quality_gate.py --repo-root . --external-lint run --semantic-rules strict` |
+| Gate acotado a lo tocado | mismo gate sólo sobre los archivos refactorizados | `python3 scripts/test_quality_gate.py --repo-root . --semantic-rules strict --include-file <archivo>` |
+| Cobertura de flows | covered / partial / junk-only / missing / exempt por flow | `python3 scripts/flow_coverage_audit.py --repo-root .` |
+
+NO ofrecer `--write-junk-baseline` como fila clickeable: congelar el ratchet es
+una decisión deliberada que se tipea (blocklist §4).
+
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill
+(una fila por fase del plan; ⏭️ si la fase queda fuera del scope elegido):
+
+```markdown
+🟢 test-quality-gate OK
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Gate inicial leído | ✅ | severity breakdown errores/warnings/info |
+| Phase 0 — Unblock | ✅ | ESLint/jest-dom rules corregidas |
+| Phase 1 — Backend determinism | ✅ | timezone.now y nondet fuentes arregladas |
+| Phase 1.5 — Junk sweep | ✅ | junk baselineado atacado por regla, descalificantes primero |
+| Phase 2 — E2E locators | ✅ | role/testid en specs P1/P2 |
+| Phase 3 — High-value units | ✅ | fragilidad/coupling resueltos |
+| Phase 4 — Warning sweep | ✅ | warnings eliminados |
+| Phase 5 — Info/style | ✅ | info-level findings resueltos |
+| Gate final | ✅ | score subió X → Y, errores=0 |
+```
+
+Solo se corren los tests refactorizados (nunca la suite entera). Si una fase
+quedó incompleta (Phase 5 opcional, batch consumió límite, warnings/info no
+cerrados), reemplazar el ✅ por ⚠️ o ⏭️, omitir la línea ✨ y agregar
+`## Next steps` con los archivos restantes + el comando del gate.
+
+## Next steps
+- `python3 scripts/test_quality_gate.py --repo-root . --external-lint run --semantic-rules strict` — re-correr el gate y confirmar errores=0 (acotar con `--include-file <archivo>` repetible o `--include-glob '<patrón>'`; reporte en `test-results/test-quality-report.json`)

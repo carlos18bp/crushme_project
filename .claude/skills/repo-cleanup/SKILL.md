@@ -9,6 +9,28 @@ argument-hint: "[optional: backend, frontend, docs, or all]"
 ## Goal
 Scan the repository for files that should be deleted, updated, or added to `.gitignore`. Produce a prioritized action list the user can approve before any destructive operation.
 
+## Cómo invocar este skill
+
+Gating ([[_output-protocol]] §4): si el operador pasó el argumento de alcance
+(`backend`/`frontend`/`docs`/`all`) → ejecutar directo, sin menú. Si la
+intención es clara por la sesión (p.ej. se venía hablando de basura en docs) →
+proponer el comando en una línea y esperar confirmación. Sin argumento y sin
+intención clara → UNA sola `AskUserQuestion` (Q1). Nunca preguntar en modo
+fleet/headless/cron ni dentro de un barrido.
+
+**Q1 — Alcance** (selección única — los alcances son excluyentes):
+
+| label | description | preview |
+|---|---|---|
+| Todo el repo (`all`) *(Recommended)* | audita backend + frontend + docs; read-only, sólo reporta | `/repo-cleanup all` |
+| Sólo backend | dead code Python, artefactos y configs huérfanas de `backend/` | `/repo-cleanup backend` |
+| Sólo frontend | componentes/composables sin referencias, builds trackeados | `/repo-cleanup frontend` |
+| Sólo docs | documentación stale, duplicada o vacía | `/repo-cleanup docs` |
+
+**Qué NO se pregunta:** nada más — no hay flags ocultos (el único argumento es
+el alcance). Los lotes de borrado no se preguntan acá: se aprueban después del
+reporte, con lista y evidencia visibles (ver `## Acciones disponibles`).
+
 ## What To Search For
 
 ### 1. Build & Test Artifacts Tracked in Git
@@ -91,15 +113,54 @@ Scan the repository for files that should be deleted, updated, or added to `.git
 
 ## Rules
 - **Read-only until user approves.** Do not delete, edit, or move any file during the audit. Present the report and wait for confirmation.
-- Do not flag files in `.agents/`, `.claude/`, `.windsurf/`, or `.codex/` as obsolete — these are intentional multi-tool compatibility layers.
+- Do not flag files in `.agents/`, `.claude/`, or `.codex/` as obsolete — these are intentional compatibility layers. `.windsurf/` is retired fleet-wide and must be reported as obsolete if present.
 - Do not flag Django migrations as obsolete unless they are clearly broken merge migrations.
 - Do not flag `__init__.py` files as empty/unnecessary — they mark Python packages.
 - Verify dead code claims: a file is only "unused" if it has zero imports AND is not referenced in URL configs, management commands, or template tags.
 - When recommending `.gitignore` updates, show the exact lines to add.
 
-## Output Contract
-Return a structured report with:
-1. **Summary** — total files audited, total findings, total reclaimable size.
-2. **Action items** — grouped by priority (HIGH → LOW), each with file path, reason, and recommended command.
-3. **`.gitignore` patch** — exact additions needed.
-4. **No action needed** — brief confirmation that the rest of the repo is clean.
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de [[_output-protocol]] §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| Aplicar lote HIGH (con la lista y evidencia mostradas) | ejecuta el `git rm` del lote HIGH tal cual quedó listado arriba, nada más | `git rm <paths del lote HIGH mostrado>` |
+| Aplicar patch .gitignore | agrega al `.gitignore` las líneas exactas mostradas en el reporte | `cat >> .gitignore  # líneas del patch mostrado` |
+| Aplicar TODO lo propuesto (HIGH+MEDIUM, re-mostrando evidencia) | borra ambos lotes; re-muestra lista + evidencia de MEDIUM antes de tocar | `git rm <lotes HIGH+MEDIUM>` + patch `.gitignore` |
+| Nada — sólo el reporte | cierra sin ejecutar nada | — |
+
+Los lotes MEDIUM/LOW jamás se aplican sin re-mostrar la evidencia; respeta los
+carve-outs de la skill (migrations, `__init__.py`, systemd/cron activos).
+
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill
+(auditoría read-only; ✅ limpio · ⚠️ hallazgos a revisar · ❌ HIGH: secretos o
+artefactos trackeados):
+
+```markdown
+🟢 repo-cleanup OK — <N> archivos auditados, 0 hallazgos
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Artefactos build/test trackeados | ✅ | coverage/dumps/__pycache__/dist no versionados |
+| Dead code (backend + frontend) | ✅ | 0 módulos/componentes sin referencias |
+| Backup / temp files | ✅ | sin *.bak/_old/_copy/tmp_ |
+| Config huérfana | ✅ | sin lockfiles mal ubicados ni dirs vacíos |
+| Gaps en .gitignore | ✅ | patrones cubren variantes |
+| Docs stale | ✅ | sin refs a stack removido ni duplicados |
+```
+
+Cuerpo bajo la tabla: **action items** por prioridad HIGH→LOW (path · razón ·
+comando `git rm`), **patch `.gitignore`** exacto, y tamaño reclamable total.
+Si hay hallazgos, reemplazar el ✅ de la fila por ⚠️ o ❌ (HIGH = secretos o
+artefactos trackeados) y omitir la línea ✨. Con >15 hallazgos, anteponer
+`### Resumen ejecutivo` (conteo) + `### Top 3 acciones prioritarias`.
+**Read-only hasta aprobación del operador**: la skill nunca borra.
+
+## Next steps
+- (operador) aprobar el action list antes de cualquier `git rm` / delete
+- aplicar el patch de `.gitignore` mostrado arriba

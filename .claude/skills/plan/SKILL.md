@@ -4,10 +4,18 @@ description: "Planning workflow — read context, clarify requirements, formulat
 argument-hint: "[description of the feature or problem to plan]"
 ---
 
+> *(Cuerpo en inglés por herencia; el cierre — `## Output final` — sigue el protocolo en español.)*
+
 Before starting, ALWAYS do these 3 things:
 a. Read the existing documentation in `docs/methodology/`: `architecture.md`, `product_requirement_docs.md`, `technical.md`
 b. Read the plans and context in `tasks/`: `active_context.md`, `tasks_plan.md`
-c. Get required solution context from the code files in `backend/` and `frontend/`
+c. Get required solution context from the code files in `backend/` and `frontend/` — or whatever layout exists (see [[methodology-setup]])
+
+## Cómo invocar este skill
+
+Gating ([[_output-protocol]] §4): con `$ARGUMENTS` o intención clara en la sesión → ejecutar directo, PROHIBIDO preguntar el tema (un dato menor faltante se marca en el texto, no se convierte en pregunta). Sin argumentos ni contexto → UNA sola pregunta corta en texto por el tema a planear (no picker: el insumo es libre). Nunca en modo fleet/headless/cron.
+
+Sin picker por diseño: no hay flags de modo — el argumento es la feature o el problema a planear.
 
 ---
 
@@ -15,10 +23,10 @@ c. Get required solution context from the code files in `backend/` and `frontend
 
 ## 1. UNDERSTAND the REQUIREMENTS
 
-- Always ask for clarifications and follow-ups.
-- Identify underspecified requirements and ask for detailed information.
+- Ask ONLY about product decisions that cannot be derived from the repo — technical questions are resolved by reading the code, not by asking.
+- Identify underspecified requirements; derive the answer from the codebase first, and ask for detail only when the repo cannot answer it.
 - Fully understand all aspects of the problem and gather details to make it precise and clear.
-- Ask about all hypotheses and assumptions. Remove all ambiguities.
+- State all hypotheses and assumptions explicitly. Remove all ambiguities.
 - Suggest solutions the user didn't think about — anticipate needs.
 - Only after having 100% clarity, proceed to SOLUTION.
 
@@ -50,6 +58,36 @@ c. Get required solution context from the code files in `backend/` and `frontend
 
 ---
 
-After every planning task, ALWAYS do 2 things:
+After planning, documenting is OPTIONAL — do it ONLY if the operator explicitly asks for it (it does NOT apply when invoked via `/plan-task`, which is read-only):
 a. Document the plan in `docs/methodology/`: `architecture.md`, `product_requirement_docs.md`, `technical.md`
 b. Update planning context in `tasks/`: `active_context.md`, `tasks_plan.md`
+
+---
+
+## Output final
+
+Sin menú por diseño (§4): el plan ES el entregable; su ejecución la decide el operador.
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill
+(el entregable sigue siendo el PLAN; esta tabla lo resume):
+
+```markdown
+🟢 plan OK — <título del cambio>
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Alcance entendido | ✅ | requisitos clarificados, ambigüedades/assumptions resueltas |
+| Contexto leído | ✅ | docs/methodology + tasks/ + code paths afectados |
+| Solución formulada | ✅ | meta-arquitectura + trade-offs, opción óptima justificada |
+| Archivos/interfaces a tocar | ✅ | archivos, APIs, state y test surface mapeados |
+| Pasos del plan | ✅ | breakdown step-by-step, extendable/robust/accurate |
+| Verificación definida | ✅ | test plan + escenarios de error/fallback |
+```
+
+Si el alcance aún tiene preguntas abiertas para el operador, reportar
+`⏸️ plan — pausa manual pendiente` con las clarificaciones exactas en
+`## Next steps` en lugar del veredicto 🟢.
+
+## Next steps (si aplica)
+- (manual, operador) revisar y aprobar el plan antes de implementar
+- listar las clarificaciones pendientes (una por bullet) si el veredicto fue ⏸️
