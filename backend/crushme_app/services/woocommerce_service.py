@@ -1,11 +1,10 @@
-"""
-WooCommerce API integration service
-Handles connection and data fetching from WooCommerce REST API
-"""
-import requests
-from requests.auth import HTTPBasicAuth
-from django.conf import settings
+"""WooCommerce REST API integration service."""
+
 import logging
+
+import requests
+from django.conf import settings
+from requests.auth import HTTPBasicAuth
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +16,6 @@ class WooCommerceService:
     
     def __init__(self):
         self.base_url = getattr(settings, 'WOOCOMMERCE_API_URL', 'https://distrisexcolombia.com/wp-json/wc/v3')
-        # Estas credenciales deberían venir de settings o variables de entorno
-        # Por ahora las dejamos como placeholder
         self.consumer_key = getattr(settings, 'WOOCOMMERCE_CONSUMER_KEY', 'your_consumer_key_here')
         self.consumer_secret = getattr(settings, 'WOOCOMMERCE_CONSUMER_SECRET', 'your_consumer_secret_here')
         self.auth = HTTPBasicAuth(self.consumer_key, self.consumer_secret)
@@ -28,6 +25,14 @@ class WooCommerceService:
         """
         Make a GET request to WooCommerce API
         """
+        if not all((self.base_url, self.consumer_key, self.consumer_secret)):
+            logger.info('WooCommerce request skipped because integration is not configured')
+            return {
+                'success': False,
+                'error': 'WooCommerce integration is not configured',
+                'status_code': None,
+            }
+
         url = f"{self.base_url}/{endpoint}"
         
         try:
@@ -189,4 +194,3 @@ class WooCommerceService:
 
 # Singleton instance
 woocommerce_service = WooCommerceService()
-
