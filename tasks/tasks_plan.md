@@ -2,8 +2,6 @@
 
 ## Active
 
-- [ ] Run and integrate `qa --apply` across backend, frontend-unit, and E2E
-  without production data, fake data, or a staging clone.
 - [ ] Deploy Wave 7 stage 1 in a separately authorized maintenance window with
   fresh backups, Torch-free daemon verification, and a production runtime
   probe.
@@ -25,6 +23,11 @@
 
 ## Completed
 
+- [x] Ran and integrated `qa --apply` across backend, frontend-unit, and E2E
+  without production data, fake data, or a staging clone; refreshed the flow
+  registry and validated five new browser behaviors hermetically.
+- [x] Fixed the product-card stock translation through PR #19 with a focused
+  component regression and all seven CI checks green.
 - [x] Integrated the Base Vue `c580ea8` standards snapshot, explicit CrushMe
   profile, provenance manifest, and automated drift gate through PR #18.
 - [x] Removed the accidental `crushme_project_staging` clone and fleet

@@ -2,20 +2,20 @@
 
 ## Current Focus
 
-Close QA across backend, frontend-unit, and E2E after the Base Vue standards
-convergence. A focused product-card i18n regression found during hermetic E2E is
-being fixed before QA resumes. Production deployment remains a separate future
-operation.
+Land the validated three-layer QA wave after the Base Vue standards
+convergence. The product-card i18n regression found by hermetic E2E is fixed,
+and production deployment remains a separate future operation.
 
 ## Current Coordinate
 
 - Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`;
-  repository head `8ea34f2`, deployed application release `1d476d8`.
+  QA branch base `2dec475`, deployed application release `1d476d8`.
 - Authoring isolation: fresh temporary Git worktrees only; no database, domain,
   environment file, socket, service, or permanent staging coordinate.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
 - Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
-- Runtime services: `crushme_project.service` and `crushme-huey.service`.
+- Runtime services: `gunicorn.service`, `gunicorn.socket`, and
+  `crushme-huey.service`.
 - Candidate service: `crushme-translation.service`; it is not installed in
   production until Wave 7 stage 1 deploys.
 
@@ -28,6 +28,14 @@ operation.
   complete local CI substitute and propagated to all reachable fleet hosts.
 - Base Vue standards source is fixed at `c580ea8`; canonical files, a CrushMe
   profile, and a hash gate merged through PR #18 as `8ea34f2`.
+- Product-card stock actions now use the canonical localized label; PR #19
+  merged as `2dec475` after seven green CI checks and a component regression.
+- The refreshed registry records 64 real browser flows and 176 outcomes. The
+  QA wave added five live E2E behaviors; all ten tests in the touched specs pass
+  against isolated SQLite with zero junk-only or unvalidated flows.
+- The deterministic audit remains yellow by design: 40 flows are still missing
+  complete browser coverage and one negative outcome class remains open. No
+  gap was converted into an exemption or draft credit.
 - Wave 5 PR #13 is deployed. Health, daily backup, journald observability,
   restore, and capacity gates passed; web-memory headroom improved from 25.2%
   to 81.1% without raising the 650 MiB limit.
@@ -70,8 +78,6 @@ operation.
 
 ## Next Gate
 
-Merge the focused product-card stock-label fix, then complete and integrate
-`qa --apply` for backend, frontend-unit, and E2E. No deployment is part of
-either gate. Wave 7 deployment later requires fresh recovery artifacts and
-starts a new 48-hour translation observation; lifecycle remains `modernizing`
-until all observation gates close.
+Merge the green QA branch without deploying. Wave 7 deployment later requires
+separate authorization, fresh recovery artifacts, and a new 48-hour translation
+observation; lifecycle remains `modernizing` until all observation gates close.

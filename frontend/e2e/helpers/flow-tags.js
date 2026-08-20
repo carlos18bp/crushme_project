@@ -14,6 +14,7 @@ export const FlowIds = Object.freeze({
   authResendVerification: 'auth-resend-verification',
   authLogin: 'auth-login',
   authForgotPassword: 'auth-forgot-password', // pragma: allowlist secret
+  authResetCode: 'auth-reset-code', // pragma: allowlist secret
   authResetPassword: 'auth-reset-password', // pragma: allowlist secret
   authProtectedRedirect: 'auth-protected-redirect',
   authGuestRedirect: 'auth-guest-redirect',
@@ -23,6 +24,7 @@ export const FlowIds = Object.freeze({
   catalogSearch: 'catalog-search',
   catalogProductDetail: 'catalog-product-detail',
   catalogProductVariation: 'catalog-product-variation',
+  catalogBuyNow: 'catalog-buy-now',
   catalogTrendingNavigation: 'catalog-trending-navigation',
   catalogFavoriteProduct: 'catalog-favorite-product',
   cartOpen: 'cart-open',
@@ -42,6 +44,7 @@ export const FlowIds = Object.freeze({
   wishlistPublicShare: 'wishlist-public-share',
   wishlistDirectGift: 'wishlist-direct-gift',
   wishlistPublicSearch: 'wishlist-public-search',
+  wishlistCopyShareLink: 'wishlist-copy-share-link',
   profileDashboard: 'profile-dashboard',
   profileUpdate: 'profile-update',
   profileUpload: 'profile-upload',
@@ -49,13 +52,18 @@ export const FlowIds = Object.freeze({
   profileFavorites: 'profile-favorites',
   profileOrderHistory: 'profile-order-history',
   profileGifts: 'profile-gifts',
+  profileFeed: 'profile-feed',
   diariesRandomCrush: 'diaries-random-crush',
   diariesPublicProfile: 'diaries-public-profile',
   diariesUserSearch: 'diaries-user-search',
+  diariesMediaView: 'diaries-media-view',
   reviewsDisplay: 'reviews-display',
   adminLogin: 'admin-login',
   adminOrderManagement: 'admin-order-management',
   adminCrushVerification: 'admin-crush-verification',
+  adminUserManagement: 'admin-user-management',
+  adminCatalogManagement: 'admin-catalog-management',
+  adminDiscountManagement: 'admin-discount-management',
 });
 
 export function flowTags(id, module, priority) {
