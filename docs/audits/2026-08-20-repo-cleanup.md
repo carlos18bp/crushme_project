@@ -38,9 +38,9 @@ Production runtime was not changed during this cleanup.
 
 ## Deferred Review
 
-- Root and `backend/` operational scripts contain overlapping historical
-  deployment approaches. Consolidate them only after the canonical staging
-  deployment is running and each script can be compared against live units.
+- Operational unit and Nginx copies were compared with the live production
+  configuration during modernization and consolidated under `scripts/`.
+  Installation remains gated by staging and release validation.
 - GeoLite uses a dated directory embedded in application code. A future update
   should move the path to configuration or a stable symlink before automating
   monthly database refreshes.
