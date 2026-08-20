@@ -210,3 +210,51 @@ candidate then completed the guarded cutover successfully.
   HTTP headers return the expected responses.
 - The rollback artifacts remain retained until the final observation window
   closes.
+
+## Wave 6 Revalidation
+
+Wave 6 revalidated both manifests and the real production environment before
+and after PR #14 (`1d476d8`) was deployed on 2026-08-20.
+
+### Reachable Transitive Pins
+
+The installed venv initially reported 16 findings across 10 packages. The
+requirements graph showed that five affected transitives were reachable from
+current application dependencies; they are now pinned exactly:
+
+| Package | Secure pin |
+|---|---:|
+| `click` | 8.4.2 |
+| `filelock` | 3.32.3 |
+| `idna` | 3.19 |
+| `protobuf` | 6.33.5 |
+| `sentencepiece` | 0.2.2 |
+
+The resolver dry-run, Django check, and 8 focused health/translation tests
+passed against those versions before merge. All four required PR jobs then
+passed, including the production-engine MySQL migration/concurrent-refresh
+job.
+
+### Production Environment Closure
+
+The controlled deploy updated pip to 26.2.1 and removed 18 packages that were
+installed historically but no longer reachable from `requirements.txt`:
+APScheduler, Beautiful Soup, cachetools, django-apscheduler, the obsolete
+site-package copy of django-attachments, google-auth integrations, httplib2,
+oauthlib integrations, pyasn1 integrations, pyparsing, rsa, soupsieve, Triton,
+and tzlocal. The project's vendored `backend/django_attachments/` package was
+not removed.
+
+Final results:
+
+- Frontend `npm audit`: 0 vulnerabilities.
+- Installed-environment and requirements-based `pip-audit`: only the existing
+  mitigated Stanza advisory.
+- `pip check`: no broken requirements.
+- Focused production-venv regression: 8 passed.
+- Django deploy check and migration drift: passed, with no migration required.
+- Full rollback snapshot, database/media backups, restore rehearsal, public
+  smoke checks, service health, and capacity gate: passed.
+
+The Stanza and PyTorch limitations described above remain explicit monthly
+review items. No new unmitigated critical/high finding was accepted.

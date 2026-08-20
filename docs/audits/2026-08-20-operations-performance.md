@@ -4,14 +4,15 @@ Date: 2026-08-20 UTC
 
 Coordinate: production-only `crushme_project`
 
-Release branch: `ops/20082026-crushme-wave-5`
+Release: PR #13, commit `79a25e4`
 
 ## Verdict
 
-The release candidate is ready for controlled production installation. It does
-not change CrushMe business rules, data models, payments, catalog behavior, or
-public URLs. Production acceptance remains conditional on the post-merge
-backup, restore, health, capacity, and observation controls below.
+**GREEN.** Wave 5 was installed in production on 2026-08-20. Fresh recovery
+artifacts, restore rehearsal, dependency-aware health, translation behavior,
+runtime configuration, logs, timers, and measured capacity all passed. The
+release did not change CrushMe business rules, data models, payments, catalog
+behavior, or public URLs.
 
 ## Measured Baseline
 
@@ -26,7 +27,7 @@ The application now imports Argos only when an offline translation is actually
 required. Spanish traffic and worker startup retain the existing response
 behavior without loading that engine.
 
-## Candidate Controls
+## Implemented Controls
 
 | Control | Result |
 |---|---|
@@ -38,7 +39,7 @@ behavior without loading that engine.
 | Migration drift | No changes detected |
 | systemd syntax | Web, socket, Huey, backup service, and timer passed `systemd-analyze verify` |
 | systemd hardening | Web, Huey, and backup score 3.4 `OK` offline |
-| Fleet configuration parity | Project/runtime copies match toolkit commit `79ec286` |
+| Fleet configuration parity | Project/runtime copies match the fleet standard; journald-only logging is explicit |
 | Repository hygiene | Obsolete duplicate Nginx/Gunicorn files removed; canonical copies remain under `scripts/` |
 
 ## Operational Design
@@ -55,23 +56,22 @@ behavior without loading that engine.
 - Hardened systemd units preserve the existing 650 MiB web and 450 MiB Huey
   limits instead of concealing the eager-import problem with larger limits.
 
-## Production Acceptance
+## Production Acceptance Evidence
 
-The controlled deploy must record all of the following before Wave 5 can be
-declared complete:
+| Gate | Production result |
+|---|---|
+| Fresh database backup | `default-srv571894-2026-08-20-143603.dump.gz`, gzip integrity passed |
+| Fresh media backup | `srv571894-2026-08-20-143613.tar.gz`, archive integrity passed |
+| Rollback point | `/var/backups/crushme_project/wave5-deploy-20260820T143651Z`, prior commit `98adad8` plus environment, runtime configuration, and static files |
+| Configuration validation | Candidate systemd units and `nginx -t` passed before reload |
+| Public health | HTTP 200 with application, MySQL, and Redis all `ok` |
+| Translation behavior | A genuine English category request returned translated content |
+| Restore rehearsal | 1/1 weekly database, 1/1 media, and 1/1 fresh daily database restored; disposable resources removed |
+| Capacity | 32 requests, 0 failures, 231.2 ms p95, 81.1% web-memory headroom, 75.5% CPU headroom, 63.0% host memory available |
+| Runtime checks | Web and Huey active, daily timer active, warning journals empty |
+| Fleet post-deploy | 14 pass, 0 fail, 2 non-blocking warnings: root disk usage and a known valid empty generated CSS asset |
 
-- Fresh database and media backups with archive integrity checks.
-- Rollback copies of the prior commit, environment, static files, Nginx, and
-  systemd configuration.
-- Successful systemd and Nginx validation before reload.
-- HTTP 200 health payload with both MySQL and Redis at `ok`.
-- A genuine English translation request confirming Argos behavior remains
-  available.
-- Daily backup service execution plus a restore into a disposable database and
-  media extraction into a disposable directory.
-- Representative load with at least 30% web memory and CPU headroom, at most
-  two-second p95, and no HTTP failures.
-- Green fleet post-deploy check and clean service journals.
-
-Wave 6 owns the final certification report and the real 24-hour production
-observation window. No staging clone is part of either wave.
+Wave 5 is complete. Wave 6 owns dependency revalidation, final certification,
+and the real 24-hour production observation window. No staging clone is part of
+either wave, and all rollback artifacts remain retained until observation
+closes.

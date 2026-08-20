@@ -80,6 +80,11 @@ journalctl -u crushme-huey.service --since '30 minutes ago' --no-pager
 journalctl -u crushme-dbbackup.service --since '2 days ago' --no-pager
 ```
 
+The fleet registry declares `logrotate: false` for CrushMe. No
+`/etc/logrotate.d/crushme_project*` file should exist; fleet verification treats
+an unexpected file as drift because these services do not write application
+log files.
+
 The fleet healthcheck and weekly reports remain the alerting/retention layer.
 Silk is disabled by default and may be enabled only for a bounded diagnostic
 window; its reports are not a substitute for service logs.

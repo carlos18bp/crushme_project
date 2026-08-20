@@ -53,6 +53,14 @@
 - Importing Argos from URL/serializer modules loads Torch/ONNX into every web
   worker and Huey before it is needed. A local import at the translation call
   preserves behavior while restoring ordinary-request memory headroom.
+- Updating a requirements file does not remove stale site-packages from a
+  long-lived production venv. Compare the installed graph with the resolved
+  manifest, remove only proven-unreachable packages, then run `pip check`,
+  audit, and focused behavior tests; this safely removed 18 historical
+  packages and recovered the unused Triton footprint.
+- Journald-only services must declare `logrotate: false` in the fleet registry.
+  Absence of a project logrotate file is then a verified standard, not missing
+  infrastructure.
 
 ## Remaining Debt
 
