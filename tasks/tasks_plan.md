@@ -2,8 +2,6 @@
 
 ## Active
 
-- [ ] Integrate the Base Vue `c580ea8` standards snapshot, explicit CrushMe
-  profile, provenance manifest, and automated drift gate.
 - [ ] Run and integrate `qa --apply` across backend, frontend-unit, and E2E
   without production data, fake data, or a staging clone.
 - [ ] Deploy Wave 7 stage 1 in a separately authorized maintenance window with
@@ -27,6 +25,8 @@
 
 ## Completed
 
+- [x] Integrated the Base Vue `c580ea8` standards snapshot, explicit CrushMe
+  profile, provenance manifest, and automated drift gate through PR #18.
 - [x] Removed the accidental `crushme_project_staging` clone and fleet
   coordinate without touching production data or services.
 - [x] Recovered disk space while preserving backups, media, Argos, Playwright,

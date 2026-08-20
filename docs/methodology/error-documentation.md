@@ -30,6 +30,16 @@ This file records reusable failures, risks, and resolutions.
 
 ## Resolved Issues
 
+### [ERR-003] Product cards exposed an absent stock translation key
+
+- **Date**: 2026-08-20
+- **Context**: After a failed stock check, product-card actions displayed the
+  literal key `products.product.outOfStock` instead of localized text.
+- **Root Cause**: The component referenced the product-action namespace, while
+  the EN/ES messages define the label at `products.outOfStock`.
+- **Resolution**: Pointed all product-card action variants at the canonical key
+  and added a component regression test driven by an out-of-stock response.
+
 ### [ERR-001] Accidental staging coordinate
 
 - **Date**: 2026-08-20
