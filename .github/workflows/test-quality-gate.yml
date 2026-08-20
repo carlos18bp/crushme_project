@@ -17,6 +17,14 @@ on:
       - '.testquality.yml'
       - '.junk-baseline.json'
       - 'docs/TESTING_QUALITY_STANDARDS.md'
+      - 'docs/DJANGO_VUE_ARCHITECTURE_STANDARD.md'
+      - 'docs/GLOBAL_RULES_GUIDELINES.md'
+      - 'docs/BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md'
+      - 'docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md'
+      - 'docs/TEST_QUALITY_GATE_REFERENCE.md'
+      - 'docs/CRUSHME_ARCHITECTURE_PROFILE.md'
+      - '.standards-baseline.json'
+      - 'scripts/check_standards_baseline.py'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
   push:
@@ -35,6 +43,14 @@ on:
       - '.testquality.yml'
       - '.junk-baseline.json'
       - 'docs/TESTING_QUALITY_STANDARDS.md'
+      - 'docs/DJANGO_VUE_ARCHITECTURE_STANDARD.md'
+      - 'docs/GLOBAL_RULES_GUIDELINES.md'
+      - 'docs/BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md'
+      - 'docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md'
+      - 'docs/TEST_QUALITY_GATE_REFERENCE.md'
+      - 'docs/CRUSHME_ARCHITECTURE_PROFILE.md'
+      - '.standards-baseline.json'
+      - 'scripts/check_standards_baseline.py'
       - '.pre-commit-config.yaml'
       - '.github/workflows/test-quality-gate.yml'
 
@@ -46,6 +62,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  standards-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify canonical Base Vue standards
+        run: python3 scripts/check_standards_baseline.py --repo-root .
+
   test-quality-gate:
     runs-on: ubuntu-latest
 

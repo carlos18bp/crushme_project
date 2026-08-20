@@ -232,6 +232,16 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Backend fixtures in `backend/conftest.py`: `api_client`, `user`, `admin_user`, `authenticated_client`, `admin_client`.
 - Pre-commit hook: `test-quality-gate` runs on staged test files with `--semantic-rules strict`.
 
+## Standards Contract
+- Canonical development standards are the six hashed documents listed in
+  `.standards-baseline.json`, sourced from Base Vue commit `c580ea8`.
+- `docs/CRUSHME_ARCHITECTURE_PROFILE.md` maps generic template examples to the
+  real CrushMe architecture and runtime without relaxing security or testing.
+- Never edit a canonical standard only in CrushMe. Update Base Vue first, copy
+  the approved file, update the manifest, and run
+  `python3 scripts/check_standards_baseline.py --repo-root .`.
+- Preserve the precedence and deviation rules in the project profile.
+
 ## Architecture
 
 ### Backend — Single Django App (`crushme_app`)
@@ -567,7 +577,9 @@ CrushMe maintains a Memory Bank under `docs/methodology/` and `tasks/`:
 - `active_context.md` — Current focus and recent changes
 
 **Standards files** (`docs/`):
-- `DJANGO_VUE_ARCHITECTURE_STANDARD.md`, `GLOBAL_RULES_GUIDELINES.md`, `TESTING_QUALITY_STANDARDS.md`, `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md`, `E2E_FLOW_COVERAGE_REPORT_STANDARD.md`
+- Canonical: `DJANGO_VUE_ARCHITECTURE_STANDARD.md`, `GLOBAL_RULES_GUIDELINES.md`, `TESTING_QUALITY_STANDARDS.md`, `TEST_QUALITY_GATE_REFERENCE.md`, `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md`, `E2E_FLOW_COVERAGE_REPORT_STANDARD.md`
+- Project profile: `CRUSHME_ARCHITECTURE_PROFILE.md`
+- Provenance and drift gate: `.standards-baseline.json` + `scripts/check_standards_baseline.py`
 
 Use the `methodology-setup` skill to refresh memory files when project structure changes materially.
 

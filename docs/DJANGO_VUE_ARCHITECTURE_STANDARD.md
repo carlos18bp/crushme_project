@@ -44,14 +44,15 @@ This document defines the architecture standard for fullstack projects combining
    - 3.9 [Testing (Frontend)](#39-testing-frontend)
      - 3.9.3 [E2E Module-based Directory Structure](#393-e2e-module-based-directory-structure)
      - 3.9.4 [E2E Test Infrastructure and Practical Patterns](#394-e2e-test-infrastructure-and-practical-patterns)
+       - 3.9.4.8 [Responsive / Multi-Viewport Testing](#3948-responsive--multi-viewport-testing)
      - 3.9.5 [Flow Coverage Methodology — Overview](#395-flow-coverage-methodology--overview)
-       - 3.9.5.1 [Step 0 — User Flow Map](#3951-step-0--user-flow-map-user_flow_mapmd)
      - 3.9.6 [Step 1 — Define User Flows](#396-step-1--define-user-flows-flow-definitionsjson)
      - 3.9.7 [Step 2 — Tag Tests with @flow:](#397-step-2--tag-tests-with-flow)
      - 3.9.8 [Step 3 — Flow Tag Constants](#398-step-3--flow-tag-constants-flow-tagsjs)
      - 3.9.9 [Step 4 — Custom Reporter and Artifacts](#399-step-4--custom-reporter-and-artifacts)
      - 3.9.10 [Coverage Goals and Maintenance](#3910-coverage-goals-and-maintenance)
      - 3.9.11 [Execution and Quality](#3911-execution-and-quality)
+     - 3.9.12 [User Flow Map](#3912-user-flow-map-user_flow_mapmd)
 4. [CI/CD and Pre-commit](#4-cicd-and-pre-commit)
 5. [Standard Dependencies](#5-standard-dependencies)
 6. [Execution Commands](#6-execution-commands)
@@ -101,7 +102,7 @@ These documents are the project's sources of truth. This standard **does not dup
 | `TEST_QUALITY_GATE_REFERENCE.md` | Technical quality gate reference: CLI, architecture, modes, report schema | When running or configuring the gate |
 | `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md` | Backend & frontend unit test coverage reports: custom reporters, configuration, output format, quick-start checklist | When setting up or maintaining unit/component coverage reports |
 | `E2E_FLOW_COVERAGE_REPORT_STANDARD.md` | E2E Flow Coverage Report: reporter source, flow definitions schema, tagging, JSON output, setup checklist | When setting up or maintaining E2E flow coverage |
-| `USER_FLOW_MAP.md` | Complete map of end-to-end user navigation flows organized by role, with steps, branches, and E2E coverage status | Before writing E2E tests; when adding new features that introduce navigation flows |
+| `USER_FLOW_MAP.md` | User Flow Map: human-readable narrative of all E2E user flows with steps, branches, variations, and coverage references | When adding, modifying, or reviewing user flows and E2E test coverage |
 
 > **Path note:** All documents live at the repository root or in `docs/`. If the project uses a `docs/` folder, references must be updated consistently across all files.
 
@@ -111,7 +112,6 @@ These documents are the project's sources of truth. This standard **does not dup
 3. If there is a conflict about backend/frontend unit coverage reports → `BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md` prevails
 4. If there is a conflict about E2E flow coverage → `E2E_FLOW_COVERAGE_REPORT_STANDARD.md` prevails
 5. If there is a conflict about process rules → `GLOBAL_RULES_GUIDELINES.md` prevails
-6. If there is a conflict about user flow definitions → `USER_FLOW_MAP.md` prevails
 
 ### 1.4 Testing and Quality Governance
 
@@ -1490,7 +1490,7 @@ backend/
         ├── services/          # Business logic in services (if services/ exists)
         ├── utils/             # Pure utility tests
         ├── views/             # REST endpoint tests
-        └── test_admin.py      # Django admin tests (standalone file)
+        └── admin/             # Django admin tests
 ```
 
 **When to use each layer:**
@@ -2639,146 +2639,73 @@ export default defineConfig({
 
 ##### 3.9.4.8 Responsive / Multi-Viewport Testing
 
-Responsive layout is a **cross-cutting design property**, not a user flow. It must not have its own E2E module.
+Responsive layout is a **cross-cutting design property**, not a user flow. Do **not** create a dedicated `e2e/viewport/` or `e2e/responsive/` module — it contradicts the module-based organization defined in §3.9.3.
 
-**Rules:**
-
-- **Do NOT** create a dedicated `e2e/viewport/` or `e2e/responsive/` module.
-- Use Playwright `projects` to define additional viewport sizes (mobile, tablet). Functional tests run automatically at all configured viewports.
-- If a specific component has viewport-dependent **behavior** (e.g., sidebar collapses on mobile, hamburger menu appears), the test belongs in that component's functional module (e.g., `e2e/components/layouts/mobile.spec.js`).
-
-**Multi-project configuration:**
+**Strategy:** Use Playwright `projects` to define additional viewport sizes. Functional tests run automatically at all configured viewports without any test changes.
 
 ```javascript
-// playwright.config.js
+// playwright.config.mjs — multi-project viewport setup
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  // ...
+  // ... reporter, webServer, use, etc.
   projects: [
-    { name: "Desktop Chrome", use: { ...devices["Desktop Chrome"] } },
-    { name: "Mobile Chrome", use: { ...devices["Pixel 5"] } },
-    { name: "Tablet", use: { ...devices["iPad Mini"] } },
+    {
+      name: "Desktop Chrome",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "Mobile Chrome",
+      use: { ...devices["Pixel 5"] },
+    },
+    {
+      name: "Tablet",
+      use: { ...devices["iPad Mini"] },
+    },
   ],
 });
 ```
 
-All three projects run by default — `npm run e2e` and `npm run e2e:coverage` execute the full suite across all viewports.
-
-**Per-viewport npm scripts:**
-
-| Script | Command | Purpose |
-|---|---|---|
-| `e2e` | `playwright test` | Full suite, all viewports |
-| `e2e:desktop` | `playwright test --project="Desktop Chrome"` | Desktop only |
-| `e2e:mobile` | `playwright test --project="Mobile Chrome"` | Mobile only |
-| `e2e:tablet` | `playwright test --project="Tablet"` | Tablet only |
-| `e2e:modules` | `node ./scripts/e2e-modules.cjs` | List modules defined in `flow-definitions.json` |
-| `e2e:module` | `node ./scripts/e2e-module.cjs` | Run E2E tests for a single module |
-| `e2e:coverage:module` | `node ./scripts/e2e-coverage-module.cjs` | Run E2E flow coverage for a single module |
-
-Combine viewport filter with a specific spec:
+**npm scripts for per-viewport filtering:**
 
 ```bash
+# All viewports (default)
+npm run e2e
+
+# Single viewport
+npm run e2e:desktop          # Desktop Chrome only
+npm run e2e:mobile           # Mobile Chrome (Pixel 5) only
+npm run e2e:tablet           # Tablet (iPad Mini) only
+
+# Combine viewport filter with a specific spec
 npm run e2e:desktop -- e2e/auth/auth-login.spec.js
 ```
 
-List available E2E modules (from `flow-definitions.json`):
+**When a viewport-specific behavioral test IS needed:**
 
-```bash
-npm run e2e:modules
+If a specific component has viewport-dependent **behavior** (e.g., sidebar collapses on mobile, hamburger menu appears), the test belongs in that component's functional module — not in a separate viewport module.
+
 ```
+# ✅ CORRECT — viewport-specific behavior in the owning module
+e2e/dashboard/dashboard-sidebar-mobile.spec.js
+e2e/navigation/navigation-mobile-menu.spec.js
 
-Run E2E tests for a single module (example: `auth`):
-
-```bash
-npm run e2e:module -- auth
-npm run e2e:module -- --module auth --clean
-```
-
-> `npm run e2e:module` runs `npm run e2e -- --grep @module:<name>` under the hood.
-
-Run E2E flow coverage for a single module (example: `auth`):
-
-```bash
-clear && npm run e2e:clean && npm run e2e:coverage -- --grep @module:auth
-```
-
-> `--grep @module:<name>` only runs tests tagged with that module. The flow coverage report will still list other modules as missing because the subset was not executed.
-
-Helper command for the same flow (optional):
-
-```bash
-npm run e2e:coverage:module -- auth
-npm run e2e:coverage:module -- --module auth --clean
+# ❌ WRONG — standalone viewport module
+e2e/viewport/viewport-responsive.spec.js
+e2e/responsive/responsive-layout.spec.js
 ```
 
 #### 3.9.5 Flow Coverage methodology — overview
 
 The standard E2E strategy measures coverage at the **user-flow level** rather than at the code-line level. This answers the question: *"Do our tests cover real user journeys?"*
 
-The system has **four pillars:**
+The system has **three pillars:**
 
-1. **User Flow Map** (`USER_FLOW_MAP.md`) — a human-readable document that maps every end-to-end navigation flow by role, with steps, branches, and coverage status. This is the prerequisite: flows are mapped here first, then codified in JSON.
-2. **Flow definitions** (`flow-definitions.json`) — a JSON registry of every user flow the application supports, classified by module, role, and priority.
-3. **Flow tags** (`@flow:<flow-id>`) — Playwright test tags that link each test to one or more flow definitions.
-4. **Custom reporter** (`flow-coverage-reporter.mjs`) — a Playwright reporter that computes flow-level coverage and generates a terminal report + JSON artifact.
+1. **Flow definitions** (`flow-definitions.json`) — a JSON registry of every user flow the application supports, classified by module, role, and priority.
+2. **Flow tags** (`@flow:<flow-id>`) — Playwright test tags that link each test to one or more flow definitions.
+3. **Custom reporter** (`flow-coverage-reporter.mjs`) — a Playwright reporter that computes flow-level coverage and generates a terminal report + JSON artifact.
 
 > **Full implementation guide:** see `E2E_FLOW_COVERAGE_REPORT_STANDARD.md` for the complete reporter source code, JSON output schema, report sections, and the new-project checklist.
-
-##### 3.9.5.1 Step 0 — User Flow Map (`USER_FLOW_MAP.md`)
-
-Before codifying flows in JSON, create a **human-readable map** of all end-to-end user navigation flows in `docs/USER_FLOW_MAP.md`. This document is the narrative prerequisite: it captures *what* the user can do before the system tracks *whether tests cover it*.
-
-**Document location:** `docs/USER_FLOW_MAP.md`
-
-**Purpose:**
-
-- Provide a single place where all user navigation flows are listed and described in detail.
-- Organize flows by **role** (e.g., Guest, User, Shared, Admin) — or by module, depending on the project's domain.
-- Document the **steps**, **branches** (alternative outcomes), and **E2E coverage status** for each flow.
-- Serve as the source for `flow-definitions.json` entries: every flow ID in the JSON must have a corresponding entry in the map.
-
-**Required structure:**
-
-| Section | Description |
-|---------|-------------|
-| **Metadata** | Version, last updated date, scope, sources |
-| **Roles** | List of user roles with descriptions; indicate excluded roles (e.g., Admin via Django admin) |
-| **Conventions** | Flow ID format, priority levels, coverage statuses, branch notation |
-| **Flow sections** | One section per role grouping (e.g., "Shared flows", "Guest flows", "User flows") |
-| **E2E coverage index** | Summary table mapping every Flow ID to its module, role, coverage status, and E2E spec file |
-
-**Required fields per flow entry:**
-
-| Field | Description |
-|-------|-------------|
-| `FLOW-ID` | Unique identifier in kebab-case, matching the key in `flow-definitions.json` |
-| `Module` | Logical grouping (e.g., layout, cart, checkout, blog) |
-| `Role` | Which roles exercise this flow (guest, user, guest/user) |
-| `Priority` | P1 (critical) through P3 (medium); aligns with `flow-definitions.json` priority |
-| `Routes` | Frontend routes involved in the flow |
-| `Description` | One-line summary of what the flow covers |
-| `Steps` | Numbered sequence of user actions from start to end |
-| `Branches` | Alternative outcomes or form variants (optional, listed when applicable) |
-| `Coverage` | Status (`Covered`, `Partial`, `Missing`) with reference to the E2E spec file |
-
-**When to update:**
-
-| Trigger | Action |
-|---------|--------|
-| New feature adds a page or navigation path | Add a new flow entry to the appropriate role section |
-| Existing flow changes (new steps, new branches) | Update the flow entry with the new steps/branches |
-| Feature is removed | Remove the flow entry and update the E2E coverage index |
-| E2E spec is written or updated | Update the `Coverage` field and spec reference |
-| New role is introduced | Add a new role section |
-
-**Relationship with `flow-definitions.json`:**
-
-- `USER_FLOW_MAP.md` is the **narrative source** — detailed steps, branches, and human context.
-- `flow-definitions.json` is the **machine-readable source** — consumed by the custom reporter.
-- Every flow ID in the map must exist as a key in `flow-definitions.json`, and vice versa.
-- When adding a new flow, update **both** documents: the map first (detailed description), then the JSON (reporter entry).
 
 #### 3.9.6 Step 1 — Define user flows (`flow-definitions.json`)
 
@@ -3107,11 +3034,28 @@ npx playwright test e2e/flows/checkout.spec.js
 # E2E: filter by module
 npx playwright test --grep @module:auth
 
+# E2E: list modules
+npm run e2e:modules
+
+# E2E: run a single module (alias)
+npm run e2e:module -- auth
+npm run e2e:module -- --module auth --clean
+
+# E2E: module-scoped coverage
+clear && npm run e2e:clean && npm run e2e:coverage -- --grep @module:auth
+
+# E2E: module-scoped coverage (alias)
+npm run e2e:coverage:module -- auth
+npm run e2e:coverage:module -- --module auth --clean
+
 # E2E: filter by priority
 npx playwright test --grep @priority:P1
 
 # E2E: filter by role
 npx playwright test --grep @role:client
+
+# Note: module-scoped runs only execute tagged tests. The flow coverage report will list
+# other modules/flows as missing because they were not executed in that subset.
 
 # Quality gate on specific files
 python3 scripts/test_quality_gate.py --suite frontend-unit \
@@ -3127,6 +3071,90 @@ Inline exceptions when strictly necessary:
 // quality: disable RULE_ID (reason)
 // quality: allow-serial (reason)
 ```
+
+#### 3.9.12 User Flow Map (`USER_FLOW_MAP.md`)
+
+Every project must maintain a **User Flow Map** — a human-readable document that describes all end-to-end user navigation flows in detail. While `flow-definitions.json` (§3.9.6) is the machine-readable registry consumed by the reporter, the User Flow Map is the **narrative companion** that developers, QA, and product stakeholders read to understand the full picture.
+
+**Location:** `docs/USER_FLOW_MAP.md`
+
+**Relationship to `flow-definitions.json`:**
+
+| Artifact | Format | Audience | Contains |
+|----------|--------|----------|----------|
+| `flow-definitions.json` | JSON | Reporter, CI | Flow ID, module, priority, roles, expectedSpecs |
+| `USER_FLOW_MAP.md` | Markdown | Developers, QA, product | Steps, branches, variations, routes, E2E coverage references |
+
+Both files must stay in sync. Every flow in `flow-definitions.json` must have a corresponding entry in the User Flow Map, and vice versa.
+
+**Document structure:**
+
+```markdown
+# User Flow Map
+
+Version: <semver matching flow-definitions.json>
+Last Updated: <YYYY-MM-DD>
+Description: End-to-end user flows for the <project> frontend, grouped by role.
+Sources: frontend/e2e/flow-definitions.json, frontend/e2e/helpers/flow-tags.js,
+         frontend/e2e specs, frontend/src/router.
+
+## System Roles
+- <Role 1>: <description>
+- <Role 2>: <description>
+
+## <Role Group> Flows
+
+### <flow-id>: <Flow Name>
+- Module: <module>
+- Priority: <P1–P4>
+- Route: <route path>
+- Roles: <comma-separated roles>
+- Description: <one-line description>
+- E2E Coverage: <Covered|Missing|Partial> (<spec file path>)
+
+**Steps**
+1. <step 1>
+2. <step 2>
+3. ...
+
+**Branches / Variations**
+- <variation 1>
+- <variation 2>
+```
+
+**Required fields per flow entry:**
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| Flow ID (heading) | Yes | Must match the key in `flow-definitions.json` |
+| Module | Yes | Logical module grouping |
+| Priority | Yes | P1–P4 |
+| Route | Yes | Primary route path for the flow |
+| Roles | Yes | Which roles exercise this flow |
+| Description | Yes | One-line summary |
+| E2E Coverage | Yes | Coverage status + spec file reference |
+| Steps | Yes | Numbered list of user actions from start to finish |
+| Branches / Variations | Yes | Alternate paths, error states, edge cases |
+
+**Role grouping:**
+
+- If the project has distinct user roles (e.g., admin, customer, guest), group flows by role section.
+- If all flows are shared across roles, use a single **"Shared Flows"** section.
+- Flows accessible without authentication go under **"Guest Flows"** or **"Public Flows"**.
+- Cross-role flows that span multiple roles go under **"Shared Flows"** with roles listed.
+
+**Maintenance rules:**
+
+| Trigger | Action |
+|---------|--------|
+| New flow added to `flow-definitions.json` | Add corresponding entry to User Flow Map |
+| Flow removed from `flow-definitions.json` | Remove entry from User Flow Map |
+| E2E spec file created or renamed | Update the E2E Coverage field |
+| Route path changed | Update the Route field |
+| New branch/variation discovered during testing | Add to Branches / Variations |
+| Version bump in `flow-definitions.json` | Bump version in User Flow Map header |
+
+> **When to create:** The User Flow Map should be created as part of the initial E2E Flow Coverage setup (§3.9.5–3.9.10). It is a living document — update it whenever flows change.
 
 ---
 
@@ -3358,50 +3386,7 @@ npm run test
 npm run e2e
 ```
 
-### 6.3 Global Test Runner (sequential by default)
-
-The script `scripts/run-tests-all-suites.py` runs backend pytest, frontend unit (Jest), and frontend E2E (Playwright) tests **sequentially** by default to keep logs clean. It produces per-suite logs, a resume metadata file, and a final colored report with coverage summaries.
-
-```bash
-# Run all three suites sequentially (from repo root)
-python3 scripts/run-tests-all-suites.py
-
-# Parallel mode (run suites concurrently)
-python3 scripts/run-tests-all-suites.py --parallel
-
-# Cap worker concurrency
-python3 scripts/run-tests-all-suites.py --unit-workers=50% --e2e-workers=2 --parallel
-
-# Skip specific suites
-python3 scripts/run-tests-all-suites.py --skip-backend
-python3 scripts/run-tests-all-suites.py --skip-unit --skip-e2e
-
-# Resume only failed suites from the last run
-python3 scripts/run-tests-all-suites.py --resume
-
-# Forward extra args to individual runners
-python3 scripts/run-tests-all-suites.py --backend-args="-k test_order" --e2e-args="--headed"
-```
-
-| Option | Description |
-|--------|-------------|
-| `--parallel` | Run suites in parallel instead of sequentially |
-| `--resume` | Re-run only suites that failed in the last run |
-| `--skip-backend` | Skip backend pytest suite |
-| `--skip-unit` | Skip frontend unit (Jest) suite |
-| `--skip-e2e` | Skip frontend E2E (Playwright) suite |
-| `--backend-markers` | pytest `-m` marker expression |
-| `--backend-args` | Extra args forwarded to pytest |
-| `--unit-args` | Extra args forwarded to Jest |
-| `--e2e-args` | Extra args forwarded to Playwright |
-| `--unit-workers` | Jest `--maxWorkers` value |
-| `--e2e-workers` | Playwright `--workers` value |
-| `--report-dir` | Log output directory (default: `test-reports`) |
-
-Logs per suite: `test-reports/backend.log`, `test-reports/frontend-unit.log`, `test-reports/frontend-e2e.log`.
-Resume metadata: `test-reports/last-run.json` (cleared on non-resume runs).
-
-### 6.4 Development Access URLs
+### 6.3 Development Access URLs
 
 | Resource | URL | Description |
 |----------|-----|-------------|
@@ -3475,7 +3460,6 @@ Use this list when starting a new project to ensure all standards defined in thi
   - [ ] Create `e2e/helpers/captcha.js` — captcha bypass helper (if app uses captcha)
   - [ ] Configure `playwright.config.mjs` with `webServer`, timeouts, retries, and reporters
 - [ ] **E2E Flow Coverage setup (§3.9.5–3.9.10):**
-  - [ ] Create `docs/USER_FLOW_MAP.md` with all user navigation flows organized by role (§3.9.5.1)
   - [ ] Create `e2e/flow-definitions.json` with initial user flows (at least P1 flows)
   - [ ] Create `e2e/reporters/flow-coverage-reporter.mjs` (copy from reference project or `E2E_FLOW_COVERAGE_REPORT_STANDARD.md`)
   - [ ] Register the custom reporter in `playwright.config.mjs`
@@ -3484,6 +3468,11 @@ Use this list when starting a new project to ensure all standards defined in thi
   - [ ] Tag all E2E tests with `@flow:<flow-id>` tags
   - [ ] Add `e2e-results/` to `.gitignore`
   - [ ] Run suite and verify Flow Coverage Report appears in terminal output
+- [ ] **User Flow Map (§3.9.12):**
+  - [ ] Create `docs/USER_FLOW_MAP.md` with all user flows listed in `flow-definitions.json`
+  - [ ] Document steps, branches/variations, routes, and E2E coverage references for each flow
+  - [ ] Group flows by role (Shared, Guest, User, Admin as applicable)
+  - [ ] Verify every flow in `flow-definitions.json` has a corresponding entry in the map
 
 ### 7.4 Before Production
 
@@ -3640,7 +3629,6 @@ Selectors (frontend)
   □ No waitForTimeout in E2E
 
 Flow Coverage (E2E)
-  □ New navigation flows documented in USER_FLOW_MAP.md before implementation
   □ Every test has at least one @flow:<flow-id> tag
   □ Flow ID exists in flow-definitions.json
   □ New user flows added to flow-definitions.json before writing tests
@@ -3653,53 +3641,114 @@ Quality Gate
   □ Score 100/100 or exceptions documented with justification
   □ Exceptions reviewed and not accumulated without reason
 ───────────────────────────────────────────────────────────────
-```
 
 ---
 
-## Annex C: Production Requirements
+## 8. Production Requirements
 
 All Django projects in production MUST include the following configurations.
 
-### C.1 Settings Structure
+### 8.1 Settings Structure
 
 Settings must be split into separate files:
+
 ```
 backend/[project_name]/
-├── settings.py          # Base/shared settings
-├── settings_dev.py      # Development (DEBUG=True, manage.py uses this)
-└── settings_prod.py     # Production (DEBUG=False enforced, wsgi/asgi uses this)
+├── settings.py          # Base/shared settings (imported by dev/prod)
+├── settings_dev.py      # Development overrides (DEBUG=True)
+└── settings_prod.py     # Production overrides (DEBUG=False enforced)
 ```
 
 **Required in settings_prod.py:**
 - `DEBUG = False` (hardcoded, never from environment)
-- `SECRET_KEY` must be set via `DJANGO_SECRET_KEY` env var (raise error if missing)
-- `ALLOWED_HOSTS` must be set via `DJANGO_ALLOWED_HOSTS` env var (raise error if missing)
+- `SECRET_KEY` must be set (raise error if missing)
+- `ALLOWED_HOSTS` must be set (raise error if missing)
 - Security headers enabled (HSTS, secure cookies, SSL redirect)
 
-**Database Configuration:**
-- Production: MySQL via env vars (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`)
-- Development: SQLite as default fallback (zero-config)
+### 8.2 Environment Variables
 
-### C.2 Environment Variables
+All secrets must be loaded from environment variables:
+- `DJANGO_SECRET_KEY`
+- `DB_USER`, `DB_PASSWORD`
+- `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`
+- API keys (project-specific)
 
-All secrets must be loaded from environment variables using `python-dotenv`:
+A `.env.example` file must be provided with placeholders.
 
-```python
-from dotenv import load_dotenv
+### 8.3 Automated Backups (django-dbbackup)
 
-load_dotenv(BASE_DIR / '.env')
-
-def get_env(var_name, default=None, required=False):
-    value = os.getenv(var_name, default)
-    if required and value is None:
-        raise ImproperlyConfigured(f"Missing required environment variable: {var_name}")
-    return value
+**Installation:**
+```bash
+pip install django-dbbackup
 ```
 
-A `.env.example` file must be provided with placeholders (never real secrets).
+**Configuration in settings.py:**
+```python
+INSTALLED_APPS = [
+    # ...
+    'dbbackup',
+]
 
-### C.3 Task Queue (Huey)
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': get_env('BACKUP_STORAGE_PATH', '/var/backups/[project_name]')
+}
+DBBACKUP_COMPRESS = True
+DBBACKUP_CLEANUP_KEEP = 5  # ~90 days at 20-day intervals
+```
+
+**Automation:** Use Huey periodic task (every 20 days).
+
+**Storage:** `/var/backups/[project_name]/` (outside project directory)
+
+**Retention:** 90 days
+
+### 8.4 Query Monitoring (django-silk)
+
+**Installation:**
+```bash
+pip install django-silk
+```
+
+**Configuration in settings.py (behind ENABLE_SILK flag):**
+```python
+ENABLE_SILK = get_bool_env('ENABLE_SILK', default=False)
+if ENABLE_SILK:
+    INSTALLED_APPS.append('silk')
+
+if ENABLE_SILK:
+    MIDDLEWARE.insert(1, 'silk.middleware.SilkyMiddleware')
+
+if ENABLE_SILK:
+    # Access control
+    SILKY_AUTHENTICATION = True
+    SILKY_AUTHORISATION = True
+
+    def silk_permissions(user):
+        return user.is_staff
+
+    SILKY_PERMISSIONS = silk_permissions
+
+    # Retention
+    SILKY_MAX_RECORDED_REQUESTS = 10000
+
+# Thresholds (always defined, used by weekly report task)
+SLOW_QUERY_THRESHOLD_MS = 500
+N_PLUS_ONE_THRESHOLD = 10
+```
+
+**URL:** Add `path('silk/', include('silk.urls', namespace='silk'))` to urls.py (conditional).
+
+**Garbage Collection:** Daily cleanup of data older than 7 days via management command.
+
+**Alerts:** Weekly report generated via Huey task.
+
+### 8.5 Task Queue (Huey)
+
+**Installation:**
+```bash
+pip install huey redis
+```
 
 **Configuration in settings.py:**
 ```python
@@ -3708,13 +3757,9 @@ from huey import RedisHuey
 HUEY = RedisHuey(
     name='[project_name]',
     url=get_env('REDIS_URL', 'redis://localhost:6379/1'),
-    immediate=not IS_PRODUCTION,  # Sync in dev, async in prod
+    immediate=not IS_PRODUCTION,
 )
 ```
-
-**Task Files:**
-- `[app_name]/tasks.py` — Business logic tasks (if applicable)
-- `[project_name]/tasks.py` — Infrastructure tasks (backups, monitoring)
 
 **Scheduled Tasks:**
 
@@ -3724,68 +3769,4 @@ HUEY = RedisHuey(
 | silk_garbage_collection | Daily, 4:00 AM | Clean old profiling data |
 | weekly_slow_queries_report | Mondays, 8:00 AM | Performance report |
 
-**Production:** Huey must run as a systemd service. See `docs/systemd/huey.service.example`.
-
-### C.4 Automated Backups (django-dbbackup)
-
-**Configuration in settings.py:**
-```python
-INSTALLED_APPS = [
-    # ...
-    'dbbackup',
-]
-
-STORAGES = {
-    # ...
-    'dbbackup': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-        'OPTIONS': {
-            'location': get_env('BACKUP_STORAGE_PATH', '/var/backups/[project_name]'),
-        },
-    },
-}
-
-DBBACKUP_FILENAME_TEMPLATE = '{datetime}.sql'
-DBBACKUP_MEDIA_FILENAME_TEMPLATE = '{datetime}.tar'
-DBBACKUP_CLEANUP_KEEP = 5      # ~90 days at 20-day intervals
-DBBACKUP_CLEANUP_KEEP_MEDIA = 5
-```
-
-**Storage:** Configured via `BACKUP_STORAGE_PATH` env var (outside project directory).
-
-**Retention:** 90 days (5 backups at 20-day intervals).
-
-### C.5 Query Monitoring (django-silk) — Conditional
-
-**Configuration in settings.py:**
-```python
-ENABLE_SILK = get_bool_env('ENABLE_SILK', default=False)
-
-if ENABLE_SILK:
-    INSTALLED_APPS += ['silk']
-    MIDDLEWARE.insert(1, 'silk.middleware.SilkyMiddleware')
-
-    SILKY_PYTHON_PROFILER = True
-    SILKY_AUTHENTICATION = True
-    SILKY_AUTHORISATION = True
-    SILKY_PERMISSIONS = lambda user: user.is_staff
-    SILKY_MAX_RECORDED_REQUESTS = 10000
-
-    SLOW_QUERY_THRESHOLD_MS = 500
-    N_PLUS_ONE_THRESHOLD = 10
-```
-
-**URL (conditional):**
-```python
-if getattr(settings, 'ENABLE_SILK', False):
-    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
-```
-
-**Usage:** Set `ENABLE_SILK=true` in `.env` when profiling needed. Access at `/silk/`.
-
-**Garbage Collection:** Management command `silk_garbage_collect` removes data older than 7 days.
-```bash
-python manage.py silk_garbage_collect
-python manage.py silk_garbage_collect --days=14
-python manage.py silk_garbage_collect --dry-run
-```
+**Service:** Huey must run as a systemd service in production.

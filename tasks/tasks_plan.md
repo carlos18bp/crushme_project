@@ -2,9 +2,13 @@
 
 ## Active
 
-- [ ] Land and deploy Wave 7 stage 1: pinned CTranslate2 static-int8 models,
-  Torch-free daemon, Unix client, explicit Argos rollback, focused QA, and
-  production runtime probe.
+- [ ] Integrate the Base Vue `c580ea8` standards snapshot, explicit CrushMe
+  profile, provenance manifest, and automated drift gate.
+- [ ] Run and integrate `qa --apply` across backend, frontend-unit, and E2E
+  without production data, fake data, or a staging clone.
+- [ ] Deploy Wave 7 stage 1 in a separately authorized maintenance window with
+  fresh backups, Torch-free daemon verification, and a production runtime
+  probe.
 - [ ] Observe Wave 7 stage 1 for 48 hours and one representative WooCommerce
   sync with zero translation errors, OOM events, or restart loops.
 - [ ] Execute Wave 7 stage 2 only after observation: remove Argos/Torch/Stanza/
@@ -62,3 +66,8 @@
 - [x] Restricted production backup artifacts to owner-only access and added a
   regression contract so Django storage cannot override the secure systemd
   umask with permissive defaults.
+- [x] Merged Wave 7 stage-1 code through PR #17 with a CPU-only/int8 isolated
+  CTranslate2 daemon, explicit Argos rollback, focused tests, and six green CI
+  jobs; deployment remains pending.
+- [x] Merged toolkit translation-runtime PR #41 after the approved complete
+  local CI substitute and propagated commit `3d8ff16` across the fleet.

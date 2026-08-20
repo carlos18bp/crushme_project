@@ -70,6 +70,9 @@ cd ../frontend
 npm test -- test/path/to/file.spec.js
 npx playwright test e2e/path/to/flow.spec.js
 npm run build
+
+cd ..
+python3 scripts/check_standards_baseline.py --repo-root .
 ```
 
 Fake-data commands enforce a production refusal before reading or mutating
@@ -87,6 +90,8 @@ rows. They still belong only in an isolated development database.
 ## Documentation
 
 - [Modernization roadmap](docs/MODERNIZATION_ROADMAP.md)
+- [Canonical architecture standard](docs/DJANGO_VUE_ARCHITECTURE_STANDARD.md)
+- [CrushMe architecture profile](docs/CRUSHME_ARCHITECTURE_PROFILE.md)
 - [Architecture](docs/methodology/architecture.md)
 - [Technical context](docs/methodology/technical.md)
 - [Wave 3 vulnerability report](audit-report.md)

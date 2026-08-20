@@ -54,7 +54,8 @@ will not be merged wholesale.
 - Wave 0: complete through PR #4; accidental staging retired and disk gate met.
 - Wave 1: complete through PR #5; Codex, Claude Code, and the Memory Bank are
   synchronized without runtime changes. Windsurf was subsequently retired
-  fleet-wide through PR #9.
+  fleet-wide through PR #9. The standards follow-up pins the exact Base Vue
+  `c580ea8` snapshot and separates canonical rules from the CrushMe profile.
 - Wave 2: complete through PR #6; repository cleanup, hermetic test settings,
   guarded fake data, six partitioned CI jobs, lint, and test-quality foundations
   are on `main`.
@@ -77,11 +78,11 @@ will not be merged wholesale.
   passed. The final 24-hour observation started at 2026-08-20 15:13:06 UTC and
   remains open until at least 2026-08-21 15:13:06 UTC; lifecycle therefore
   remains `modernizing`.
-- Wave 7: implementation in progress on
-  `chore/20082026-crushme-cpu-translation`. Stage 1 introduces pinned
-  static-int8 models, a Torch-free local daemon, explicit Argos rollback, and
-  focused QA. Stage 2 removes the heavyweight dependency chain only after the
-  new 48-hour observation gate passes.
+- Wave 7: stage-1 code merged through PR #17 as `3217c5f` after all six CI jobs
+  and 23 focused local tests passed. It introduces pinned static-int8 models, a
+  Torch-free local daemon, explicit Argos rollback, and focused QA. It remains
+  undeployed; stage 2 removes the heavyweight dependency chain only after the
+  new 48-hour production observation gate passes.
 
 ## Wave Delivery
 

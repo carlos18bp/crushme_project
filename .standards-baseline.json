@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/carlos18bp/base_django_vue_feature.git",
+    "profile": "vue",
+    "commit": "c580ea81ea70b7c878775c0f12e7eebbf75b3787"
+  },
+  "documents": {
+    "docs/BACKEND_AND_FRONTEND_COVERAGE_REPORT_STANDARD.md": "1f832e0cd915c9a5d54d0fd30f7296aa1895e0178bb3c596d226f1f11a0e407a",
+    "docs/DJANGO_VUE_ARCHITECTURE_STANDARD.md": "417e3336ca04d7b2a61c8fe57e7829c9387eb79adae93d493908e8037f0dc45c",
+    "docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md": "7274dfecd8888c931a3601f413eb440d1799246ad2854e7ac180c1d7efedc186",
+    "docs/GLOBAL_RULES_GUIDELINES.md": "8eea08d19a02677b88113fd097df69e8ca4fa5bc96eeb91c1d7dc089529da334",
+    "docs/TESTING_QUALITY_STANDARDS.md": "7b5ce51d9e188bce5171f24acded511da076e0cf7eaca60decf820ac48717086",
+    "docs/TEST_QUALITY_GATE_REFERENCE.md": "8f218058e1221b43bdfa431d165d4c5ac7c787cc7bdfc18734d415b3dc821778"
+  }
+}
