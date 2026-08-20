@@ -3,11 +3,11 @@
   "lastUpdated": "2026-08-20",
   "flows": {
     "public-home": {
-      "name": "View home page",
+      "name": "Browse home content",
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Navigate from the public entry point and view real featured content.",
+      "description": "Navigate to home and view featured categories, trending products, and diary cards.",
       "outcomes": ["display", "failure"]
     },
     "public-about": {
@@ -15,7 +15,7 @@
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P4",
-      "description": "Open the About page from site navigation.",
+      "description": "Open the About page from site navigation and read its localized content.",
       "outcomes": ["display"]
     },
     "public-terms": {
@@ -23,7 +23,7 @@
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Open localized terms and return to the site.",
+      "description": "Open the localized terms page and return to the site.",
       "outcomes": ["display"]
     },
     "public-privacy": {
@@ -31,7 +31,7 @@
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Open the localized privacy policy.",
+      "description": "Open the localized privacy policy from navigation or authentication pages.",
       "outcomes": ["display"]
     },
     "public-contact-submit": {
@@ -39,7 +39,7 @@
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Submit a valid or invalid contact message and handle service failure.",
+      "description": "Submit a valid contact message or receive validation and service-failure feedback.",
       "outcomes": ["success", "error", "failure"]
     },
     "public-faq-toggle": {
@@ -47,15 +47,15 @@
       "module": "public",
       "roles": ["guest", "user"],
       "priority": "P4",
-      "description": "Expand and collapse FAQ answers from the public UI.",
-      "outcomes": ["display", "success"]
+      "description": "Expand and collapse FAQ answers on the home page.",
+      "outcomes": ["success", "display"]
     },
     "navigation-locale-switch": {
       "name": "Switch locale",
       "module": "navigation",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Switch between English and Spanish while preserving the current route.",
+      "description": "Switch English and Spanish while preserving the current route.",
       "outcomes": ["success", "display"]
     },
     "navigation-mobile-menu": {
@@ -63,7 +63,7 @@
       "module": "navigation",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Open the mobile menu and navigate to a public module.",
+      "description": "Open the mobile menu and navigate to a public destination.",
       "outcomes": ["success", "display"]
     },
     "navigation-not-found": {
@@ -71,7 +71,7 @@
       "module": "navigation",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Visit an unknown route and receive a recoverable 404 view.",
+      "description": "Visit an unknown route and use the recoverable not-found view.",
       "outcomes": ["display"]
     },
     "auth-register": {
@@ -79,7 +79,7 @@
       "module": "auth",
       "roles": ["guest"],
       "priority": "P1",
-      "description": "Create an account and handle validation or delivery failures.",
+      "description": "Create an account or receive client/server validation and delivery-failure feedback.",
       "outcomes": ["success", "error", "failure"]
     },
     "auth-verify-email": {
@@ -87,15 +87,15 @@
       "module": "auth",
       "roles": ["guest"],
       "priority": "P1",
-      "description": "Activate a pending account with a valid or invalid verification code.",
-      "outcomes": ["success", "error"]
+      "description": "Activate a pending account with a valid code or receive rejected-code and request-failure feedback.",
+      "outcomes": ["success", "error", "failure"]
     },
     "auth-resend-verification": {
       "name": "Resend verification code",
       "module": "auth",
       "roles": ["guest"],
       "priority": "P2",
-      "description": "Request a replacement verification code and handle delivery failure.",
+      "description": "Request a replacement verification code, including rejected and delivery-failure states.",
       "outcomes": ["success", "error", "failure"]
     },
     "auth-login": {
@@ -103,7 +103,7 @@
       "module": "auth",
       "roles": ["guest"],
       "priority": "P1",
-      "description": "Authenticate a verified user and report rejected or failed attempts.",
+      "description": "Authenticate a verified user or display rejected credentials and request failures.",
       "outcomes": ["success", "error", "failure"]
     },
     "auth-forgot-password": {
@@ -111,16 +111,24 @@
       "module": "auth",
       "roles": ["guest"],
       "priority": "P2",
-      "description": "Request a reset code and handle invalid input or delivery failure.",
+      "description": "Request a reset code with valid input or display validation and delivery failures.",
       "outcomes": ["success", "error", "failure"]
+    },
+    "auth-reset-code": {
+      "name": "Validate reset code locally",
+      "module": "auth",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "Enter a four-digit reset code and continue to password reset, or display local validation feedback.",
+      "outcomes": ["success", "error"]
     },
     "auth-reset-password": {
       "name": "Reset password",
       "module": "auth",
       "roles": ["guest"],
       "priority": "P2",
-      "description": "Set a new password with a valid code or display validation errors.",
-      "outcomes": ["success", "error"]
+      "description": "Set a new password using a valid code or display rejected-field and request-failure feedback.",
+      "outcomes": ["success", "error", "failure"]
     },
     "auth-protected-redirect": {
       "name": "Protect authenticated routes",
@@ -143,7 +151,7 @@
       "module": "auth",
       "roles": ["user"],
       "priority": "P1",
-      "description": "Clear local authentication and return to a public route.",
+      "description": "Clear authenticated state from the profile navigation and return to a public route.",
       "outcomes": ["success", "failure"]
     },
     "catalog-browse": {
@@ -151,7 +159,7 @@
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Navigate to the catalog and view deterministic product data or a load failure.",
+      "description": "Navigate to the catalog and view real products or its loading failure state.",
       "outcomes": ["display", "failure"]
     },
     "catalog-filter-sort": {
@@ -159,23 +167,23 @@
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Filter by theme or category, sort products, and paginate results.",
-      "outcomes": ["success", "display", "error"]
+      "description": "Select themes or categories, sort products, paginate, and handle loading failures.",
+      "outcomes": ["success", "display", "failure"]
     },
     "catalog-search": {
       "name": "Search catalog",
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Search products and display matching, empty, invalid, or failed states.",
-      "outcomes": ["success", "display", "error", "failure"]
+      "description": "Search products and display matching, empty, or request-failure states.",
+      "outcomes": ["success", "display", "failure"]
     },
     "catalog-product-detail": {
       "name": "View product detail",
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Open a product from the catalog and view price, stock, gallery, and description.",
+      "description": "Open a product and view its price, stock, gallery, description, and unavailable or failed detail states.",
       "outcomes": ["display", "error", "failure"]
     },
     "catalog-product-variation": {
@@ -183,15 +191,15 @@
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Select available options and handle incomplete or unavailable combinations.",
-      "outcomes": ["success", "error", "display"]
+      "description": "Select attributes for a variable product and handle incomplete, unavailable, and load-failure combinations.",
+      "outcomes": ["success", "error", "failure", "display"]
     },
     "catalog-trending-navigation": {
       "name": "Browse trending products",
       "module": "catalog",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Navigate the trending carousel and open a listed product.",
+      "description": "View trending products, open a listed product, and retry a failed content load.",
       "outcomes": ["success", "display", "failure"]
     },
     "catalog-favorite-product": {
@@ -199,15 +207,23 @@
       "module": "catalog",
       "roles": ["user"],
       "priority": "P2",
-      "description": "Add or remove a product favorite and display authentication, authorization, or service failures.",
+      "description": "Add or remove a product favorite and show current state, authorization, or service failure.",
       "outcomes": ["success", "error", "failure", "display"]
+    },
+    "catalog-buy-now": {
+      "name": "Buy product now",
+      "module": "catalog",
+      "roles": ["guest", "user"],
+      "priority": "P1",
+      "description": "Check stock, add a simple product, and proceed directly to checkout or report stock and service failures.",
+      "outcomes": ["success", "error", "failure"]
     },
     "cart-open": {
       "name": "Open cart drawer",
       "module": "cart",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Open the cart from navigation and view populated or empty state.",
+      "description": "Open the cart from navigation and view populated or empty local-cart state.",
       "outcomes": ["display"]
     },
     "cart-add": {
@@ -215,7 +231,7 @@
       "module": "cart",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Check stock and add an available product or report stock/service errors.",
+      "description": "Check stock and add an available product, or report out-of-stock and service failures.",
       "outcomes": ["success", "error", "failure"]
     },
     "cart-quantity-update": {
@@ -223,7 +239,7 @@
       "module": "cart",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Increase or decrease quantity while enforcing stock and quantity limits.",
+      "description": "Increase or decrease cart quantity while enforcing quantity and stock limits.",
       "outcomes": ["success", "error", "failure"]
     },
     "cart-remove": {
@@ -232,14 +248,14 @@
       "roles": ["guest", "user"],
       "priority": "P2",
       "description": "Remove an item and display the resulting cart state.",
-      "outcomes": ["success", "failure", "display"]
+      "outcomes": ["success", "display"]
     },
     "cart-checkout-validation": {
       "name": "Start checkout from cart",
       "module": "cart",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Continue from a non-empty cart to checkout or block the empty-cart state before payment.",
+      "description": "Continue from a non-empty cart or block checkout for the empty-cart state.",
       "outcomes": ["success", "error", "display"]
     },
     "cart-clear": {
@@ -247,7 +263,7 @@
       "module": "cart",
       "roles": ["guest", "user"],
       "priority": "P3",
-      "description": "Confirm cart clearing and display the resulting empty-cart state.",
+      "description": "Confirm cart clearing and display the resulting empty state.",
       "outcomes": ["success", "display"]
     },
     "checkout-shipping-details": {
@@ -255,15 +271,15 @@
       "module": "checkout",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Enter recipient and shipping data with client and server validation.",
-      "outcomes": ["success", "error"]
+      "description": "Enter recipient and shipping data with client, server, and dependency validation.",
+      "outcomes": ["success", "error", "failure"]
     },
     "checkout-discount": {
       "name": "Apply discount",
       "module": "checkout",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Apply a valid discount or display rejected and unavailable states.",
+      "description": "Apply a valid discount or display rejected and service-unavailable states.",
       "outcomes": ["success", "error", "failure"]
     },
     "checkout-paypal": {
@@ -271,7 +287,7 @@
       "module": "checkout",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Create and capture a sandbox PayPal order with cancellation and failure handling.",
+      "description": "Create and capture a sandbox PayPal order with cancellation, rejection, and gateway-failure handling.",
       "outcomes": ["success", "error", "failure"]
     },
     "checkout-wompi": {
@@ -287,7 +303,7 @@
       "module": "checkout",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Return from a gateway and display approved, pending, rejected, or unavailable status.",
+      "description": "Return from a gateway and display approved, pending, rejected, timeout, or unavailable status.",
       "outcomes": ["success", "display", "error", "failure"]
     },
     "checkout-gift-recipient": {
@@ -295,7 +311,7 @@
       "module": "checkout",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Preserve the wishlist recipient and shipping contract through checkout.",
+      "description": "Select or resolve a gift recipient and preserve the wishlist recipient contract through checkout.",
       "outcomes": ["success", "error", "failure"]
     },
     "wishlist-create": {
@@ -311,7 +327,7 @@
       "module": "wishlist",
       "roles": ["user"],
       "priority": "P1",
-      "description": "Add a product through the wishlist selector or remove an item from an owned expanded wishlist.",
+      "description": "Add a product through the selector or remove an item from an owned expanded wishlist.",
       "outcomes": ["success", "error", "failure", "display"]
     },
     "wishlist-public-share": {
@@ -319,7 +335,7 @@
       "module": "wishlist",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Resolve a public @username/wishlist link, add only available items to the cart, or show invalid, missing, empty, and load-failure states.",
+      "description": "Resolve an @username/wishlistId link, add available items to cart, or show invalid, missing, empty, and load-failure states.",
       "outcomes": ["success", "error", "failure", "display"]
     },
     "wishlist-direct-gift": {
@@ -327,7 +343,7 @@
       "module": "wishlist",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Select a shared wishlist item and enter gift checkout for its owner.",
+      "description": "Select a public wishlist and enter gift checkout for its owner.",
       "outcomes": ["success", "error", "failure"]
     },
     "wishlist-public-search": {
@@ -335,15 +351,23 @@
       "module": "wishlist",
       "roles": ["user"],
       "priority": "P2",
-      "description": "Search a username, display public wishlists or an empty result, and open a selected list for gift checkout.",
+      "description": "Search a username, display public wishlists or no results, and open a selected list for gift checkout.",
       "outcomes": ["success", "display", "error", "failure"]
+    },
+    "wishlist-copy-share-link": {
+      "name": "Copy wishlist share link",
+      "module": "wishlist",
+      "roles": ["user", "guest"],
+      "priority": "P3",
+      "description": "Copy an owned or public wishlist URL and show successful or failed clipboard feedback.",
+      "outcomes": ["success", "error"]
     },
     "profile-dashboard": {
       "name": "View profile dashboard",
       "module": "profile",
       "roles": ["user", "crush"],
       "priority": "P2",
-      "description": "Navigate through the profile UI and view account summary data.",
+      "description": "Navigate through profile UI and view account summary and gift-count data.",
       "outcomes": ["display", "failure"]
     },
     "profile-update": {
@@ -351,7 +375,7 @@
       "module": "profile",
       "roles": ["user", "crush"],
       "priority": "P1",
-      "description": "Save profile text, links, locale, and personal information with validation.",
+      "description": "Save profile, address, links, and personal information with validation.",
       "outcomes": ["success", "error", "failure"]
     },
     "profile-upload": {
@@ -359,7 +383,7 @@
       "module": "profile",
       "roles": ["user", "crush"],
       "priority": "P2",
-      "description": "Upload or remove profile, cover, and gallery images with rejection feedback.",
+      "description": "Upload or remove profile, cover, and gallery images with validation and persistence feedback.",
       "outcomes": ["success", "error", "failure", "display"]
     },
     "profile-crush-verification": {
@@ -367,7 +391,7 @@
       "module": "profile",
       "roles": ["user", "crush"],
       "priority": "P1",
-      "description": "Request or cancel crush verification and display its current status.",
+      "description": "Request or cancel crush verification and display current pending, approved, or rejected status.",
       "outcomes": ["success", "error", "failure", "display"]
     },
     "profile-favorites": {
@@ -375,7 +399,7 @@
       "module": "profile",
       "roles": ["user"],
       "priority": "P2",
-      "description": "View and remove favorite products or handle an empty list.",
+      "description": "View and remove favorite products, including empty and loading-failure states.",
       "outcomes": ["success", "display", "failure"]
     },
     "profile-order-history": {
@@ -383,7 +407,7 @@
       "module": "profile",
       "roles": ["user"],
       "priority": "P1",
-      "description": "View real purchase history and order status details.",
+      "description": "View real purchase history, expand orders, paginate, and open a purchased product.",
       "outcomes": ["display", "failure"]
     },
     "profile-gifts": {
@@ -391,8 +415,16 @@
       "module": "profile",
       "roles": ["user", "crush"],
       "priority": "P1",
-      "description": "Switch between sent and received gift records and view empty states.",
-      "outcomes": ["display", "success", "failure"]
+      "description": "Switch between sent and received gift records and view real or empty states.",
+      "outcomes": ["success", "display", "failure"]
+    },
+    "profile-feed": {
+      "name": "View profile activity feed",
+      "module": "profile",
+      "roles": ["user", "crush"],
+      "priority": "P2",
+      "description": "View activity feed records or the empty and load-failure states on the dashboard.",
+      "outcomes": ["display", "failure"]
     },
     "diaries-random-crush": {
       "name": "Discover a random crush",
@@ -407,7 +439,7 @@
       "module": "diaries",
       "roles": ["guest", "user"],
       "priority": "P1",
-      "description": "Open a crush profile by username and view public wishlists or a missing profile.",
+      "description": "Open a crush profile by username and view public profile data or a missing and failed state.",
       "outcomes": ["display", "error", "failure"]
     },
     "diaries-user-search": {
@@ -415,15 +447,23 @@
       "module": "diaries",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "Search public profiles and select a result or view an empty/error state.",
-      "outcomes": ["success", "display", "error", "failure"]
+      "description": "Search public profiles, select a result, or display empty and request-failure states.",
+      "outcomes": ["success", "display", "failure"]
+    },
+    "diaries-media-view": {
+      "name": "View crush media",
+      "module": "diaries",
+      "roles": ["guest", "user"],
+      "priority": "P4",
+      "description": "Open and close a public profile, cover, or gallery image modal.",
+      "outcomes": ["success", "display"]
     },
     "reviews-display": {
       "name": "View product reviews",
       "module": "reviews",
       "roles": ["guest", "user"],
       "priority": "P2",
-      "description": "View review statistics, records, and the empty state from product detail.",
+      "description": "View product review statistics, records, retry state, and the empty state from product detail.",
       "outcomes": ["display", "failure"]
     },
     "admin-login": {
@@ -431,24 +471,48 @@
       "module": "admin",
       "roles": ["staff"],
       "priority": "P2",
-      "description": "Authenticate a staff user in the custom Django admin or reject invalid access.",
-      "outcomes": ["success", "error"]
+      "description": "Authenticate a staff user in the custom Django admin or reject invalid credentials and failures.",
+      "outcomes": ["success", "error", "failure"]
     },
     "admin-order-management": {
       "name": "Manage order status",
       "module": "admin",
       "roles": ["staff"],
       "priority": "P2",
-      "description": "Find an order and update its operational status from the admin UI.",
-      "outcomes": ["success", "error", "display"]
+      "description": "Find an order, view it, and update operational status from Django Admin.",
+      "outcomes": ["success", "error", "failure", "display"]
     },
     "admin-crush-verification": {
       "name": "Review crush verification",
       "module": "admin",
       "roles": ["staff"],
       "priority": "P2",
-      "description": "Review, approve, or reject a pending crush verification request.",
-      "outcomes": ["success", "error", "display"]
+      "description": "Review, approve, or reject pending crush verification requests from Django Admin.",
+      "outcomes": ["success", "error", "failure", "display"]
+    },
+    "admin-user-management": {
+      "name": "Manage user records",
+      "module": "admin",
+      "roles": ["staff"],
+      "priority": "P2",
+      "description": "Search, inspect, and update registered user, guest, address, gallery, and link records in Django Admin.",
+      "outcomes": ["success", "error", "failure", "display"]
+    },
+    "admin-catalog-management": {
+      "name": "Manage catalog records",
+      "module": "admin",
+      "roles": ["staff"],
+      "priority": "P2",
+      "description": "Search, inspect, and update local catalog, WooCommerce mirror, category, variation, and pricing-margin records.",
+      "outcomes": ["success", "error", "failure", "display"]
+    },
+    "admin-discount-management": {
+      "name": "Manage discount codes",
+      "module": "admin",
+      "roles": ["staff"],
+      "priority": "P2",
+      "description": "Create, edit, inspect, or reject invalid discount-code changes in Django Admin.",
+      "outcomes": ["success", "error", "failure", "display"]
     }
   }
 }

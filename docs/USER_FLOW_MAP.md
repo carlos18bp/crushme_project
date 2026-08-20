@@ -2,132 +2,152 @@
 
 **Fecha de corte:** 2026-08-20
 **Registro ejecutable:** `frontend/e2e/flow-definitions.json`
-**Fase:** QA Fase 1, inventario de flujos desde codigo real
-**Alcance:** 56 flujos, 149 outcomes, 25 P1 y 22 P2
-**Evidencia actual:** 4 cubiertos, 16 parciales, 36 faltantes, 0 junk-only y 0
-sin validar; detalle en `docs/audits/2026-08-20-wave-4-qa.md`
+**Fuente de verdad:** rutas Vue, componentes, stores consumidos por UI,
+URLs/vistas Django y Django Admin en `2dec475`.
+**Alcance:** 64 flujos, 176 outcomes, 26 P1 y 27 P2.
+**Cobertura E2E:** no auditada en esta Fase 1; no inferir cobertura desde la existencia de specs.
 
 ## Roles
 
-- **Guest:** visita contenido publico, explora el catalogo, usa el carrito
-  local y completa checkout anonimo.
-- **User:** cuenta autenticada que administra perfil, favoritos, wishlists,
-  pedidos y regalos.
-- **Crush:** User con solicitud o aprobacion de verificacion; expone perfil
-  publico y recibe regalos.
-- **Gift buyer:** Guest o User que abre una wishlist publica y paga un regalo
-  para su titular.
-- **Staff:** operador autenticado del Django Admin.
+- **Guest:** visita contenido público, explora catálogo, mantiene un carrito local y completa checkout anónimo.
+- **User:** cuenta autenticada que gestiona perfil, favoritos, wishlists, pedidos y regalos.
+- **Crush:** User con solicitud, rechazo o aprobación de verificación; expone perfil público y recibe regalos.
+- **Gift buyer:** Guest o User que abre una wishlist pública y compra para su titular.
+- **Staff:** operador autenticado del Django Admin personalizado.
 
 ## Convenciones
 
-- Cada ID representa una interaccion observable desde navegador, no la mera
-  disponibilidad de un endpoint o metodo de store.
-- Los outcomes son `success`, `error`, `failure` y `display`.
-- `error` cubre validacion local o respuesta rechazada; `failure` cubre una
-  dependencia, carga o servicio no disponible. Flujos puramente estaticos
-  solo requieren `display`.
-- PayPal y Wompi se ejercitan exclusivamente con sandbox. SMTP, WooCommerce,
-  sincronizacion, traduccion y webhooks no son interacciones directas de UI.
-- No hay exenciones intencionales `expectedSpecs: 0` registradas.
-- Las brechas se conservan visibles y se priorizan por severidad; una prueba
-  solo recibe credito cuando ejecuta una interaccion y afirma su outcome.
-
-## Inventario
-
-| Modulo | Flujos | Outcomes | P1 | P2 |
-|---|---:|---:|---:|---:|
-| Publico | 6 | 10 | 0 | 2 |
-| Navegacion | 3 | 5 | 0 | 1 |
-| Autenticacion | 9 | 20 | 5 | 3 |
-| Catalogo | 7 | 22 | 3 | 3 |
-| Carrito | 6 | 15 | 3 | 2 |
-| Checkout | 6 | 18 | 5 | 1 |
-| Wishlists | 5 | 18 | 4 | 1 |
-| Perfil | 7 | 21 | 4 | 3 |
-| Diaries | 3 | 10 | 1 | 2 |
-| Reviews | 1 | 2 | 0 | 1 |
-| Admin | 3 | 8 | 0 | 3 |
-| **Total** | **56** | **149** | **25** | **22** |
+- Un flow representa una interacción verificable desde el navegador. Endpoints sin disparador UI, webhooks, sincronización WooCommerce, traducción, tareas Huey y comandos de gestión no son flows E2E.
+- `success` es la acción completada; `error` es validación, permiso o rechazo recuperable; `failure` es una dependencia o solicitud fallida; `display` es contenido, datos reales o estado vacío observable.
+- Cuando una clase no aparece en el registro, es **n/a**: el código no contiene un camino de navegador para esa clase. Por ejemplo, las páginas legales sólo tienen `display`; los guards sólo redirigen localmente.
+- Un display E2E debe llegar mediante navegación UI y afirmar datos reales, nunca sólo `goto()` y visibilidad.
+- No existen exenciones `expectedSpecs: 0`.
+- Los contratos UI relevantes usan `request_http.js`: JWT, CSRF, `Accept-Language` y `X-Currency`. Los resultados HTTP rechazados son `error`; fallas de red, gateway o carga son `failure`.
 
 ## Guest
 
-| Modulo | Interacciones registradas |
-|---|---|
-| Publico | `public-home`, `public-about`, `public-terms`, `public-privacy`, `public-contact-submit`, `public-faq-toggle` |
-| Navegacion | `navigation-locale-switch`, `navigation-mobile-menu`, `navigation-not-found` |
-| Autenticacion | `auth-register`, `auth-verify-email`, `auth-resend-verification`, `auth-login`, `auth-forgot-password`, `auth-reset-password`, `auth-protected-redirect` |
-| Catalogo | `catalog-browse`, `catalog-filter-sort`, `catalog-search`, `catalog-product-detail`, `catalog-product-variation`, `catalog-trending-navigation` |
-| Carrito | `cart-open`, `cart-add`, `cart-quantity-update`, `cart-remove`, `cart-checkout-validation`, `cart-clear` |
-| Checkout | `checkout-shipping-details`, `checkout-discount`, `checkout-paypal`, `checkout-wompi`, `checkout-payment-status`, `checkout-gift-recipient` |
-| Diaries | `diaries-random-crush`, `diaries-public-profile`, `diaries-user-search` |
-| Reviews | `reviews-display` |
+| Flow | Ruta o disparador real | Outcomes | n/a |
+|---|---|---|---|
+| `public-home` | `HomeView` y navegación principal | display, failure | success/error: no mutación ni validación propia |
+| `public-about` | Navbar/Footer → `/en|es/about` | display | success/error/failure: contenido estático |
+| `public-terms` | Auth/Footer → `/en|es/terms` | display | success/error/failure: contenido estático |
+| `public-privacy` | Auth/Footer → `/en|es/privacy` | display | success/error/failure: contenido estático |
+| `public-contact-submit` | `ContactView` → `POST /api/contact/` | success, error, failure | display: el formulario no carga datos de negocio |
+| `public-faq-toggle` | FAQ de `HomeView` | success, display | error/failure: estado local |
+| `navigation-locale-switch` | `LanguageSelector` | success, display | error/failure: cambio local de ruta/locale |
+| `navigation-mobile-menu` | Navbar móvil | success, display | error/failure: navegación local |
+| `navigation-not-found` | catch-all Vue | display | success/error/failure: vista estática de recuperación |
+| `auth-register` | `/signup`, `POST /api/auth/signup/` | success, error, failure | display: no lista de datos |
+| `auth-verify-email` | `/verification`, `POST /api/auth/verify-email/` | success, error, failure | display: sólo formulario/alerta |
+| `auth-resend-verification` | botón `verification-resend` | success, error, failure | display: sólo alerta/cooldown |
+| `auth-login` | `/login`, `POST /api/auth/login/` | success, error, failure | display: sólo formulario/alerta |
+| `auth-forgot-password` | `/forgot-password`, `POST /api/auth/forgot-password/` | success, error, failure | display: sólo formulario/alerta |
+| `auth-reset-code` | `/reset-code`, código de cuatro dígitos | success, error | failure: submit sólo navega localmente |
+| `auth-reset-password` | `/reset-password`, `POST /api/auth/reset-password/` | success, error, failure | display: sólo formulario/alerta |
+| `auth-protected-redirect` | guard de rutas `/profile/**` | success | error/failure/display: guard local sin vista propia |
+| `catalog-browse` | Navbar → `/products`, WooCommerce local API | display, failure | success/error: cargar lista no muta ni valida input |
+| `catalog-filter-sort` | filtros, sort y paginación de `ProductsView` | success, display, failure | error: categorías proceden del API, no hay input inválido UI |
+| `catalog-search` | búsqueda de `ProductsView` | success, display, failure | error: búsqueda libre sin validación de rechazo UI |
+| `catalog-product-detail` | tarjeta → `/products/:id` | display, error, failure | success: abrir detalle no muta |
+| `catalog-product-variation` | atributos de `ProductDetailView` | success, error, failure, display | ninguna |
+| `catalog-trending-navigation` | `TrendingProducts` | success, display, failure | error: no hay formulario/validación |
+| `catalog-buy-now` | `ProductCard.handleBuyNow()` | success, error, failure | display: cubierto por catálogo/detalle |
+| `cart-open` | botón Navbar con `aria-label="Cart"` | display | success/error/failure: sólo estado local |
+| `cart-add` | tarjeta/detalle → `cartStore.addToCart()` | success, error, failure | display: cubierto por drawer |
+| `cart-quantity-update` | controles +/- del drawer | success, error, failure | display: cubierto por drawer |
+| `cart-remove` | remover item del drawer | success, display | error/failure: mutación local sin request |
+| `cart-checkout-validation` | drawer → checkout | success, error, display | failure: validación y routing locales |
+| `cart-clear` | confirmación de `CartDrawer` | success, display | error/failure: mutación local |
+| `checkout-shipping-details` | formulario de `CheckoutView` | success, error, failure | display: datos no son vista independiente |
+| `checkout-discount` | `POST /api/discounts/validate/` | success, error, failure | display: descuento se afirma dentro del total |
+| `checkout-paypal` | botones sandbox PayPal | success, error, failure | display: integración no tiene vista de datos |
+| `checkout-wompi` | widget sandbox Wompi | success, error, failure | display: integración no tiene vista de datos |
+| `checkout-payment-status` | `/checkout/wompi/success`, polling status | success, display, error, failure | ninguna |
+| `checkout-gift-recipient` | búsqueda/selección de receptor | success, error, failure | display: resultados se prueban en el flujo de selección |
+| `wishlist-public-share` | `/:locale?/@:username/:wishlistId` | success, error, failure, display | ninguna |
+| `wishlist-direct-gift` | botón Buy wishlist desde perfil público | success, error, failure | display: lista se afirma en perfil público |
+| `diaries-random-crush` | `/diaries`, `GET /api/auth/crush/random/` | success, display, failure | error: no hay input validable |
+| `diaries-public-profile` | `/diaries/@:username` | display, error, failure | success: cargar perfil no muta |
+| `diaries-user-search` | `UserSearch` con debounce | success, display, failure | error: texto libre sin rechazo UI |
+| `diaries-media-view` | modal de avatar, portada o galería | success, display | error/failure: estado local |
+| `reviews-display` | `ProductReviews` en detalle | display, failure | success/error: UI actual no crea ni edita reviews |
 
-## User y Crush
+## User
 
-| Modulo | Interacciones registradas |
-|---|---|
-| Sesion | `auth-guest-redirect`, `auth-logout` |
-| Catalogo | `catalog-favorite-product` |
-| Wishlists | `wishlist-create`, `wishlist-item-manage`, `wishlist-public-share`, `wishlist-direct-gift`, `wishlist-public-search` |
-| Perfil | `profile-dashboard`, `profile-update`, `profile-upload`, `profile-crush-verification`, `profile-favorites`, `profile-order-history`, `profile-gifts` |
+| Flow | Ruta o disparador real | Outcomes | n/a |
+|---|---|---|---|
+| `auth-guest-redirect` | guard de login/signup | success | error/failure/display: guard local |
+| `auth-logout` | `ProfileSidebar.handleLogout()` | success, failure | error/display: no formulario ni vista de datos |
+| `catalog-favorite-product` | corazón de `ProductCard`/detalle | success, error, failure, display | ninguna |
+| `wishlist-create` | modal de `ProfileWishlist` | success, error, failure | display: lista se prueba al expandirla |
+| `wishlist-item-manage` | selector de wishlist y remover item | success, error, failure, display | ninguna |
+| `wishlist-public-search` | formulario de `ProfileWishlist` | success, display, error, failure | ninguna |
+| `wishlist-copy-share-link` | botones de copiar URL en wishlist/perfil público | success, error | failure/display: Clipboard API es la única dependencia y el contenido se cubre en el flow origen |
+| `profile-dashboard` | `/profile` | display, failure | success/error: dashboard no muta ni recibe input |
+| `profile-update` | `/profile/my-profile` | success, error, failure | display: carga inicial se cubre con dashboard |
+| `profile-upload` | foto de perfil, portada y galería | success, error, failure, display | ninguna |
+| `profile-crush-verification` | solicitud/cancelación en `MyProfile` | success, error, failure, display | ninguna |
+| `profile-favorites` | `/profile/favorites` | success, display, failure | error: no input validable |
+| `profile-order-history` | `/profile/history` | display, failure | success/error: expansión/paginación no muta |
+| `profile-gifts` | `/profile/my-gifts` | success, display, failure | error: tabs locales sin validación |
+| `profile-feed` | `Feed` en `ProfileDashboard` → `GET /api/feeds/my-feeds/` | display, failure | success/error: no acción mutante ni formulario |
 
-El flujo de regalo desde wishlist publica resuelve `@username/wishlistId`,
-descarta productos no disponibles y redirige con `giftMode`, destinatario e ID
-de wishlist; el checkout vuelve a validar datos de envio, descuento, importe y
-estado de pago.
+## Crush
+
+| Flow | Ruta o disparador real | Outcomes | n/a |
+|---|---|---|---|
+| `profile-dashboard` | dashboard autenticado | display, failure | success/error: sin mutación |
+| `profile-update` | formulario `MyProfile` | success, error, failure | display: carga cubierta por dashboard |
+| `profile-upload` | media de `MyProfile` | success, error, failure, display | ninguna |
+| `profile-crush-verification` | solicitud, cancelación y estado | success, error, failure, display | ninguna |
+| `profile-gifts` | regalos recibidos/enviados | success, display, failure | error: tabs locales |
+| `profile-feed` | actividad del dashboard | display, failure | success/error: sin mutación |
+
+## Gift Buyer
+
+| Flow | Ruta o disparador real | Outcomes | n/a |
+|---|---|---|---|
+| `wishlist-public-share` | enlace compartido de wishlist | success, error, failure, display | ninguna |
+| `wishlist-direct-gift` | compra desde wishlist pública | success, error, failure | display: lista cubierta al resolver link/perfil |
+| `checkout-shipping-details` | checkout de regalo | success, error, failure | display: no vista independiente |
+| `checkout-gift-recipient` | destinatario prellenado o seleccionado | success, error, failure | display: resultados son parte de selección |
+| `checkout-discount` | código de descuento | success, error, failure | display: total en checkout |
+| `checkout-paypal` | PayPal sandbox | success, error, failure | display: no vista propia |
+| `checkout-wompi` | Wompi sandbox | success, error, failure | display: no vista propia |
+| `checkout-payment-status` | retorno de gateway | success, display, error, failure | ninguna |
 
 ## Staff
 
-| Modulo | Interacciones registradas |
-|---|---|
-| Django Admin | `admin-login`, `admin-order-management`, `admin-crush-verification` |
+| Flow | Superficie real | Outcomes | n/a |
+|---|---|---|---|
+| `admin-login` | `/admin/` custom `CrushMeAdminSite` | success, error, failure | display: login no lista datos |
+| `admin-order-management` | `OrderAdmin` | success, error, failure, display | ninguna |
+| `admin-crush-verification` | `CustomUserAdmin` actions approve/reject | success, error, failure, display | ninguna |
+| `admin-user-management` | User, GuestUser, UserAddress, UserGallery y UserLink admins | success, error, failure, display | ninguna |
+| `admin-catalog-management` | Product, WooCommerce catalog, categories, variations y margins admins | success, error, failure, display | ninguna |
+| `admin-discount-management` | `DiscountCodeAdmin` | success, error, failure, display | ninguna |
 
-## Evidencia Sustantiva
+## E2E Coverage Index
 
-- Las rutas reales de checkout, perfil, wishlists y diaries estan en
-  `frontend/src/router/index.js:95`, `frontend/src/router/index.js:107` y
-  `frontend/src/router/index.js:198`.
-- La ruta compartida consulta la wishlist publica, rechaza enlaces invalidos o
-  listas vacias, omite items no disponibles y redirige al checkout en
-  `frontend/src/views/wishlist/WishlistCheckoutRedirect.vue:60`,
-  `frontend/src/views/wishlist/WishlistCheckoutRedirect.vue:71` y
-  `frontend/src/views/wishlist/WishlistCheckoutRedirect.vue:123`.
-- `wishlist-public-search` cubre el formulario y la consulta de listas publicas
-  en `frontend/src/views/profile/ProfileWishlist.vue:32` y
-  `frontend/src/views/profile/ProfileWishlist.vue:389`.
-- `catalog-favorite-product` cubre el control que redirige guests a login y
-  agrega o elimina favoritos en
-  `frontend/src/components/products/ProductCard.vue:253`.
-- `cart-clear` cubre la confirmacion previa al vaciado del carrito en
-  `frontend/src/components/products/CartDrawer.vue:246`.
-- Se retiro `checkout-guest-identify`: `guestCheckout()` existe solo como
-  metodo de store en `frontend/src/stores/modules/authStore.js:289`, sin
-  consumidor UI; el checkout anonimo real usa el formulario de envio.
-- Se retiraron `wishlist-edit-delete` y `wishlist-favorite`: los metodos
-  persisten en `frontend/src/stores/modules/wishlistStore.js:130` y
-  `frontend/src/stores/modules/wishlistStore.js:433`, pero la UI solo crea,
-  busca, copia y elimina items (`frontend/src/views/profile/ProfileWishlist.vue:311`).
-- Se retiraron `reviews-create` y `reviews-manage`: los botones no tienen
-  handler en `frontend/src/components/products/ProductReviews.vue:23` y la
-  unica accion de menu permanece como TODO en
-  `frontend/src/components/products/ProductReviews.vue:145`.
-- Se retiro `pricing-currency-display`: la moneda se detecta por geolocalizacion
-  en `frontend/src/stores/modules/currencyStore.js:63`; no existe selector de
-  moneda en la UI actual.
-- Se retiro `profile-feed`: no hay ruta de perfil para feed
-  (`frontend/src/router/index.js:110`); solo persiste una consulta aislada en
-  `frontend/src/stores/modules/profileStore.js:912`.
-- Se conservan los flujos de Admin: la interfaz esta publicada en
-  `backend/crushme_project/urls.py:33`, registra pedidos en
-  `backend/crushme_app/admin.py:421` y acciones de aprobacion/rechazo de Crush
-  en `backend/crushme_app/admin.py:110` y
-  `backend/crushme_app/admin.py:133`.
+| Dimensión | Flujos | Outcomes | Estado |
+|---|---:|---:|---|
+| Público y navegación | 9 | 15 | pendiente de auditoría |
+| Autenticación | 10 | 28 | pendiente de auditoría |
+| Catálogo | 8 | 25 | pendiente de auditoría |
+| Carrito | 6 | 14 | pendiente de auditoría |
+| Checkout | 6 | 19 | pendiente de auditoría |
+| Wishlists | 6 | 20 | pendiente de auditoría |
+| Perfil | 8 | 21 | pendiente de auditoría |
+| Diaries | 4 | 11 | pendiente de auditoría |
+| Reviews | 1 | 2 | pendiente de auditoría |
+| Django Admin | 6 | 23 | pendiente de auditoría |
+| **Total** | **64** | **176** | **pendiente de auditoría** |
 
-## Disciplina de Selectores
+Ejecutar después de escribir el registro:
 
-La disciplina esta presente, pero parcial: hay `data-testid` para login,
-terminos, catalogo y tarjetas de producto, por ejemplo
-`frontend/src/views/auth/LoginView.vue:25` y
-`frontend/src/components/products/ProductCard.vue:2`. Los flujos restantes
-deben ampliar `data-testid` o roles accesibles antes de autorizar nuevos E2E.
+```bash
+python3 scripts/flow_coverage_audit.py --repo-root . --json test-results/flow-audit.json
+```
+
+El layout es monolítico: `.testquality.yml` no declara `flow_definitions_dir`.
+No corresponde ejecutar `generate_flow_registry.py`.

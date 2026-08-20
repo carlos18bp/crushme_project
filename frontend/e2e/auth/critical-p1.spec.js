@@ -36,6 +36,31 @@ test.describe('critical authentication journeys', () => {
     await expect(page.getByRole('dialog')).toContainText('Invalid verification code');
   });
 
+  // Bug caught: a failed resend starts the cooldown and permanently blocks recovery.
+  test('reenables verification resend after a delivery failure', {
+    tag: ['@flow:auth-resend-verification', '@role:guest', '@outcome:failure'],
+  }, async ({ page }) => {
+    await page.route('**/api/auth/resend-verification/', (route) => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Delivery unavailable' }),
+    }));
+
+    await page.goto('/en/verification?email=e2e-user@example.test');
+    const resendButton = page.getByTestId('verification-resend');
+    const resendResponse = page.waitForResponse(
+      (response) => response.url().includes('/api/auth/resend-verification/')
+        && response.request().method() === 'POST'
+        && response.status() === 500,
+    );
+    await resendButton.click();
+
+    expect((await resendResponse).status()).toBe(500);
+    await expect(page.getByRole('dialog')).toContainText('Failed to resend code: Delivery unavailable');
+    await expect(resendButton).toHaveText('Resend');
+    await expect(resendButton).toBeEnabled();
+  });
+
   // Bug caught: logout leaves local tokens that still grant access to protected routes.
   test('clears a local session from the profile sidebar', {
     tag: ['@flow:auth-logout', '@role:user', '@outcome:success'],
