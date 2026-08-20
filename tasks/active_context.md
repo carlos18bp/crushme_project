@@ -1,14 +1,27 @@
-# Active Context — CrushMe
+# Active Context - CrushMe
 
 ## Current Focus
-AI tools ecosystem audit and methodology setup (April 2026).
 
-## Recent Changes
-- Audited and corrected all AI guidance files against real codebase (21 files fixed)
-- Key corrections: store API pattern, HTTP client architecture, Nuxt→Vue references, projectapp residuals, venv path
-- Initialized Memory Bank (`docs/methodology/` + `tasks/`)
+Wave-based modernization of the existing production project. There is no
+CrushMe staging environment and none will be created for this program.
+
+## Current Coordinate
+
+- Runtime: `/home/ryzepeck/webapps/crushme_project` on `main`.
+- Authoring: temporary worktree under `/home/ryzepeck/webapps/.wt/`.
+- Domain: `crushme.com.co` and `www.crushme.com.co`.
+- Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
 
 ## Active Decisions
-- Single HTTP client pattern (`request_http.js`) is the established approach — no plans to split
-- Mixed Pinia store API styles (setup + Options) are acceptable — match existing style when editing
-- PyTorch remains installed but unused (tech debt, not blocking)
+
+- Release one PR per wave directly to `main`.
+- Reuse the old modernization branch only as reviewed source material.
+- Preserve function-based DRF views and the single frontend HTTP client.
+- Preserve existing business behavior unless a verified security defect requires
+  a compatibility-conscious correction.
+- Never run QA or fake-data commands against production data.
+
+## Next Gate
+
+Land Wave 0, then create Wave 1 from the resulting `main` and synchronize the
+three AI ecosystems against the canonical toolkit and Vue scaffold.
