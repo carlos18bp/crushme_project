@@ -15,7 +15,19 @@ This file tracks known errors, their context, and resolutions. When a reusable f
 
 ## Known Issues
 
-_No known issues recorded yet._
+### [KNOWN-001] Production database credential exists in Git history
+- **Date**: 2026-08-20
+- **Context**: Repository cleanup found a literal credential in the former `backend/setup_db.sql`.
+- **Root Cause**: Initial deployment bootstrap SQL was committed with a real password.
+- **Impact**: The tracked value matches the active production database credential.
+- **Required Resolution**: Rotate credentials, update protected stores atomically, verify services, and purge or explicitly accept Git-history exposure.
+- **Files Affected**: Git history for `backend/setup_db.sql`; production environment and fleet credential store.
+
+### [KNOWN-002] Permanent staging DNS is not provisioned
+- **Date**: 2026-08-20
+- **Context**: `crushme.projectapp.co` does not resolve.
+- **Impact**: HTTPS staging deployment and external Playwright validation cannot complete.
+- **Required Resolution**: Create DNS record to the staging VPS before Wave 5 certification.
 
 ## Resolved Issues
 

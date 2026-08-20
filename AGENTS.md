@@ -254,18 +254,18 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Build output goes to `backend/static/frontend/` — do not edit files there directly.
 
 ### Environment & Settings
-- Base settings: `backend/crushme_project/settings.py`. Environment-specific overrides auto-import from `settings_dev.py` or `settings_prod.py` based on `DJANGO_ENV` env var (default: `development`).
-- Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings` (from `pytest.ini`).
+- Base settings: `backend/crushme_project/settings.py`. Production uses `DJANGO_ENV=production`; staging uses the explicit `settings_staging` module.
+- Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings_test` (from `pytest.ini`) and never inherits deployment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
-- Systemd units: `gunicorn.service` (not `crushme_project.service`) + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
+- Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
 - Memory limit: 650M (PyTorch is in requirements but unused in code).
 
 ### Deployment Flow
 1. `git pull origin main`
 2. `pip install -r requirements.txt` + `python manage.py migrate`
-3. `cd frontend && npm install && npm run build`
+3. `cd frontend && npm ci && npm run build`
 4. `python manage.py collectstatic --noinput`
-5. `sudo systemctl restart gunicorn crushme-huey`
+5. `sudo systemctl restart crushme_project crushme-huey`
 
 ### Email Templates
 Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_templates/{en,es}/`. Email sending is handled by `crushme_app/services/email_service.py`.
@@ -276,35 +276,6 @@ Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_te
 - Do not hardcode user-facing strings — use `vue-i18n` locale files or server-side translation.
 - Do not edit files inside `backend/static/frontend/` — they are Vite build artifacts.
 - Prefer existing project patterns over generic framework advice.
-<!-- session-start-protocol:begin -->
-## Session Start Protocol
-
-Al inicio de **cada sesión y antes de editar archivos**, debes invocar la skill `git-sync` para este repo. Razón: el operador trabaja desde múltiples máquinas y procesos automatizados (cron, CI) pueden haber commiteado cambios que tu copia local no tiene; editar sobre una versión desactualizada genera conflictos o trabajo duplicado.
-
-**Flujo:**
-1. Un hook `SessionStart` (definido en `~/.codex/hooks.json`) ejecuta `git fetch + git status` read-only y te inyecta el estado de este repo como contexto.
-2. Si el reporte indica `behind > 0` o `dirty > 0`, **invoca la skill `git-sync`** antes de hacer cualquier cambio. `git-sync` hace rebase contra el parent branch y, si hay conflictos, te guía interactivamente por la resolución.
-3. Si el reporte indica `behind=0 ahead=0 dirty=0`, el repo ya está sincronizado y puedes proceder.
-
-**Importante:** Nunca uses `git pull --force`, `git reset --hard` ni stash automático para "resolver" el sync — usa siempre la skill `git-sync`, que es segura y reproducible.
-<!-- session-start-protocol:end -->
-<!-- e2e-user-flows-protocol:begin -->
-## E2E User Flows Check
-
-Cuando termines de implementar un cambio que afecte un **flujo de usuario en el frontend** — por ejemplo:
-- Crear o editar un formulario (agregar/quitar campos)
-- Nueva ruta, página o vista accesible al usuario
-- Cambios en flujos de autenticación, checkout, onboarding, búsqueda, perfil
-- Modificaciones a `docs/USER_FLOW_MAP.md` o `frontend/e2e/flow-definitions.json`
-
-…debes invocar la skill `e2e-user-flows-check` como **paso final** antes de reportar la implementación como completa. Esa skill audita la cobertura E2E del flujo modificado y reporta brechas/riesgos.
-
-**Por qué:** los flujos de usuario en frontend cambian las assumptions de los tests E2E. Sin auditoría, un campo eliminado deja tests "verdes" pero inválidos, y un form nuevo queda sin cobertura.
-
-**No aplica para:** correcciones aisladas que no cambian el flujo (typos, refactors internos, estilos puros, dependency bumps), ni cambios solo en backend que no alteren UX.
-
-**Recordatorio automático:** el protocolo de cierre de Codex revisa al cierre del turno si hay cambios uncommitted bajo `frontend/src/`, `frontend/app/`, etc., y te lo inyecta como contexto. El hook es un recordatorio, no bloqueante — la regla aplica igual aunque el hook no dispare.
-<!-- e2e-user-flows-protocol:end -->
 <!-- project-shared:end -->
 
 <!-- codex-specific:begin -->
@@ -321,9 +292,9 @@ Cuando termines de implementar un cambio que afecte un **flujo de usuario en el 
 - **Domain**: `crushme.com.co` / `www.crushme.com.co`
 - **Stack**: Django 5.1.5 + DRF (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
-- **Services**: `gunicorn.service` (Gunicorn), `gunicorn.socket`, `crushme-huey.service`
+- **Services**: `crushme_project.service` (Gunicorn), `crushme-huey.service`
 - **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in `.env`
-- **Nginx**: `/etc/nginx/sites-available/crushme_project`
+- **Nginx**: `/etc/nginx/sites-available/crushme`
 - **Static**: `/home/ryzepeck/webapps/crushme_project/backend/staticfiles/`
 - **Media**: `/home/ryzepeck/webapps/crushme_project/backend/media/`
 - **Resource limits**: MemoryMax=650M, CPUQuota=40%, OOMScoreAdjust=300
@@ -638,8 +609,8 @@ flowchart TD
 
 **Important paths**:
 - The Python venv lives at `backend/venv_cpu/` (PyTorch CPU build), **not** `backend/venv/`. Activate with `cd backend && source venv_cpu/bin/activate`.
-- The systemd unit is named `gunicorn.service` (not `crushme_project.service`) — this is a quirk of this deployment.
-- The systemd socket binds to `/run/gunicorn.sock`.
+- The production systemd unit is `crushme_project.service`.
+- Gunicorn binds to `/run/gunicorn.sock`.
 
 ---
 
@@ -760,23 +731,23 @@ This is the **PyTorch CPU build venv** — not a regular `venv/`. PyTorch is cur
 
 #### Frontend dev server
 ```bash
-cd frontend && npm install && npm run dev   # Vite, default :5173
+cd frontend && npm ci && npm run dev   # Vite, default :5173
 ```
 
 ### Production Deployment
 
-See `.agents/skills/deploy-and-check/SKILL.md` for the canonical sequence. Note the systemd quirks:
-- The Gunicorn unit is named **`gunicorn.service`** (not `crushme_project.service`).
+See `.agents/skills/deploy-and-check/SKILL.md` for the canonical sequence:
+- The Gunicorn unit is `crushme_project.service`.
 - The Huey unit is `crushme-huey.service`.
 - The socket is at `/run/gunicorn.sock`.
 
 Deploy summary:
 1. `git pull origin main`
 2. Backend: `cd backend && source venv_cpu/bin/activate && pip install -r requirements.txt && python manage.py migrate`
-3. Frontend: `cd frontend && npm install && npm run build`
+3. Frontend: `cd frontend && npm ci && npm run build`
 4. Backend: `python manage.py collectstatic --noinput`
-5. Restart: `sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey`
-6. Verify: `bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh crushme_project`
+5. Restart: `sudo systemctl restart crushme_project && sudo systemctl restart crushme-huey`
+6. Verify: `bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh crushme_project`
 
 ### Testing Insights
 
@@ -787,7 +758,7 @@ Deploy summary:
 
 ### Tech Debt / Things to Be Aware Of
 
-- **PyTorch is in `requirements.txt` but unused** — `torch`, `transformers`, `sklearn` do not appear in any application code. The `venv_cpu` and the 650M memory limit exist because of PyTorch's footprint, even though it isn't actively imported.
+- **PyTorch is in `requirements.txt` but unused** — `torch`, `stanza`, and `ctranslate2` do not appear in application code. The `venv_cpu` and the 650M memory limit exist because of their footprint.
 - `stanza` and `ctranslate2` are also installed without active integration (probably future translation upgrades).
 - The single `crushme_app` is large; consider splitting if it grows further.
 

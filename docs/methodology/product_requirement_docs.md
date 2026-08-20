@@ -33,11 +33,11 @@ CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform. Verified 
   - **PayPal** for international payments (USD)
   - **Wompi** for Colombian payments (COP)
 - Webhook endpoints update `Order.status` based on payment events
-- Order tracking via `OrderTracking` model
+- Order history and payment status are stored on `Order`
 - Orders can be forwarded to WooCommerce via `woocommerce_order_service`
 
 ### 6. Reviews & Ratings
-- Product reviews with text and images (`Review`, `ReviewImage`)
+- Product reviews and ratings via `Review`
 
 ### 7. User Diaries / Public Profiles
 - Public-facing user diary pages at `/diaries/@{username}`
@@ -54,7 +54,7 @@ CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform. Verified 
 - Backend `CurrencyMiddleware` reads the header
 
 ### 10. Contact & Feed
-- Contact form with `ContactMessage` model
+- Contact form persisted through the `Contact` model
 - Feed system for user activity
 
 ## Non-Functional Requirements

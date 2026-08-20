@@ -1,49 +1,68 @@
-# Deployment Guide — crushme_project
+# Deployment Guide - CrushMe
 
-Instructions for deploying crushme_project to production.
+This document records project-specific facts. The executable deployment
+protocol is `.agents/skills/deploy-and-check/SKILL.md` and the fleet registry is
+`vps-ops-toolkit/projects.yml`.
 
----
+## Production Coordinate
 
-## Prerequisites
+| Item | Value |
+|---|---|
+| Path | `/home/ryzepeck/webapps/crushme_project` |
+| Branch | `main` |
+| Domain | `crushme.com.co`, `www.crushme.com.co` |
+| Django service | `crushme_project.service` |
+| Huey service | `crushme-huey.service` |
+| Gunicorn socket | `/run/gunicorn.sock` |
+| Nginx site | `/etc/nginx/sites-available/crushme` |
+| Settings | `crushme_project.settings` with `DJANGO_ENV=production` |
 
-- Ubuntu/Debian with Python 3.12+, Node 22+, MySQL 8+, Redis, Nginx
-- SSL certificate (Let's Encrypt via certbot)
-- Domain: `crushme.com.co`
+## Release Gate
 
----
+Deploy only an integration commit that has passed:
 
-## Deploy from main
+1. Dependency and vulnerability audit.
+2. Secret scan and production credential rotation when required.
+3. Focused backend, frontend unit, and E2E quality gates.
+4. Frontend build and Django system/migration checks.
+5. Staging smoke tests and the roadmap observation window.
+6. Explicit lifecycle/release authorization in the fleet registry.
+
+## Canonical Sequence
+
+The deployment skill performs the guarded form of this sequence:
 
 ```bash
 cd /home/ryzepeck/webapps/crushme_project
-git pull origin main
+git pull --ff-only origin main
 
-# Backend
 cd backend
 source venv_cpu/bin/activate
 pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
+python manage.py migrate --noinput
 
-# Frontend
 cd ../frontend
-npm install
+npm ci
 npm run build
 
-# Restart services
-sudo systemctl restart gunicorn
-sudo systemctl restart crushme-huey
+cd ../backend
+python manage.py collectstatic --noinput
+
+sudo systemctl restart crushme_project.service
+sudo systemctl restart crushme-huey.service
+
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh crushme_project
 ```
 
-## Environment Variables
+Do not use this snippet to bypass the skill's branch, registry, health, rollback,
+or production confirmation gates.
 
-All variables are loaded from `backend/.env` via `python-decouple`.
-See `backend/.env.example` for the full list with descriptions.
+## Staging
 
-Key variables:
-- `DJANGO_ENV=production`
-- `DJANGO_SECRET_KEY` (required)
-- `DJANGO_ALLOWED_HOSTS` (required)
-- `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `REDIS_URL`
-- `ENABLE_SILK=false`
+Staging uses `crushme_project.settings_staging`, separate MySQL and Redis
+resources, sandbox gateways, disabled scheduled backups, and its own service
+names/socket. It must never copy production payment secrets or run against the
+production database.
+
+The planned hostname is `crushme.projectapp.co`; deployment remains blocked
+until DNS resolves to the staging VPS.

@@ -2,7 +2,9 @@
 
 ## Active Tasks
 
-_No active tasks._
+- [ ] Execute `docs/MODERNIZATION_ROADMAP.md` waves 1-6 on `release/crushme-modernization`
+- [ ] Rotate the exposed production database credential before lifecycle promotion
+- [ ] Establish isolated staging at `crushme.projectapp.co` after DNS is provisioned
 
 ## Backlog
 
@@ -17,4 +19,7 @@ _No active tasks._
 
 ## Completed
 
-_No completed tasks recorded yet._
+- [x] Add `modernizing` lifecycle and isolated work coordinate
+- [x] Synchronize Claude, Codex, and Windsurf baselines/skills
+- [x] Add hermetic test/staging settings and fake-data guardrails
+- [x] Remove generated artifacts, dead frontend files, and tracked secret file

@@ -252,18 +252,18 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Build output goes to `backend/static/frontend/` — do not edit files there directly.
 
 ### Environment & Settings
-- Base settings: `backend/crushme_project/settings.py`. Environment-specific overrides auto-import from `settings_dev.py` or `settings_prod.py` based on `DJANGO_ENV` env var (default: `development`).
-- Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings` (from `pytest.ini`).
+- Base settings: `backend/crushme_project/settings.py`. Production uses `DJANGO_ENV=production`; staging uses the explicit `settings_staging` module.
+- Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings_test` (from `pytest.ini`) and never inherits deployment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
-- Systemd units: `gunicorn.service` (not `crushme_project.service`) + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
+- Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
 - Memory limit: 650M (PyTorch is in requirements but unused in code).
 
 ### Deployment Flow
 1. `git pull origin main`
 2. `pip install -r requirements.txt` + `python manage.py migrate`
-3. `cd frontend && npm install && npm run build`
+3. `cd frontend && npm ci && npm run build`
 4. `python manage.py collectstatic --noinput`
-5. `sudo systemctl restart gunicorn crushme-huey`
+5. `sudo systemctl restart crushme_project crushme-huey`
 
 ### Email Templates
 Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_templates/{en,es}/`. Email sending is handled by `crushme_app/services/email_service.py`.

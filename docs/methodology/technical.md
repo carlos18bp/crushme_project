@@ -56,12 +56,12 @@ Product content is translated at WooCommerce sync time via `argostranslate` and 
 9 stores use setup/Composition API, 3 use Options API. This is the current state — not a design decision to enforce.
 
 ### PyTorch Installed But Unused
-`torch`, `transformers`, `stanza`, `ctranslate2` are in `requirements.txt` but no application code imports them. The `venv_cpu` venv and 650M memory limit exist because of PyTorch's footprint.
+`torch`, `stanza`, and `ctranslate2` are in `requirements.txt` but no application code imports them. The `venv_cpu` venv and 650M memory limit exist because of PyTorch's footprint.
 
 ## Development Environment
 
 ### Prerequisites
-- Python 3.12+, Node 18+
+- Python 3.12+, Node 22
 - MySQL 8, Redis
 - venv at `backend/venv_cpu/` (NOT `backend/venv/`)
 
@@ -77,10 +77,12 @@ cd frontend && npm run dev  # :5173, proxies /api/ and /media/ to :8000
 
 ### Environment Variables
 Managed via `python-decouple` reading `.env` file:
-- `DJANGO_ENV` — `development` (default) or `production`
+- `DJANGO_ENV` — `development` (default), `staging`, `test`, or `production`
+- `DJANGO_SETTINGS_MODULE` — use `settings_staging` for staging and `settings_test` for tests/E2E
 - `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`
 - `REDIS_CACHE_URL` (default: `redis://127.0.0.1:6379/1`)
-- `REDIS_HUEY_URL` (default: `redis://127.0.0.1:6379/2`)
+- `REDIS_URL` (default: `redis://127.0.0.1:6379/2`)
+- `FAKE_DATA_ALLOWED` — enables fake-data commands only on isolated non-production databases
 - `ENABLE_SILK` — Enable django-silk profiling (default: False)
 
 ## Deployment
@@ -93,5 +95,5 @@ Managed via `python-decouple` reading `.env` file:
 2. `cd backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_ENV=production python manage.py migrate`
 3. `cd frontend && npm ci && npm run build`
 4. `cd backend && DJANGO_ENV=production python manage.py collectstatic --noinput`
-5. `sudo systemctl restart gunicorn && sudo systemctl restart crushme-huey`
-6. `bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh crushme_project`
+5. `sudo systemctl restart crushme_project && sudo systemctl restart crushme-huey`
+6. `bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh crushme_project`
