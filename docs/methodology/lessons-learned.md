@@ -26,14 +26,30 @@ Patterns, preferences, and project intelligence discovered during development.
 
 ## Testing
 
-- Backend product tests currently contain one file with 10 fake-data guard cases; six historical `test_*.py` scripts outside the suite are not quality-gate coverage.
-- Frontend has 1 unit test file (`src/utils/__tests__/priceHelper.test.js`). E2E directory has no specs.
-- The Jest config only discovers `frontend/test/`; the existing unit file must be moved before it counts.
-- Pre-commit hook: `test-quality-gate` runs on staged test files with `--semantic-rules strict`.
+- The executable inventory is 18 backend behavior files / 49 test functions,
+  7 frontend-unit files / 16 tests, and 11 E2E specs / 21 tests. Historical
+  scripts outside `crushme_app/tests` do not count as behavior coverage.
+- Literal Playwright tags are required on each test: `@flow`, `@role`, and
+  `@outcome`. The static auditor does not resolve imported tag constants.
+- The E2E scenario uses guarded file-backed SQLite and one worker. Increasing
+  workers requires per-worker data isolation, not just a config change.
+- A worktree without `backend/venv_cpu` must pass `E2E_PYTHON` explicitly;
+  CI already does this.
+- Cold Vite lazy routes require condition-based navigation synchronization.
+  Use `waitForURL` before the click and bounded action timeouts, never sleeps,
+  retries, `force`, or weakened assertions.
+- User-content fixtures should be unambiguous in the requested locale unless
+  translation is the behavior under test; otherwise auto-detection can invoke
+  real offline Argos and contaminate timing.
+- Mutating E2E tests must clean up their own records and assert cleanup success.
+- Pre-commit runs strict semantic quality, ESLint, secret detection, and Bandit.
+- Canonical QA is yellow at 4 covered, 16 partial, and 36 missing flows, with
+  no junk-only or unvalidated flow.
 
 ## Tech Debt
 
 - **Translation dependency chain is real** — Argos uses CTranslate2; Stanza pulls PyTorch, while MiniSBD is forced to keep vulnerable Stanza model loading unreachable.
-- **Memory headroom is unproven** — validate the 650M limit with a representative translation sync in staging.
-- **Minimal test coverage** — destructive command guards are covered, but core product behavior and all E2E flows remain uncovered.
-- **Exposed database credential** — a bootstrap SQL file matched production credentials and remains in Git history; rotation and history remediation block lifecycle promotion.
+- **Memory headroom is unproven** - validate the 650M limit with a representative translation sync in staging.
+- **Flow coverage remains incomplete** - 36 of 56 declared flows are missing and one negative-case gap remains.
+- **Permanent staging is blocked** - `crushme.projectapp.co` does not resolve, so TLS, restore, profiling, and sandbox smoke checks are not certified.
+- **Exposed database credential** - a bootstrap SQL file matched production credentials and remains in Git history; rotation and history remediation block lifecycle promotion.

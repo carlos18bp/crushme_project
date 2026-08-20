@@ -105,6 +105,11 @@ Views are thin wrappers. Business logic lives in services:
   contacts payment, SMTP, translation, currency, or WooCommerce providers.
 - GitHub Actions partitions backend, frontend unit/build, E2E, and MySQL
   migration compatibility into independent jobs.
+- The executable inventory contains 18 backend behavior files / 49 test
+  functions, 7 frontend-unit files / 16 tests, and 11 Playwright specs / 21
+  tests. Static flow tags map them to 56 declared outcomes.
+- The E2E database is shared and guarded, so Playwright runs one worker. Stable
+  selectors use `data-testid` for controls and accessible role/name elsewhere.
 
 ## Infrastructure
 
@@ -112,6 +117,11 @@ Views are thin wrappers. Business logic lives in services:
 - `crushme_project.service` — Production app server
 - Gunicorn binds to `/run/gunicorn.sock`
 - `crushme-huey.service` — Async task worker
+
+Prepared staging is isolated as `crushme_staging.service` plus
+`crushme-staging-huey.service`, socket `/run/crushme_staging.sock`, MySQL
+database `crushme_staging`, Redis cache DB 10, and Huey DB 11. These artifacts
+are versioned only; DNS and deployment are still pending.
 
 ### Huey Periodic Tasks
 - `scheduled_backup` — Sun 03:00 UTC (DB + media, 4-week retention)

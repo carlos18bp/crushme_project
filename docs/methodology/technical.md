@@ -43,6 +43,8 @@
 | pytest + pytest-django | Backend | `backend/pytest.ini` |
 | Jest | Frontend unit | `frontend/jest.config.cjs` |
 | Playwright | Frontend E2E | `frontend/playwright.config.js` |
+| ESLint 9 | Frontend static analysis | `frontend/eslint.config.js` |
+| Test Quality Gate | Cross-suite semantic audit | `.testquality.yml` |
 
 ## Key Technical Decisions
 
@@ -92,19 +94,35 @@ Managed via `python-decouple` reading `.env` file:
   `settings_ci_mysql`.
 - Playwright uses `settings_e2e`, a deterministic file-backed SQLite database,
   local Django/Vite servers, one worker, and production-host refusal guards.
-- Test settings pin the COP-to-USD rate and disable unconfigured external
-  clients, so QA cannot call currency, WooCommerce, payment, SMTP, Redis, or
-  translation services.
+- Test settings pin the COP-to-USD rate and disable external WooCommerce,
+  payment, SMTP, and Redis clients. Offline translation remains local app code;
+  fixtures stay in the requested locale unless translation is under test.
 - `.github/workflows/ci.yml` has four independent jobs: backend coverage,
   frontend unit/build, hermetic E2E, and MySQL migration compatibility.
 - `.github/workflows/test-quality-gate.yml` and pre-commit enforce the canonical
   strict quality gate, current-tree secret detection, and Bandit medium/high
   scanning.
+- Current executable inventory: 18 backend behavior files / 49 test functions,
+  7 frontend-unit files / 16 tests, and 11 E2E specs / 21 tests.
+- Canonical flow read-out: 4 covered, 16 partial, 36 missing, 0 junk-only, and
+  0 unvalidated across 56 declared outcomes. This is yellow, not promotion-ready.
 
 ## Deployment
 
 ### Production Path
 `/home/ryzepeck/webapps/crushme_project`
+
+### Prepared Staging Coordinate
+
+- Hostname: `crushme.projectapp.co` (DNS pending)
+- Database: `crushme_staging`
+- Redis: cache DB 10, Huey DB 11
+- Socket: `/run/crushme_staging.sock`
+- Services: `crushme_staging`, `crushme-staging-huey`
+- Settings: `crushme_project.settings_staging`, sandbox gateways, WooCommerce
+  disabled, console email, backups and slow-query reports disabled
+
+The registry remains `dev_only`; artifacts are versioned but not installed.
 
 ### Deploy Sequence
 1. `git pull origin main`

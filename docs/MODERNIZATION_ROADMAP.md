@@ -10,7 +10,7 @@ The promotion path is `legacy -> modernizing -> active`. The intermediate state
 allows AI ecosystem maintenance while making it explicit that final technical
 and operational gates are still pending.
 
-## Baseline (2026-08-20)
+## Historical Baseline (start of 2026-08-20)
 
 | Capability | Current state |
 |---|---|
@@ -37,6 +37,18 @@ and operational gates are still pending.
 - Public response shapes, locale routes, the single HTTP client, FBV views,
   WooCommerce mirroring, offline translation, PayPal, and Wompi are invariants.
 
+## Execution Status (2026-08-20)
+
+| Wave | Status | Verified result |
+|---|---|---|
+| 0 | Complete | Fleet contract, release branch, isolated work coordinate, and baseline are versioned. |
+| 1 | Complete | Claude 35/35, Codex 35/35, Windsurf 32/32, cleanup, Memory Bank, and standards are synchronized. |
+| 2 | Implementation complete; promotion blocked | npm has 0 advisories, Bandit has 0 medium/high findings, and the one Stanza advisory is unreachable and regression-tested. The exposed production DB credential still requires rotation and history remediation. |
+| 3 | Complete | Hermetic SQLite test/E2E settings, MySQL compatibility CI, deterministic data, ESLint, quality gate, and partitioned CI are versioned. |
+| 4 | In progress | Canonical QA reports 4 covered, 16 partial, 36 missing, 0 junk-only, 0 unvalidated, and one negative-case gap across 56 declared outcomes. |
+| 5 | Prepared; deployment blocked | Isolated settings and versioned systemd/Nginx/env artifacts exist. DNS for `crushme.projectapp.co` still does not resolve, so deploy, TLS, restore, and profiling are not certified. |
+| 6 | Pending | Promotion remains prohibited until Waves 4-5 and the credential blocker are closed. |
+
 ## Wave 0 - Transition and Work Coordinate
 
 - [x] Add the `modernizing` lifecycle to the fleet contract.
@@ -49,25 +61,25 @@ and AI ecosystem tooling includes CrushMe without classifying it as promoted.
 
 ## Wave 1 - AI Ecosystem, Cleanup, and Standards
 
-- [ ] Synchronize Codex, Claude Code, Windsurf, skills, and QA agents from the
+- [x] Synchronize Codex, Claude Code, Windsurf, skills, and QA agents from the
   canonical toolkit; reconcile project-specific guidance after synchronization.
-- [ ] Run `repo-cleanup` read-only, approve findings, then remove only verified
+- [x] Run `repo-cleanup` read-only, approve findings, then remove only verified
   artifacts, dead code, stale configuration, and obsolete documentation.
-- [ ] Refresh Memory Bank, README, deployment guidance, and runtime identities.
-- [ ] Align pre-commit, branch protocol, test-quality core, and development rules.
+- [x] Refresh Memory Bank, README, deployment guidance, and runtime identities.
+- [x] Align pre-commit, branch protocol, test-quality core, and development rules.
 
 **Gate:** AI drift is zero, the repository is clean, and instructions match the
 actual Vue/Django architecture and deployed services.
 
 ## Wave 2 - Vulnerabilities, Dependencies, and Hardening
 
-- [ ] Run `vuln-audit` report-first for Python and npm, then apply approved
+- [x] Run `vuln-audit` report-first for Python and npm, then apply approved
   patch/minor updates. Major upgrades require a separate compatibility decision.
-- [ ] Prove dependency reachability before removing heavy ML/translation packages;
+- [x] Prove dependency reachability before removing heavy ML/translation packages;
   validate WooCommerce synchronization and offline translation after any removal.
-- [ ] Audit authorization, validation, uploads, JWT, payment webhooks, and log
+- [x] Audit authorization, validation, uploads, JWT, payment webhooks, and log
   redaction; fix findings without changing public business contracts.
-- [ ] Harden environment examples, sandbox defaults, CORS/CSRF, headers, rate
+- [x] Harden environment examples, sandbox defaults, CORS/CSRF, headers, rate
   limits, systemd, and Nginx configuration.
 
 **Gate:** no unmitigated critical/high vulnerability, successful builds and
@@ -75,13 +87,13 @@ deployment checks, and every deferred major has a documented owner and reason.
 
 ## Wave 3 - Test Platform and CI
 
-- [ ] Add isolated backend test/E2E settings, factories, fixtures, and mocks for
+- [x] Add isolated backend test/E2E settings, factories, fixtures, and mocks for
   all external systems.
-- [ ] Complete the Vue/Jest harness, component setup, request mocks, and selector
+- [x] Complete the Vue/Jest harness, component setup, request mocks, and selector
   conventions.
-- [ ] Add Playwright orchestration, `.env.e2e.example`, deterministic seed data,
+- [x] Add Playwright orchestration, `.env.e2e.example`, deterministic seed data,
   and guards that refuse production in code.
-- [ ] Add `.testquality.yml`, junk baseline, complete flow registry, coverage
+- [x] Add `.testquality.yml`, junk baseline, complete flow registry, coverage
   tooling, and partitioned backend/unit/E2E CI jobs.
 
 SQLite is the fast isolated default; CI also runs a focused MySQL migration and
@@ -93,9 +105,9 @@ production-grade database.
 
 ## Wave 4 - Functional QA
 
-- [ ] Run `qa` in dry-run mode to regenerate and rank the real flow map.
-- [ ] Fan out backend, frontend-unit, and E2E authoring through `qa --apply`.
-- [ ] Validate all E2E drafts live and heal failures with bounded retries.
+- [x] Run `qa` in dry-run mode to regenerate and rank the real flow map.
+- [ ] Complete backend, frontend-unit, and E2E authoring through `qa --apply`.
+- [x] Validate every authored E2E spec live; no draft or unvalidated spec remains.
 - [ ] Run the quality gate, test audit, and complete partitioned CI.
 
 P1/P2 coverage includes authentication, catalog, cart, public/shared wishlists,
@@ -103,10 +115,16 @@ guest gifting, checkout, orders, PayPal, Wompi, WooCommerce sync/translation,
 profiles, reviews, locale, and currency. Each flow covers success, error,
 failure, and display outcomes or records a justified exemption.
 
+Current read-out: the quality gate and junk/unvalidated conditions are green,
+but the wave remains yellow until the 36 missing flows, the negative-case gap,
+and complete partitioned CI are closed.
+
 **Gate:** QA is green with no junk-only flow and no unvalidated E2E spec.
 
 ## Wave 5 - Staging, Operations, and Performance
 
+- [x] Version fail-fast staging settings plus isolated env, systemd, socket,
+  Huey, override, and Nginx artifacts without installing them.
 - [ ] Deploy `crushme.projectapp.co` from the integration branch using database
   `crushme_staging`, Redis cache DB 10, Huey DB 11, socket
   `/run/crushme_staging.sock`, and sandbox-only external integrations.
@@ -133,6 +151,19 @@ Only after stable production verification:
 - [ ] Change lifecycle from `modernizing` to `active`.
 - [ ] Remove the one-shot release authorization.
 - [ ] Refresh this roadmap, Memory Bank, and fleet QA memory.
+
+## Active Promotion Blockers
+
+1. Rotate the production database credential exposed in Git history, update
+   protected stores atomically, verify web/Huey, and remediate or explicitly
+   accept historical exposure.
+2. Provision DNS for `crushme.projectapp.co`; only then install staging
+   artifacts, issue TLS, run post-deploy checks, rehearse restore, and profile
+   representative translation/payment workloads.
+3. Close the 36 missing QA flows and the remaining negative-case gap, then run
+   the complete partitioned CI on the integration PR.
+4. Complete Wave 6 certification and the observation window before changing
+   lifecycle from `modernizing` to `active`.
 
 ## Promotion Definition of Done
 

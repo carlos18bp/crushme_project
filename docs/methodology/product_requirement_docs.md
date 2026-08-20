@@ -63,3 +63,13 @@ CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform. Verified 
 - **Bilingual**: ES primary, EN secondary
 - **Performance**: Redis cache (db 1), django-silk profiling (conditional)
 - **Backups**: Weekly via Huey task + django-dbbackup
+- **Compatibility**: Public API response shapes, locale-prefixed routes, payment
+  behavior, WooCommerce mirroring, and offline translation are modernization
+  invariants.
+- **Security**: Client payment values are untrusted; server-side products,
+  totals, discounts, recipients, signatures, and durable payment sessions are
+  authoritative.
+- **Test isolation**: pytest/E2E/fake data must refuse production-grade
+  databases and live payment, WooCommerce, SMTP, and Redis integrations.
+- **Promotion**: lifecycle remains `modernizing` until QA, vulnerability,
+  staging restore/performance, production smoke, and observation gates pass.
