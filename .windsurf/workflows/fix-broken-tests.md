@@ -102,18 +102,30 @@ Entregar un resumen estructurado con: qué falló, causa raíz, qué cambió, y 
 
 ---
 
-## Formato de Output
+## Output final
 
-```
-### Test: <nombre_del_test>
-- Archivo: <ruta>
-- Error original: <mensaje corto>
-- Causa raíz: <explicación en 1-2 líneas>
-- Cambio aplicado: <qué se modificó>
-- Resultado: ✅ Pasa / ❌ Aún falla
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de
+`/fix-broken-tests`:
 
-### Regresión
-- Archivo: <ruta del módulo>
-- Comando: <comando exacto ejecutado>
-- Resultado: ✅ Sin regresiones / ⚠️ <detalle si hay problema>
+```markdown
+🟢 fix-broken-tests OK
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Tests rotos capturados | ✅ | N tests con error + traceback |
+| Causa raíz identificada | ✅ | API drift / mock / selector / determinism |
+| Quality standards | ✅ | docs/TESTING_QUALITY_STANDARDS.md respetados |
+| Tests arreglados | ✅ | N/N pasan tras el fix |
+| Regresión del módulo | ✅ | archivo completo del test pasa, sin vecinos rotos |
+| Suite no completa | ✅ | solo tests indicados + regresión, no full suite |
 ```
+
+Si algún test sigue fallando tras el fix, o la regresión del módulo rompe
+vecinos, reemplazar el ✅ correspondiente por ❌, omitir la línea ✨ y agregar
+`## Next steps` con el test pendiente, la hipótesis para el siguiente
+intento, y el comando exacto a correr.
+
+Si para arreglar el test fue necesario modificar código de producción,
+reportarlo explícitamente en una fila adicional con ⚠️ — esa modificación
+necesita aprobación del operador antes de commitear.

@@ -1,34 +1,154 @@
 ---
-name: implement
-description: "Implement a Azurita feature or fix using the repo's existing architecture and minimal targeted verification. Use when the user asks to build, code, or fix something."
-argument-hint: "[feature, refactor, bugfix, or concrete implementation request]"
+name: "implement"
+description: "Implementation workflow — systematic code protocol with dependency analysis, step-by-step changes, and testing. Use when the user asks to build, code, or implement a feature or fix."
 ---
 
-# Implement Workflow
+Before starting, ALWAYS do 2 things:
+a. Read and understand the documentation in `docs/` and `tasks/`
+b. Get required code context from `backend/` and `frontend/` — o el layout que
+   exista en el repo (ver $methodology-setup)
 
-## Before Editing
-- Read the relevant scope instructions and touched code.
-- Read only the memory files that materially affect the change.
-- Identify the smallest useful verification commands before changing code.
+## Cómo invocar este skill
 
-## Azurita Rules
-- Backend DRF views stay function-based unless the user explicitly asks otherwise.
-- Keep business logic out of views when a service, serializer, helper, or model method is the better fit.
-- Frontend stores use Pinia Options API.
-- Keep content/admin requests on `stores/services/request_http.js`.
-- Keep platform/auth requests on `usePlatformApi.js`.
-- Preserve existing public response shapes unless the task explicitly changes them.
+Gating ($output-protocol §4): con `$ARGUMENTS` o intención clara en la sesión → ejecutar directo, PROHIBIDO preguntar el tema (un dato menor faltante se marca en el texto, no se convierte en pregunta). Sin argumentos ni contexto → UNA sola pregunta corta en texto por la tarea a implementar (no picker: el insumo es libre). Nunca en modo fleet/headless/cron.
 
-## Implementation Sequence
-1. Confirm the affected files, contracts, and side effects.
-2. Make the smallest coherent change that solves the request.
-3. Update tests or add focused coverage for the changed behavior.
-4. Run only the smallest relevant verification slice.
-5. Update docs or memory files only if the user asked for it or the change materially alters runtime guidance, architecture, or workflows.
+Sin picker por diseño: no hay flags de modo — el argumento es la feature o el fix a implementar.
 
-## Output Contract
-When done, report:
-- what changed
-- why the change fits existing project patterns
-- what verification ran
-- what could not be verified
+---
+
+## Preflight (obligatorio)
+
+Si el repo actual es un proyecto del fleet (aparece en
+`~/webapps/vps-ops-toolkit/projects.yml`), ANTES de escribir:
+
+```bash
+bash $HOME/webapps/vps-ops-toolkit/scripts/maintenance/resolve-work-coordinate.sh --check <proyecto>
+```
+
+- `resolved_branch` es la **BASE** del trabajo, no la rama donde se commitea:
+  commitear SIEMPRE en TU rama de sesión (worktree propio, PR al primer push con
+  base=`resolved_branch`) — nunca directo sobre la release ni sobre main/master,
+  nunca en la rama de otra sesión (git-branch-protocol del CLAUDE.md del repo).
+- `host_status=wrong-host` → **STOP**: el trabajo de este proyecto vive en el
+  clon de `vps_work`, no en este host.
+
+---
+
+# Implementation Workflow
+
+## Programming Principles
+
+- **Algorithm efficiency**: Use the most efficient algorithms and data structures
+- **Modularity**: Write modular code, break complex logic into smaller atomic parts
+- **File management**: Break long files into smaller, more manageable files
+- **Import statements**: Prefer importing functions from other files instead of modifying them directly
+- **Reuse**: Prefer to reuse existing code instead of writing from scratch
+- **Code preservation**: Don't modify working components without necessity
+- **Systematic sequence**: Complete one step completely before starting another
+- **Design patterns**: Apply appropriate patterns for maintainability and scalability
+- **Proactive testing**: Functionality code should be accompanied with proper tests
+
+## Systematic Code Protocol
+
+### Step 1: Analyze Code
+
+**Dependency Analysis:**
+- Which components will be affected?
+- What dependencies exist?
+- Is this local or does it affect core logic?
+- What cascading effects will this change have?
+
+**Flow Analysis:**
+- Conduct complete end-to-end flow analysis from entry point to execution of all affected code.
+- Track data and logic flow throughout all components.
+- Document dependencies thoroughly.
+
+### Step 2: Plan Code
+
+- Outline a detailed plan including component dependencies and architectural considerations.
+- Provide a proposal specifying: (1) what files/functions/lines are changed; (2) why; (3) impacted modules; (4) potential side effects; (5) trade-offs.
+
+### Step 3: Make Changes
+
+1. Document current state in the memory files — los 7 canónicos de
+   $methodology-setup; `tasks/active_context.md` siempre
+2. Plan single logical change at a time:
+   - One logical feature at a time
+   - Fully resolve by accommodating changes in other parts
+   - Adjust all existing dependencies
+   - Ensure new code integrates with existing architecture
+3. Simulation testing: simulate user interactions, dry runs, trace calls before applying
+4. If simulation passes, do the actual implementation
+
+### Step 4: Test
+
+- Slice mínimo de verificación: el/los tests del comportamiento tocado (crear
+  o correr sólo esos, en archivos separados) + confirmar que la regresión
+  inmediata no se rompe.
+- La cobertura completa (edge cases, casos negativos, gate) la cierra $qa
+  en el Cierre — no dupliques su trabajo acá.
+
+### Step 5: Loop Steps 1-4
+
+Incorporate all changes systematically, one by one. Verify and test each.
+
+### Step 6: Optimize
+
+Optimize the implemented code after all changes are tested and verified.
+
+---
+
+After every implementation, ALWAYS do 2 things:
+a. Update other possibly affected codes in `backend/` and `frontend/`
+b. Update the memory files afectados por el cambio — los 7 canónicos de
+   $methodology-setup: `docs/methodology/product_requirement_docs.md`,
+   `docs/methodology/technical.md`, `docs/methodology/architecture.md`,
+   `docs/methodology/error-documentation.md`,
+   `docs/methodology/lessons-learned.md`, `tasks/tasks_plan.md` y
+   `tasks/active_context.md` (este último siempre)
+
+---
+
+## Cierre — QA de lo implementado
+
+Al terminar la implementación (feature funcionalmente completa), la forma
+canónica de cerrar la cobertura es invocar **$qa**: audita el flow-map,
+escribe los tests faltantes al DoD de 3 puntos (casos negativos incluidos),
+corre el gate y purga junk — sin mergear. Sugerilo siempre en el cierre.
+
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y sin flags explícitos (reglas de
+gating de $output-protocol §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| $qa (Recommended) | dry-run, no mergea; cierra la cobertura de lo implementado | `$qa` |
+| $git-commit | add+commit+push de lo implementado | `$git-commit` |
+
+**NUNCA** ofrecer `$deploy-and-check` (manual-only por política — sólo como
+texto en `## Next steps` si aplica).
+
+## Output final
+
+Reportar siguiendo $output-protocol. Plantilla específica de `$implement`:
+
+```markdown
+🟢 implement OK — <qué se implementó>
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Análisis de dependencias | ✅ | componentes afectados + flujo end-to-end trazado |
+| Plan | ✅ | archivos/funciones, side effects y trade-offs definidos |
+| Cambios | ✅ | cambio mínimo coherente, integrado con la arquitectura |
+| Tests | ✅ | cobertura para lo nuevo + regresión existente preservada |
+| Verificación | ✅ | slice mínimo de verificación corrió y pasó |
+| Docs/memory | ✅ | docs/ y tasks/ actualizados si el cambio lo exige |
+```
+
+Si un test falla, la verificación no pasa, o queda algo sin verificar,
+reemplazar el ✅ correspondiente por ⚠️ o ❌, omitir la línea ✨ y agregar
+`## Next steps` con el comando exacto de verificación pendiente
+(p.ej. `<venv>/bin/python manage.py test <app>` o `npx playwright test <spec>`)
+y lo que no se pudo confirmar.

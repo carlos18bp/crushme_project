@@ -96,9 +96,33 @@ Scan the repository for files that should be deleted, updated, or added to `.git
 - Verify dead code claims: a file is only "unused" if it has zero imports AND is not referenced in URL configs, management commands, or template tags.
 - When recommending `.gitignore` updates, show the exact lines to add.
 
-## Output Contract
-Return a structured report with:
-1. **Summary** — total files audited, total findings, total reclaimable size.
-2. **Action items** — grouped by priority (HIGH → LOW), each with file path, reason, and recommended command.
-3. **`.gitignore` patch** — exact additions needed.
-4. **No action needed** — brief confirmation that the rest of the repo is clean.
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill
+(auditoría read-only; ✅ limpio · ⚠️ hallazgos a revisar · ❌ HIGH: secretos o
+artefactos trackeados):
+
+```markdown
+🟢 repo-cleanup OK — <N> archivos auditados, 0 hallazgos
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Artefactos build/test trackeados | ✅ | coverage/dumps/__pycache__/dist no versionados |
+| Dead code (backend + frontend) | ✅ | 0 módulos/componentes sin referencias |
+| Backup / temp files | ✅ | sin *.bak/_old/_copy/tmp_ |
+| Config huérfana | ✅ | sin lockfiles mal ubicados ni dirs vacíos |
+| Gaps en .gitignore | ✅ | patrones cubren variantes |
+| Docs stale | ✅ | sin refs a stack removido ni duplicados |
+```
+
+Cuerpo bajo la tabla: **action items** por prioridad HIGH→LOW (path · razón ·
+comando `git rm`), **patch `.gitignore`** exacto, y tamaño reclamable total.
+Si hay hallazgos, reemplazar el ✅ de la fila por ⚠️ o ❌ (HIGH = secretos o
+artefactos trackeados) y omitir la línea ✨. Con >15 hallazgos, anteponer
+`### Resumen ejecutivo` (conteo) + `### Top 3 acciones prioritarias`.
+**Read-only hasta aprobación del operador**: la skill nunca borra.
+
+## Next steps
+- (operador) aprobar el action list antes de cualquier `git rm` / delete
+- aplicar el patch de `.gitignore` mostrado arriba

@@ -128,3 +128,22 @@ If the user reports the recommended fix did not work or introduced a new error:
    - Runtime logs or terminal output.
    - The exact state of the code after their changes.
    - Any additional context they haven't shared yet.
+
+---
+
+## Output final
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill (read-only: diagnostica, NO aplica el fix):
+
+🟢 debug OK   (🟡 si la hipótesis no alcanzó confianza alta; 🔴 si no se pudo reunir evidencia)
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Causa raíz | ✅ | identificada, con evidencia (archivo:línea) |
+| Fix recomendado | ✅ | before/after propuesto — NO aplicado (read-only) |
+| Riesgo de regresión | ✅ | side-effects + edge cases a verificar anotados |
+| Plan de verificación | ✅ | repro + validate + tests de regresión listados |
+
+## Next steps
+- (manual, operador) aplicar el fix before/after propuesto — esta skill no modifica archivos
+- tras aplicar: correr el comando de "Plan de verificación" para validar + chequear regresión

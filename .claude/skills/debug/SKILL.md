@@ -2,6 +2,7 @@
 name: debug
 description: "Agentic debug mode — diagnose and analyze bugs without modifying code. Read-only 4-phase workflow producing diagnosis and recommended fix. Use when the user reports a bug, error, or unexpected behavior."
 argument-hint: "[description of the bug, error message, or unexpected behavior]"
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Debug Mode
@@ -10,9 +11,15 @@ Act as an expert debugger. Your job is to **analyze and diagnose only**. Follow 
 
 > **STRICT RULE — READ-ONLY WORKFLOW**
 > You must **NEVER** modify, edit, create, or delete any file during this workflow.
-> You may: search code, read files, run read-only terminal commands (`git log`, `git diff`, `grep`).
-> You must NOT: write code, apply fixes, run tests, create files, or make any changes to the codebase.
+> You may: search code, read files, run read-only terminal commands (`git log`, `git diff`, `grep`) — reproducing the bug with a test or a read-only command IS allowed.
+> You must NOT: write code, apply fixes, create files, or run anything that MUTATES state (writes, migrations, deploys) — no changes to the codebase.
 > Your deliverable is a **diagnosis + recommended fix** — the user decides when and how to apply it.
+
+## Cómo invocar este skill
+
+Gating ([[_output-protocol]] §4): con `$ARGUMENTS` o intención clara en la sesión → ejecutar directo, PROHIBIDO preguntar el tema (un dato menor faltante se marca en el texto, no se convierte en pregunta). Sin argumentos ni contexto → UNA sola pregunta corta en texto por el bug a diagnosticar (no picker: el insumo es libre). Nunca en modo fleet/headless/cron.
+
+Sin picker por diseño: no hay flags de modo — el argumento es el bug: mensaje de error, stack trace o comportamiento inesperado.
 
 ---
 
@@ -31,7 +38,7 @@ Act as an expert debugger. Your job is to **analyze and diagnose only**. Follow 
 git log --oneline -10
 ```
 ```bash
-git diff HEAD~3 --stat
+git diff $(git merge-base HEAD origin/HEAD 2>/dev/null || echo HEAD~1)..HEAD --stat
 ```
 
 4. If the project maintains error documentation, check `docs/methodology/error-documentation.md` for previously resolved similar issues.
@@ -103,3 +110,25 @@ If the user reports the recommended fix did not work:
 2. Return to **Phase 2** with additional context.
 3. Recommend **reverting** the failed fix before trying a different approach.
 4. After **2 failed recommendations**, pause and ask the user for runtime logs, exact code state, and any additional context.
+
+---
+
+## Output final
+
+Sin menú por diseño (§4): read-only por diseño; el diagnóstico ES el entregable y el fix se decide fuera.
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill (read-only: diagnostica, NO aplica el fix):
+
+🟢 debug OK   (🟡 si la hipótesis no alcanzó confianza alta; 🔴 si no se pudo reunir evidencia)
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Causa raíz | ✅ | identificada, con evidencia (archivo:línea) |
+| Fix recomendado | ✅ | before/after propuesto — NO aplicado (read-only) |
+| Riesgo de regresión | ✅ | side-effects + edge cases a verificar anotados |
+| Plan de verificación | ✅ | repro + validate + tests de regresión listados |
+| Iteraciones | ✅ | ≤2 recomendaciones; ⏸️ pausado tras 2 fallos (pedir logs/estado exacto) |
+
+## Next steps
+- (manual, operador) aplicar el fix before/after propuesto — esta skill no modifica archivos
+- tras aplicar: correr el comando de "Plan de verificación" para validar + chequear regresión
