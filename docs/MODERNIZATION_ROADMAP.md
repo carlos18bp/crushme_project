@@ -41,7 +41,7 @@ will not be merged wholesale.
 | Wave | Purpose | Release gate |
 |---|---|---|
 | 0 | Free disk, retire the accidental staging coordinate, establish this roadmap and a safe worktree | Production remains healthy; disk usage below 80%; registry and worktree checks green |
-| 1 | Synchronize Codex, Claude Code, Windsurf, skills, standards, and Memory Bank | Project-specific AI drift is zero and guidance matches the real runtime |
+| 1 | Synchronize Codex, Claude Code, skills, standards, and Memory Bank | Project-specific AI drift is zero and guidance matches the real runtime |
 | 2 | Remove verified repository waste and add hermetic test/CI/development foundations | Six partitioned CI jobs pass; no production behavior or data changes |
 | 3 | Update dependencies and harden authentication, uploads, payments, secrets, headers, and runtime boundaries | No unmitigated critical/high finding; restore rehearsal and controlled production deploy pass |
 | 4 | Close backend, frontend-unit, and E2E behavior gaps and audit test quality | No junk-only or unvalidated critical flow; quality gate and CI pass |

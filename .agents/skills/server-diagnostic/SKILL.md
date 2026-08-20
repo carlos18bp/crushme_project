@@ -1,10 +1,81 @@
 ---
-name: server-diagnostic
+name: "server-diagnostic"
 description: "Diagnóstico integral del servidor de producción basado en las 15 buenas prácticas para servidores saludables"
-allowed-tools: Bash
 ---
+
+## Cuándo usar cuál (familia de auditoría)
+
+| Skill | Úsala cuando | Cadencia típica |
+|---|---|---|
+| `$full-audit` | Veredicto integral 🟢/🟡/🔴 del VPS o del fleet (`--all`): configs, drift, envs, timers, health, email — 12 fases automatizadas, ~4 min | Post-cambio grande, post-incidente, trimestral |
+| `$server-diagnostic` | Informe profundo por las 15 buenas prácticas con score y recomendaciones por proyecto — más narrativo y granular que full-audit | Semanal automático (cron) / a demanda |
+| `$vuln-audit` | Dependencias y CVEs de UN proyecto (pip + npm), con updates aplicados | Por proyecto, mensual o ante CVE |
+
+No se orquestan entre sí (cada una es independiente); full-audit NO corre a las otras dos.
+
 # DIAGNÓSTICO INTEGRAL DE SERVIDOR DE PRODUCCIÓN
 ## Basado en las 15 Buenas Prácticas para Servidores Saludables
+---
+
+## Cómo invocar este skill
+
+Gating ($output-protocol §4): (1) flags explícitos → ejecutar directo, sin
+menú; (2) intención clara por la sesión (p.ej. "diagnosticá vps-gym" →
+`--target=vps-gym`) → proponer el comando en una línea y esperar confirmación;
+(3) sin argumentos / intención difusa → UNA sola AskUserQuestion con Q1;
+(4) nunca en headless/cron ni dentro de un barrido fleet — sólo en sesión
+interactiva single-target.
+
+**Q1 — Target** (`multiSelect: false` — `--all-vps` y `--target` son mutuamente excluyentes):
+
+| label | description | preview |
+|---|---|---|
+| Este host (Recommended) | las 14 fases sólo en el VPS donde estás parado; desde la dev machine no es válido (usar --all-vps o --target) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=local` |
+| --all-vps (fleet) | los 3 VPS secuencialmente vía tailscale, con pausa de aprobación si un VPS deja fases críticas (🔴, score <7) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps` |
+| Un VPS específico | elegir "Other" y tipear `--target=<alias>` (vps-projectapp-staging · vps-projectapp-prod · vps-gym) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=<alias>` |
+
+**Qué NO se pregunta:** `--no-pause` — tuning simétrico (corre el fleet de un
+tirón, sin pausar ante fases críticas); se tipea a propósito cuando el operador
+ya decidió no supervisar host por host.
+
+## PROTOCOLO DE EJECUCIÓN POR DEFECTO
+
+**Antes de leer la guía manual de 15 prácticas que sigue**, invoca el orquestador. Detecta automáticamente si estás en la dev machine o dentro de un VPS y hace lo correcto.
+
+```bash
+bash scripts/diagnostics/run-fleet-diagnostic.sh
+```
+
+### Comportamiento automático
+
+- **Desde la dev machine** (detecta `/home/dev-env/webapps` o `/home/dev_env/webapps`) → orquesta secuencialmente los VPS del fleet — la lista sale de `fleet_vps_aliases` (`scripts/lib/bootstrap-common.sh`, registry `config/tailscale/expected-nodes.yml`; hoy 3: vps-projectapp-staging, vps-projectapp-prod, vps-gym), no la hardcodees:
+  - En cada VPS corre las 14 FASES automatizadas del diagnóstico vía SSH.
+  - Si un VPS deja fases críticas (🔴, score <7), pausa y pide aprobación antes de continuar con el siguiente VPS.
+  - Genera un `reports/server-diagnostic-<alias>-YYYY-MM-DD.md` por VPS.
+
+- **Desde un VPS** (cualquiera del fleet) → ejecuta el diagnóstico **solo en ese VPS**, genera `reports/Diagnostic-Report-<HOSTNAME>.md`.
+
+### Overrides en lenguaje natural del operador
+
+- "solo vps-gym" / "solo vps-projectapp-staging" → invocar con `--target=<alias>`.
+- "solo este vps" / "diagnóstico local" → invocar con `--target=local` (solo válido desde un VPS).
+- "sin pausas" / "corré todo de un tirón" → agregar `--no-pause`.
+
+### Después de que el orquestador termina
+
+Lee los reportes `.md` generados (rutas que imprimió el RESUMEN FINAL del orquestador). Para CADA reporte:
+
+1. Extrae el score por fase (formato `## FASE N: NOMBRE — 🟢/🟡/🔴 X/10`) y los hallazgos rojos.
+2. Sintetiza en chat siguiendo la skill `human` (tablas, jerga técnica, español, sin verbosidad):
+   - **Veredicto por VPS** (1 línea): `✅ verde` | `⚠️ N warnings` | `🔴 N críticos`.
+   - **Tabla cross-VPS**: fase × VPS con score y emoji.
+   - **Top 3 acciones prioritarias** del fleet (cross-VPS).
+   - Path de cada reporte para que el operador pueda profundizar.
+
+### Cuándo usar la guía manual de abajo
+
+**Aclaración de numeración (los dos números coexisten a propósito):** el orquestador corre **14 FASES automatizadas**; la guía manual documenta **15 PRÁCTICAS** — la práctica 15 (Estandarización de Proyecto: settings split + decouple) se revisa con la guía manual y el validador `validate-settings-selector.sh`, no como fase propia del orquestador. El orquestador ya cubre las 14 fases con scoring automático (la **FASE 14 — projects.yml ↔ Realidad** valida `server:`/`branch:` de cada proyecto local contra el clon real: `branch:` drift → `resolve-work-coordinate.sh --fix` si es yml-stale; `server:` corriendo en host ajeno → migrate-project, nunca auto). **Ojo con la etiqueta «FASE N»:** los headings `## FASE N` de la guía manual de abajo numeran las **15 PRÁCTICAS**, no las 14 fases del orquestador — en particular, la FASE 14 del orquestador (projects.yml ↔ Realidad) NO es la «FASE 14: Reportes periódicos» de la guía. La guía manual de las 15 prácticas que sigue es para **profundizar** en un hallazgo específico — por ejemplo, si el reporte dice "Fase 7 score 3/10" y el operador pide "explicame qué pasó con backups en vps-projectapp-staging", entonces se entra al detalle manual de Fase 7 abajo, ejecutando los comandos correspondientes vía `tailscale ssh ryzepeck@vps-projectapp-staging '<comando>'`.
+
 ---
 
 ## CONTEXTO DE MI INFRAESTRUCTURA
@@ -32,8 +103,8 @@ allowed-tools: Bash
 - **Configuración Nginx**: `/etc/nginx/sites-available/` y `/etc/nginx/sites-enabled/`
 - **Servicios Systemd**: `/etc/systemd/system/`
 - **Certificados SSL**: `/etc/letsencrypt/`
-- **Scripts de monitoreo**: `/home/ryzepeck/webapps/ops/vps/scripts/`
-- **Reportes generados**: `/home/ryzepeck/webapps/ops/vps/reports/`
+- **Scripts de monitoreo**: `/home/ryzepeck/webapps/vps-ops-toolkit/scripts/`
+- **Reportes generados**: `/home/ryzepeck/webapps/vps-ops-toolkit/reports/`
 - **Backups django-dbbackup**: `/var/backups/<proyecto>/`
 - **Cron de monitoreo**: `/etc/cron.d/srv-monitoring`
 - **Config msmtp**: `/home/ryzepeck/.config/msmtp/config`
@@ -51,6 +122,54 @@ cat ~/webapps/projects.yml
 - Los proyectos bajo `inactive:` solo se verifican para limpieza (archivos huérfanos, servicios residuales).
 
 > **candle_project** y **kore_project** son los proyectos más actualizados y deben usarse como referencia/template para evaluar los demás.
+
+### Convención production vs staging — IMPORTANTE
+
+Cada proyecto en `projects.yml` puede tener un campo `environment:` con valor `production` (default) o `staging`. Staging **NO** es un entorno "menos completo" — es producción real con HTTPS, fail2ban, MemoryMax/CPUQuota, geo-block, rate-limit, etc., pero con tres compromisos relajados (backups, severidad de alertas, reporting). NO penalizar staging por las dimensiones que se relajan por diseño.
+
+Para identificar staging programáticamente:
+```bash
+# proyectos staging según projects.yml
+STAGING_PROJECTS=$(awk '/^\s+-\s+name:/{name=$3} /^\s+environment:\s*staging/{print name}' ~/webapps/projects.yml)
+```
+
+**Reglas para reportar staging** (aplicar en TODAS las fases que comparen estado por proyecto):
+
+| Aspecto | Production | Staging |
+|---------|------------|---------|
+| Backups en `/var/backups/<proj>/` | Esperado ✅ ; ausencia = ❌ | **`ℹ️ n/a (staging)`** — debe estar **vacío** (guard activo) |
+| `scheduled_backup` task definida en `tasks.py` | ✅ esperado | ✅ esperado **con guard `BACKUPS_ENABLED=False`** en `.env` |
+| `weekly_slow_queries_report` (Silk N+1) | Verificar archivo en silk-reports/ | **`ℹ️ n/a`** — guard `ENABLE_SLOW_QUERIES_REPORT=False` (sin tráfico real) |
+| `silk_garbage_collection` + `silk_reports_cleanup` | Activas | ✅ Activas (limpieza igual que prod) |
+| Reportes Silk en `silk-reports/` | Esperar archivos recientes | **`ℹ️ n/a (staging)`** — bajo tráfico genera reportes vacíos |
+| Servicios gunicorn/huey down | 🔴 Crítica | 🟡 Media (`record_warning`, no `record_critical`) |
+| HTTPS 5xx | 🔴 Crítica | 🟡 Media (warning) |
+| SSL expirando | 🔴 Crítica | 🟡 Media (certbot renueva igual) |
+| RotatingFileHandler / Silk middleware / settings split / decouple / DJANGO_ENV / nginx / fail2ban / SSL | Igual | Igual (estándar de código compartido) |
+
+**Variables `.env` esperadas en staging** (no en producción):
+- `BACKUPS_ENABLED=False` — desactiva la task `scheduled_backup` (vía guard `if not getattr(settings, 'BACKUPS_ENABLED', True): return` en `tasks.py`)
+- `ENABLE_SLOW_QUERIES_REPORT=False` — desactiva `weekly_slow_queries_report` (vía guard paralelo)
+
+**En la tabla E2 (comparativa por proyecto)**: añadir sufijo `[staging]` al nombre del proyecto y rellenar las columnas siguientes con `n/a` (no con ❌):
+- `/var/backups/<p>/ reciente`
+- `silk-reports/ con archivos`
+- `weekly_slow_queries_report` (la task existe pero está guardada)
+- `scheduled_backup` (la task existe pero está guardada)
+
+**En E3 (acciones prioritarias)**: NO incluir hallazgos de staging que solo reflejen menor infraestructura esperada. SÍ flagear si:
+- Hay archivos recientes en `/var/backups/<staging>/` (significa que el guard NO está funcionando — `BACKUPS_ENABLED=False` falta en `.env` o tasks.py no tiene el guard).
+- Falta `BACKUPS_ENABLED` o `ENABLE_SLOW_QUERIES_REPORT` en `.env` de un staging.
+- Hay un problema real (servicio caído, SSL expirando crítico, código corrupto).
+
+La lista de proyectos staging NO se hardcodea acá (se pudre): derivarla en cada corrida con el comando awk de arriba, o con el helper canónico `is_staging` sobre `LOCAL_PROJECTS`:
+
+```bash
+OPS_ROOT="$HOME/webapps/vps-ops-toolkit"
+source "$OPS_ROOT/scripts/lib/bootstrap-common.sh"
+PROJECT_DEFS_QUIET=1 source "$OPS_ROOT/scripts/lib/project-definitions.sh"
+for p in "${LOCAL_PROJECTS[@]}"; do is_staging "$p" && echo "$p [staging]"; done
+```
 
 ### Detección de Proyectos Nuevos
 
@@ -623,6 +742,13 @@ grep -r "SENTRY_DSN\|sentry_sdk\|raven" /home/ryzepeck/webapps/*/backend/ 2>/dev
 
 **Objetivo**: Verificar que existan backups automáticos y funcionales.
 
+> ⚠️ **Convención staging — Backups**:
+> - `BACKUPS_ENABLED=False` en `.env` → la task Huey `scheduled_backup` aborta sin ejecutar (guard al inicio del cuerpo de la función).
+> - `/var/backups/<staging>/` debe estar **vacío** o solo con archivos pre-guard. Marcar como `ℹ️ n/a (staging)`, **nunca ❌**.
+> - `scheduled_backup` definida en `tasks.py` ✅ es esperado (con el guard activo). NO penalizar.
+> - **HALLAZGO si**: hay archivos recientes (<7 días) en `/var/backups/<staging>/` → el guard no está funcionando. Verificar que `.env` tenga `BACKUPS_ENABLED=False` y que `tasks.py` tenga el `if not getattr(settings, 'BACKUPS_ENABLED', True): return` al inicio.
+> - Aplica a 7.4 (config), 7.5 (eval) y tabla E2.
+
 ### 7.1 Scripts de Backup
 ```bash
 # Buscar scripts de backup
@@ -968,6 +1094,12 @@ done
 ## FASE 11: SILK — PROFILING Y DETECCIÓN DE QUERIES LENTAS ✓
 
 **Objetivo**: Verificar que Silk esté configurado correctamente en cada proyecto para detectar queries lentas y patrones N+1, y que MySQL tenga slow_query_log activo.
+
+> ⚠️ **Convención staging — Silk**:
+> - Configuración Silk (settings, middleware, thresholds, `silk_garbage_collection`, `silk_reports_cleanup`) **debe existir igual que en prod** — es código compartido.
+> - `silk-reports/` puede estar vacío o ausente en staging — `ℹ️ n/a (staging)` por bajo tráfico, **nunca ❌**.
+> - `weekly_slow_queries_report` task en `tasks.py`: ✅ definida con doble guard (`ENABLE_SILK` + `ENABLE_SLOW_QUERIES_REPORT`). En staging, `ENABLE_SLOW_QUERIES_REPORT=False` en `.env` aborta el reporte.
+> - **HALLAZGO si**: falta `ENABLE_SLOW_QUERIES_REPORT=False` en `.env` de un staging, o si hay reportes recientes en `silk-reports/` (significa que el guard no está activo).
 
 ### 11.1 Configuración de MySQL Slow Query Log
 ```bash
@@ -1650,3 +1782,39 @@ Listar las acciones ordenadas por prioridad (🔴 Crítica > 🟠 Alta > 🟡 Me
 
 ### E4: Proyectos Nuevos Detectados
 Si se detectó algún proyecto nuevo en la sección 0, listar aquí con checklist completo de lo que necesita para cumplir el estándar.
+
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de $output-protocol §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| --target=<alias> | drill-down de UN VPS del fleet (read-only) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --target=<alias>` |
+| --all-vps | los 3 VPS secuencialmente, con pausa entre críticos (read-only) | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps` |
+| --no-pause | fleet de un tirón, sin pausar ante fases críticas | `bash scripts/diagnostics/run-fleet-diagnostic.sh --all-vps --no-pause` |
+| Profundizar una fase | drill-down manual con la guía de 15 prácticas (elegir práctica + VPS) | `tailscale ssh ryzepeck@vps-<alias> '<comando de la práctica>'` |
+
+## Output final
+
+Reportar siguiendo $output-protocol. Esta skill ya implementa las tres
+secciones del protocolo — solo aclarar el mapeo:
+
+1. **Veredicto:** una línea, derivada del **PROMEDIO E1** con el mismo
+   umbral del scoring canónico:
+   - PROMEDIO E1 ≥ 9.0/10 → `🟢 server-diagnostic — <alias> sano (X/10)`
+   - PROMEDIO E1 7.0–8.9   → `🟡 server-diagnostic — <alias> operativo con mejoras menores (X/10)`
+   - PROMEDIO E1 < 7.0     → `🔴 server-diagnostic — <alias> requiere acción inmediata (X/10)`
+
+2. **Tabla:** las dos tablas existentes cumplen la sección 2 del protocolo:
+   - **E1** = veredicto por práctica (15 filas + PROMEDIO — prácticas, no las 14 FASES del orquestador).
+   - **E2** = cross-VPS × componente estándar.
+   - Si E1 supera 15 filas, agregar `### Top 3 acciones prioritarias`
+     ENTRE veredicto y tabla (regla del protocolo).
+
+3. **Next steps:** E3 ya es la sección de acciones prioritarias (con
+   prioridad 🔴 Crítica > 🟠 Alta > 🟡 Media + comando exacto + Fase X).
+
+Asegurar al cerrar: emojis del set canónico (✅⚠️❌⏭️ℹ️🚫⏸️ para celdas,
+🟢🟡🔴 solo para veredicto), comandos exactos en E3, sin prosa redundante
+después de las tablas.

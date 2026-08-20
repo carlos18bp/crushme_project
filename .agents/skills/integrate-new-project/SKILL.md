@@ -1,124 +1,233 @@
 ---
-name: integrate-new-project
-description: "Integrar un nuevo proyecto Django al ecosistema del servidor vps-projectapp (12 pasos: DB, venv, .env, migrations, systemd, nginx, backups, health, scripts de métricas)"
-argument-hint: "[project_name domain light|standard]"
-allowed-tools: Bash, Read, Edit
+name: "integrate-new-project"
+description: "Integrar un nuevo proyecto Django al ecosistema VPS (14 pasos: DB, venv, build frontend, .env, migrations, systemd incl. Next.js, nginx + SSL 2-fase, backups, logrotate, health, projects.yml, verificación)"
+---
+
+## Entorno requerido
+
+**Esta skill SOLO funciona desde un VPS** — necesita `mysql`, `systemctl`, `certbot`, `nginx`, y paths `/home/ryzepeck/webapps/...`. Si la invocás desde la dev machine, los primeros pasos van a fallar con "command not found" o pueden dejar archivos huérfanos en `/etc/...`.
+
+**Verificación obligatoria ANTES de cualquier otro paso**:
+
+```bash
+if [[ -d /home/dev-env/webapps || -d /home/dev_env/webapps ]]; then
+  echo "❌ Esta skill no se puede ejecutar desde la dev machine."
+  echo "   SSH primero al VPS destino:"
+  echo "     ssh vps-projectapp-staging   (o vps-gym)"
+  echo "     cd ~/webapps/vps-ops-toolkit && claude → $integrate-new-project ..."
+  exit 2
+fi
+echo "✅ Entorno VPS detectado, procediendo."
+```
+
+Si el bloque aborta con ❌, **NO continuar** con los pasos siguientes — SSH al VPS destino y re-invocar la skill allí.
+
 ---
 
 Argumentos recibidos: **$ARGUMENTS**
 
 Si `$ARGUMENTS` está vacío o incompleto, pedir al usuario antes de continuar:
-- **project** — nombre del directorio del proyecto (snake_case, ej. `mi_proyecto`)
-- **domain** — dominio completo (ej. `miproyecto.projectapp.co`)
-- **profile** — perfil de recursos: `light` (150M/250M/40%) o `standard` (300M/512M/50%)
+- **project** — directorio (snake_case, ej. `mi_proyecto`)
+- **domain** — FQDN (ej. `miproyecto.projectapp.co`)
+- **profile** — `light` (150M/250M/40%) o `standard` (300M/512M/50%)
+- **frontend-kind** — `nextjs-runtime` (servicio dedicado en puerto), `bake-into-django` (build:django + collectstatic), `none`
 
-Ejecutar cada paso en orden. No omitir ninguno.
-
-> **Regla de base de datos:** Todo proyecto de produccion debe usar MySQL. Solo los entornos de staging (identificados por "staging" en el nombre o dominio) pueden usar SQLite. Si el usuario solicita SQLite para un proyecto de produccion, advertir y recomendar MySQL.
+> **Regla DB:** producción = MySQL. Solo staging (con "staging" en nombre o dominio) puede usar SQLite. Si el usuario pide SQLite para prod, advertir y recomendar MySQL.
 
 ---
 
-## Derivaciones automáticas (calcular antes de empezar)
+## Cómo invocar este skill (picker pre-run — §4)
 
-A partir del nombre del proyecto, derivar:
+Gating ($output-protocol §4):
+
+1. Args completos (`<project> <domain> light|standard`) → ejecutar directo, sin menú.
+2. Faltan `<project>`/`<domain>` → pedirlos en **texto plano, una sola vez, ≤3
+   bullets** — son datos, no flags; nunca un picker para tipearlos.
+3. Con project + domain pero sin modo → UNA `AskUserQuestion` (Q1). Nunca en modo
+   fleet/headless/cron.
+
+**Q1 — Modo (perfil de recursos)** (single-select):
+
+| label | description | preview |
+|---|---|---|
+| light (Recommended) | el default del Paso 6e: MemoryHigh 150M / MemoryMax 250M / CPU 40% — proyectos chicos | `$integrate-new-project <project> <domain> light` |
+| standard | MemoryHigh 300M / MemoryMax 512M / CPU 50% — proyectos con más tráfico o carga | `$integrate-new-project <project> <domain> standard` |
+
+**Qué NO se pregunta:** `--frontend-kind=` — se tipea sólo si el proyecto trae un
+frontend no estándar (`nextjs-runtime|bake-into-django|none`).
+
+---
+
+## Derivaciones automáticas
 
 | Variable | Regla | Ejemplo |
 |----------|-------|---------|
-| `PROJECT` | Tal cual | `fernando_aragon_project` |
-| `PROJECT_SLUG` | kebab-case, sin `_project` | `fernando-aragon` |
-| `DJANGO_PROJECT` | Detectar en `manage.py` o `wsgi.py` del repo | `base_feature_project` |
-| `DB_NAME` | `<PROJECT>_db` | `fernando_aragon_project_db` |
-| `DB_USER` | `<PROJECT>_user` | `fernando_aragon_project_user` |
-| `SOCKET` | `/home/ryzepeck/webapps/<PROJECT>/<PROJECT>.sock` | — |
+| `PROJECT` | tal cual | `mimittos_project` |
+| `PROJECT_SLUG` | kebab, sin `_project` | `mimittos` |
+| `DJANGO_PROJECT` | leer `DJANGO_SETTINGS_MODULE` en `manage.py` / `wsgi.py` | `base_feature_project` |
+| `DB_NAME` | `<PROJECT>_db` | `mimittos_project_db` |
+| `DB_USER` | `<PROJECT>_user` | `mimittos_project_user` |
+| `SOCKET` | `/run/<PROJECT>.sock` (patrón actual) | `/run/mimittos_project.sock` |
 | `BACKUP_DIR` | `/var/backups/<PROJECT>` | — |
-| `GUNICORN_SERVICE` | igual que `PROJECT` | `fernando_aragon_project` |
-| `HUEY_SERVICE` | `<PROJECT_SLUG>-huey` | `fernando-aragon-huey` |
+| `GUNICORN_SERVICE` | igual a `PROJECT` | `mimittos_project` |
+| `HUEY_SERVICE` | `<PROJECT_SLUG>-huey` | `mimittos-huey` |
+| `FRONTEND_SERVICE` | `<PROJECT_SLUG>-frontend` (si `nextjs-runtime`) | `mimittos-frontend` |
+| `FRONTEND_PORT` | siguiente libre en la tabla abajo | `3002` |
 
-Para `DJANGO_PROJECT`: leer el archivo `manage.py` del proyecto y extraer el valor de `DJANGO_SETTINGS_MODULE`.
+### Puertos frontend Next.js asignados (srv571894)
 
-Para `PROFILE`:
-- `light` → MemoryHigh=150M, MemoryMax=250M, CPUQuota=40%
-- `standard` → MemoryHigh=300M, MemoryMax=512M, CPUQuota=50%
+| Proyecto | Puerto |
+|---|---|
+| tuhuella_project | 3001 |
+| mimittos_project | 3002 |
+| **próximo libre** | **3003** |
 
----
+Verificar con `ss -lntp | grep -E ':300[0-9]'` antes de asignar.
 
-## Paso 1: Base de datos MySQL
+### Redis DB slots (srv571894)
 
-```bash
-# Generar password seguro
-python3 -c "import secrets,string; c=string.ascii_letters+string.digits+'!@#%^&*'; print(''.join(secrets.choice(string.ascii_uppercase)+secrets.choice(string.ascii_lowercase)+secrets.choice(string.digits)+secrets.choice('!@#%^&*')+''.join(secrets.choice(c) for _ in range(20))))"
-```
+Slots 0–10 usados (0 kore, 1 candle, 2 crushme, 3 taptag, 4 tenndalux, 5 projectapp, 6 azurita, 7 fernando, 8 candle_staging, 9 tuhuella, 10 mimittos). **Próximo libre: 11.**
 
-Guardar el password generado. Luego crear DB y usuario (leer password de debian-sys-maint desde `/etc/mysql/debian.cnf`):
-
-```bash
-mysql -u debian-sys-maint -p'<DEBIAN_PASS>' -e "
-  CREATE DATABASE IF NOT EXISTS <DB_NAME> CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-  CREATE USER IF NOT EXISTS '<DB_USER>'@'localhost' IDENTIFIED BY '<GENERATED_PASSWORD>';
-  GRANT ALL PRIVILEGES ON <DB_NAME>.* TO '<DB_USER>'@'localhost';
-  FLUSH PRIVILEGES;"
-```
-
-Verificar Redis DB disponible:
-
-```bash
-redis-cli INFO keyspace
-```
-
-Anotar el número de DB libre para el `.env`.
+Confirmar con `redis-cli INFO keyspace`.
 
 ---
 
-## Paso 2: Virtualenv + dependencias
+## Paso 1: MySQL DB + Redis slot
+
+### 1a. Generar password
+```bash
+python3 -c "import secrets,string; c=string.ascii_letters+string.digits+'!@#%^&*'; print(''.join([secrets.choice(string.ascii_uppercase),secrets.choice(string.ascii_lowercase),secrets.choice(string.digits),secrets.choice('!@#%^&*')]+[secrets.choice(c) for _ in range(20)]))"
+```
+Guardar la password en el gestor de secretos del operador. **Solo escribirla en `backend/.env` chmod 600**; NO crear `config/credentials/mysql-users.env` a partir del template si ese archivo no existe en el working tree — los placeholders `CHANGEME` pueden corromper el bootstrap de otros proyectos si alguien re-ejecuta `setup-mysql.sh`.
+
+### 1b. Crear DB y usuario
+> **Permisos sudo requeridos** para leer `/etc/mysql/debian.cnf`. Si el sandbox/guardrail lo bloquea, el operador debe ejecutar el bloque en su propia shell (prefijo `! ` en Claude Code).
+
+```bash
+DEBIAN_PASS=$(sudo awk -F '= ' '/^password/ {print $2; exit}' /etc/mysql/debian.cnf)
+mysql -u debian-sys-maint -p"$DEBIAN_PASS" <<SQL
+CREATE DATABASE IF NOT EXISTS <DB_NAME> CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '<DB_USER>'@'localhost' IDENTIFIED BY '<GENERATED_PASSWORD>';
+GRANT ALL PRIVILEGES ON <DB_NAME>.* TO '<DB_USER>'@'localhost';
+FLUSH PRIVILEGES;
+SQL
+```
+
+### 1c. Verificar Redis slot
+```bash
+redis-cli INFO keyspace   # confirmar que <REDIS_DB> no aparece
+```
+
+---
+
+## Paso 2: Backend venv + dependencias
 
 ```bash
 python3 -m venv /home/ryzepeck/webapps/<PROJECT>/backend/venv
 source /home/ryzepeck/webapps/<PROJECT>/backend/venv/bin/activate
+pip install --upgrade pip wheel
 pip install -r /home/ryzepeck/webapps/<PROJECT>/backend/requirements.txt gunicorn mysqlclient
 ```
 
 ---
 
-## Paso 3: Archivo .env (producción)
+## Paso 3: Frontend — build ANTES de systemd
+
+**Este paso detecta bugs del template temprano.** Si `npm run build` falla en TypeScript, parar aquí y arreglar en el repo del proyecto (ver apartado "Bugs comunes del template" al final).
+
+### Si `frontend-kind=nextjs-runtime`:
+```bash
+source ~/.nvm/nvm.sh
+nvm use 20.19.4                 # o la versión del .nvmrc del proyecto
+cd /home/ryzepeck/webapps/<PROJECT>/frontend
+npm ci
+NEXT_PUBLIC_BACKEND_ORIGIN=https://<DOMAIN> npm run build
+```
+
+### Si `frontend-kind=bake-into-django`:
+```bash
+source ~/.nvm/nvm.sh && nvm use <NODE_VERSION>
+cd /home/ryzepeck/webapps/<PROJECT>/frontend && npm ci && bash build_to_django.sh
+```
+
+### Si `frontend-kind=none`: saltar.
+
+---
+
+## Paso 4: `.env` de producción
 
 ```bash
 cp /home/ryzepeck/webapps/<PROJECT>/backend/.env.example /home/ryzepeck/webapps/<PROJECT>/backend/.env
 chmod 600 /home/ryzepeck/webapps/<PROJECT>/backend/.env
 ```
 
-Editar `.env` con valores reales. Variables obligatorias:
-- `DJANGO_ENV=production`
-- `DJANGO_DEBUG=false`
-- `DJANGO_SECRET_KEY` — generar con `python3 -c "import secrets; print(secrets.token_urlsafe(50))"`
-- `DJANGO_ALLOWED_HOSTS=<DOMAIN>`
-- DB credentials (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST=localhost`)
-- `REDIS_URL=redis://localhost:6379/<N>` (N = DB libre del paso 1)
-- `BACKUP_STORAGE_PATH=/var/backups/<PROJECT>`
-- `ENABLE_SILK=true`
+Editar con valores reales. Variables **obligatorias**:
+
+| Variable | Valor |
+|---|---|
+| `DJANGO_ENV` | `production` |
+| `DJANGO_DEBUG` | `false` |
+| `DJANGO_SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `DJANGO_ALLOWED_HOSTS` | `<DOMAIN>` (sin comas, solo el dominio prod) |
+| `DJANGO_CORS_ALLOWED_ORIGINS` | `https://<DOMAIN>` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://<DOMAIN>` |
+| `DJANGO_DB_ENGINE` | `django.db.backends.mysql` |
+| `DB_NAME` | `<DB_NAME>` |
+| `DB_USER` | `<DB_USER>` |
+| `DB_PASSWORD` | `<GENERATED_PASSWORD>` |
+| `DB_HOST` | `localhost` |
+| `DB_PORT` | `3306` |
+| `REDIS_URL` | `redis://localhost:6379/<REDIS_DB>` |
+| `BACKUP_STORAGE_PATH` | `/var/backups/<PROJECT>` |
+| `ENABLE_SILK` | `false` (salvo que necesites profiling) |
+
+> ⚠️ **Trampa conocida del template `base_feature_project`:** `settings.py` (dev) lee `DJANGO_DB_NAME`, pero `settings_prod.py` lee `DB_NAME`. En producción siempre usar `DB_NAME=...` (no `DJANGO_DB_NAME=...`). Idem para `FRONTEND_URL`: debe ser `https://<DOMAIN>`, nunca `localhost`.
+
+> ⚠️ **Wompi / integraciones de pago:** si el cliente solo entregó claves sandbox (`pub_test_*`, `prv_test_*`), dejarlo documentado en `projects.yml` `notes:` y en un comentario del `.env`. Migrar a producción es un TODO explícito.
+
+### 4b. Template versionado para el repo ops
+```bash
+mkdir -p /home/ryzepeck/webapps/vps-ops-toolkit/config/project-env-templates/<PROJECT>
+# copiar backend/.env.example → backend.env reemplazando valores por <placeholders>
+```
 
 ---
 
-## Paso 4: Migraciones + collectstatic
+## Paso 5: Migraciones + collectstatic
 
 ```bash
 cd /home/ryzepeck/webapps/<PROJECT>/backend
 source venv/bin/activate
-DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py migrate
+DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py migrate --noinput
 DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py collectstatic --noinput
 ```
 
 ---
 
-## Paso 5: Systemd services
+## Paso 6: Systemd services
 
-Crear los tres archivos con `sudo tee`:
+Crear cada unit file en `/etc/systemd/system/` **Y DUPLICAR en `/home/ryzepeck/webapps/vps-ops-toolkit/config/systemd/`** (idéntica, sin comentarios distintos). Si no lo duplicás, `verify-state.sh` reporta drift.
 
-**Gunicorn** (`/etc/systemd/system/<PROJECT>.service`):
+### 6a. Socket (gunicorn)
+Archivo `/etc/systemd/system/<PROJECT>.socket`:
+```ini
+[Unit]
+Description=<PROJECT> Gunicorn Socket
 
-```bash
-sudo tee /etc/systemd/system/<PROJECT>.service > /dev/null << 'EOF'
+[Socket]
+ListenStream=/run/<PROJECT>.sock
+SocketUser=www-data
+
+[Install]
+WantedBy=sockets.target
+```
+
+### 6b. Gunicorn service
+`/etc/systemd/system/<PROJECT>.service`:
+```ini
 [Unit]
 Description=Gunicorn daemon for <PROJECT>
+Requires=<PROJECT>.socket
 After=network.target
 
 [Service]
@@ -131,193 +240,391 @@ ExecStart=/home/ryzepeck/webapps/<PROJECT>/backend/venv/bin/gunicorn \
     --workers 2 \
     --max-requests 800 \
     --max-requests-jitter 80 \
-    --timeout 120 \
-    --bind unix:<SOCKET> \
+    --timeout 30 \
+    --graceful-timeout 20 \
+    --bind unix:/run/<PROJECT>.sock \
     <DJANGO_PROJECT>.wsgi:application
-ExecReload=/bin/kill -s HUP $MAINPID
-Restart=on-failure
+Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
-EOF
 ```
 
-**Huey** (`/etc/systemd/system/<HUEY_SERVICE>.service`):
-
-```bash
-sudo tee /etc/systemd/system/<HUEY_SERVICE>.service > /dev/null << 'EOF'
+### 6c. Huey service
+`/etc/systemd/system/<HUEY_SERVICE>.service`:
+```ini
 [Unit]
-Description=Huey worker for <PROJECT>
+Description=<PROJECT> Huey Task Queue
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=ryzepeck
+Group=www-data
+WorkingDirectory=/home/ryzepeck/webapps/<PROJECT>/backend
+Environment="DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod"
+ExecStart=/home/ryzepeck/webapps/<PROJECT>/backend/venv/bin/python \
+          manage.py run_huey --workers 1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 6d. Frontend service (solo si `nextjs-runtime`)
+`/etc/systemd/system/<FRONTEND_SERVICE>.service`:
+```ini
+[Unit]
+Description=<PROJECT> Next.js Frontend
 After=network.target
 
 [Service]
 Type=simple
 User=ryzepeck
-WorkingDirectory=/home/ryzepeck/webapps/<PROJECT>/backend
-Environment="DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod"
-ExecStart=/home/ryzepeck/webapps/<PROJECT>/backend/venv/bin/python manage.py run_huey --workers 1
+Group=www-data
+WorkingDirectory=/home/ryzepeck/webapps/<PROJECT>/frontend
+Environment="NODE_ENV=production"
+Environment="PORT=<FRONTEND_PORT>"
+Environment="NEXT_PUBLIC_BACKEND_ORIGIN=https://<DOMAIN>"
+ExecStart=/home/ryzepeck/.nvm/versions/node/v20.19.4/bin/node \
+    /home/ryzepeck/webapps/<PROJECT>/frontend/node_modules/.bin/next \
+    start -p <FRONTEND_PORT>
 Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
-EOF
 ```
 
-**Override** de recursos (`/etc/systemd/system/<PROJECT>.service.d/override.conf`):
+### 6e. Overrides (drop-ins de recursos)
+Crear `/etc/systemd/system/<PROJECT>.service.d/override.conf`:
 
-```bash
-sudo mkdir -p /etc/systemd/system/<PROJECT>.service.d
-sudo tee /etc/systemd/system/<PROJECT>.service.d/override.conf > /dev/null << 'EOF'
+Perfil **light** (default):
+```ini
 [Service]
-MemoryHigh=<MEMORY_HIGH>
-MemoryMax=<MEMORY_MAX>
-CPUQuota=<CPU_QUOTA>
+MemoryHigh=150M
+MemoryMax=250M
+CPUQuota=40%
 TasksMax=50
 OOMScoreAdjust=300
 Restart=on-failure
-EOF
+RestartSec=5
 ```
 
-Activar:
+Perfil **standard**:
+```ini
+[Service]
+MemoryHigh=300M
+MemoryMax=512M
+CPUQuota=50%
+TasksMax=50
+OOMScoreAdjust=300
+Restart=on-failure
+RestartSec=5
+```
 
+Análogos para `<HUEY_SERVICE>` (CPU 20%) y `<FRONTEND_SERVICE>` (200/300M, CPU 25%).
+
+### 6f. Activar
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable <PROJECT> <HUEY_SERVICE>
-sudo systemctl start <PROJECT> <HUEY_SERVICE>
+sudo systemctl enable --now <PROJECT>.socket <PROJECT>.service <HUEY_SERVICE>.service [<FRONTEND_SERVICE>.service]
+systemctl is-active <PROJECT> <HUEY_SERVICE> [<FRONTEND_SERVICE>]   # deben ser 'active'
 ```
 
 ---
 
-## Paso 6: Nginx + SSL
+## Paso 7: Nginx + SSL (2-phase dance)
 
-Crear `/etc/nginx/sites-available/<PROJECT>` con:
-- `geo $blocked_country` para bloqueo geográfico
-- `limit_req_zone` para rate limiting
-- `proxy_pass` al socket `<SOCKET>`
-- location `/static/` → `backend/staticfiles/`
-- location `/media/` → `backend/media/`
-- Si tiene frontend SPA: `root` + `try_files` para `/`
+> **Por qué 2 fases:** la config nginx final referencia `/etc/letsencrypt/live/<DOMAIN>/fullchain.pem` pero el cert todavía no existe → `nginx -t` falla. Certbot no puede actuar si nginx no puede validar su config. Romper el ciclo con una config HTTP-only temporal.
+
+### 7a. Instalar config final en el repo (no habilitarla aún)
+
+Crear `/home/ryzepeck/webapps/vps-ops-toolkit/config/nginx/sites-available/<PROJECT>` copiando el patrón de `tuhuella_project`:
+- `server_name <DOMAIN>`
+- `/static/` → `backend/staticfiles/`
+- `/media/` → `backend/media/`
+- `/api/`, `/admin/`, `/admin-gallery/` → `proxy_pass http://unix:/run/<PROJECT>.sock`
+- Si `nextjs-runtime`: `location / { proxy_pass http://127.0.0.1:<FRONTEND_PORT>; ... }`
+- `client_max_body_size 15M` (o más, según `MAX_UPLOAD_*`)
+- Incluir `snippets/geo-block.conf` y `limit_req`
+- `listen 443 ssl` + SSL certs de `/etc/letsencrypt/live/<DOMAIN>/`
+
+Instalar en `/etc/nginx/sites-available/<PROJECT>` pero **NO** symlinkear todavía.
+
+### 7b. Alternativa automatizada (recomendada)
+
+Si existe `scripts/bootstrap/emit-ssl-cert.sh <DOMAIN>`, invocarlo para obtener el cert antes de habilitar la config final. El helper hace el dance completo.
+
+### 7c. Dance manual (si no usas el helper)
 
 ```bash
-sudo ln -sf /etc/nginx/sites-available/<PROJECT> /etc/nginx/sites-enabled/
+# 1. Config temporal HTTP-only
+sudo tee /etc/nginx/sites-available/<PROJECT>.http-only >/dev/null <<'EOF'
+server {
+    listen 80;
+    server_name <DOMAIN>;
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+    location / { return 404; }
+}
+EOF
+sudo ln -sfn /etc/nginx/sites-available/<PROJECT>.http-only /etc/nginx/sites-enabled/<PROJECT>.http-only
 sudo nginx -t && sudo systemctl reload nginx
 
-# SSL
-sudo certbot --nginx -d <DOMAIN> --non-interactive --agree-tos --redirect
+# 2. Emitir cert vía webroot
+sudo mkdir -p /var/www/html/.well-known/acme-challenge
+sudo chown -R www-data:www-data /var/www/html
+sudo certbot certonly --webroot -w /var/www/html -d <DOMAIN> \
+    --non-interactive --agree-tos --email <OPERATOR_EMAIL>
+
+# 3. Cambiar a config final
+sudo rm /etc/nginx/sites-enabled/<PROJECT>.http-only /etc/nginx/sites-available/<PROJECT>.http-only
+sudo ln -sfn /etc/nginx/sites-available/<PROJECT> /etc/nginx/sites-enabled/<PROJECT>
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### 7d. Smoke test
+```bash
+curl -sI https://<DOMAIN>/                  # → 200
+curl -s  https://<DOMAIN>/api/health/       # → {"status":"ok"}
+curl -sI http://<DOMAIN>/                   # → 301 → https
 ```
 
 ---
 
-## Paso 7: Directorio de backups
+## Paso 8: Directorio de backups
 
 ```bash
 sudo mkdir -p /var/backups/<PROJECT>
 sudo chown ryzepeck:ryzepeck /var/backups/<PROJECT>
+sudo chmod 755 /var/backups/<PROJECT>
 ```
 
 ---
 
-## Paso 8: Health endpoint
+## Paso 9: Logrotate para debug.log
 
-Verificar que existe `/api/health/` en `urls.py`:
+**No olvidar** — este paso sólo lo cubre `bootstrap.sh` en una corrida completa. Para onboarding aislado, aplicarlo manualmente:
 
 ```bash
-grep -r "health" /home/ryzepeck/webapps/<PROJECT>/backend --include="urls.py" -l
+sudo sed 's/{PROJECT}/<PROJECT>/g' \
+    /home/ryzepeck/webapps/vps-ops-toolkit/config/logrotate/project-debug.template \
+    | sudo tee /etc/logrotate.d/<PROJECT>-debug >/dev/null
 ```
 
-Si no existe, agregar al `urls.py` principal:
+Si existe `scripts/bootstrap/apply-logrotate.sh`, usarlo: `sudo bash scripts/bootstrap/apply-logrotate.sh --apply <PROJECT>`.
 
+---
+
+## Paso 10: Health endpoint
+
+Verificar:
+```bash
+grep -Hrn "api/health" /home/ryzepeck/webapps/<PROJECT>/backend --include="urls.py"
+```
+
+Si falta, añadir al `urls.py` principal:
 ```python
 from django.http import JsonResponse
-
 def health_check(request):
     return JsonResponse({'status': 'ok'})
-
-urlpatterns = [
-    path('api/health/', health_check, name='health-check'),
-    # ... resto de urls
-]
+urlpatterns = [path('api/health/', health_check, name='health-check'), ...]
 ```
 
 ---
 
-## Paso 9: Ajustes en código
+## Paso 11: Ajustes en código del proyecto
 
-Verificar y ajustar en `settings.py` (o `settings_prod.py`):
+Estos cambios viven en el **repo del proyecto clonado** (`/home/ryzepeck/webapps/<PROJECT>`), NO en el repo ops. Hacer commit y push upstream:
 
-```python
-# HUEY name debe ser único por proyecto
-HUEY = {
-    'name': '<PROJECT>',  # único en el servidor
-    ...
-}
+1. **HUEY name único**: en `settings.py` (o `settings_prod.py` como override):
+   ```python
+   HUEY = RedisHuey(name='<PROJECT>', url=os.getenv('REDIS_URL', ...), ...)
+   ```
 
-# Retención de backups
-DBBACKUP_CLEANUP_KEEP = 4
+2. **Retención backups**: `DBBACKUP_CLEANUP_KEEP = 4` (si usa django-dbbackup).
+
+3. **Shift crontab Huey** para evitar colisiones con otros proyectos. Ejecutar:
+   ```bash
+   bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-huey-schedules.sh   # (si existe)
+   ```
+   o manualmente:
+   ```bash
+   grep -h "crontab" /home/ryzepeck/webapps/*/backend/*/tasks.py
+   ```
+   y asignar minutos/horas únicos al nuevo proyecto en `tasks.py` (particularmente `scheduled_backup` y `cleanup_*` que son pesados).
+
+---
+
+## Paso 12: Registrar en `projects.yml`
+
+Archivo: `/home/ryzepeck/webapps/vps-ops-toolkit/projects.yml` (NO `/home/ryzepeck/webapps/projects.yml`, ese path está obsoleto en docs antiguos).
+
+Añadir bajo `active:`:
+```yaml
+  - name: <PROJECT>
+    status: active
+    server: <HOSTNAME_SHORT>           # srv571894 o srv614758.hstgr.cloud
+    environment: production
+    label: <LABEL>
+    domain: <DOMAIN>
+    git_repo: <REPO_URL>
+    branch: main                        # ¡confirmar con `git branch --show-current`!
+    db: mysql
+    db_name: <DB_NAME>
+    redis_db: <REDIS_DB>
+    gunicorn_service: <GUNICORN_SERVICE>
+    huey_service: <HUEY_SERVICE>
+    memory_max: 250M                    # según perfil: 250M light, 512M standard
+    has_frontend: true                  # false si none
+    python_version: "3.12"
+    node_version: "20"                  # omit si no has_frontend
+    requirements_path: backend/requirements.txt
+    frontend_build: "npm ci && npm run build"
+    collectstatic: true
+    media_path: backend/media
+    venv_path: backend/venv/bin/python
+    socket_path: /run/<PROJECT>.sock
+    log_files:
+      - backend/logs/django.log
+      - backend/logs/gunicorn-error.log
+    notes: "<info relevante: puerto frontend, sandbox flags, suspended_reason…>"
 ```
 
-Verificar horarios de Huey que no colisionen con otros proyectos:
+Este es el **único paso** que conecta el proyecto a monitoring, backups, healthcheck y diagnóstico — todos los scripts leen `projects.yml` via `project-definitions.sh`.
+
+Si `/etc/cron.d/srv-monitoring` tiene comentario con cantidad de proyectos, actualizarlo.
+
+---
+
+## Paso 13: Workflow deploy del proyecto
+
+Crear `/home/ryzepeck/webapps/<PROJECT>/.claude/commands/deploy-and-check.md` usando como plantilla `tenndalux_project/.claude/commands/deploy-and-check.md` (adaptar branch `main` vs `master`, nombres de servicios, puerto frontend, comando de build).
+
+---
+
+## Paso 14: Verificación final
 
 ```bash
-grep -h "crontab" /home/ryzepeck/webapps/*/backend/*/tasks.py 2>/dev/null
-```
+# 1. Servicios activos
+systemctl is-active <PROJECT> <HUEY_SERVICE> [<FRONTEND_SERVICE>]
 
-Asignar horarios únicos en `tasks.py` del nuevo proyecto.
+# 2. HTTPS
+curl -sI https://<DOMAIN>/
+curl -s  https://<DOMAIN>/api/health/
 
----
-
-## Paso 10: Registrar en projects.yml
-
-Agregar el nuevo proyecto a `/home/ryzepeck/webapps/projects.yml` bajo la sección `active:`. Incluir todos los campos requeridos: `name`, `label`, `domain`, `branch`, `db`, `db_name`, `redis_db`, `gunicorn_service`, `huey_service`, `memory_max`, `has_frontend`, `frontend_build`, `media_path`, `venv_path`, `socket_path`, y `notes`.
-
-**Este es el único paso necesario para integrar el proyecto en los scripts de métricas.** Todos los scripts de monitoreo, diagnóstico, backup y mantenimiento leen automáticamente de `projects.yml` via la librería compartida `project-definitions.sh`.
-
-También actualizar:
-- `/etc/cron.d/srv-monitoring` — actualizar comentario con nueva cantidad de proyectos
-
----
-
-## Paso 11: Workflow deploy del proyecto
-
-Crear `.claude/commands/deploy-and-check.md` dentro del directorio del proyecto (si aplica), siguiendo el patrón de `tenndalux_project/.claude/commands/deploy-and-check.md`.
-
----
-
-## Paso 12: Verificación final
-
-```bash
-# Servicios activos
-systemctl is-active <PROJECT>
-systemctl is-active <HUEY_SERVICE>
-
-# Health check HTTPS
-curl -s https://<DOMAIN>/api/health/
-
-# Backup manual de prueba
-cd /home/ryzepeck/webapps/<PROJECT>/backend
-source venv/bin/activate
+# 3. Backup manual
+cd /home/ryzepeck/webapps/<PROJECT>/backend && source venv/bin/activate
 DJANGO_SETTINGS_MODULE=<DJANGO_PROJECT>.settings_prod python manage.py dbbackup --compress
+ls /var/backups/<PROJECT>/
 
-# Post-deploy check
-bash /home/ryzepeck/webapps/ops/vps/scripts/deployment/post-deploy-check.sh <PROJECT>
+# 4. Post-deploy check (solo el proyecto, sin ruido global)
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh --project-only <PROJECT>
+
+# 5. Sin drift / missing
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/bootstrap/verify-state.sh | tail -3
+#    Debe mostrar: DRIFT=0 | MISSING=0
+
+# 6. projects.yml OK
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-projects-yml.sh
+
+# 7. Sin colisiones de Huey (si existe el script)
+bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/ci/validate-huey-schedules.sh
 ```
 
-Reportar resultado final:
-- Estado de servicios (Gunicorn + Huey)
-- Respuesta de `/api/health/`
-- Resultado del backup de prueba
-- Cualquier error encontrado durante el proceso
+Reportar:
+- Estado servicios + `systemctl is-active`
+- `{"status":"ok"}` en `/api/health/`
+- Tamaño del backup generado
+- `PASS=N FAIL=0 WARN=?` en post-deploy-check
+- Credenciales sensibles (SECRET_KEY, DB_PASSWORD) → al operador por canal seguro
+- Wompi / integraciones en sandbox → seguimiento en `projects.yml` notes
 
 ---
+
+## Bugs comunes del template `base_feature_project`
+
+Estos bugs rompen `npm run build` de producción y se detectan en **Paso 3**. Si aparecen, arreglarlos en el repo del proyecto y commitear:
+
+1. **`lib/types.ts`: falta `export type Blog`**. Shape mínima:
+   ```ts
+   export type Blog = { id: number; title: string; category?: string; description?: string; image_url?: string }
+   ```
+2. **`lib/types.ts`: falta `export type Product`**. Suele ser alias de `Peluch`:
+   ```ts
+   export type Product = Peluch
+   ```
+3. **`app/page.tsx` y `app/products/[productId]/page.tsx`**: `addToCart(item, qty)` con 2 args. La firma del store es `(item: CartItem) => void`. Fix: `addToCart({...item, quantity: qty})` o actualizar la firma del store.
+4. **`HUEY name` hardcoded** a `base_feature_project`. Cambiar a `<PROJECT>` o hacerlo env-driven.
+5. **`DJANGO_DB_NAME` vs `DB_NAME`**: template inconsistente. En prod siempre `DB_NAME=...`.
 
 ## Convenciones de nombres (referencia)
 
 | Elemento | Formato | Ejemplo |
-|----------|---------|---------|
-| Directorio | snake_case | `fernando_aragon_project` |
-| Gunicorn service | igual que directorio | `fernando_aragon_project.service` |
-| Huey service | kebab-case, sin `_project` + `-huey` | `fernando-aragon-huey.service` |
-| MySQL DB | `<directorio>_db` | `fernando_aragon_project_db` |
-| MySQL user | `<directorio>_user` | `fernando_aragon_project_user` |
-| Backup dir | `/var/backups/<directorio>` | `/var/backups/fernando_aragon_project` |
-| Socket | en directorio del proyecto | `fernando_aragon_project.sock` |
+|---|---|---|
+| Directorio | snake_case | `mimittos_project` |
+| Gunicorn service | igual al directorio | `mimittos_project.service` |
+| Huey service | slug (sin `_project`) + `-huey` | `mimittos-huey.service` |
+| Frontend service | slug + `-frontend` | `mimittos-frontend.service` |
+| MySQL DB / user | `<dir>_db` / `<dir>_user` | `mimittos_project_db` / `mimittos_project_user` |
+| Backup dir | `/var/backups/<dir>` | `/var/backups/mimittos_project` |
+| Socket | `/run/<dir>.sock` | `/run/mimittos_project.sock` |
+| Logrotate | `/etc/logrotate.d/<dir>-debug` | `/etc/logrotate.d/mimittos_project-debug` |
+
+---
+
+## Acciones disponibles
+
+Tras el reporte, si la sesión es interactiva y NO hubo flags explícitos
+(reglas de gating de $output-protocol §4), ofrecer vía AskUserQuestion:
+
+| Opción (label) | description (costo/efecto) | preview (comando exacto) |
+|---|---|---|
+| Verificar drift (Recommended) | read-only: confirma `DRIFT=0 \| MISSING=0` tras duplicar units/nginx en el repo ops | `bash scripts/bootstrap/verify-state.sh \| tail -3` |
+| Validar projects.yml | read-only: valida el schema del registro agregado en el Paso 12 | `bash scripts/ci/validate-projects-yml.sh` |
+| Validar crontabs Huey | read-only: detecta colisiones de horario con los otros proyectos (Paso 11) | `bash scripts/ci/validate-huey-schedules.sh` |
+
+Blocklist §4: `post-deploy-check.sh` / `$deploy-and-check` van SÓLO como texto en
+`## Next steps` (manual-only por política), nunca como fila clickeable; la entrega
+de credenciales por canal seguro es acción manual del operador.
+
+## Output final
+
+Reportar siguiendo $output-protocol. Plantilla específica de
+`$integrate-new-project`:
+
+```markdown
+🟢 integrate-new-project OK — <PROJECT> @ <DOMAIN>
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| MySQL DB + Redis slot | ✅ | DB/user creados, slot Redis libre confirmado |
+| Backend venv + deps | ✅ | venv + requirements + gunicorn/mysqlclient |
+| Frontend build | ✅ | `npm ci && build` OK (⏭️ si frontend-kind=none) |
+| `.env` producción (chmod 600) | ✅ | vars obligatorias + template versionado en repo ops |
+| Migraciones + collectstatic | ✅ | migrate + collectstatic con settings_prod |
+| Systemd services | ✅ | socket/gunicorn/huey [+frontend] active + drop-ins |
+| Nginx + SSL (2-phase) | ✅ | site habilitado, cert emitido, smoke test 200 |
+| Backups + logrotate | ✅ | /var/backups/<PROJECT> + logrotate.d instalados |
+| Health endpoint | ✅ | /api/health/ responde {"status":"ok"} |
+| Ajustes código proyecto | ✅ | HUEY name único, retención, crontab sin colisión |
+| Registro en projects.yml | ✅ | conecta monitoring/backups/healthcheck/diagnóstico |
+| Deploy workflow del proyecto | ✅ | deploy-and-check creado en el repo del proyecto |
+| Verificación final | ✅ | post-deploy-check PASS, verify-state DRIFT=0 |
+```
+
+Si la verificación de entorno falla (corriendo en dev-machine), reportar
+`🚫 integrate-new-project — REFUSED (dev machine)` con `## Next steps`
+indicando el SSH al VPS destino — **no es error**, es safety gate. Si un
+servicio no levanta, el cert no emite, o post-deploy-check FALLA, reemplazar
+el ✅ correspondiente por ⚠️/❌, omitir la línea ✨ y agregar `## Next steps`
+con el comando exacto (`journalctl -u <PROJECT> -n 50`,
+`bash scripts/bootstrap/emit-ssl-cert.sh <DOMAIN>`, etc.).
+
+## Next steps (si aplica)
+- `bash scripts/deployment/post-deploy-check.sh <PROJECT>` — verifica servicios + health del proyecto
+- `bash scripts/bootstrap/verify-state.sh | tail -3` — confirma DRIFT=0 | MISSING=0
+- (manual, operador) entregar SECRET_KEY + DB_PASSWORD por canal seguro; documentar claves sandbox en projects.yml notes
