@@ -2,9 +2,9 @@
 
 ## Active
 
-- [ ] Land Wave 5 production operations/performance PR and deployment.
-- [ ] Complete Wave 6 certification and lifecycle promotion after the required
-  production observation window.
+- [ ] Close the Wave 6 production observation after 2026-08-21 15:13:06 UTC,
+  re-run the closing health/log/backup/capacity gates, and promote the fleet
+  lifecycle only if the complete interval is green.
 
 ## Deferred Decisions
 
@@ -45,3 +45,12 @@
   validated all touched tests with zero junk-only or unvalidated flows.
 - [x] Merged Wave 4 through PR #12, passed all six CI jobs, and deployed it
   with fresh database/media backups and a green production post-deploy gate.
+- [x] Merged Wave 5 through PR #13, deployed dependency-aware health,
+  independent backups, hardened runtime configuration, lazy Argos loading,
+  and passed restore plus production headroom gates.
+- [x] Merged Wave 6 dependency closure through PR #14, pinned five reachable
+  secure transitives, removed 18 stale venv packages, and passed all required
+  project CI jobs.
+- [x] Completed the immediate Wave 6 AI, QA, vulnerability, deployment,
+  restore, public-contract, service, and capacity certification without
+  creating a staging coordinate.

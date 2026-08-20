@@ -56,6 +56,9 @@
   1.10.1. Enabling Stanza chunking is prohibited.
 - Keep exact backend pins and lock frontend transitive versions through
   `package-lock.json`. Framework majors are separate compatibility work.
+- Pin security-relevant reachable backend transitives explicitly when their
+  safe floor is stricter than the direct package constraint. Current explicit
+  pins are Click, Filelock, idna, Protobuf, and SentencePiece.
 
 ## Development And Test Environments
 
