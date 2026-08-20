@@ -19,7 +19,7 @@ Patterns, preferences, and project intelligence discovered during development.
 
 ## Development
 
-- **venv is `venv_cpu/`**, not `venv/` — exists because PyTorch is installed (but unused in code).
+- **venv is `venv_cpu/`**, not `venv/` — Argos' Stanza dependency requires the PyTorch CPU build.
 - **Production service**: Gunicorn runs as `crushme_project.service` and binds `/run/gunicorn.sock`; Huey runs as `crushme-huey.service`.
 - **Huey immediate mode** in dev: tasks run synchronously, no Redis/worker needed.
 - **Vite dev proxy**: `/api/` and `/media/` proxied to localhost:8000. Both servers must run.
@@ -33,6 +33,7 @@ Patterns, preferences, and project intelligence discovered during development.
 
 ## Tech Debt
 
-- **PyTorch, stanza, ctranslate2** in requirements.txt but unused — 650M memory limit exists because of PyTorch footprint.
+- **Translation dependency chain is real** — Argos uses CTranslate2; Stanza pulls PyTorch, while MiniSBD is forced to keep vulnerable Stanza model loading unreachable.
+- **Memory headroom is unproven** — validate the 650M limit with a representative translation sync in staging.
 - **Minimal test coverage** — destructive command guards are covered, but core product behavior and all E2E flows remain uncovered.
 - **Exposed database credential** — a bootstrap SQL file matched production credentials and remains in Git history; rotation and history remediation block lifecycle promotion.

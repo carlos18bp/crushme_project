@@ -11,6 +11,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from decouple import Csv, config
+from django.core.exceptions import ImproperlyConfigured
 from huey import RedisHuey
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +23,17 @@ DJANGO_ENV = config('DJANGO_ENV', default='development')
 IS_PRODUCTION = DJANGO_ENV == 'production'
 IS_STAGING = DJANGO_ENV == 'staging'
 IS_TEST = DJANGO_ENV in {'test', 'e2e'}
+
+# Argos 1.11.0 still pins a vulnerable Stanza release. MiniSBD preserves
+# offline sentence splitting without loading Stanza checkpoint files.
+ARGOS_CHUNK_TYPE = config('ARGOS_CHUNK_TYPE', default='MINISBD').upper()
+ARGOS_DEVICE_TYPE = config('ARGOS_DEVICE_TYPE', default='cpu').lower()
+if ARGOS_CHUNK_TYPE != 'MINISBD':
+    raise ImproperlyConfigured('ARGOS_CHUNK_TYPE must remain MINISBD')
+if ARGOS_DEVICE_TYPE != 'cpu':
+    raise ImproperlyConfigured('ARGOS_DEVICE_TYPE must remain cpu')
+os.environ['ARGOS_CHUNK_TYPE'] = ARGOS_CHUNK_TYPE
+os.environ['ARGOS_DEVICE_TYPE'] = ARGOS_DEVICE_TYPE
 
 # ---------------------------------------------------------------------------
 # Core Django settings

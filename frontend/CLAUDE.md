@@ -8,7 +8,7 @@
 - HTTP: **Axios** wrapped by a **single client** `src/services/request_http.js` (CSRF + JWT + auto-refresh).
 - i18n: **vue-i18n 9.14** with `src/locales/` organized by domain.
 - Styling: **Tailwind 4** + **Flowbite 3** + **Headless UI** + **Heroicons**.
-- Animations: **GSAP 3.13**.
+- Animations: **GSAP 3.15**.
 - Tests: **Jest** for unit, **Playwright** for E2E.
 
 ## Project Conventions

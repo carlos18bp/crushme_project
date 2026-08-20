@@ -2,16 +2,16 @@
 
 ## Stack
 
-- **Vue 3.5.13** (`<script setup>`-style components OK)
+- **Vue 3.5.41** (`<script setup>`-style components OK)
 - **Vite 7** as the dev server and bundler
-- **Pinia 3.0.3** + **`pinia-plugin-persistedstate`** for state management (mixed API styles + localStorage persistence)
-- **Vue Router 4.5.1** with locale prefixes (`/en/...`, `/es/...`)
-- **Axios 1.12.2** wrapped by a **single HTTP client**: `src/services/request_http.js` (CSRF + JWT + auto-refresh)
+- **Pinia 3.0.4** + **`pinia-plugin-persistedstate` 4.7.1** for state management (mixed API styles + localStorage persistence)
+- **Vue Router 4.6.4** with locale prefixes (`/en/...`, `/es/...`)
+- **Axios 1.19.0** wrapped by a **single HTTP client**: `src/services/request_http.js` (CSRF + JWT + auto-refresh)
 - **vue-i18n 9.14.5** for EN/ES localization
-- **Tailwind CSS 4.1.13** + **Flowbite 3.1.2**
+- **Tailwind CSS 4.3.3** + **Flowbite 3.1.2**
 - **Headless UI Vue 1.7.23**, **Heroicons 2.2**, **Bootstrap Icons 1.13**
-- **GSAP 3.13** for animations
-- **SweetAlert2 11.23**, **country-state-city 3.2** for forms
+- **GSAP 3.15** for animations
+- **SweetAlert2 11.26**, **country-state-city 3.2** for forms
 - **Tests**: Jest (unit) + Playwright (E2E)
 
 This is a **Vue 3 + Vite SPA** — **NOT Nuxt**. There is no SSR.

@@ -59,7 +59,7 @@ CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform. Verified 
 
 ## Non-Functional Requirements
 - **Domain**: crushme.com.co / www.crushme.com.co
-- **Memory limit**: 650M (PyTorch installed but unused)
+- **Memory limit**: 650M pending representative translation-load validation in staging
 - **Bilingual**: ES primary, EN secondary
 - **Performance**: Redis cache (db 1), django-silk profiling (conditional)
 - **Backups**: Weekly via Huey task + django-dbbackup

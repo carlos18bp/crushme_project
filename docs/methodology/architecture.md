@@ -9,8 +9,8 @@
                      → /*       → [Vue SPA index.html]   [Redis db2: Huey]
 ```
 
-- **Backend**: Django 5.1.5 + DRF 3.15.2, single app `crushme_app`
-- **Frontend**: Vue 3.5.13 + Vite 7 SPA, built to `backend/static/frontend/`
+- **Backend**: Django 5.2.17 LTS + DRF 3.17.2, single app `crushme_app`
+- **Frontend**: Vue 3.5.41 + Vite 7 SPA, built to `backend/static/frontend/`
 - **Database**: MySQL 8 (utf8mb4, STRICT_TRANS_TABLES)
 - **Cache**: Redis db 1 (django-redis)
 - **Task queue**: Huey against Redis db 2 (synchronous in dev, async in prod via `crushme-huey.service`)

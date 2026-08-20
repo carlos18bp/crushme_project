@@ -203,7 +203,7 @@ por ecosistema. La fuente de verdad es `vps-ops-toolkit/workflows/`.
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.1.5 + DRF (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
+CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.2.17 LTS + DRF 3.17.2 (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
 
 ## Commands
 ```bash
@@ -258,7 +258,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings_test` (from `pytest.ini`) and never inherits deployment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
 - Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
-- Memory limit: 650M (PyTorch is in requirements but unused in code).
+- Memory limit: 650M. Revalidate this in staging because Argos reaches CTranslate2 and its pinned Stanza dependency pulls PyTorch CPU.
 
 ### Deployment Flow
 1. `git pull origin main`
@@ -290,7 +290,7 @@ Bilingual MJML source templates in `emails/`, rendered HTML in `backend/email_te
 
 - **Name**: CrushMe
 - **Domain**: `crushme.com.co` / `www.crushme.com.co`
-- **Stack**: Django 5.1.5 + DRF (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
+- **Stack**: Django 5.2.17 LTS + DRF 3.17.2 (backend) / Vue 3.5 + Vite 7 SPA (frontend) / MySQL 8 / Redis / Huey
 - **Server path**: `/home/ryzepeck/webapps/crushme_project`
 - **Services**: `crushme_project.service` (Gunicorn), `crushme-huey.service`
 - **Settings module**: `DJANGO_SETTINGS_MODULE=crushme_project.settings`; production mode activated by `DJANGO_ENV=production` in `.env`
@@ -723,7 +723,7 @@ Full reference: `docs/TESTING_QUALITY_STANDARDS.md`
 ```bash
 cd backend && source venv_cpu/bin/activate
 ```
-This is the **PyTorch CPU build venv** — not a regular `venv/`. PyTorch is currently installed but **unused** in code (legacy or future ML feature).
+This is the **PyTorch CPU build venv** — not a regular `venv/`. PyTorch is pulled by Argos Translate's Stanza dependency; CTranslate2 performs the actual model inference and MiniSBD performs sentence splitting.
 
 #### Huey immediate mode in dev
 - `HUEY['immediate'] = True` in dev settings — tasks run synchronously, no Redis/worker required.
@@ -758,8 +758,8 @@ Deploy summary:
 
 ### Tech Debt / Things to Be Aware Of
 
-- **PyTorch is in `requirements.txt` but unused** — `torch`, `stanza`, and `ctranslate2` do not appear in application code. The `venv_cpu` and the 650M memory limit exist because of their footprint.
-- `stanza` and `ctranslate2` are also installed without active integration (probably future translation upgrades).
+- **Translation dependencies are transitive but required** — Argos uses CTranslate2 for model inference. Its Stanza pin pulls PyTorch CPU, while project settings force MiniSBD so Stanza checkpoint loading remains unreachable.
+- Re-measure the 650M service limit under translation load in staging before changing it.
 - The single `crushme_app` is large; consider splitting if it grows further.
 
 ---

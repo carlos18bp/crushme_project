@@ -7,7 +7,7 @@ modernization.
 
 ## Stack
 
-- Python 3.12, Django 5.1.5, Django REST Framework 3.15
+- Python 3.12, Django 5.2.17 LTS, Django REST Framework 3.17.2
 - Vue 3.5, Vite 7, Pinia 3, Vue Router, vue-i18n
 - MySQL 8, Redis, Huey, Gunicorn, Nginx
 - WooCommerce catalog mirror with offline ES/EN translation

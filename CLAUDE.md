@@ -201,7 +201,7 @@ por ecosistema. La fuente de verdad es `vps-ops-toolkit/workflows/`.
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.1.5 + DRF (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
+CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.2.17 LTS + DRF 3.17.2 (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
 
 ## Commands
 ```bash
@@ -256,7 +256,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 - Pytest uses `DJANGO_SETTINGS_MODULE=crushme_project.settings_test` (from `pytest.ini`) and never inherits deployment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
 - Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
-- Memory limit: 650M (PyTorch is in requirements but unused in code).
+- Memory limit: 650M. Revalidate this in staging because Argos reaches CTranslate2 and its pinned Stanza dependency pulls PyTorch CPU.
 
 ### Deployment Flow
 1. `git pull origin main`

@@ -14,7 +14,7 @@
 - [ ] Write frontend E2E tests (user flows: auth, products, cart, checkout, wishlists)
 
 ### Tech Debt
-- [ ] Evaluate removing PyTorch/stanza/ctranslate2 from requirements.txt (unused, wastes 650M memory)
+- [x] Verify Argos dependency reachability; retain CTranslate2/PyTorch chain and isolate Stanza behind MiniSBD
 - [ ] Consider splitting `crushme_app` if it grows further
 
 ## Completed

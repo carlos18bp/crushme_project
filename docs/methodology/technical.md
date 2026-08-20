@@ -6,36 +6,36 @@
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | Python | 3.12.3 | Runtime |
-| Django | 5.1.5 | Web framework |
-| DRF | 3.15.2 | REST API |
-| SimpleJWT | 5.3.0 | JWT authentication |
-| MySQL | 8 | Database (mysqlclient 2.2.7) |
+| Django | 5.2.17 LTS | Web framework |
+| DRF | 3.17.2 | REST API |
+| SimpleJWT | 5.5.1 | JWT authentication |
+| MySQL | 8 | Database (mysqlclient 2.2.8) |
 | Redis | 7.1.0 | Cache (db 1) + task queue (db 2) |
-| Huey | 2.5+ | Async task queue |
-| argostranslate | 1.9.6 | Offline ES/EN translation |
+| Huey | 2.6.0 | Async task queue |
+| argostranslate | 1.11.0 | Offline ES/EN translation with MiniSBD |
 | Gunicorn | 23.0.0 | WSGI server |
-| django-silk | 5.0+ | Profiling (conditional, `ENABLE_SILK=True`) |
-| django-dbbackup | 4.0+ | Database backups |
-| django-cors-headers | 4.6.0 | CORS |
-| django-attachments | 1.1.1 | File galleries (vendored) |
+| django-silk | 5.5.2 | Profiling (conditional, `ENABLE_SILK=True`) |
+| django-dbbackup | 5.3.0 | Database backups |
+| django-cors-headers | 4.9.0 | CORS |
+| django-attachments | vendored | File galleries |
 | django-cleanup | 8.1.0 | Auto-delete orphaned files |
 | Faker | 25.0.1 | Fake data generation |
 
 ### Frontend
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| Vue | 3.5.13 | UI framework |
+| Vue | 3.5.41 | UI framework |
 | Vite | 7 | Build tool + dev server |
-| Pinia | 3.0.3 | State management |
-| pinia-plugin-persistedstate | 4.5.0 | localStorage persistence |
-| vue-router | 4.5.1 | Routing with locale prefixes |
+| Pinia | 3.0.4 | State management |
+| pinia-plugin-persistedstate | 4.7.1 | localStorage persistence |
+| vue-router | 4.6.4 | Routing with locale prefixes |
 | vue-i18n | 9.14.5 | Internationalization |
-| Axios | 1.12.2 | HTTP client |
-| Tailwind CSS | 4.1.13 | Utility-first CSS |
+| Axios | 1.19.0 | HTTP client |
+| Tailwind CSS | 4.3.3 | Utility-first CSS |
 | Flowbite | 3.1.2 | UI component library |
 | Headless UI | 1.7.23 | Accessible UI primitives |
-| GSAP | 3.13.0 | Animations |
-| SweetAlert2 | 11.23.0 | Alert dialogs |
+| GSAP | 3.15.0 | Animations |
+| SweetAlert2 | 11.26.25 | Alert dialogs |
 
 ### Testing
 | Tool | Scope | Config |
@@ -55,8 +55,8 @@ Product content is translated at WooCommerce sync time via `argostranslate` and 
 ### Mixed Pinia Store API Styles
 9 stores use setup/Composition API, 3 use Options API. This is the current state — not a design decision to enforce.
 
-### PyTorch Installed But Unused
-`torch`, `stanza`, and `ctranslate2` are in `requirements.txt` but no application code imports them. The `venv_cpu` venv and 650M memory limit exist because of PyTorch's footprint.
+### Offline Translation Dependency Chain
+Argos uses CTranslate2 for model inference and pins Stanza, which pulls PyTorch CPU. Project settings force MiniSBD and reject other sentence splitters so the vulnerable Stanza checkpoint loader is unreachable. The `venv_cpu` name remains accurate; the 650M service limit must be measured under translation load in staging.
 
 ## Development Environment
 

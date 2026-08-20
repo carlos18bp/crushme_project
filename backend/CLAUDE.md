@@ -1,7 +1,7 @@
 # Backend Rules — CrushMe
 
 ## Stack And Scope
-- Django 5.1.5 + DRF 3.15.2, Python 3.x.
+- Django 5.2.17 LTS + DRF 3.17.2, Python 3.12.
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
 - Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
 - Production uses `crushme_project.settings` with `DJANGO_ENV=production`.
@@ -40,6 +40,6 @@
 - Prefer deterministic tests: freeze time, seed data explicitly, and avoid hidden global state.
 
 ## Tech Debt to Be Aware Of
-- **PyTorch is in `requirements.txt` but unused** — no active code imports it. The 650M memory limit and the `venv_cpu` exist because of PyTorch's footprint.
-- `stanza` and `ctranslate2` are also installed without active integration.
+- Argos uses CTranslate2 for offline model inference. Argos pins Stanza, which pulls PyTorch CPU, but settings force MiniSBD and reject Stanza model loading until the upstream advisory is resolved.
+- Re-measure the 650M memory limit with a representative translation sync in staging.
 - The single `crushme_app` is large (~25 models, 15+ view modules); consider splitting if it grows further.
