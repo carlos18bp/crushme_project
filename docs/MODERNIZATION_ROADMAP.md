@@ -48,6 +48,13 @@ will not be merged wholesale.
 | 5 | Align production operations, backups, observability, restore, and performance with the fleet standard | Post-deploy, restore, timers, logs, and representative load show at least 30% headroom |
 | 6 | Run final read-only certification and promote lifecycle | QA, vulnerability, AI sync, full audit, and 24-hour production observation are green |
 
+## Execution Status
+
+- Wave 0: complete through PR #4; accidental staging retired and disk gate met.
+- Wave 1: complete in its dedicated PR; all three AI ecosystems and the Memory
+  Bank are synchronized without runtime changes.
+- Waves 2-6: pending their independent PRs and gates.
+
 ## Wave Delivery
 
 Each wave starts from the latest `main` as `chore/crushme-wave-<n>-<topic>`. The

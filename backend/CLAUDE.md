@@ -4,7 +4,8 @@
 - Django 5.1.5 + DRF 3.15.2, Python 3.x.
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
 - Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
-- Production settings module: `crushme_project.settings_prod`.
+- Production uses `crushme_project.settings` with `DJANGO_ENV=production`.
+- Development and current tests use `crushme_project.settings`; production adds `DJANGO_ENV=production`.
 - Database: **MySQL 8** (`mysqlclient`, `utf8mb4`, `STRICT_TRANS_TABLES`). Cache + queue: Redis (db 1 for cache, db 2 for Huey).
 - **venv**: `backend/venv_cpu/` (PyTorch CPU build) — **not** `backend/venv/`.
 

@@ -11,6 +11,12 @@ Esta skill estandariza el uso de **Playwright MCP** (instalado en Claude Code) p
 
 > **Autorización del operador (Gustavo):** Playwright MCP queda autorizado a correr lo que necesite sin pedir permiso paso a paso, **excepto** cualquier mutación contra un proyecto production (ver §5).
 
+## Cómo invocar este skill
+
+Gating ([[_output-protocol]] §4): con `$ARGUMENTS` o intención clara en la sesión (los disparadores de §1) → ejecutar directo, PROHIBIDO preguntar el tema (un dato menor faltante se marca en el texto, no se convierte en pregunta). Sin argumentos ni contexto → UNA sola pregunta corta en texto por qué validar y dónde (no picker: el insumo es libre). Nunca en modo fleet/headless/cron.
+
+Sin picker por diseño: los flags son parámetros de la corrida (URL, usuario, viewport); se tipean. El proyecto, si falta y no se infiere del cwd, se pregunta en texto.
+
 ---
 
 ## 1. Cuándo activarse
@@ -38,7 +44,7 @@ Si la solicitud encaja en cualquiera de estos, ejecutar el flujo de pre-flight c
 
 ```bash
 # Cargar helpers del fleet (idéntico al patrón que usan server-alerts.sh, backup-mysql-and-media.sh)
-OPS_ROOT=/home/ryzepeck/webapps/ops/vps
+OPS_ROOT=/home/ryzepeck/webapps/vps-ops-toolkit
 MODE=check
 source "${OPS_ROOT}/scripts/lib/bootstrap-common.sh"
 source "${OPS_ROOT}/scripts/lib/project-definitions.sh"
@@ -55,7 +61,7 @@ DOMAIN="${PROJECT_DOMAINS[$PROJ]}"        # ej. azurita.projectapp.co
 DB_TYPE_VAL="${DB_TYPE[$PROJ]}"            # mysql | sqlite | postgres
 DB_NAME_VAL="${DB_NAME[$PROJ]:-}"
 GUNICORN_SVC_VAL="${GUNICORN_SVC[$PROJ]}"
-PROJ_PATH="/home/ryzepeck/webapps/${PROJ}"
+PROJ_PATH="$(resolve_projects_root)/${PROJ}"   # helper del toolkit — resuelve dev vs VPS
 
 echo "Proyecto: ${PROJ} | Env: ${ENV} | Dominio: ${DOMAIN} | DB: ${DB_TYPE_VAL}"
 ```
@@ -67,24 +73,24 @@ Si `PROJECT_DOMAINS[$PROJ]` está vacío: detener y preguntar al operador (proye
 En production este paso **se salta completo**.
 
 ```bash
-"${PROJ_PATH}/.venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
+"${PROJ_PATH}/backend/venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
 from django.apps import apps
 for m in apps.get_models():
     print(f"{m._meta.label}: {m.objects.count()}")
 '
 ```
 
-- Si los modelos relevantes para el flujo a probar tienen `0` registros → invocar el comando de seed del proyecto:
+- Si los modelos relevantes para el flujo a probar tienen `0` registros → refrescar el seed: preferir usar la skill [[fake-data-refresh]] (gate inverso de prod incluido), o directo el comando del proyecto:
   ```bash
-  "${PROJ_PATH}/.venv/bin/python" "${PROJ_PATH}/backend/manage.py" populate_fake_data
+  "${PROJ_PATH}/backend/venv/bin/python" "${PROJ_PATH}/backend/manage.py" create_fake_data
   ```
-- Si el proyecto no tiene `populate_fake_data` (u otro comando equivalente como `seed`, `loaddata`): **detener y avisar al operador**. No improvisar fixtures desde la skill.
-- Validar coherencia mínima de FKs no-nulas:
+- Si el proyecto no tiene `create_fake_data` (u otro comando equivalente como `seed`, `loaddata`): **detener y avisar al operador**. No improvisar fixtures desde la skill.
+- Sanity check adicional: `check --deploy` valida settings de deploy, NO integridad de FKs — para integridad usar los counts por modelo de arriba:
   ```bash
-  "${PROJ_PATH}/.venv/bin/python" "${PROJ_PATH}/backend/manage.py" check --deploy
+  "${PROJ_PATH}/backend/venv/bin/python" "${PROJ_PATH}/backend/manage.py" check --deploy
   ```
 
-> **Nota DB:** la mayoría del fleet usa **MySQL `localhost:3306`** (con credenciales en `config/credentials/mysql-users.env` por proyecto). Excepciones detectables vía `DB_TYPE[$PROJ]`: `azurita` y `candle_staging_project` usan **SQLite**; `vastago_project_staging` usa **PostgreSQL 16**. Para validación vía Django ORM esto es transparente.
+> **Nota DB:** la mayoría del fleet usa **MySQL `localhost:3306`** (con credenciales en `config/credentials/mysql-users.env` por proyecto). Excepciones detectables vía `DB_TYPE[$PROJ]`: `azurita` y `candle_staging_project` usan **SQLite**. Para validación vía Django ORM esto es transparente.
 
 ### Paso C — Autenticación y storage state (split staging/prod)
 
@@ -118,7 +124,7 @@ chmod 700 "${PROJ_PATH}/${SESSIONS_BASE}" "${PROJ_PATH}/${SESSIONS_BASE}/session
 
 **Reglas de uso:**
 
-- Si existe `<username>.json` y `mtime < 7 días`: reusar con `browser_set_storage_state` (cap `storage`). Internamente Playwright core ≥ 1.58 expone `setStorageState()` que aplica el state al context activo sin crear uno nuevo — más eficiente que el patrón viejo de `newContext({ storageState })` y compatible con Test Agents.
+- Si existe `<username>.json` y `mtime < 7 días`: reusar con `browser_set_storage_state` (cap `storage`). Internamente Playwright expone `setStorageState()` que aplica el state al context activo sin crear uno nuevo — más eficiente que el patrón viejo de `newContext({ storageState })` y compatible con Test Agents.
 - Si no existe o expiró: hacer login interactivo en el browser, luego `browser_storage_state` para exportar; persistir con `chmod 600 <username>.json`.
 - Si el proyecto guarda tokens en **IndexedDB** (ej. Firebase Auth, algunos SDKs SaaS): pasar `indexedDB: true` al exportar storage state — soportado desde Playwright 1.58. Default es solo cookies + localStorage.
 - **Nunca** copiar manualmente un JSON entre `.playwright_staging/` y `.playwright_prod/`. Son dominios distintos y cookies cruzadas son un bug semántico.
@@ -149,9 +155,9 @@ Pasar a Playwright MCP `--output-dir=${ARTIFACTS_DIR}` cuando se invoque.
 
 ---
 
-## 3. Capacidades disponibles (`@playwright/mcp` última + Playwright core 1.57+)
+## 3. Capacidades disponibles (`@playwright/mcp` última + Playwright ≥1.57)
 
-> Versiones a la fecha (2026-05): `@playwright/mcp` ≥ 0.0.75 y Playwright core ≥ 1.59. La skill no pina versión — usa la instalada en Claude Code. Test Agents (Planner/Generator/Healer) requieren Playwright core ≥ 1.57.
+> Piso de versión único: **Playwright ≥1.57 (verificado 2026-07)** — cubre también los Test Agents (Planner/Generator/Healer). La skill no pina versión — usa la instalada en Claude Code.
 
 | Categoría | Tools | Uso típico |
 |---|---|---|
@@ -189,8 +195,8 @@ fi
 
 | Sub-agente | Qué hace | Cuándo invocar | Restricción |
 |---|---|---|---|
-| **Planner** | Explora la app vía MCP y escribe `specs/<flow>.md` describiendo el plan de tests | "genera plan de tests para X" | Requiere `tests/seed.spec.ts` con auth precargada (la skill lo crea apuntando a la sesión del paso C si falta) |
-| **Generator** | Consume el spec del Planner y escribe `tests/<flow>.spec.ts` (TypeScript Playwright) | "convierte el spec en tests ejecutables" | Después de revisar el spec |
+| **Planner** | Explora la app vía MCP y escribe `frontend/e2e/specs/<flow>.md` describiendo el plan de tests | "genera plan de tests para X" | Requiere `frontend/e2e/seed.spec.ts` con auth precargada (la skill lo crea apuntando a la sesión del paso C si falta) |
+| **Generator** | Consume el spec del Planner y escribe `frontend/e2e/<flow>.spec.ts` (TypeScript Playwright) | "convierte el spec en tests ejecutables" | Después de revisar el spec |
 | **Healer** | Re-ejecuta tests fallidos y propone parche o `test.skip()` | "repara los tests rotos" | **Nunca en production** — puede silenciar fallos legítimos. Solo staging y siempre revisar diff antes de aceptar |
 
 **Orden recomendado:** Planner → revisión humana del spec → Generator → primera corrida → Healer (solo staging, solo si rompió algo legítimo).
@@ -212,7 +218,7 @@ Como Playwright MCP **no tiene un "read-only mode" técnico**, la regla es semá
 - `browser_file_upload` (escribe en backend).
 - Generación de fake data (Paso B se salta).
 - Sub-agente Healer.
-- `populate_fake_data` u otros management commands de mutación.
+- `create_fake_data` u otros management commands de mutación.
 
 ### Permitido en `ENV=production`
 
@@ -238,7 +244,7 @@ Comparar conteos por modelo Django **antes y después** del run para confirmar 0
 
 ```bash
 # Antes del run
-"${PROJ_PATH}/.venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
+"${PROJ_PATH}/backend/venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
 from django.apps import apps
 for m in apps.get_models(): print(f"{m._meta.label}|{m.objects.count()}")
 ' > /tmp/playwright-mcp-${PROJ}/${RUN_ID}/counts-before.txt
@@ -246,7 +252,7 @@ for m in apps.get_models(): print(f"{m._meta.label}|{m.objects.count()}")
 # ... run de Playwright MCP ...
 
 # Después del run
-"${PROJ_PATH}/.venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
+"${PROJ_PATH}/backend/venv/bin/python" "${PROJ_PATH}/backend/manage.py" shell -c '
 from django.apps import apps
 for m in apps.get_models(): print(f"{m._meta.label}|{m.objects.count()}")
 ' > /tmp/playwright-mcp-${PROJ}/${RUN_ID}/counts-after.txt
@@ -267,15 +273,15 @@ Al terminar la sesión MCP (éxito o error):
 rm -rf "/tmp/playwright-mcp-${PROJ}/${RUN_ID}"
 # Si el operador no pidió conservar nada en otra ruta, borrar también runs viejos del mismo proyecto:
 find "/tmp/playwright-mcp-${PROJ}" -mindepth 1 -maxdepth 1 -type d -mtime +1 -exec rm -rf {} +
-# Limpiar artefactos accidentales en cwd (output-mode mal configurado):
-find . -maxdepth 1 -type f \( -name 'page-*.png' -o -name 'page-*.jpeg' -o -name 'page-*.pdf' -o -name 'storage-state-*.json' \) -delete
+# Limpiar artefactos accidentales en la raíz del proyecto (output-mode mal configurado):
+find "${PROJ_PATH}" -maxdepth 1 -type f \( -name 'page-*.png' -o -name 'page-*.jpeg' -o -name 'page-*.pdf' -o -name 'storage-state-*.json' \) -delete
 ```
 
 ### Conservar
 
 - `/home/ryzepeck/webapps/<proyecto>/.playwright_staging/sessions/*.json` (sesiones staging gitignored)
 - `/home/ryzepeck/webapps/<proyecto>/.playwright_prod/sessions/*.json` (sesiones prod gitignored, solo en server)
-- `tests/*.spec.ts` y `specs/*.md` si el operador pidió generación persistente
+- `frontend/e2e/*.spec.ts` y `frontend/e2e/specs/*.md` si el operador pidió generación persistente (único home E2E del fleet)
 - `.github/chatmodes/` si se ejecutó `init-agents` (avisar al operador para que decida commit)
 
 ### Solo si el operador pide conservar evidencia
@@ -293,7 +299,7 @@ Mover los archivos relevantes **antes** del `rm -rf` a una ruta explícita que e
 ```bash
 PROJ=azurita
 # Paso A: detecta env=staging, DOMAIN=azurita.projectapp.co, DB=sqlite
-# Paso B: count de modelos clave; si OK seguir, si vacío correr populate_fake_data
+# Paso B: count de modelos clave; si OK seguir, si vacío correr create_fake_data
 # Paso C: reusar /home/ryzepeck/webapps/azurita/.playwright_staging/sessions/admin.json
 # Paso D: URL=https://azurita.projectapp.co
 # Paso E: ARTIFACTS_DIR=/tmp/playwright-mcp-azurita/<RUN_ID>
@@ -344,7 +350,7 @@ Si el operador pide "ahora completa la compra para verificar el flujo entero" �
 ```bash
 PROJ=candle_staging_project
 # Paso A: env=staging
-# Paso B: validar que existen Productos, Carritos, Usuarios; si no, populate_fake_data
+# Paso B: validar que existen Productos, Carritos, Usuarios; si no, create_fake_data
 # Paso C: sesión cliente.json en .playwright_staging/sessions/
 ```
 
@@ -355,13 +361,13 @@ Flujo:
    cd /home/ryzepeck/webapps/candle_staging_project
    [ ! -d .github/chatmodes ] && npx playwright init-agents --loop=claude
    ```
-2. Crear/actualizar `tests/seed.spec.ts` con `storageState: '<ruta a cliente.json>'`.
-3. Invocar Planner (Agent tool) → genera `specs/checkout.md`.
+2. Crear/actualizar `frontend/e2e/seed.spec.ts` con `storageState: '<ruta a cliente.json>'`.
+3. Invocar Planner (Agent tool) → genera `frontend/e2e/specs/checkout.md`.
 4. **Pausa para review humano del spec**.
-5. Invocar Generator → genera `tests/checkout.spec.ts`.
-6. Correr `npx playwright test tests/checkout.spec.ts`.
+5. Invocar Generator → genera `frontend/e2e/checkout.spec.ts`.
+6. Correr `cd frontend && npx playwright test e2e/checkout.spec.ts`.
 7. Si rompe: invocar Healer (solo permitido en staging).
-8. Cleanup de artefactos `/tmp/`; conservar `tests/`, `specs/`, `.github/chatmodes/`.
+8. Cleanup de artefactos `/tmp/`; conservar `frontend/e2e/`, `.github/chatmodes/`.
 9. Avisar al operador qué archivos quedaron para revisar/commitear.
 
 ---
@@ -380,11 +386,66 @@ Flujo:
 
 ---
 
-## Resumen de garantías
+## 9. Handoff validate-pending (desde /qa)
 
-- **Detección automática** de entorno por proyecto vía `is_staging`.
-- **Hard refuse** ante mutaciones en production.
-- **Aislamiento de credenciales** staging vs prod en dirs separados, ambos gitignored.
-- **Cleanup automático** de screenshots/traces/downloads en `/tmp/playwright-mcp-${PROJ}/`.
-- **Verificación de integridad** post-run en production (diff de counts).
-- **Sub-agentes oficiales** (Planner/Generator/Healer) bootstrapeados on-demand cuando el operador pide tests persistentes.
+> **Como fase del conductor:** desde 2026-07-25 [[qa]] ejecuta esta sección
+> automáticamente como su **Fase 5b** cuando el preflight detecta app viva
+> (`app_reachable=local:*|staging:*` — prod jamás). Invocada suelta, esta
+> sección sigue siendo el camino manual idéntico.
+
+Cuando la Fase 4 de [[qa]] dejó specs en DRAFT (`blocked: validate-pending` —
+la app no corría durante el authoring), esta skill es el paso que los valida:
+
+1. Con la app corriendo (staging o dev), ejecutar cada draft:
+   ```bash
+   cd "${PROJ_PATH}/frontend" && npx playwright test e2e/<spec>
+   ```
+2. Reportar pass/fail por spec.
+3. En verde, indicar al operador re-correr:
+   ```bash
+   bash $HOME/webapps/vps-ops-toolkit/scripts/qa/qa-agent.sh --verify <proj> --files=<specs>
+   ```
+   (limpia el marker `.qa-gate-pending`).
+
+Production sigue read-only: **nunca** correr flujos mutantes contra prod — los
+drafts que mutan se validan sólo en staging/dev.
+
+---
+
+## Output final
+
+Sin menú por diseño (§4): la validación visual ES el entregable; acciones mutantes exigen autorización explícita del operador.
+
+Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill
+(una fila por garantía verificada en el run):
+
+```markdown
+🟢 playwright-validation OK — <proyecto> (<env>)
+✨ Todo en orden — no hay acciones pendientes.
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Detección de entorno | ✅ | <proyecto> → <env> vía is_staging |
+| Fake data / seed | ✅ | modelos poblados (⏭️ en production) |
+| Sesión autenticada | ✅ | storage state reusado <username>.json (<7d) |
+| Flujo validado | ✅ | browser_* ejecutados, snapshot/screenshot OK |
+| Aislamiento credenciales | ✅ | .playwright_<env>/ gitignored |
+| Read-only en production | ✅ | diff counts before/after = 0 (⏭️ en staging) |
+| Cleanup de artefactos | ✅ | /tmp/playwright-mcp-<proj>/<RUN_ID> borrado |
+```
+
+Casos de veredicto distinto a 🟢:
+
+- 🚫 **REFUSED** — se pidió mutar en production (submit, upload, Healer,
+  `create_fake_data`). Detener y sugerir migrar la prueba al
+  `<base>_staging` equivalente.
+- ⏸️ — requiere login interactivo (sin sesión válida) o review humano del
+  spec del Planner antes del Generator.
+- ⚠️ — sesión expirada, cap MCP (`storage`/`testing`) no habilitada, o la
+  a11y tree no encontró el elemento (fallback a `vision`).
+- ❌ — dominio 5xx (servicio caído, no bug del test) o flujo roto real.
+
+## Next steps
+- (si 🚫 REFUSED — prod muta) migrar la prueba al `<base>_staging` equivalente
+- (si ⚠️ sesión) borrar `<username>.json` y re-login interactivo
+- (si ❌ 5xx) `systemctl status <GUNICORN_SVC>` + `journalctl -u <svc> -n 100`

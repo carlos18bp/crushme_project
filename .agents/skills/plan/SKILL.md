@@ -1,35 +1,92 @@
 ---
-name: plan
-description: "Create a decision-complete implementation plan for a Azurita change. Use when the user asks to plan, design, scope, or compare approaches before coding."
-argument-hint: "[feature, refactor, bugfix, or workflow to plan]"
+name: "plan"
+description: "Planning workflow — read context, clarify requirements, formulate solution. Use when the user asks to plan a feature, design a solution, or think through an approach before coding."
 ---
 
-# Plan Workflow
+> *(Cuerpo en inglés por herencia; el cierre — `## Output final` — sigue el protocolo en español.)*
 
-## Goal
-Produce a plan another engineer or agent can implement without making new product or architecture decisions.
+Before starting, ALWAYS do these 3 things:
+a. Read the existing documentation in `docs/methodology/`: `architecture.md`, `product_requirement_docs.md`, `technical.md`
+b. Read the plans and context in `tasks/`: `active_context.md`, `tasks_plan.md`
+c. Get required solution context from the code files in `backend/` and `frontend/` — or whatever layout exists (see $methodology-setup)
 
-## Context To Read
-- Relevant scope instructions in `AGENTS.md`, `backend/AGENTS.md`, and `frontend/AGENTS.md`
-- Relevant memory files in `docs/methodology/` and `tasks/`
-- The specific code paths the change will touch
+## Cómo invocar este skill
 
-## Workflow
-1. Inspect the repo first. Do not ask for facts that can be derived from the codebase or docs.
-2. Clarify only the product or tradeoff decisions that cannot be discovered locally.
-3. Map the affected data flow, APIs, state, and test surface.
-4. Prefer existing Azurita conventions over generic framework patterns.
-5. Call out migrations, compatibility constraints, and rollout risks when they matter.
+Gating ($output-protocol §4): con `$ARGUMENTS` o intención clara en la sesión → ejecutar directo, PROHIBIDO preguntar el tema (un dato menor faltante se marca en el texto, no se convierte en pregunta). Sin argumentos ni contexto → UNA sola pregunta corta en texto por el tema a planear (no picker: el insumo es libre). Nunca en modo fleet/headless/cron.
 
-## Output Contract
-Return a compact but decision-complete plan with:
-- summary
-- key implementation changes
-- public or internal interface changes
-- test plan
-- assumptions/defaults chosen
+Sin picker por diseño: no hay flags de modo — el argumento es la feature o el problema a planear.
 
-## Rules
-- This is a planning workflow, not an implementation workflow.
-- Do not edit repo files while using this skill.
-- Do not assume memory files need updates unless the user asks or the plan itself is about methodology/runtime changes.
+---
+
+# Planning Workflow
+
+## 1. UNDERSTAND the REQUIREMENTS
+
+- Ask ONLY about product decisions that cannot be derived from the repo — technical questions are resolved by reading the code, not by asking.
+- Identify underspecified requirements; derive the answer from the codebase first, and ask for detail only when the repo cannot answer it.
+- Fully understand all aspects of the problem and gather details to make it precise and clear.
+- State all hypotheses and assumptions explicitly. Remove all ambiguities.
+- Suggest solutions the user didn't think about — anticipate needs.
+- Only after having 100% clarity, proceed to SOLUTION.
+
+## 2. FORMULATE the SOLUTION
+
+- Have a meta architecture plan for the solution.
+- Break down the problem into key concepts and smaller sub-problems.
+- Think about all possible ways to solve the problem.
+- Set up evaluation criteria and trade-offs to assess solutions.
+- Find the optimal solution and explain the criteria making it optimal.
+- Use web search if needed to research best practices or documentation.
+- Reason rigorously about optimality. Question every assumption.
+- Think of better solutions, combining strongest aspects of different approaches.
+- Iterate and refine until a strong solution is found.
+
+## 3. SOLUTION VALIDATION
+
+- Provide the PLAN with as much detail as possible.
+- Break down the solution step-by-step with clarity.
+- Reason out its optimality vs. other promising solutions.
+- Explicitly state all assumptions, choices, and decisions.
+- Explain trade-offs.
+
+### Plan Features:
+- **Extendable**: Future code can easily build on the current plan.
+- **Detailed**: Takes care of every affected aspect.
+- **Robust**: Plans for error scenarios and failure cases with fallbacks.
+- **Accurate**: Components are in sync, interfaces are correct.
+
+---
+
+After planning, documenting is OPTIONAL — do it ONLY if the operator explicitly asks for it (it does NOT apply when invoked via `$plan-task`, which is read-only):
+a. Document the plan in `docs/methodology/`: `architecture.md`, `product_requirement_docs.md`, `technical.md`
+b. Update planning context in `tasks/`: `active_context.md`, `tasks_plan.md`
+
+---
+
+## Output final
+
+Sin menú por diseño (§4): el plan ES el entregable; su ejecución la decide el operador.
+
+Reportar siguiendo $output-protocol. Plantilla específica de esta skill
+(el entregable sigue siendo el PLAN; esta tabla lo resume):
+
+```markdown
+🟢 plan OK — <título del cambio>
+
+| Dimensión | Estado | Detalle |
+|---|---|---|
+| Alcance entendido | ✅ | requisitos clarificados, ambigüedades/assumptions resueltas |
+| Contexto leído | ✅ | docs/methodology + tasks/ + code paths afectados |
+| Solución formulada | ✅ | meta-arquitectura + trade-offs, opción óptima justificada |
+| Archivos/interfaces a tocar | ✅ | archivos, APIs, state y test surface mapeados |
+| Pasos del plan | ✅ | breakdown step-by-step, extendable/robust/accurate |
+| Verificación definida | ✅ | test plan + escenarios de error/fallback |
+```
+
+Si el alcance aún tiene preguntas abiertas para el operador, reportar
+`⏸️ plan — pausa manual pendiente` con las clarificaciones exactas en
+`## Next steps` en lugar del veredicto 🟢.
+
+## Next steps (si aplica)
+- (manual, operador) revisar y aprobar el plan antes de implementar
+- listar las clarificaciones pendientes (una por bullet) si el veredicto fue ⏸️
