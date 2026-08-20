@@ -1,8 +1,7 @@
 import { test, expect } from '../helpers/test.js';
-import { CATALOG_BROWSE } from '../helpers/flow-tags.js';
 
 test('renders the deterministic product catalog', {
-  tag: [...CATALOG_BROWSE, '@role:guest', '@outcome:display'],
+  tag: ['@flow:catalog-browse', '@role:guest', '@outcome:display'],
 }, async ({ page }) => {
   await page.goto('/en');
   const productsResponse = page.waitForResponse(
