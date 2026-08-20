@@ -49,7 +49,10 @@ the full gate reported zero errors, infrastructure errors, or warnings. Those
 
 ## Release Gates
 
-Stage 1 still requires PR CI, fresh recovery artifacts, controlled production
-deployment, the live translation runtime probe, representative WooCommerce
-sync, and 48 hours without translation errors, OOM events, or restart loops.
-Stage 2 dependency removal must not begin before those conditions pass.
+Application PR #17 passes all six required CI jobs. Toolkit PR #41 passes the
+equivalent local validators, but GitHub did not start its jobs because of the
+account billing/spending-limit block; real toolkit CI remains mandatory.
+Stage 1 then requires fresh recovery artifacts, controlled production deploy,
+the live runtime probe, a representative WooCommerce sync, and 48 hours
+without translation errors, OOM events, or restart loops. Stage 2 dependency
+removal must not begin before those conditions pass.

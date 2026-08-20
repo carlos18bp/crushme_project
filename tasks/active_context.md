@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Wave 7 stage 1 is being authored on
+Wave 7 stage 1 is implemented and under review in PR #17 on
 `chore/20082026-crushme-cpu-translation`. It moves
 offline ES/EN inference into a pinned, Torch-free CTranslate2 daemon while
 retaining Argos only as explicit rollback. Production remains unchanged on
@@ -24,8 +24,9 @@ clean `main` until review and release gates pass.
 
 - Wave 7 stage-1 authoring passes 23 focused backend tests across six files,
   QA verify with zero findings, clean runtime/builder dependency audits,
-  reproducible model hashes, and a 156 MiB Torch-free daemon proof. PR CI and
-  deployment remain.
+  reproducible model hashes, a 156 MiB Torch-free daemon proof, and all six
+  application PR CI jobs. Toolkit PR #41 passes the equivalent local gates but
+  still requires a real CI run after the GitHub billing block is resolved.
 - Wave 5 PR #13 is deployed. Health, daily backup, journald observability,
   restore, and capacity gates passed; web-memory headroom improved from 25.2%
   to 81.1% without raising the 650 MiB limit.
@@ -68,7 +69,7 @@ clean `main` until review and release gates pass.
 
 ## Next Gate
 
-Pass focused QA, dependency audits, model/runtime integrity, systemd syntax,
-and PR CI for Wave 7 stage 1. Deployment then requires fresh recovery
-artifacts and starts a new 48-hour translation observation; lifecycle remains
-`modernizing` throughout both Wave 6 and Wave 7 gates.
+Resolve the external GitHub Actions billing block and obtain green CI for
+toolkit PR #41, then review and merge both stage-1 PRs. Deployment requires
+fresh recovery artifacts and starts a new 48-hour translation observation;
+lifecycle remains `modernizing` throughout both Wave 6 and Wave 7 gates.
