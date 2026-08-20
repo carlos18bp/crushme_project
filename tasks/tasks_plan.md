@@ -4,6 +4,8 @@
 
 - [ ] Land Wave 2 repository and test-platform PR.
 - [ ] Land Wave 3 dependency/security PR and controlled deployment.
+- [ ] Add the concurrent JWT refresh regression test with Wave 3 auth
+  hardening; its implementation does not exist on the Wave 2 baseline.
 - [ ] Land Wave 4 QA PR.
 - [ ] Land Wave 5 production operations/performance PR and deployment.
 - [ ] Complete Wave 6 certification and lifecycle promotion.

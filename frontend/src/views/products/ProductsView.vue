@@ -161,7 +161,7 @@
             <!-- Products Header -->
             <div class="products-header flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 lg:mb-8 gap-3 md:gap-4">
               <div>
-                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-1.5 md:mb-2 flex items-center">
+                <h1 data-testid="catalog-heading" class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-1.5 md:mb-2 flex items-center">
                   <span>{{ pageTitle }}</span>
                 </h1>
                 <p class="text-sm md:text-base text-gray-600">
@@ -1155,5 +1155,4 @@ onMounted(async () => {
   }
 }
 </style>
-
 

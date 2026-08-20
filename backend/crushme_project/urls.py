@@ -13,9 +13,8 @@ from crushme_app.views.frontend_views import FrontendView
 
 
 def health_check(request):
-    # 'project'/'environment' let external probes verify WHO answered: a shared
-    # codebase means the project name alone cannot tell prod from staging
-    # (measured: /qa pilot #3).
+    # 'project'/'environment' let external probes verify which deployment
+    # coordinate answered a health check.
     return JsonResponse({
         'status': 'ok',
         'project': settings.BASE_DIR.parent.name,

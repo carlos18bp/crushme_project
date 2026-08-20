@@ -21,6 +21,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import re
 import sys
@@ -44,7 +45,9 @@ from quality import (
     SuiteResult,
     DEFAULT_CONFIG,
     Patterns,
+    load_project_config,
 )
+from quality.junk_detectors import set_junk_policy
 from quality.backend_analyzer import PythonAnalyzer
 from quality.external_lint import ExternalLintRunResult, ExternalLintRunner
 
@@ -54,11 +57,20 @@ DISABLE_MARKER_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+from quality.junk_detectors import ALLOW_MARKERS as JUNK_ALLOW_MARKERS  # noqa: E402
+
 ALLOW_MARKER_RULE_IDS: dict[str, str] = {
     "allow-call-contract": "mock_call_contract_only",
     "allow-fragile-selector": "fragile_locator",
     "allow-serial": "serial_dependency",
     "allow-multi-render": "multi_render",
+    # Junk-test markers come from the single registry in quality.junk_detectors.
+    # A hardcoded copy here silently missed allow-mock-only / allow-reimpl when
+    # the 2026-07 rules landed: the detector honored the marker but the gate
+    # never listed the exception in active_exceptions nor validated its reason
+    # — an invisible, unaudited opt-out. Each opt-out must carry a reason in
+    # parentheses; the report lists active exceptions so they stay visible.
+    **JUNK_ALLOW_MARKERS,
 }
 
 ALLOW_MARKER_PATTERNS: dict[str, re.Pattern[str]] = {
@@ -66,18 +78,80 @@ ALLOW_MARKER_PATTERNS: dict[str, re.Pattern[str]] = {
     for marker in ALLOW_MARKER_RULE_IDS
 }
 
+
+def _join_comment_continuations(lines: list[str], index: int) -> str:
+    """
+    The line at `index` extended with the immediately following consecutive
+    `//` comment lines, joined into one logical line.
+
+    An allow-marker reason legitimately wraps across a comment block; matching
+    one physical line at a time reported those markers as missing their reason.
+    Joining stops once a line closes the reason's parenthesis (or the comment
+    run ends), so unrelated lines below the block are never swallowed.
+    """
+    logical = lines[index]
+    for continuation in lines[index + 1:]:
+        stripped = continuation.lstrip()
+        if not stripped.startswith("//"):
+            break
+        logical += " " + stripped[2:].strip()
+        if ")" in stripped:
+            break
+    return logical
+
 # Relaxed cross-engine dedupe for known overlapping rules that may disagree on line number.
 RELAXED_CROSS_ENGINE_RULE_IDS: frozenset[str] = frozenset({"sleep_call", "wait_for_timeout"})
 
 
+# Derived from the single registry in quality.base — a hardcoded copy here
+# silently diverged when the 2026-07 rules (mock_only_assertion,
+# reimplements_sut) were added: --write-junk-baseline FILTERED them out of the
+# freeze while the escalator still raised them to ERROR, so every reconciled
+# repo went red in CI with a baseline that claimed zero new-rule findings.
+from quality.base import JUNK_RULE_CATEGORIES  # noqa: E402
+
+JUNK_RULE_IDS: frozenset[str] = frozenset(JUNK_RULE_CATEGORIES)
+
+
+def _iter_issues(report: dict) -> "list[dict]":
+    """Every issue dict in a built report, wherever it is nested."""
+    found: list[dict] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            if "severity" in node and "file" in node:
+                found.append(node)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(report)
+    return found
+
+
 def build_config(args: argparse.Namespace) -> Config:
-    """Build configuration from CLI arguments."""
-    return Config(
-        backend_app_name=args.backend_app,
-        max_test_lines=args.max_test_lines,
-        max_assertions_per_test=args.max_assertions,
-        max_patches_per_test=args.max_patches,
-    )
+    """
+    Build configuration for the run.
+
+    Precedence: explicit CLI flag > `.testquality.yml` at the repo root >
+    canonical defaults shipped with the quality core. CLI flags default to None
+    so that "not passed" is distinguishable from "passed the default value" —
+    otherwise every run would silently clobber the project's declared config.
+    """
+    config = load_project_config(args.repo_root)
+
+    overrides = {
+        "backend_app_name": args.backend_app,
+        "frontend_unit_dir": args.frontend_unit_dir,
+        "max_test_lines": args.max_test_lines,
+        "max_assertions_per_test": args.max_assertions,
+        "max_patches_per_test": args.max_patches,
+    }
+    overrides = {key: value for key, value in overrides.items() if value is not None}
+
+    return dataclasses.replace(config, **overrides) if overrides else config
 
 
 class QualityReport:
@@ -138,20 +212,76 @@ class QualityReport:
         score += min(len(issue.message or ""), 160) // 40
         return score
 
+
+    def _backend_app_names(self) -> list[str]:
+        """The configured backend apps, normalised from str | list | "*"."""
+        raw = self.config.backend_app_name
+        if isinstance(raw, str):
+            if raw.strip() == "*":
+                backend = self.repo_root / "backend"
+                if not backend.is_dir():
+                    return []
+                return sorted(d.name for d in backend.iterdir() if (d / "tests").is_dir())
+            return [raw] if raw.strip() else []
+        return [str(a) for a in raw if str(a).strip()]
+
+    def _backend_test_roots(self) -> list[Path]:
+        """
+        Every backend tests/ dir this run will scan.
+
+        F53: backend_app_name was a single string, so a repo with bounded-context
+        apps got exactly ONE scanned and the rest were invisible — measured in
+        projectapp (backend/accounts, 67 files / 1160 tests, unread) and versiona
+        (12 of 13 app dirs unread). F37's guard cannot see it, because the named
+        dir does exist. A list names the apps explicitly; "*" takes every app
+        that has a tests/ dir.
+        """
+        return [
+            self.repo_root / "backend" / app / "tests"
+            for app in self._backend_app_names()
+            if (self.repo_root / "backend" / app / "tests").is_dir()
+        ]
+
+    def _unscanned_backend_apps(self) -> list[str]:
+        """
+        Apps that HAVE a tests/ dir and are not in this run's scan set.
+
+        Multi-app support alone does not save a repo that lists 2 of 4 apps, and
+        the silence is the whole defect: both F53 sightings looked green. The
+        report has to name what it never read.
+        """
+        backend = self.repo_root / "backend"
+        if not backend.is_dir():
+            return []
+        scanned = {r.parent.name for r in self._backend_test_roots()}
+        return sorted(
+            d.name for d in backend.iterdir()
+            if (d / "tests").is_dir() and d.name not in scanned
+        )
+
     def _suite_bucket_for_file(self, file_path: str) -> str | None:
         """Map report file path to suite bucket key."""
         normalized = file_path.replace("\\", "/")
         if normalized.startswith("backend/"):
             return "backend"
-        if any(normalized.startswith(prefix) for prefix in self._frontend_unit_prefixes()):
-            return "frontend_unit"
+        # e2e is tested BEFORE unit: once frontend_unit_dir "." normalises to the
+        # "frontend/" prefix (F60), a unit-first order would swallow every e2e
+        # file into the unit bucket. _attach_issue already orders it this way.
         if normalized.startswith("frontend/e2e/"):
             return "frontend_e2e"
+        if any(normalized.startswith(prefix) for prefix in self._frontend_unit_prefixes()):
+            return "frontend_unit"
         return None
 
     def _frontend_unit_prefixes(self) -> tuple[str, ...]:
         """Return accepted frontend-unit path prefixes (configured + legacy)."""
-        configured = f"frontend/{self.config.frontend_unit_dir.strip('/').replace('\\\\', '/')}/"
+        # F60: "." / "" / "./" all mean "frontend/ itself" — the repos that
+        # colocate unit tests in **/__tests__/ at arbitrary depth have no single
+        # dir to name. Interpolated raw they produced the literals "frontend/./"
+        # and "frontend//", which no repo-relative path starts with, silently
+        # voiding every consumer of this tuple. Four fleet repos ship ".".
+        raw = self.config.frontend_unit_dir.strip().replace("\\", "/").strip("/")
+        configured = "frontend/" if raw in ("", ".") else f"frontend/{raw}/"
         prefixes = [configured]
         if configured != "frontend/test/":
             prefixes.append("frontend/test/")
@@ -182,7 +312,8 @@ class QualityReport:
             except OSError:
                 continue
 
-            for line_number, line in enumerate(content.splitlines(), start=1):
+            lines = content.splitlines()
+            for line_number, line in enumerate(lines, start=1):
                 for disable_match in DISABLE_MARKER_PATTERN.finditer(line):
                     marker_text = disable_match.group(0).strip()
                     raw_rule_id = disable_match.group(1) or ""
@@ -219,6 +350,16 @@ class QualityReport:
 
                     marker_pattern = ALLOW_MARKER_PATTERNS[marker]
                     marker_match = marker_pattern.search(line)
+                    if marker_match is not None and marker_match.group(1) is None:
+                        rest = line[marker_match.end():]
+                        if rest.lstrip().startswith("(") and ")" not in rest:
+                            # The reason opens a paren that closes on a later
+                            # consecutive `//` comment line: rematch against the
+                            # joined comment run. Where the marker itself may
+                            # live is unchanged — only its reason may wrap.
+                            marker_match = marker_pattern.search(
+                                _join_comment_continuations(lines, line_number - 1)
+                            )
                     marker_text = marker_match.group(0).strip() if marker_match else f"quality: {marker}"
                     reason = (
                         (marker_match.group(1) or "").strip()
@@ -367,7 +508,11 @@ class QualityReport:
             ("frontend_unit", unit),
             ("frontend_e2e", e2e),
         ):
+            # Merge, never replace: analyzers stamp their own notes here first
+            # (e.g. disabled_by_config from an empty frontend_*_dir), and a
+            # plain assignment would silently drop them from the report.
             suite_result.suite_findings = {
+                **suite_result.suite_findings,
                 "semantic_issues_suppressed_by_mode": semantic_suppressed.get(suite_key, 0),
                 "active_exceptions_count": active_by_suite.get(suite_key, 0),
                 "error_count": suite_result.error_count,
@@ -447,6 +592,35 @@ class QualityReport:
             if matcher(file_result.file)
         ]
         return filtered
+
+    def _unmatched_include_files(
+        self,
+        backend: SuiteResult,
+        unit: SuiteResult,
+        e2e: SuiteResult,
+    ) -> list[str]:
+        """
+        --include-file arguments that matched no scanned file in any suite.
+
+        A typo'd path silently produced an empty (and green) run, which reads
+        as "this file is clean". Matching mirrors `_build_file_matcher`: an
+        include file is satisfied only by an exact normalized-path match, so
+        anything the matcher would never select is reported here.
+        """
+        if not self.include_files:
+            return []
+        scanned = {
+            file_result.file.replace("\\", "/")
+            for suite_result in (backend, unit, e2e)
+            for file_result in suite_result.files
+            if file_result.file
+        }
+        normalized = {
+            self._normalize_relative_path(path)
+            for path in self.include_files
+            if path.strip()
+        }
+        return sorted(normalized - scanned)
 
     def _suite_file_paths(self, suite_result: SuiteResult) -> list[Path]:
         """Return absolute file paths discovered in a suite result."""
@@ -756,8 +930,85 @@ class QualityReport:
             py_analyzer = PythonAnalyzer(
                 self.repo_root, self.config, self.patterns, self.verbose
             )
-            backend_root = self.repo_root / "backend" / self.config.backend_app_name / "tests"
-            backend = py_analyzer.analyze_suite(backend_root, file_matcher=path_matcher)
+            # F53: one root per configured app. A plain string still yields
+            # exactly one, so nothing changes for the single-app repos; a list
+            # or "*" is what a bounded-context repo needs. Results are merged
+            # because each root has to be passed to the analyzer separately —
+            # it derives a file's `area` relative to the root it came from.
+            backend_roots = self._backend_test_roots()
+            backend = SuiteResult(suite_name="backend")
+            for _root in backend_roots:
+                _part = py_analyzer.analyze_suite(_root, file_matcher=path_matcher)
+                backend.files.extend(_part.files)
+            backend_root = backend_roots[0] if backend_roots else (
+                self.repo_root / "backend" / "<none>" / "tests"
+            )
+            # F37: backend/ exists but the resolved app's tests dir does not →
+            # the suite silently scanned nothing and reported green. Measured
+            # failure mode: a repo adopting the core BEFORE running
+            # extract_project_config.py inherits the canonical default
+            # backend_app_name (one project's app) and every backend run is a
+            # silent no-op. WARNING, not error: it must surface in every report
+            # without turning adoption itself red.
+            if (self.repo_root / "backend").is_dir() and not backend_root.is_dir():
+                from quality.base import CONFIG_FILENAME, FileResult
+                _has_cfg = (self.repo_root / CONFIG_FILENAME).is_file()
+                backend.suite_findings["default_app_missing"] = True
+                _sentinel = FileResult(
+                    file=f"backend/{self.config.backend_app_name}/tests",
+                    area="backend",
+                    location_ok=True,
+                )
+                _sentinel.issues.append(Issue(
+                    file=f"backend/{self.config.backend_app_name}/tests",
+                    message=(
+                        f"backend suite scanned nothing: backend/ exists but "
+                        f"'{self.config.backend_app_name}' "
+                        + ("(from .testquality.yml)" if _has_cfg else
+                           f"(canonical default — no {CONFIG_FILENAME} in this repo)")
+                        + " has no tests dir — a green backend result here verifies nothing"
+                    ),
+                    severity=Severity.WARNING,
+                    category=IssueCategory.MISPLACED_FILE,
+                    rule_id="config_default_app_missing",
+                    line=0,
+                    suggestion=(
+                        f"Run extract_project_config.py to derive {CONFIG_FILENAME} "
+                        "with the repo's real backend_app_name"
+                    ),
+                ))
+                backend.add_file(_sentinel)
+
+            # F53: multi-app support alone does not save a repo that lists 2 of
+            # 4 apps, and the silence IS the defect — both sightings looked
+            # green because the app they named did exist. Name what was never
+            # read. WARNING, like F37: a partial config is a blind spot, not a
+            # reason to fail the build.
+            _unscanned = self._unscanned_backend_apps()
+            if _unscanned:
+                from quality.base import CONFIG_FILENAME, FileResult
+                _u_sentinel = FileResult(
+                    file="backend/<unscanned apps>",
+                    area="backend",
+                    location_ok=True,
+                )
+                _u_sentinel.issues.append(Issue(
+                    file="backend/<unscanned apps>",
+                    message=(
+                        f"{len(_unscanned)} backend app(s) have a tests/ dir that this run never "
+                        f"scanned: {', '.join(_unscanned)} - a green backend result does not cover them"
+                    ),
+                    severity=Severity.WARNING,
+                    category=IssueCategory.MISPLACED_FILE,
+                    rule_id="config_backend_apps_unscanned",
+                    line=0,
+                    suggestion=(
+                        f'Set backend_app_name to "*" in {CONFIG_FILENAME} to scan every app, or '
+                        "list the apps explicitly"
+                    ),
+                ))
+                backend.add_file(_u_sentinel)
+
             timings["backend"] = time.perf_counter() - suite_started
         
         # Analyze frontend unit tests
@@ -766,20 +1017,61 @@ class QualityReport:
                 print(f"\n{Colors.BLUE}[Frontend Unit Tests]{Colors.RESET}")
             
             suite_started = time.perf_counter()
-            try:
-                from quality.frontend_unit_analyzer import FrontendUnitAnalyzer
-                unit_analyzer = FrontendUnitAnalyzer(
-                    self.repo_root,
-                    self.config,
-                    self.patterns,
-                    self.verbose,
-                    self.semantic_rules,
+            if self.config.frontend_unit_dir == "":
+                # "" = layer disabled by config, on purpose. `Path("frontend") / ""`
+                # is a no-op, so before this guard an empty dir de-scoped the scan
+                # to ALL of frontend/. frontend/ itself is spelled ".".
+                unit.suite_findings["disabled_by_config"] = True
+                # F59: but a disabled layer used to report "files 0, errors 0",
+                # which reads as a clean pass. Measured: versiona shipped "" from
+                # the day it adopted the core, so 0 of its 67 unit files were ever
+                # analysed — locally or in CI — while every run reported green.
+                # Twin of F37's backend sentinel: WARNING, so it surfaces in every
+                # report without turning adoption itself red.
+                from quality.base import CONFIG_FILENAME, FileResult
+                _has_cfg = (self.repo_root / CONFIG_FILENAME).is_file()
+                _unit_sentinel = FileResult(
+                    file="frontend/<frontend_unit_dir>",
+                    area="unit",
+                    location_ok=True,
                 )
-                unit_root = self.repo_root / "frontend" / self.config.frontend_unit_dir
-                unit = unit_analyzer.analyze_suite(unit_root, file_matcher=path_matcher)
-            except ImportError:
+                _unit_sentinel.issues.append(Issue(
+                    file="frontend/<frontend_unit_dir>",
+                    message=(
+                        "frontend unit suite scanned nothing: frontend_unit_dir is \"\" "
+                        + ("(from .testquality.yml)" if _has_cfg else
+                           f"(canonical default — no {CONFIG_FILENAME} in this repo)")
+                        + ", which disables the layer — a green unit result here "
+                        "verifies nothing"
+                    ),
+                    severity=Severity.WARNING,
+                    category=IssueCategory.MISPLACED_FILE,
+                    rule_id="config_unit_layer_disabled",
+                    line=0,
+                    suggestion=(
+                        "Set frontend_unit_dir to the dir holding the unit tests, or "
+                        "to \".\" when they are colocated under frontend/ at arbitrary "
+                        f"depth; run extract_project_config.py to derive {CONFIG_FILENAME}"
+                    ),
+                ))
+                unit.add_file(_unit_sentinel)
                 if self.verbose:
-                    print(f"  {Colors.DIM}Frontend unit analyzer not available{Colors.RESET}")
+                    print(f"  {Colors.DIM}frontend_unit_dir is \"\" - suite disabled by config{Colors.RESET}")
+            else:
+                try:
+                    from quality.frontend_unit_analyzer import FrontendUnitAnalyzer
+                    unit_analyzer = FrontendUnitAnalyzer(
+                        self.repo_root,
+                        self.config,
+                        self.patterns,
+                        self.verbose,
+                        self.semantic_rules,
+                    )
+                    unit_root = self.repo_root / "frontend" / self.config.frontend_unit_dir
+                    unit = unit_analyzer.analyze_suite(unit_root, file_matcher=path_matcher)
+                except ImportError:
+                    if self.verbose:
+                        print(f"  {Colors.DIM}Frontend unit analyzer not available{Colors.RESET}")
             timings["frontend_unit"] = time.perf_counter() - suite_started
         
         # Analyze frontend E2E tests
@@ -788,26 +1080,37 @@ class QualityReport:
                 print(f"\n{Colors.BLUE}[Frontend E2E Tests]{Colors.RESET}")
             
             suite_started = time.perf_counter()
-            try:
-                from quality.frontend_e2e_analyzer import FrontendE2EAnalyzer
-                e2e_analyzer = FrontendE2EAnalyzer(
-                    self.repo_root,
-                    self.config,
-                    self.patterns,
-                    self.verbose,
-                    self.semantic_rules,
-                )
-                e2e_root = self.repo_root / "frontend" / self.config.frontend_e2e_dir
-                e2e = e2e_analyzer.analyze_suite(e2e_root, file_matcher=path_matcher)
-            except ImportError:
+            if self.config.frontend_e2e_dir == "":
+                # Same contract as frontend_unit_dir above: "" disables the layer.
+                e2e.suite_findings["disabled_by_config"] = True
                 if self.verbose:
-                    print(f"  {Colors.DIM}Frontend E2E analyzer not available{Colors.RESET}")
+                    print(f"  {Colors.DIM}frontend_e2e_dir is \"\" - suite disabled by config{Colors.RESET}")
+            else:
+                try:
+                    from quality.frontend_e2e_analyzer import FrontendE2EAnalyzer
+                    e2e_analyzer = FrontendE2EAnalyzer(
+                        self.repo_root,
+                        self.config,
+                        self.patterns,
+                        self.verbose,
+                        self.semantic_rules,
+                    )
+                    e2e_root = self.repo_root / "frontend" / self.config.frontend_e2e_dir
+                    e2e = e2e_analyzer.analyze_suite(e2e_root, file_matcher=path_matcher)
+                except ImportError:
+                    if self.verbose:
+                        print(f"  {Colors.DIM}Frontend E2E analyzer not available{Colors.RESET}")
             timings["frontend_e2e"] = time.perf_counter() - suite_started
 
         # Optional include-file/include-glob filtering
         backend = self._filter_suite_result(backend, file_matcher)
         unit = self._filter_suite_result(unit, file_matcher)
         e2e = self._filter_suite_result(e2e, file_matcher)
+
+        # An --include-file that matched nothing is a configuration error, not
+        # a clean run. Checked against the filtered suites, before external
+        # lint attaches its placeholder file entries.
+        unmatched_include_files = self._unmatched_include_files(backend, unit, e2e)
 
         external_started = time.perf_counter()
         external_lint = self._run_external_lints(backend, unit, e2e)
@@ -842,7 +1145,18 @@ class QualityReport:
         errors = sum(1 for i in all_issues if i.severity == Severity.ERROR)
         warnings = sum(1 for i in all_issues if i.severity == Severity.WARNING)
         infos = sum(1 for i in all_issues if i.severity == Severity.INFO)
-        
+
+        # Unmatched include files count as errors so the run cannot pass.
+        errors += len(unmatched_include_files)
+
+        # Infrastructure errors (missing tooling, not test-quality findings).
+        # Contract: summary.infra_errors is ALWAYS present, 0 when none.
+        infra_errors = sum(
+            1 for i in all_issues
+            if i.severity == Severity.ERROR
+            and self._rule_id_for_issue(i) == "ast_bridge_unavailable"
+        )
+
         # Categorize by type
         by_category = Counter(i.category.name.lower() for i in all_issues)
         
@@ -862,6 +1176,8 @@ class QualityReport:
                 "errors": errors,
                 "warnings": warnings,
                 "info": infos,
+                "infra_errors": infra_errors,
+                "unmatched_include_files": unmatched_include_files,
                 "quality_score": score,
                 "status": "passed" if errors == 0 else "failed",
                 "issues_by_category": dict(by_category),
@@ -983,10 +1299,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-path", type=Path,
                         default=Path("test-results/test-quality-report.json"),
                         help="JSON report output path")
-    parser.add_argument("--backend-app", default="core_app",
-                        help="Django app name (default: core_app)")
+    parser.add_argument("--backend-app", default=None,
+                        help="Django app name (overrides .testquality.yml)")
     parser.add_argument("--suite", choices=["backend", "frontend-unit", "frontend-e2e"],
                         help="Analyze specific suite only")
+    parser.add_argument("--frontend-unit-dir", default=None,
+                        help="Frontend unit test dir relative to frontend/ (overrides .testquality.yml)")
     parser.add_argument("--verbose", "-v", action="store_true",
                         help="Verbose output")
     parser.add_argument("--strict", action="store_true",
@@ -1043,9 +1361,23 @@ def parse_args() -> argparse.Namespace:
     )
     
     # Threshold overrides
-    parser.add_argument("--max-test-lines", type=int, default=50)
-    parser.add_argument("--max-assertions", type=int, default=7)
-    parser.add_argument("--max-patches", type=int, default=5)
+    parser.add_argument("--max-test-lines", type=int, default=None)
+    parser.add_argument("--max-assertions", type=int, default=None)
+    parser.add_argument("--max-patches", type=int, default=None)
+    parser.add_argument(
+        "--junk-severity", choices=["warning", "error"], default="warning",
+        help="Severity for junk-test findings not present in the baseline "
+             "(default: warning). Use 'error' to block new junk in CI.",
+    )
+    parser.add_argument(
+        "--junk-baseline", type=Path, default=Path(".junk-baseline.json"),
+        help="Findings recorded as pre-existing debt; these stay warnings even "
+             "with --junk-severity=error (default: .junk-baseline.json)",
+    )
+    parser.add_argument(
+        "--write-junk-baseline", action="store_true",
+        help="Record the current junk findings as the baseline and exit",
+    )
     
     return parser.parse_args()
 
@@ -1063,7 +1395,22 @@ def main() -> int:
     
     # Build config
     config = build_config(args)
-    
+
+    # Junk severity policy. Escalation applies only to findings absent from the
+    # baseline, so adopting --junk-severity=error blocks new junk without
+    # failing on debt that predates the rules.
+    baseline_path = args.junk_baseline
+    if not baseline_path.is_absolute():
+        baseline_path = repo_root / baseline_path
+    baseline: set[str] | None = None
+    if baseline_path.is_file():
+        try:
+            baseline = set(json.loads(baseline_path.read_text(encoding="utf-8")).get("findings", []))
+        except (OSError, json.JSONDecodeError):
+            print(f"Warning: could not read {baseline_path}; treating every finding as new",
+                  file=sys.stderr)
+    set_junk_policy(baseline, escalate=(args.junk_severity == "error") and not args.write_junk_baseline)
+
     # Build report
     try:
         builder = QualityReport(
@@ -1085,6 +1432,30 @@ def main() -> int:
         traceback.print_exc()
         return 2
     
+    # Record the current junk debt as the baseline and stop. Everything found
+    # from here on is new and, under --junk-severity=error, blocks the merge.
+    if args.write_junk_baseline:
+        keys = sorted({
+            f"{issue['file']}::{issue['rule_id']}::{issue.get('identifier') or ''}"
+            for issue in _iter_issues(report)
+            if issue.get("rule_id") in JUNK_RULE_IDS
+        })
+        baseline_path.parent.mkdir(parents=True, exist_ok=True)
+        baseline_path.write_text(
+            json.dumps({
+                "_comment": (
+                    "Junk-test findings that predate the rules. These stay warnings "
+                    "under --junk-severity=error so existing debt does not block "
+                    "merges; anything not listed here is a new finding and fails. "
+                    "This file should only ever shrink."
+                ),
+                "findings": keys,
+            }, indent=2),
+            encoding="utf-8",
+        )
+        print(f"Baseline written: {baseline_path} ({len(keys)} findings)")
+        return 0
+
     # Write JSON
     report_path = (repo_root / args.report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1096,9 +1467,16 @@ def main() -> int:
     else:
         print_report(report, args.show_all)
         print(f"Report: {report_path}")
-    
+
     # Exit code
     summary = report["summary"]
+    unmatched_include_files = summary.get("unmatched_include_files") or []
+    if unmatched_include_files:
+        # A typo'd --include-file must fail loudly as a configuration error,
+        # never pass as an empty-but-green run. stderr keeps --json-only clean.
+        for path in unmatched_include_files:
+            print(f"  ERROR: --include-file matched no suite: {path}", file=sys.stderr)
+        return 2
     if summary["errors"] > 0:
         return 1
     if args.strict and summary["warnings"] > 0:

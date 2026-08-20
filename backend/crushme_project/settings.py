@@ -1,9 +1,9 @@
 """Django base settings for crushme_project.
 
 Shared settings used by both development and production environments.
-Environment-specific overrides are auto-imported at the end of this file
-from ``settings_dev.py`` or ``settings_prod.py`` based on the
-``DJANGO_ENV`` environment variable.
+Environment-specific overrides are auto-imported at the end of this file.
+Tests use the explicit ``settings_test`` module so they never inherit
+deployment resources.
 """
 
 import os
@@ -20,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------------------------------
 DJANGO_ENV = config('DJANGO_ENV', default='development')
 IS_PRODUCTION = DJANGO_ENV == 'production'
+IS_TEST = DJANGO_ENV in {'test', 'e2e'}
 
 # ---------------------------------------------------------------------------
 # Core Django settings
@@ -343,6 +344,19 @@ HUEY = RedisHuey(
     immediate=not IS_PRODUCTION,
 )
 
+# Destructive seed commands additionally reject production and protected
+# database names. This flag is opt-in outside local development and tests.
+FAKE_DATA_ALLOWED = config(
+    'FAKE_DATA_ALLOWED',
+    default=DJANGO_ENV in {'development', 'test', 'e2e'},
+    cast=bool,
+)
+FAKE_DATA_PROTECTED_DATABASES = config(
+    'FAKE_DATA_PROTECTED_DATABASES',
+    default='crushme,crushme_db,crushme_production',
+    cast=Csv(),
+)
+
 # ---------------------------------------------------------------------------
 # Backups (django-dbbackup)
 # ---------------------------------------------------------------------------
@@ -350,9 +364,9 @@ HUEY = RedisHuey(
 DBBACKUP_COMPRESS = True
 DBBACKUP_CLEANUP_KEEP = 4
 
-# Backups: permite desactivar la tarea programada en staging via .env
+# Backups: permite desactivar la tarea programada en entornos no productivos.
 BACKUPS_ENABLED = config('BACKUPS_ENABLED', default=True, cast=bool)
-# Slow queries report: solo tiene sentido con tráfico real (desactivar en staging)
+# El reporte de queries lentas solo tiene sentido con trafico real.
 ENABLE_SLOW_QUERIES_REPORT = config('ENABLE_SLOW_QUERIES_REPORT', default=True, cast=bool)
 DBBACKUP_CLEANUP_KEEP_MEDIA = 4
 

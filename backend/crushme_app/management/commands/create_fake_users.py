@@ -7,6 +7,8 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 from crushme_app.models import User
 
+from crushme_app.fake_data_guard import ensure_fake_data_allowed
+
 class Command(BaseCommand):
     help = 'Create fake users for testing purposes'
 
@@ -19,6 +21,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        ensure_fake_data_allowed('create_fake_users')
         fake = Faker()
         num_users = options['num_users']
 
