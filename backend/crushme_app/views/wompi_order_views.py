@@ -2,7 +2,7 @@
 Wompi Order Views
 Handles Wompi payment integration for order creation (Colombian market - COP only)
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +20,12 @@ from ..services.payment_session_service import (
     payment_matches_session,
 )
 from ..services.wompi_service import wompi_service
+from ..throttles import (
+    PaymentConfirmRateThrottle,
+    PaymentCreateRateThrottle,
+    PaymentWebhookRateThrottle,
+    PublicSearchRateThrottle,
+)
 from .order_helpers import process_order_after_payment
 
 logger = logging.getLogger(__name__)
@@ -34,6 +40,7 @@ def _amount_from_cents(value):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentCreateRateThrottle])
 def create_wompi_transaction(request):
     """Create signed Wompi widget data from a server-authoritative checkout."""
     try:
@@ -96,6 +103,7 @@ def create_wompi_transaction(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentConfirmRateThrottle])
 def confirm_wompi_payment(request):
     """Verify a Wompi transaction and process its persisted checkout session."""
     transaction_id = request.data.get('transaction_id')
@@ -186,6 +194,7 @@ def confirm_wompi_payment(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_wompi_config(request):
     """
     Get Wompi configuration for frontend (PUBLIC ENDPOINT)
@@ -200,6 +209,7 @@ def get_wompi_config(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentConfirmRateThrottle])
 def check_payment_status(request, reference):
     """Return the durable processing state for a Wompi checkout reference."""
     try:
@@ -235,6 +245,7 @@ def check_payment_status(request, reference):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentWebhookRateThrottle])
 def wompi_webhook(request):
     """Authenticate a Wompi event before applying its payment transition."""
     try:

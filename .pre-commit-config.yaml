@@ -9,3 +9,19 @@ repos:
           ^(backend/crushme_app/tests/(.*/)?test_[^/]+\.py|frontend/test/.*\.(spec|test)\.(js|jsx|ts|tsx)|frontend/e2e/.*\.spec\.(js|jsx|ts|tsx))$
         entry: >-
           bash -c 'include_args=(); for f in "$@"; do case "$f" in backend/crushme_app/tests/*|frontend/test/*|frontend/e2e/*) include_args+=(--include-file "$f") ;; esac; done; if [ ${#include_args[@]} -eq 0 ]; then exit 0; fi; python3 scripts/test_quality_gate.py --repo-root . --report-path test-results/test-quality-report.json --external-lint run --semantic-rules strict --verbose "${include_args[@]}"' --
+      - id: detect-secrets
+        name: Detect new secrets
+        language: python
+        additional_dependencies:
+          - detect-secrets==1.5.0
+        entry: detect-secrets-hook --baseline .secrets.baseline
+        exclude: >-
+          (^\.secrets\.baseline$|package-lock\.json$|\.min\.js$|\.(png|jpe?g|gif|webp|ico|mp4|ttf|woff2?|mmdb|sqlite3|lock)$)
+      - id: bandit
+        name: Bandit medium/high findings
+        language: python
+        additional_dependencies:
+          - bandit==1.9.4
+        entry: bandit -ll
+        types: [python]
+        exclude: ^backend/crushme_app/(tests|migrations)/

@@ -2,7 +2,7 @@
 PayPal Order Views
 Handles PayPal payment integration for order creation
 """
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +20,11 @@ from ..services.payment_session_service import (
     payment_matches_session,
 )
 from ..services.paypal_service import paypal_service
+from ..throttles import (
+    PaymentConfirmRateThrottle,
+    PaymentCreateRateThrottle,
+    PublicSearchRateThrottle,
+)
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -192,6 +197,7 @@ def _update_user_history_and_gifts(order, receiver_username=None):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentCreateRateThrottle])
 def create_paypal_order(request):
     """
     Step 1: Create PayPal order for payment (PUBLIC ENDPOINT)
@@ -237,6 +243,7 @@ def create_paypal_order(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PaymentConfirmRateThrottle])
 def capture_paypal_order(request):
     """Capture a PayPal order after verifying its durable checkout session."""
     paypal_order_id = request.data.get('paypal_order_id')
@@ -327,6 +334,7 @@ def capture_paypal_order(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([PublicSearchRateThrottle])
 def get_paypal_config(request):
     """
     Get PayPal configuration for frontend (PUBLIC ENDPOINT)

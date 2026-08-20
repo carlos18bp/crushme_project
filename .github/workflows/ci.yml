@@ -234,3 +234,9 @@ jobs:
 
       - name: Run Django compatibility checks
         run: python manage.py check --database default
+
+      - name: Verify concurrent refresh locking on MySQL
+        run: >-
+          pytest
+          crushme_app/tests/views/test_auth_security.py::test_concurrent_refresh_accepts_token_only_once
+          -v

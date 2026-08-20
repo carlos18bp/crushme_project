@@ -73,12 +73,20 @@ function getRefreshToken() {
   return localStorage.getItem("refresh_token");
 }
 
+let tokenRefreshPromise = null;
+let authEpoch = 0;
+
 /**
  * Set JWT tokens in localStorage
  * @param {string} accessToken - Access token
  * @param {string} refreshToken - Refresh token
  */
 export function setTokens(accessToken, refreshToken) {
+  authEpoch += 1;
+  storeTokens(accessToken, refreshToken);
+}
+
+function storeTokens(accessToken, refreshToken) {
   localStorage.setItem("access_token", accessToken);
   localStorage.setItem("refresh_token", refreshToken);
 }
@@ -87,9 +95,42 @@ export function setTokens(accessToken, refreshToken) {
  * Remove JWT tokens from localStorage
  */
 export function clearTokens() {
+  authEpoch += 1;
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
   localStorage.removeItem("user");
+}
+
+async function refreshAccessToken(refreshToken) {
+  if (!tokenRefreshPromise) {
+    const refreshEpoch = authEpoch;
+    tokenRefreshPromise = axios.post('/api/auth/token/refresh/', {
+      refresh: refreshToken
+    }).then((response) => {
+      if (authEpoch !== refreshEpoch) {
+        throw new Error('Authentication session changed during token refresh');
+      }
+      storeTokens(
+        response.data.access,
+        response.data.refresh || refreshToken
+      );
+      return response.data.access;
+    }).finally(() => {
+      tokenRefreshPromise = null;
+    });
+  }
+
+  return tokenRefreshPromise;
+}
+
+export async function revokeRefreshToken() {
+  const refreshToken = getRefreshToken();
+  clearTokens();
+  if (!refreshToken) return;
+
+  await axios.post('/api/auth/logout/', { refresh: refreshToken }, {
+    headers: { "X-CSRFToken": getCookie("csrftoken") }
+  });
 }
 
 /**
@@ -184,12 +225,7 @@ async function makeRequest(method, url, params = {}, config = {}) {
       try {
         const refreshToken = getRefreshToken();
         if (refreshToken) {
-          const refreshResponse = await axios.post('/api/auth/token/refresh/', {
-            refresh: refreshToken
-          });
-          
-          const newAccessToken = refreshResponse.data.access;
-          localStorage.setItem("access_token", newAccessToken);
+          const newAccessToken = await refreshAccessToken(refreshToken);
           
           // Retry original request with new token
           const newHeaders = {

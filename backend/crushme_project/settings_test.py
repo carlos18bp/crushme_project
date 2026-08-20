@@ -14,7 +14,7 @@ DJANGO_ENV = 'test'
 IS_PRODUCTION = False
 IS_TEST = True
 
-SECRET_KEY = 'test-only-secret-key'
+SECRET_KEY = 'test-only-secret-key-with-at-least-32-bytes'
 DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 

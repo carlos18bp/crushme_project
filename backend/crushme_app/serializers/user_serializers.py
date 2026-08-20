@@ -7,9 +7,9 @@ Handles user registration, authentication, and password management
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
 from ..models import User, PasswordCode, UserAddress, UserGallery, UserLink, GuestUser
 from ..services.translation_service import create_translator_from_request
+from ..validators import validate_image_upload
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,6 +18,16 @@ class UserSerializer(serializers.ModelSerializer):
     Used for displaying user information and profile updates
     """
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    profile_picture = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        validators=[validate_image_upload],
+    )
+    cover_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        validators=[validate_image_upload],
+    )
     
     class Meta:
         model = User
@@ -341,23 +351,6 @@ class PasswordChangeSerializer(serializers.Serializer):
         return attrs
 
 
-class GoogleLoginSerializer(serializers.Serializer):
-    """
-    Serializer for Google OAuth2 login
-    """
-    google_token = serializers.CharField(
-        help_text="Google ID token from frontend authentication"
-    )
-    
-    def validate_google_token(self, value):
-        """Validate Google token (implementation depends on Google auth library)"""
-        # Note: This would require implementing Google token verification
-        # using google-auth library as shown in the signin_signon_feature repo
-        if not value:
-            raise serializers.ValidationError("Google token is required.")
-        return value
-
-
 class UserAddressSerializer(serializers.ModelSerializer):
     """
     Serializer for UserAddress model
@@ -449,7 +442,10 @@ class UserGallerySerializer(serializers.ModelSerializer):
     Serializer for UserGallery model
     Supports both file uploads and URL references
     """
-    image = serializers.ImageField(required=False)
+    image = serializers.ImageField(
+        required=False,
+        validators=[validate_image_upload],
+    )
     
     class Meta:
         model = UserGallery
@@ -531,6 +527,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     Supports both read and write operations for nested relationships
     """
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    profile_picture = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        validators=[validate_image_upload],
+    )
+    cover_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        validators=[validate_image_upload],
+    )
     addresses = UserAddressSerializer(many=True, required=False, allow_null=True)
     # gallery_photos is handled manually in update() to support file uploads
     links = UserLinkSerializer(many=True, required=False, allow_null=True)
