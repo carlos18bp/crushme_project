@@ -200,6 +200,7 @@
                   <div
                     v-for="user in crushStore.searchResults"
                     :key="user.id"
+                    :data-testid="`gift-recipient-option-${user.username}`"
                     class="username-search-item"
                     @mousedown="selectUser(user)"
                   >
