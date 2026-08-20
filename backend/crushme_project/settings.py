@@ -103,11 +103,11 @@ CSRF_TRUSTED_ORIGINS = config(
 # Configuraciones adicionales de CORS para desarrollo
 CORS_ALLOW_CREDENTIALS = True
 
-# Allow popups and iframes for payment gateways (PayPal, Wompi)
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allow iframes from same origin
+# Gateway widgets embed third-party content; they do not need to frame CrushMe.
+X_FRAME_OPTIONS = 'DENY'
 
-# Security headers - Allow popups
-SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # Allow popups to communicate
+# Development keeps gateway popup communication available.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # Additional CORS settings for popups and payment gateways
 CORS_ALLOW_HEADERS = [

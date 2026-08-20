@@ -21,7 +21,7 @@
 ## Auth And Security
 - **API auth**: JWT via SimpleJWT — `ACCESS_TOKEN_LIFETIME=15m`, `REFRESH_TOKEN_LIFETIME=7d`, database-serialized rotation, blacklist after rotation, and logout revocation.
 - **Admin auth**: Django session + CSRF (default).
-- `settings_prod.py` enforces live HTTPS integrations, HSTS (1y), `SECURE_SSL_REDIRECT=True`, secure cookies, NOSNIFF, referrer policy, and `X_FRAME_OPTIONS=SAMEORIGIN`.
+- `settings_prod.py` enforces live HTTPS integrations, HSTS (1y), `SECURE_SSL_REDIRECT=True`, secure cookies, NOSNIFF, referrer policy, and `X_FRAME_OPTIONS=DENY`.
 - `CORS_ALLOW_CREDENTIALS=True` and a custom CORS-allowed header `x-currency` for the multi-currency frontend.
 - `MEDIA_*` is on the local filesystem; uploaded user content (avatars, gallery) lives under `backend/media/`.
 - Validate input in DRF serializers. Never disable CSRF or hardcode secrets.
