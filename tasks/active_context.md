@@ -2,14 +2,14 @@
 
 ## Current Focus
 
-Land the validated three-layer QA wave after the Base Vue standards
-convergence. The product-card i18n regression found by hermetic E2E is fixed,
-and production deployment remains a separate future operation.
+Keep the merged Base Vue and three-layer QA baseline stable while Wave 7 waits
+for a separately authorized production deployment and observation window. The
+product-card i18n regression found by hermetic E2E is fixed.
 
 ## Current Coordinate
 
-- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`;
-  QA branch base `2dec475`, deployed application release `1d476d8`.
+- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main` at
+  `8f173b3`; deployed application release `1d476d8`.
 - Authoring isolation: fresh temporary Git worktrees only; no database, domain,
   environment file, socket, service, or permanent staging coordinate.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
@@ -30,6 +30,9 @@ and production deployment remains a separate future operation.
   profile, and a hash gate merged through PR #18 as `8ea34f2`.
 - Product-card stock actions now use the canonical localized label; PR #19
   merged as `2dec475` after seven green CI checks and a component regression.
+- Three-layer QA PR #20 merged as `8f173b3` after seven green PR checks and a
+  green post-merge run covering backend, frontend unit/build, hermetic E2E, and
+  MySQL compatibility.
 - The refreshed registry records 64 real browser flows and 176 outcomes. The
   QA wave added five live E2E behaviors; all ten tests in the touched specs pass
   against isolated SQLite with zero junk-only or unvalidated flows.
@@ -78,6 +81,7 @@ and production deployment remains a separate future operation.
 
 ## Next Gate
 
-Merge the green QA branch without deploying. Wave 7 deployment later requires
-separate authorization, fresh recovery artifacts, and a new 48-hour translation
-observation; lifecycle remains `modernizing` until all observation gates close.
+Obtain separate maintenance authorization for the Wave 7 stage-1 production
+deployment, create fresh recovery artifacts, validate the Torch-free daemon,
+run one representative WooCommerce sync, and complete the 48-hour observation.
+Lifecycle remains `modernizing` until all observation gates close.
