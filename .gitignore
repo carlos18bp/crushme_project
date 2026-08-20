@@ -64,6 +64,3 @@ backend/static/frontend/
 # OS
 .DS_Store
 Thumbs.db
-
-# Windsurf
-.windsurf/plans/
