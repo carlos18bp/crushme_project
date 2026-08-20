@@ -626,7 +626,7 @@ flowchart TD
     FSrc --> FViews[views/ — Home, Login, Register, Products, Detail, Checkout, Profile, Wishlist]
     FSrc --> FComponents[components/]
     FSrc --> FStores[stores/modules/ — Pinia + persisted: auth, product, cart, order, wishlist, profile, payment, currency, i18n, crush, review, contact]
-    FSrc --> FComposables[composables/ — useAlert, useCart, useCheckout, useNotifications]
+    FSrc --> FComposables[composables/ — useAlert, useCart, useNotifications]
     FSrc --> FServices[services/ — request_http.js: single HTTP client with CSRF + JWT]
     FSrc --> FRouter[router/ — vue-router 4 with locale prefixes]
     FSrc --> FLocales[locales/ — vue-i18n EN/ES]

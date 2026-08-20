@@ -26,7 +26,7 @@ This is a **Vue 3 + Vite SPA** — **NOT Nuxt**. There is no SSR.
 
 - **Pinia store files**: camelCase (`authStore.js`, `productStore.js`, `cartStore.js`, `orderStore.js`, `wishlistStore.js`, `profileStore.js`, `paymentStore.js`, `currencyStore.js`, `i18nStore.js`, `crushStore.js`, `reviewStore.js`, `contactStore.js`).
 - **Component files**: PascalCase (`HomeView.vue`, `LoginView.vue`, `ProductDetailView.vue`).
-- **Composables**: camelCase with `use` prefix (`useAlert.js`, `useCart.js`, `useCheckout.js`, `useNotifications.js`).
+- **Composables**: camelCase with `use` prefix (`useAlert.js`, `useCart.js`, `useNotifications.js`).
 - Stores live under `src/stores/modules/`.
 
 ## State Management — Pinia (mixed API styles + persisted)

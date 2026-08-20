@@ -72,7 +72,7 @@ Views are thin wrappers. Business logic lives in services:
 | Stores | `src/stores/modules/` | 12 files | Pinia state management (mixed setup/Options API) |
 | Views | `src/views/` | 6 dirs + 4 root files | Page-level components |
 | Components | `src/components/` | 9 dirs | Reusable UI components |
-| Composables | `src/composables/` | 4 files | useAlert, useCart, useCheckout, useNotifications |
+| Composables | `src/composables/` | 3 files | useAlert, useCart, useNotifications |
 | Services | `src/services/` | 1 file | request_http.js — single HTTP client |
 | Router | `src/router/` | 1 file | vue-router 4 with locale prefixes |
 | Locales | `src/locales/` | nested by domain | vue-i18n EN/ES translation files |
