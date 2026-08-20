@@ -3,7 +3,7 @@
 ## Active Tasks
 
 - [ ] Close the 36 missing QA flows and one negative-case gap.
-- [ ] Run complete partitioned CI on a PR targeting `release/crushme-modernization`.
+- [ ] Re-run complete partitioned CI after the remaining QA authoring lands.
 - [ ] Rotate the exposed production database credential and remediate history.
 - [ ] Provision DNS and deploy isolated staging at `crushme.projectapp.co`.
 - [ ] Prove staging TLS, health, backup restore, observability, translation load,
@@ -30,3 +30,4 @@
 - [x] Version fail-fast staging settings and operational artifacts without deploy.
 - [x] Establish 18 backend behavior files, 7 frontend-unit files, and 11 E2E specs.
 - [x] Validate all 21 authored E2E cases live with no draft or junk-only flow.
+- [x] Open PR #3 to `release/crushme-modernization`; all six CI jobs pass.

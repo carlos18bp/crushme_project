@@ -45,7 +45,7 @@ and operational gates are still pending.
 | 1 | Complete | Claude 35/35, Codex 35/35, Windsurf 32/32, cleanup, Memory Bank, and standards are synchronized. |
 | 2 | Implementation complete; promotion blocked | npm has 0 advisories, Bandit has 0 medium/high findings, and the one Stanza advisory is unreachable and regression-tested. The exposed production DB credential still requires rotation and history remediation. |
 | 3 | Complete | Hermetic SQLite test/E2E settings, MySQL compatibility CI, deterministic data, ESLint, quality gate, and partitioned CI are versioned. |
-| 4 | In progress | Canonical QA reports 4 covered, 16 partial, 36 missing, 0 junk-only, 0 unvalidated, and one negative-case gap across 56 declared outcomes. |
+| 4 | In progress | Canonical QA reports 4 covered, 16 partial, 36 missing, 0 junk-only, 0 unvalidated, and one negative-case gap across 56 declared outcomes. All six PR #3 CI jobs pass. |
 | 5 | Prepared; deployment blocked | Isolated settings and versioned systemd/Nginx/env artifacts exist. DNS for `crushme.projectapp.co` still does not resolve, so deploy, TLS, restore, and profiling are not certified. |
 | 6 | Pending | Promotion remains prohibited until Waves 4-5 and the credential blocker are closed. |
 
@@ -108,7 +108,7 @@ production-grade database.
 - [x] Run `qa` in dry-run mode to regenerate and rank the real flow map.
 - [ ] Complete backend, frontend-unit, and E2E authoring through `qa --apply`.
 - [x] Validate every authored E2E spec live; no draft or unvalidated spec remains.
-- [ ] Run the quality gate, test audit, and complete partitioned CI.
+- [x] Run the quality gate, test audit, and complete partitioned CI.
 
 P1/P2 coverage includes authentication, catalog, cart, public/shared wishlists,
 guest gifting, checkout, orders, PayPal, Wompi, WooCommerce sync/translation,
@@ -116,8 +116,8 @@ profiles, reviews, locale, and currency. Each flow covers success, error,
 failure, and display outcomes or records a justified exemption.
 
 Current read-out: the quality gate and junk/unvalidated conditions are green,
-but the wave remains yellow until the 36 missing flows, the negative-case gap,
-and complete partitioned CI are closed.
+but the wave remains yellow until the 36 missing flows and the negative-case
+gap are closed and CI is rerun after that authoring.
 
 **Gate:** QA is green with no junk-only flow and no unvalidated E2E spec.
 
@@ -160,8 +160,8 @@ Only after stable production verification:
 2. Provision DNS for `crushme.projectapp.co`; only then install staging
    artifacts, issue TLS, run post-deploy checks, rehearse restore, and profile
    representative translation/payment workloads.
-3. Close the 36 missing QA flows and the remaining negative-case gap, then run
-   the complete partitioned CI on the integration PR.
+3. Close the 36 missing QA flows and the remaining negative-case gap, then
+   re-run the complete partitioned CI on the integration PR.
 4. Complete Wave 6 certification and the observation window before changing
    lifecycle from `modernizing` to `active`.
 

@@ -68,6 +68,7 @@ does not contaminate the scenario.
 | Final test-quality pre-commit | Pass |
 | Canonical QA read-out | 0 junk-only, 0 unvalidated, 36 missing |
 | Project AI catalogs | Claude 35/35, Codex 35/35, Windsurf 32/32; no project drift |
+| PR #3 partitioned CI | 6/6 jobs passed |
 | Production data/runtime | Not accessed or modified |
 
 ## Remaining Work
@@ -78,9 +79,9 @@ order/gift history, and public diary profiles. High-priority gaps also remain in
 password recovery UI, locale switching, product filtering/variation/favorites,
 discount UI, public wishlist search, profile media/favorites, reviews, and admin.
 
-One negative outcome class is still absent. Complete partitioned CI must run on
-the integration PR; the full suite was intentionally not run locally under the
-project execution policy.
+One negative outcome class is still absent. PR #3's complete partitioned CI is
+green; it must run again after future QA authoring. The full suite was
+intentionally not run locally under the project execution policy.
 
 ## Promotion Decision
 

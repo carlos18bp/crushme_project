@@ -20,6 +20,8 @@ integration PR, deploy isolated staging after DNS, and certify promotion.
   none have been installed.
 - Canonical QA now reports 4 covered, 16 partial, 36 missing, 0 junk-only, and
   0 unvalidated flows across 56 declared outcomes.
+- PR #3 targets `release/crushme-modernization`; all six CI jobs pass and the PR
+  remains intentionally unmerged.
 
 ## Active Decisions
 
@@ -39,8 +41,7 @@ integration PR, deploy isolated staging after DNS, and certify promotion.
 ## Next Gates
 
 1. Close the 36 missing flows and the remaining negative-case gap.
-2. Push the session branch, open the PR to `release/crushme-modernization`, and
-   require complete partitioned CI without merging.
+2. Keep PR #3 green while the remaining QA authoring lands; do not merge it.
 3. Rotate the exposed production DB credential and remediate Git history.
 4. Provision `crushme.projectapp.co`, deploy isolated staging, issue TLS, and
    complete restore, observability, performance, and headroom validation.
