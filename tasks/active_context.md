@@ -8,8 +8,8 @@ product-card i18n regression found by hermetic E2E is fixed.
 
 ## Current Coordinate
 
-- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main` at
-  `8f173b3`; deployed application release `1d476d8`.
+- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`;
+  deployed application release `1d476d8`.
 - Authoring isolation: fresh temporary Git worktrees only; no database, domain,
   environment file, socket, service, or permanent staging coordinate.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
