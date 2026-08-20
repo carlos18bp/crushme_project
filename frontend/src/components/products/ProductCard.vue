@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+  <div :data-testid="`product-card-${product.id}`" class="product-card bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
     
     <!-- Imagen del producto con iconos -->
     <div class="product-image relative bg-white p-3 md:p-4">

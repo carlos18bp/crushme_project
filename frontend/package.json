@@ -7,12 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "jest",
-    "test:coverage": "jest --coverage && node scripts/coverage-summary.cjs",
+    "test": "NODE_OPTIONS='--no-deprecation' jest --config jest.config.cjs",
+    "test:coverage": "NODE_OPTIONS='--no-deprecation' jest --config jest.config.cjs --coverage && node scripts/coverage-summary.cjs",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
-    "e2e:coverage": "playwright test",
-    "e2e:clean": "rm -rf e2e-results",
+    "e2e:coverage": "npm run e2e:clean && playwright test",
+    "e2e:coverage:ci": "npm run e2e:clean && playwright test --reporter=./e2e/reporters/flow-coverage-reporter.mjs",
+    "e2e:clean": "rm -rf e2e-results playwright-report test-results",
     "check:e2e-flow-sync": "node scripts/check-flow-definitions-sync.mjs"
   },
   "dependencies": {
@@ -32,8 +33,20 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.5",
+    "@playwright/test": "^1.60.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.10",
+    "@vue/vue3-jest": "^29.2.6",
     "autoprefixer": "^10.5.4",
+    "axios-mock-adapter": "^2.1.0",
+    "babel-jest": "^29.7.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-transform-stub": "^2.0.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
     "vite": "^7"

@@ -10,7 +10,7 @@
           
           <!-- Header -->
           <header class="terms-header">
-            <h1 class="terms-title">{{ $t('terms.title') }}</h1>
+            <h1 data-testid="terms-heading" class="terms-title">{{ $t('terms.title') }}</h1>
             <p class="terms-subtitle">{{ $t('terms.subtitle') }}</p>
           </header>
           
@@ -238,4 +238,3 @@ const sections = [
   }
 }
 </style>
-

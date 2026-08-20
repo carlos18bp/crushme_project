@@ -1,0 +1,4 @@
+{
+  "_comment": "Junk-test findings that predate the rules. These stay warnings under --junk-severity=error so existing debt does not block merges; anything not listed here is a new finding and fails. This file should only ever shrink.",
+  "findings": []
+}

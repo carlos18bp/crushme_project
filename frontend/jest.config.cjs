@@ -1,15 +1,15 @@
 module.exports = {
-    moduleFileExtensions: ['js', 'json', 'vue', 'mjs'],
+    moduleFileExtensions: ['js', 'mjs', 'json', 'vue'],
     transform: {
         '^.+\\.vue$': '@vue/vue3-jest',
-        '^.+\\.js$': 'babel-jest',
-        '^.+\\.mjs$': 'babel-jest',
+        '^.+\\.(js|mjs)$': 'babel-jest',
         ".+\\.(css|styl|less|sass|scss|png|jpg|webp|ttf|woff|woff2)$": "jest-transform-stub"
     },
     testEnvironment: 'jest-environment-jsdom',
     coverageProvider: 'v8',
     coverageReporters: ['text', 'json-summary'],
-    resetModules: true,
+    clearMocks: true,
+    restoreMocks: true,
     testEnvironmentOptions: {
         customExportConditions: ["node", "node-addons"],
     },
@@ -23,8 +23,10 @@ module.exports = {
     ],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
-        '\\.(css|less|scss|sass|png|jpg|webp|ttf|woff|woff2)$': 'jest-transform-stub',
+        '\\.(css|less|scss|sass|png|jpg|webp|ttf|woff|woff2)$': 'identity-obj-proxy',
     },
+    transformIgnorePatterns: ['/node_modules/(?!.*perfect-debounce)'],
+    setupFilesAfterEnv: ['./jest.setup.js'],
     collectCoverageFrom: [
         'src/**/*.{js,vue}',
         '!src/**/main.js',

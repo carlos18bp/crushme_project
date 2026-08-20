@@ -3,8 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 
+const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:8000'
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
@@ -35,21 +37,21 @@ export default defineConfig({
   },
   
   // Base URL para los assets en producción
-  base: '/static/frontend/',
+  base: command === 'serve' ? '/' : '/static/frontend/',
   
   server: {
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: backendUrl,
         changeOrigin: true,
         secure: false,
       },
       '/media': {
-        target: 'http://localhost:8000',
+        target: backendUrl,
         changeOrigin: true,
         secure: false,
       },
     },
   },
-})
+}))
