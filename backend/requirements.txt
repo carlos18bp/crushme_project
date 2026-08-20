@@ -30,7 +30,12 @@ torch==2.13.0+cpu
 Faker==25.0.1
 
 # Security pins for transitive dependencies.
+click==8.4.2
+filelock==3.32.3
+idna==3.19
 PyJWT==2.13.0
+protobuf==6.33.5
+sentencepiece==0.2.2
 setuptools==83.0.0
 sqlparse==0.6.0
 urllib3==2.7.0
