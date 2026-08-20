@@ -1,98 +1,120 @@
-# Technical Context — CrushMe
+# Technical Context - CrushMe
 
 ## Technology Stack
 
 ### Backend
+
 | Technology | Version | Purpose |
-|-----------|---------|---------|
+|---|---:|---|
 | Python | 3.12.3 | Runtime |
-| Django | 5.1.5 | Web framework |
-| DRF | 3.15.2 | REST API |
-| SimpleJWT | 5.3.0 | JWT authentication |
-| MySQL | 8 | Database (mysqlclient 2.2.7) |
-| Redis | 7.1.0 | Cache (db 1) + task queue (db 2) |
-| Huey | 2.5+ | Async task queue |
-| argostranslate | 1.9.6 | Offline ES/EN translation |
+| Django | 5.2.17 | Web framework |
+| DRF | 3.18.0 | REST API |
+| SimpleJWT | 5.5.1 | JWT authentication |
+| MySQL | 8 | Database (`mysqlclient` 2.2.8) |
+| Redis | 7.1.0 | Cache DB 1 and Huey DB 2 |
+| Huey | 2.6.0 | Async/periodic work |
+| Argos Translate | 1.11.0 | Offline ES/EN translation |
+| Torch | 2.13.0+cpu | Argos dependency, CPU wheel |
 | Gunicorn | 23.0.0 | WSGI server |
-| django-silk | 5.0+ | Profiling (conditional, `ENABLE_SILK=True`) |
-| django-dbbackup | 4.0+ | Database backups |
-| django-cors-headers | 4.6.0 | CORS |
-| django-attachments | 1.1.1 | File galleries (vendored) |
-| django-cleanup | 8.1.0 | Auto-delete orphaned files |
-| Faker | 25.0.1 | Fake data generation |
+| django-silk | 5.5.2 | Conditional profiling |
+| django-dbbackup | 5.3.0 | Backup integration |
 
 ### Frontend
+
 | Technology | Version | Purpose |
-|-----------|---------|---------|
-| Vue | 3.5.13 | UI framework |
-| Vite | 7 | Build tool + dev server |
-| Pinia | 3.0.3 | State management |
-| pinia-plugin-persistedstate | 4.5.0 | localStorage persistence |
-| vue-router | 4.5.1 | Routing with locale prefixes |
-| vue-i18n | 9.14.5 | Internationalization |
-| Axios | 1.12.2 | HTTP client |
-| Tailwind CSS | 4.1.13 | Utility-first CSS |
-| Flowbite | 3.1.2 | UI component library |
-| Headless UI | 1.7.23 | Accessible UI primitives |
-| GSAP | 3.13.0 | Animations |
-| SweetAlert2 | 11.23.0 | Alert dialogs |
+|---|---:|---|
+| Vue | 3.5.41 | UI framework |
+| Vite | 7.3.6 | Build tool/dev server |
+| Pinia | 3.0.4 | State management |
+| pinia-plugin-persistedstate | 4.7.1 | Local persistence |
+| Vue Router | 4.6.4 | Locale-prefixed routing |
+| Vue I18n | 9.14.5 | ES/EN UI localization |
+| Axios | 1.19.0 | Shared HTTP client |
+| Tailwind CSS | 4.3.3 | Styling |
+| Flowbite | 3.1.2 | UI components |
+| GSAP | 3.15.0 | Animation |
+| SweetAlert2 | 11.26.25 | Dialogs |
 
-### Testing
-| Tool | Scope | Config |
-|------|-------|--------|
-| pytest + pytest-django | Backend | `backend/pytest.ini` |
-| Jest | Frontend unit | `frontend/jest.config.cjs` |
-| Playwright | Frontend E2E | `frontend/playwright.config.js` |
+### Quality Tooling
 
-## Key Technical Decisions
+- Backend: pytest, pytest-django, coverage, Ruff, Bandit, pip-audit.
+- Frontend: Jest, Vue Test Utils, Playwright, ESLint, npm audit.
+- Repository: pre-commit, detect-secrets, semantic test-quality gate, six
+  partitioned GitHub Actions jobs, and a MySQL auth-concurrency regression.
 
-### Single HTTP Client (not dual)
-All frontend API requests go through `src/services/request_http.js`. It sends both CSRF and JWT headers, injects language/currency headers, and handles automatic token refresh. There is no separate platform API composable.
+## Key Decisions
 
-### Offline Translation
-Product content is translated at WooCommerce sync time via `argostranslate` and cached in a `TranslatedContent` model. No real-time MT. Frontend reads localized fields directly.
+- Preserve the single `crushme_app`, function-based DRF views, and service
+  layer.
+- Preserve the single Axios client; token refresh is shared and guarded against
+  late persistence after logout.
+- Treat `PaymentSession` as the durable authority for payment amounts and
+  gateway confirmation.
+- Translate offline during WooCommerce sync, never in request paths.
+- Force Argos MiniSBD on CPU until Argos no longer pins vulnerable Stanza
+  1.10.1. Enabling Stanza chunking is prohibited.
+- Keep exact backend pins and lock frontend transitive versions through
+  `package-lock.json`. Framework majors are separate compatibility work.
 
-### Mixed Pinia Store API Styles
-9 stores use setup/Composition API, 3 use Options API. This is the current state — not a design decision to enforce.
+## Development And Test Environments
 
-### PyTorch Installed But Unused
-`torch`, `stanza`, and `ctranslate2` are in `requirements.txt` but no application code imports them. The `venv_cpu` venv and 650M memory limit exist because of PyTorch's footprint.
+The runtime venv is `backend/venv_cpu/`, not `backend/venv/`.
 
-## Development Environment
-
-### Prerequisites
-- Python 3.12+, Node 22
-- MySQL 8, Redis
-- venv at `backend/venv_cpu/` (NOT `backend/venv/`)
-
-### Running Locally
 ```bash
-# Backend
-cd backend && source venv_cpu/bin/activate
-python manage.py runserver  # :8000
+# Backend development
+cd backend
+source venv_cpu/bin/activate
+python manage.py runserver
 
-# Frontend (separate terminal)
-cd frontend && npm run dev  # :5173, proxies /api/ and /media/ to :8000
+# Focused backend test
+pytest crushme_app/tests/path/to/test_file.py -v
+
+# Frontend development
+cd frontend
+npm run dev
+
+# Focused frontend checks
+npm test -- path/to/file.spec.js
+npx playwright test e2e/path/to/spec.js
 ```
 
-### Environment Variables
-Managed via `python-decouple` reading `.env` file:
-- `DJANGO_ENV` — `development` (default) or `production`
-- `DJANGO_SETTINGS_MODULE` — production and current development use `crushme_project.settings`
-- `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`
-- `REDIS_CACHE_URL` (default: `redis://127.0.0.1:6379/1`)
-- `REDIS_URL` (default: `redis://127.0.0.1:6379/2`)
-- `ENABLE_SILK` — Enable django-silk profiling (default: False)
+Tests select `settings_test.py`; Playwright uses `settings_e2e.py`. Both isolate
+database, cache, queue, email, and payment integrations. Fake-data commands
+have code-level production refusal.
 
-## Deployment
+## Environment Variables
 
-### Production Path
-`/home/ryzepeck/webapps/crushme_project`
+`python-decouple` reads `backend/.env`; committed examples contain placeholders
+only. Relevant groups are:
 
-### Deploy Sequence
-1. `git pull origin main`
-2. `cd backend && source venv_cpu/bin/activate && pip install -r requirements.txt && DJANGO_ENV=production python manage.py migrate`
-3. `cd frontend && npm ci && npm run build`
-4. `cd backend && DJANGO_ENV=production python manage.py collectstatic --noinput`
-5. `sudo systemctl restart crushme_project && sudo systemctl restart crushme-huey`
-6. `bash /home/ryzepeck/webapps/vps-ops-toolkit/scripts/deployment/post-deploy-check.sh crushme_project`
+- Django: `DJANGO_ENV`, `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`,
+  `DJANGO_ALLOWED_HOSTS`, CSRF/CORS origins, and log level.
+- Data: database name/user/password/host/port, `REDIS_CACHE_URL`, `REDIS_URL`.
+- Auth: `JWT_ACCESS_TOKEN_MINUTES` (15) and `JWT_REFRESH_TOKEN_DAYS` (7), plus
+  named `THROTTLE_*` rates.
+- Payments: explicit PayPal and Wompi IDs/secrets, mode/environment, and HTTPS
+  endpoints. Production requires PayPal `live` and Wompi `production`.
+- Commerce: WooCommerce API URL/key/secret and dropshipping customer ID.
+- Uploads: maximum bytes, pixels, and files per request.
+- Translation: `ARGOS_CHUNK_TYPE=MINISBD` and `ARGOS_DEVICE_TYPE=cpu`.
+- Optional profiling: `ENABLE_SILK=False` by default.
+
+Secrets remain mode 600 in runtime/protected stores and never enter frontend
+environment variables.
+
+## Production Deployment
+
+Production path: `/home/ryzepeck/webapps/crushme_project`.
+
+1. Create fresh database/media backups, rehearse restore, and record rollback
+   commit/environment/dependency state.
+2. Pull the reviewed `main` release.
+3. Activate `backend/venv_cpu` and run
+   `python -m pip install --no-cache-dir -r requirements.txt`.
+4. Run `python -m pip check`, Django checks, migration drift check, then
+   `DJANGO_ENV=production python manage.py migrate`.
+5. Run `npm ci && npm run build` in `frontend/`.
+6. Run `DJANGO_ENV=production python manage.py collectstatic --noinput`.
+7. Restart `crushme_project.service` and `crushme-huey.service`.
+8. Run the toolkit post-deploy check, public health/payment-config smoke checks,
+   service/log inspection, and retain rollback artifacts through observation.

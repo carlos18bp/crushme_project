@@ -201,7 +201,7 @@ por ecosistema. La fuente de verdad es `vps-ops-toolkit/workflows/`.
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.1.5 + DRF (backend) and Vue 3.5 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
+CrushMe is a bilingual (ES/EN) e-commerce + wishlist-sharing platform where verified "crush" profiles can receive gifted wishlists. Built with Django 5.2.17 + DRF 3.18 (backend) and Vue 3.5.41 + Vite 7 + Pinia (frontend), backed by MySQL 8, Redis, and Huey for async tasks. Production domain: `crushme.com.co`.
 
 ## Commands
 ```bash
@@ -235,17 +235,17 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 ### Backend — Single Django App (`crushme_app`)
 - **Views are 100% function-based** with `@api_view`, split per resource (`auth_views.py`, `product_views.py`, `cart_views.py`, `order_views.py`, `wishlist_views.py`, `paypal_order_views.py`, `wompi_order_views.py`, etc.). Do not convert to CBV/`APIView`/`ViewSets`.
 - **Service layer is real**: business logic lives in `crushme_app/services/` (email, translation, woocommerce sync, paypal, wompi). Views are thin wrappers that call services — do not inline business rules into views.
-- **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (30d access, 60d refresh, rotation + blacklist). `/admin/` uses session + CSRF.
+- **Dual auth**: `/api/auth/...` uses JWT via SimpleJWT (15m access, 7d refresh, serialized rotation + blacklist, logout revocation). `/admin/` uses session + CSRF.
 - **Offline translation**: `argostranslate` translates ES↔EN at WooCommerce sync time and caches results in a `TranslatedContent` model. No real-time machine translation.
 - **Custom `User` model**: email-as-username, crush verification fields (`is_crush`, `crush_verification_status`). `GuestUser` model supports anonymous checkout via session.
-- **Two payment gateways**: PayPal (USD, international) and Wompi (COP, Colombian). Each has webhook endpoints that update `Order.status`.
+- **Two payment gateways**: PayPal (USD, international) and Wompi (COP, Colombian). Server-calculated `PaymentSession` state is authoritative; captures/webhooks must match it before updating `Order.status`.
 - **WooCommerce mirror**: products are pulled from a remote WooCommerce store and mirrored locally with translated content.
 - **Conditional Silk**: `django-silk` profiling is gated by `ENABLE_SILK=True` env var. Off by default.
 - **Currency middleware**: custom middleware reads `x-currency` header (COP/USD) from frontend requests.
 
 ### Frontend — Vue 3 SPA
 - **Pinia stores use mixed API styles** with `pinia-plugin-persistedstate`. Most stores (auth, cart, crush, currency, order, payment, product, profile, wishlist) use the **setup/Composition API** (`defineStore('name', () => { ... })`). A few (i18n, review, contact) use the **Options API**. Stores live in `src/stores/modules/`.
-- **Single HTTP client**: all API requests go through `src/services/request_http.js` — an Axios wrapper that sends both `X-CSRFToken` and `Authorization: Bearer` headers, injects `Accept-Language` and `X-Currency`, and handles automatic JWT refresh on 401.
+- **Single HTTP client**: all API requests go through `src/services/request_http.js` — an Axios wrapper that sends both `X-CSRFToken` and `Authorization: Bearer` headers, injects `Accept-Language` and `X-Currency`, and shares one guarded JWT refresh on concurrent 401 responses.
 - **Locale routing**: vue-router uses `/en/...` and `/es/...` prefixes. Active locale comes from `i18nStore`.
 - **Bilingual content**: product text is already translated server-side — the frontend just reads localized fields. UI strings (buttons, labels) go through `vue-i18n` locale files in `src/locales/`.
 - **Currency**: `currencyStore` tracks COP/USD; `request_http.js` injects `x-currency` header on every request.
@@ -253,7 +253,7 @@ cd frontend && npx playwright test e2e/path/to/spec.js   # Playwright E2E
 
 ### Environment & Settings
 - Base settings: `backend/crushme_project/settings.py`. It imports `settings_dev` by default and `settings_prod` only when `DJANGO_ENV=production`.
-- Pytest currently names the shared settings module in `pytest.ini`; run it only with an isolated non-production environment until Wave 2 lands dedicated test settings.
+- Pytest uses isolated `settings_test.py`; Playwright uses `settings_e2e.py`. Neither may inherit production database, Redis, email, or payment resources.
 - Redis db 1 = Django cache, Redis db 2 = Huey task queue.
 - Production systemd units: `crushme_project.service` + `crushme-huey.service`. Socket: `/run/gunicorn.sock`.
 - Memory limit: 650M (PyTorch is in requirements but unused in code).

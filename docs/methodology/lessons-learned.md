@@ -1,38 +1,60 @@
-# Lessons Learned — CrushMe
-
-Patterns, preferences, and project intelligence discovered during development.
+# Lessons Learned - CrushMe
 
 ## Architecture
 
-- **Single app (`crushme_app`)** works for now but is large. Models, views, serializers, services, and tests all live here.
-- **Service layer is real**: business logic in `crushme_app/services/`, views are thin FBV wrappers.
-- **WooCommerce mirror**: products synced from a remote store, translated offline, cached in `TranslatedContent`.
-- **Dual payment gateways**: PayPal (USD) + Wompi (COP), each with webhook endpoints.
-- **Custom User model**: email-as-username, crush verification workflow.
+- The single `crushme_app` remains workable because views are split by resource
+  and meaningful business logic already lives in services. Do not split it
+  without a concrete ownership or deployment boundary.
+- Function-based DRF views and the single Axios client are product architecture,
+  not legacy defects to replace during maintenance.
+- WooCommerce mirroring, offline bilingual translation, public wishlists,
+  guest gifting, PayPal, and Wompi are business invariants.
+- Payment gateways must never trust client totals. Durable, server-calculated
+  `PaymentSession` state is the cross-request contract.
 
-## Frontend
+## Security
 
-- **Single HTTP client** (`request_http.js`): sends CSRF + JWT + language + currency headers. No separate platform API client.
-- **Mixed store styles**: most Pinia stores use setup/Composition API; i18nStore, reviewStore, contactStore use Options API. Match existing style when editing.
-- **Locale routing**: `/en/...` and `/es/...` prefixes via vue-router. Active locale from `i18nStore`.
-- **Product content is pre-translated**: don't translate client-side. UI strings go through `vue-i18n`.
+- JWT rotation requires concurrency control, not only
+  `BLACKLIST_AFTER_ROTATION`; lock the outstanding token row and verify the race
+  against MySQL in CI.
+- Frontend refresh coordination needs both a shared promise and an auth epoch,
+  otherwise logout can be undone by an older in-flight response.
+- Production integration mode must fail closed. Sandbox defaults belong only in
+  development/test settings.
+- Upload validation must inspect decoded content and pixel count in addition to
+  extension, MIME, and byte size.
+- A secret removed from the current tree is not resolved until the credential
+  is revoked, protected stores are synchronized, and services are verified.
 
-## Development
+## Development And Testing
 
-- **venv is `venv_cpu/`**, not `venv/` — exists because PyTorch is installed (but unused in code).
-- **Production service**: Gunicorn runs as `crushme_project.service` and binds `/run/gunicorn.sock`; Huey runs as `crushme-huey.service`.
-- **Huey immediate mode** in dev: tasks run synchronously, no Redis/worker needed.
-- **Vite dev proxy**: `/api/` and `/media/` proxied to localhost:8000. Both servers must run.
+- The venv is `backend/venv_cpu/`; use the PyTorch CPU index and avoid pip cache
+  on this disk-constrained host.
+- Backend tests use `settings_test.py`; E2E uses `settings_e2e.py`. Neither may
+  inherit production database, Redis, email, or gateway resources.
+- Six partitioned CI jobs own broad verification. Local runs stay targeted at
+  no more than 20 tests, three commands per cycle, and two E2E specs.
+- The semantic test-quality gate, Ruff/ESLint, Bandit, detect-secrets, npm audit,
+  and pip-audit are complementary gates; none replaces behavior tests.
 
-## Testing
+## Operations
 
-- Backend product tests currently contain one file with 10 fake-data guard cases; six historical `test_*.py` scripts outside the suite are not quality-gate coverage.
-- Frontend has 1 unit test file (`src/utils/__tests__/priceHelper.test.js`). E2E directory has no specs.
-- The Jest config only discovers `frontend/test/`; the existing unit file must be moved before it counts.
-- Pre-commit hook: `test-quality-gate` runs on staged test files with `--semantic-rules strict`.
+- A Git worktree is sufficient to isolate authoring while production stays on
+  clean `main`; it must not become a second deployable environment.
+- A backup is not evidence until restore is rehearsed. Database restore and
+  media file-count, byte-count, and inventory-hash checks all passed before the
+  credential cutover.
+- Runtime documentation must be derived from deployed service units, not old
+  naming assumptions. The active units are `crushme_project.service` and
+  `crushme-huey.service`.
 
-## Tech Debt
+## Remaining Debt
 
-- **PyTorch, stanza, ctranslate2** in requirements.txt but unused — 650M memory limit exists because of PyTorch footprint.
-- **Minimal test coverage** — destructive command guards are covered, but core product behavior and all E2E flows remain uncovered.
-- **Exposed database credential** — a bootstrap SQL file matched production credentials and remains in Git history; rotation and history remediation block lifecycle promotion.
+- Argos 1.11 pins vulnerable Stanza 1.10.1. MiniSBD/CPU makes the path
+  unreachable, but the dependency must be reviewed monthly.
+- PyTorch remains a heavy Argos dependency and drives disk/memory cost even
+  though application modules do not import it directly.
+- Vite reports existing large-chunk warnings; Wave 5 must measure before any
+  code-splitting change.
+- Critical business-flow coverage is still incomplete and is the scope of
+  Wave 4.

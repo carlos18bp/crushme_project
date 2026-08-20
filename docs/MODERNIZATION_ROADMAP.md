@@ -41,7 +41,7 @@ will not be merged wholesale.
 | Wave | Purpose | Release gate |
 |---|---|---|
 | 0 | Free disk, retire the accidental staging coordinate, establish this roadmap and a safe worktree | Production remains healthy; disk usage below 80%; registry and worktree checks green |
-| 1 | Synchronize Codex, Claude Code, Windsurf, skills, standards, and Memory Bank | Project-specific AI drift is zero and guidance matches the real runtime |
+| 1 | Synchronize Codex, Claude Code, skills, standards, and Memory Bank | Project-specific AI drift is zero and guidance matches the real runtime |
 | 2 | Remove verified repository waste and add hermetic test/CI/development foundations | Six partitioned CI jobs pass; no production behavior or data changes |
 | 3 | Update dependencies and harden authentication, uploads, payments, secrets, headers, and runtime boundaries | No unmitigated critical/high finding; restore rehearsal and controlled production deploy pass |
 | 4 | Close backend, frontend-unit, and E2E behavior gaps and audit test quality | No junk-only or unvalidated critical flow; quality gate and CI pass |
@@ -51,9 +51,17 @@ will not be merged wholesale.
 ## Execution Status
 
 - Wave 0: complete through PR #4; accidental staging retired and disk gate met.
-- Wave 1: complete in its dedicated PR; all three AI ecosystems and the Memory
-  Bank are synchronized without runtime changes.
-- Waves 2-6: pending their independent PRs and gates.
+- Wave 1: complete through PR #5; Codex, Claude Code, and the Memory Bank are
+  synchronized without runtime changes. Windsurf was subsequently retired
+  fleet-wide through PR #9.
+- Wave 2: complete through PR #6; repository cleanup, hermetic test settings,
+  guarded fake data, six partitioned CI jobs, lint, and test-quality foundations
+  are on `main`.
+- Wave 3: implementation complete on its dedicated branch. Dependency audits,
+  application hardening, fresh backups, restore rehearsals, and production
+  database credential rotation passed. CI, merge, and controlled application
+  deployment remain.
+- Waves 4-6: pending their independent PRs and gates.
 
 ## Wave Delivery
 

@@ -1,11 +1,11 @@
 # Backend Rules — CrushMe
 
 ## Stack And Scope
-- Django 5.1.5 + DRF 3.15.2, Python 3.x.
+- Django 5.2.17 + DRF 3.18.0, Python 3.12.
 - **Single business app**: `crushme_app` — contains all models, views, serializers, services, and tests.
 - Auxiliary apps: `django_attachments` (vendored), `easy_thumbnails`, `dbbackup`, `silk` (conditional), `huey.contrib.djhuey`, `corsheaders`, `rest_framework`, `rest_framework_simplejwt`, `django_cleanup`.
 - Production uses `crushme_project.settings` with `DJANGO_ENV=production`.
-- Development and current tests use `crushme_project.settings`; production adds `DJANGO_ENV=production`.
+- Development uses the shared settings; pytest uses `settings_test.py`, Playwright uses `settings_e2e.py`, and production adds `DJANGO_ENV=production`.
 - Database: **MySQL 8** (`mysqlclient`, `utf8mb4`, `STRICT_TRANS_TABLES`). Cache + queue: Redis (db 1 for cache, db 2 for Huey).
 - **venv**: `backend/venv_cpu/` (PyTorch CPU build) — **not** `backend/venv/`.
 
@@ -19,9 +19,9 @@
 - Prefer Django ORM. Raw SQL only when strictly necessary, always parameterized.
 
 ## Auth And Security
-- **API auth**: JWT via SimpleJWT — `ACCESS_TOKEN_LIFETIME=30d`, `REFRESH_TOKEN_LIFETIME=60d`, refresh rotation enabled, blacklist after rotation.
+- **API auth**: JWT via SimpleJWT — `ACCESS_TOKEN_LIFETIME=15m`, `REFRESH_TOKEN_LIFETIME=7d`, database-serialized rotation, blacklist after rotation, and logout revocation.
 - **Admin auth**: Django session + CSRF (default).
-- `settings_prod.py` enforces HSTS (1y), `SECURE_SSL_REDIRECT=True`, secure cookies, NOSNIFF, `X_FRAME_OPTIONS=SAMEORIGIN`.
+- `settings_prod.py` enforces live HTTPS integrations, HSTS (1y), `SECURE_SSL_REDIRECT=True`, secure cookies, NOSNIFF, referrer policy, and `X_FRAME_OPTIONS=SAMEORIGIN`.
 - `CORS_ALLOW_CREDENTIALS=True` and a custom CORS-allowed header `x-currency` for the multi-currency frontend.
 - `MEDIA_*` is on the local filesystem; uploaded user content (avatars, gallery) lives under `backend/media/`.
 - Validate input in DRF serializers. Never disable CSRF or hardcode secrets.
