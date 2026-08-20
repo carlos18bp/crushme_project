@@ -2,8 +2,8 @@
 
 ## Active
 
-- [ ] Pass Wave 3 CI, merge its PR, and complete the controlled production
-  deployment and post-deploy checks.
+- [ ] Merge the frame-protection deployment blocker, rotate the Django signing
+  key, and complete Wave 3 production deployment/post-deploy checks.
 - [ ] Land Wave 4 QA coverage and test-quality PR.
 - [ ] Land Wave 5 production operations/performance PR and deployment.
 - [ ] Complete Wave 6 certification and lifecycle promotion after the required
@@ -39,3 +39,4 @@
 - [x] Created fresh database/media backups and completed restore rehearsals.
 - [x] Rotated the exposed production database credential, revoked the former
   account, and synchronized the protected fleet credential source.
+- [x] Passed all six Wave 3 CI gates and merged PR #10.

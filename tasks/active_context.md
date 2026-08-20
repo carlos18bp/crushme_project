@@ -2,18 +2,18 @@
 
 ## Current Focus
 
-Wave 3 dependency and security release. The implementation, focused regression
-tests, vulnerability report, backup restore rehearsal, and production database
-credential rotation are complete. CI, merge, and the controlled application
-deployment remain as the release gate.
+Wave 3 dependency and security release is merged. The controlled deployment is
+paused before migrations/restart while a deployment-check hotfix closes frame
+embedding and rotates the prefixed Django signing key.
 
 ## Current Coordinate
 
-- Runtime: `/home/ryzepeck/webapps/crushme_project` on clean `main` at
-  `3b4be6b` until Wave 3 is released.
+- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`
+  at `93807f0`; existing processes still serve the pre-Wave-3 code until the
+  guarded restart.
 - Authoring: temporary worktree
-  `/home/ryzepeck/webapps/.wt/crushme-modernization` on
-  `chore/20082026-crushme-wave-3-security`.
+  `/home/ryzepeck/webapps/.wt/crushme-frame-protection` on
+  `fix/20082026-crushme-frame-protection`.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
 - Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
 - Runtime services: `crushme_project.service` and `crushme-huey.service`.
@@ -47,6 +47,6 @@ deployment remain as the release gate.
 
 ## Next Gate
 
-Push Wave 3, pass all six CI jobs including the MySQL concurrent-refresh test,
-squash-merge the PR, then deploy exact dependencies, migrations, frontend
-assets, and static files with rollback artifacts retained.
+Merge the frame-protection hotfix, rotate/synchronize `DJANGO_SECRET_KEY`,
+confirm `check --deploy` has no warnings, then install exact dependencies,
+apply migrations, build assets, restart services, and run post-deploy checks.

@@ -72,7 +72,8 @@ application path creates a Stanza pipeline.
 - Test: `settings_test.py` with SQLite, in-memory cache/Huey, and local email.
 - E2E: `settings_e2e.py` with isolated SQLite and disabled/sandbox gateways.
 - Production: `settings_prod.py`, loaded only with `DJANGO_ENV=production`,
-  requiring live HTTPS integration configuration and secure headers/cookies.
+  requiring live HTTPS integration configuration, secure headers/cookies, and
+  frame embedding denial. Gateway popups remain compatible through COOP.
 
 ## Frontend Architecture
 
