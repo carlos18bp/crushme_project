@@ -125,6 +125,14 @@
                           </ul>
                         </div>
                       </div>
+
+                      <p
+                        v-if="operationError"
+                        role="alert"
+                        class="mt-4 text-sm font-poppins text-red-700"
+                      >
+                        {{ operationError }}
+                      </p>
                     </div>
 
                     <!-- Footer con totales y checkout -->
@@ -155,6 +163,15 @@
 
                       <!-- Checkout button -->
                       <div class="mb-4">
+                        <button
+                          type="button"
+                          data-testid="clear-cart"
+                          :disabled="cartStore.isUpdating"
+                          class="mb-3 flex w-full items-center justify-center rounded-full border border-red-300 px-6 py-3 font-poppins text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          @click="clearCart"
+                        >
+                          {{ $t('cart.actions.clearCart') }}
+                        </button>
                         <button
                           @click="handleCheckout"
                           :disabled="cartStore.isEmpty || cartStore.isUpdating"
@@ -220,6 +237,7 @@ const currencyStore = useCurrencyStore()
 
 // State
 const open = ref(props.isOpen)
+const operationError = ref(null)
 
 // Methods
 const updateQuantity = (itemId, newQuantity) => {
@@ -229,37 +247,53 @@ const updateQuantity = (itemId, newQuantity) => {
   }
   
   try {
-    cartStore.updateCartItem(itemId, newQuantity)
+    operationError.value = null
+    const result = cartStore.updateCartItem(itemId, newQuantity)
+    if (!result.success) {
+      operationError.value = newQuantity > 99
+        ? t('cart.messages.maxQuantityReached')
+        : t('cart.messages.errorUpdating')
+    }
   } catch (error) {
-    console.error('Error updating cart item:', error)
+    operationError.value = t('cart.messages.errorUpdating')
   }
 }
 
 const removeItem = (itemId) => {
   try {
-    cartStore.removeFromCart(itemId)
+    operationError.value = null
+    const result = cartStore.removeFromCart(itemId)
+    if (!result.success) operationError.value = t('cart.messages.errorRemoving')
   } catch (error) {
-    console.error('Error removing cart item:', error)
+    operationError.value = t('cart.messages.errorRemoving')
   }
 }
 
 const clearCart = () => {
   if (confirm(t('cart.confirmations.clearCart'))) {
     try {
-      cartStore.clearCart()
+      operationError.value = null
+      const result = cartStore.clearCart()
+      if (!result.success) operationError.value = t('cart.messages.generalError')
     } catch (error) {
-      console.error('Error clearing cart:', error)
+      operationError.value = t('cart.messages.generalError')
     }
   }
 }
 
 const handleCheckout = () => {
   try {
+    operationError.value = null
     console.log('🛒 [CART DRAWER] Iniciando checkout...')
     console.log('🛒 [CART DRAWER] Carrito vacío?', cartStore.isEmpty)
     console.log('🛒 [CART DRAWER] Items en carrito:', cartStore.items)
     console.log('🛒 [CART DRAWER] Locale actual:', i18nStore.locale)
     
+    if (cartStore.items.some(item => item.stock_status === 'outofstock')) {
+      operationError.value = t('cart.messages.outOfStock')
+      return
+    }
+
     if (!cartStore.isEmpty) {
       console.log('🛒 [CART DRAWER] Redirigiendo a checkout...')
       

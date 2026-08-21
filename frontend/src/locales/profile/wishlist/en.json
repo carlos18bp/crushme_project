@@ -31,7 +31,9 @@
   "creating": "Creating...",
   "noDescription": "No description",
   "removeFromWishlist": "Remove from wishlist",
-  "confirmRemove": "Are you sure you want to remove this product?"
+  "confirmRemove": "Are you sure you want to remove this product?",
+  "nameRequired": "Enter a wishlist name.",
+  "usernameRequired": "Enter a username to search.",
+  "copyFailed": "The wishlist link could not be copied.",
+  "noPublicWishlists": "No public wishlists were found for {'@'}{username}."
 }
-
-

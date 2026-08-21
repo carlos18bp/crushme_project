@@ -3,15 +3,25 @@
  * Exports all Pinia stores for easy importing
  */
 
-// Export all stores
-export { useAuthStore } from './modules/authStore.js';
-export { useProductStore } from './modules/productStore.js';
-export { useCartStore } from './modules/cartStore.js';
-export { useOrderStore } from './modules/orderStore.js';
-export { useWishlistStore } from './modules/wishlistStore.js';
-export { useReviewStore } from './modules/reviewStore.js';
-export { useCrushStore } from './modules/crushStore.js';
-export { useCurrencyStore } from './modules/currencyStore.js';
+import { useAuthStore } from './modules/authStore.js';
+import { useCartStore } from './modules/cartStore.js';
+import { useCrushStore } from './modules/crushStore.js';
+import { useOrderStore } from './modules/orderStore.js';
+import { useProductStore } from './modules/productStore.js';
+import { useReviewStore } from './modules/reviewStore.js';
+import { useWishlistStore } from './modules/wishlistStore.js';
+import { useCurrencyStore } from './modules/currencyStore.js';
+
+export {
+  useAuthStore,
+  useCartStore,
+  useCrushStore,
+  useCurrencyStore,
+  useOrderStore,
+  useProductStore,
+  useReviewStore,
+  useWishlistStore,
+};
 
 /**
  * Convenience function to initialize all stores
@@ -52,7 +62,7 @@ export function resetAllStores() {
   productStore.clearCategory();
   
   // Clear cart
-  cartStore.clearGuestCart();
+  cartStore.clearCart();
   
   // Clear orders
   orderStore.clearCurrentOrder();

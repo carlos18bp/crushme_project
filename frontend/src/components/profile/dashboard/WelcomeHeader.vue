@@ -1,6 +1,14 @@
 <template>
   <div class="mb-4 md:mb-6">
-    <h1 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-900 font-comfortaa leading-tight">
+    <p
+      v-if="profileStore.profileError"
+      role="alert"
+      data-testid="profile-dashboard-error"
+      class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+    >
+      {{ profileStore.profileError }}
+    </p>
+    <h1 v-else class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-900 font-comfortaa leading-tight">
       {{ welcomeMessage }}
     </h1>
   </div>
@@ -37,4 +45,3 @@ const welcomeMessage = computed(() => {
   font-family: 'Comfortaa', cursive;
 }
 </style>
-

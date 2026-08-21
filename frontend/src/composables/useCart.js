@@ -16,7 +16,7 @@ export function useCart() {
   const totalItems = computed(() => cartStore.totalItems);
   const totalPrice = computed(() => cartStore.totalPrice);
   const isEmpty = computed(() => cartStore.isEmpty);
-  const isLoading = computed(() => cartStore.isLoading || cartStore.isUpdating);
+  const isLoading = computed(() => cartStore.isUpdating);
 
   /**
    * Add product to cart with notification
@@ -28,7 +28,8 @@ export function useCart() {
     const productName = typeof product === 'object' ? product.name : 'Product';
 
     try {
-      const response = await cartStore.addToCart(productId, quantity);
+      const productData = typeof product === 'object' ? product : {};
+      const response = await cartStore.addToCart(productId, quantity, productData);
       
       if (response.success) {
         notifyCart(productName, 'added');
@@ -111,29 +112,23 @@ export function useCart() {
    * @param {number} productId - Product ID
    */
   async function getProductQuantity(productId) {
-    try {
-      return await cartStore.getProductQuantity(productId);
-    } catch (error) {
-      return { success: false, error: error.message, data: { quantity_in_cart: 0 } };
-    }
+    return {
+      success: true,
+      data: { quantity_in_cart: cartStore.getProductQuantityInCart(productId) },
+    };
   }
 
   /**
    * Validate cart for checkout
    */
   async function validateForCheckout() {
-    try {
-      const response = await cartStore.validateCart();
-      
-      if (!response.success) {
-        notifyError(response.error, 'Cart Validation Failed');
-      }
-      
+    if (cartStore.isEmpty) {
+      const response = { success: false, error: 'Cart is empty' };
+      notifyError(response.error, 'Cart Validation Failed');
       return response;
-    } catch (error) {
-      notifyError('Failed to validate cart');
-      return { success: false, error: error.message };
     }
+
+    return { success: true, data: { items: cartStore.items } };
   }
 
   /**
@@ -190,7 +185,7 @@ export function useCart() {
    * @param {number} productId - Product ID
    */
   function isProductInCart(productId) {
-    return cartItems.value.some(item => item.product.id === productId);
+    return cartStore.isProductInCart(productId);
   }
 
   /**
@@ -198,7 +193,7 @@ export function useCart() {
    * @param {number} productId - Product ID
    */
   function getCartItemByProductId(productId) {
-    return cartItems.value.find(item => item.product.id === productId);
+    return cartItems.value.find(item => item.product_id === productId);
   }
 
   /**

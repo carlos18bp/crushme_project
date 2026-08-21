@@ -5,16 +5,18 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.utils import timezone
 import logging
 
 from ..models.favorite_product import FavoriteProduct
+from ..models.woocommerce_models import WooCommerceProduct
 from ..serializers.favorite_product_serializers import (
     FavoriteProductSerializer,
     AddFavoriteProductSerializer,
     FavoriteProductListSerializer
 )
 from ..services.woocommerce_service import woocommerce_service
+from ..services.translation_service import get_language_from_request
+from ..utils.translation_helpers import get_product_full_data
 
 logger = logging.getLogger(__name__)
 
@@ -51,17 +53,32 @@ def add_favorite_product(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Fetch product data from WooCommerce
-        wc_result = woocommerce_service.get_product_by_id(woocommerce_product_id)
-        
-        if not wc_result['success']:
-            return Response({
-                'success': False,
-                'error': 'No se pudo obtener información del producto desde WooCommerce',
-                'details': wc_result.get('error')
-            }, status=status.HTTP_502_BAD_GATEWAY)
-        
-        product_data = wc_result['data']
+        local_product = (
+            WooCommerceProduct.objects
+            .filter(wc_id=woocommerce_product_id, status='publish')
+            .prefetch_related('categories', 'images', 'variations')
+            .first()
+        )
+
+        if local_product:
+            product_data = get_product_full_data(
+                local_product,
+                target_language=get_language_from_request(request),
+                include_stock=False,
+                target_currency=getattr(request, 'currency', 'COP'),
+            )
+        else:
+            # Keep the remote lookup as compatibility fallback for an incomplete sync.
+            wc_result = woocommerce_service.get_product_by_id(woocommerce_product_id)
+
+            if not wc_result['success']:
+                return Response({
+                    'success': False,
+                    'error': 'No se pudo obtener información del producto desde WooCommerce',
+                    'details': wc_result.get('error')
+                }, status=status.HTTP_502_BAD_GATEWAY)
+
+            product_data = wc_result['data']
         
         # Add to favorites with cached product data
         favorite, created = FavoriteProduct.add_favorite(
@@ -342,5 +359,3 @@ def clear_all_favorites(request):
             'error': 'Error al limpiar favoritos',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-

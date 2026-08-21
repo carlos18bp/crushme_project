@@ -10,6 +10,7 @@ describe('cartStore', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     localStorage.clear();
   });
 
@@ -58,5 +59,70 @@ describe('cartStore', () => {
     expect(result).toEqual({ success: true, data: { items: [] } });
     expect(store.items).toEqual([]);
     expect(localStorage.getItem('crushme_cart')).toBe('[]');
+  });
+
+  test('recovers with an empty cart when persisted JSON is corrupt', () => {
+    // Fails if malformed browser storage prevents the cart store from starting.
+    localStorage.setItem('crushme_cart', '{invalid-json');
+
+    const store = useCartStore();
+
+    expect(store.items).toEqual([]);
+    expect(store.totalItems).toBe(0);
+    expect(store.totalPrice).toBe(0);
+  });
+
+  test('clears every line and removes persisted state', () => {
+    // Fails if clear cart empties memory but checkout restores old persisted lines.
+    const store = useCartStore();
+    store.addToCart(11, 1, { name: 'One', price: 10 });
+    store.addToCart(12, 2, { name: 'Two', price: 20 });
+
+    const result = store.clearCart();
+
+    expect(result).toEqual({ success: true, data: { items: [] } });
+    expect(store.items).toEqual([]);
+    expect(localStorage.getItem('crushme_cart')).toBeNull();
+  });
+
+  test('rolls back a quantity change when browser persistence fails', () => {
+    // Fails if checkout shows a quantity that was never persisted for the next page load.
+    const store = useCartStore();
+    store.addToCart(900001, 1, { name: 'Silk set', price: 49.90 });
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('quota exceeded');
+    });
+
+    const result = store.updateCartItem(store.items[0].id, 2);
+
+    expect(result).toEqual({ success: false, error: 'Error al actualizar item' });
+    expect(store.items[0].quantity).toBe(1);
+    expect(JSON.parse(localStorage.getItem('crushme_cart'))[0].quantity).toBe(1);
+  });
+
+  test('restores cart lines when clearing browser persistence fails', () => {
+    // Fails if a rejected clear operation empties the visible cart but leaves stale storage.
+    const store = useCartStore();
+    store.addToCart(900001, 1, { name: 'Silk set', price: 49.90 });
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+      throw new Error('storage unavailable');
+    });
+
+    const result = store.clearCart();
+
+    expect(result).toEqual({ success: false, error: 'Error al vaciar el carrito' });
+    expect(store.items).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem('crushme_cart'))).toHaveLength(1);
+  });
+
+  test('rejects a quantity above the checkout limit', () => {
+    // Fails if the drawer can persist quantities the product detail UI forbids.
+    const store = useCartStore();
+    store.addToCart(900001, 99, { name: 'Silk set', price: 49.90 });
+
+    const result = store.updateCartItem(store.items[0].id, 100);
+
+    expect(result).toEqual({ success: false, error: 'La cantidad debe estar entre 1 y 99' });
+    expect(store.items[0].quantity).toBe(99);
   });
 });

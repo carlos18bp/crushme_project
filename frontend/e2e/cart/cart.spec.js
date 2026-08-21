@@ -59,6 +59,7 @@ test('navigates to checkout from a persisted non-empty cart', {
   ]);
 
   await expect(page).toHaveURL('/en/checkout');
+  await expect(page.getByRole('heading', { name: 'E2E Rose Quartz Wand', exact: true })).toHaveText('E2E Rose Quartz Wand');
 });
 
 // Bug caught: increasing a drawer line only changes the display and not checkout state.

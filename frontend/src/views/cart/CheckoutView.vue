@@ -219,6 +219,12 @@
               <p class="gift-field-description">
                 {{ $t('cart.checkout.form.help.recipientUsername') }}
               </p>
+              <p v-if="recipientSearchError" role="alert" class="gift-field-description text-red-700">
+                {{ recipientSearchError }}
+              </p>
+              <p v-else-if="recipientValidationError" role="alert" class="gift-field-description text-red-700">
+                {{ recipientValidationError }}
+              </p>
             </div>
 
             <div class="form-group">
@@ -359,7 +365,14 @@
             </div>
 
             <!-- Error de validación -->
-            <p v-if="discountError && !discountData" class="discount-error">{{ discountError }}</p>
+            <p
+              v-if="discountError && !discountData"
+              role="alert"
+              data-testid="discount-error"
+              class="discount-error"
+            >
+              {{ discountError }}
+            </p>
           </div>
 
           <!-- Totals -->
@@ -417,7 +430,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useCartStore } from '@/stores/modules/cartStore.js';
 import { useAuthStore } from '@/stores/modules/authStore.js';
 import { useCrushStore } from '@/stores/modules/crushStore.js';
@@ -426,6 +439,7 @@ import { usePaymentStore } from '@/stores/modules/paymentStore.js';
 import { useProductStore } from '@/stores/modules/productStore.js';
 import { useRouter } from 'vue-router';
 import { useAlert } from '@/composables/useAlert.js';
+import { useI18n } from 'vue-i18n';
 import { Country, State } from 'country-state-city';
 import { useCurrencyStore } from '@/stores/modules/currencyStore.js';
 import WompiWidget from '@/components/WompiWidget.vue';
@@ -451,6 +465,7 @@ const cartStore = useCartStore();
 const authStore = useAuthStore();
 const crushStore = useCrushStore();
 const i18nStore = useI18nStore();
+const { t } = useI18n();
 const paymentStore = usePaymentStore();
 const productStore = useProductStore();
 const { showSuccess, showError, showLoading, closeAlert } = useAlert();
@@ -504,6 +519,8 @@ const isLoadingDropshipping = ref(false);
 const usernameSearchQuery = ref('');
 const showUserSearchResults = ref(false);
 const selectedGiftUser = ref(null); // ⭐ Usuario seleccionado completo (con shipping_cost)
+const recipientSearchError = ref('');
+const recipientTouched = ref(false);
 let usernameSearchTimeout = null;
 
 // ⭐ Wishlist data from query params
@@ -531,6 +548,18 @@ const giftNoteLabel = computed(() => {
   return i18nStore.locale === 'es' ? 'Nota para el destinatario' : 'Note for recipient';
 });
 
+const recipientValidationError = computed(() => {
+  if (
+    shippingType.value !== 'gift'
+    || !recipientTouched.value
+    || !usernameSearchQuery.value.trim()
+    || selectedGiftUser.value
+  ) {
+    return '';
+  }
+  return t('cart.checkout.form.errors.selectRecipient');
+});
+
 // ⭐ User search functionality
 const searchUsers = async (query) => {
   if (!query || !query.trim()) {
@@ -540,13 +569,15 @@ const searchUsers = async (query) => {
 
   try {
     await crushStore.searchUsers(query.trim(), 5);
-  } catch (error) {
-    console.error('Error searching users:', error);
+    recipientSearchError.value = '';
+  } catch {
+    recipientSearchError.value = t('cart.checkout.form.errors.recipientSearch');
   }
 };
 
 // ⭐ Handle username input blur
 const handleUsernameBlur = () => {
+  recipientTouched.value = true;
   setTimeout(() => {
     showUserSearchResults.value = false;
   }, 200);
@@ -558,6 +589,8 @@ const selectUser = (user) => {
   
   // Guardar usuario completo con shipping_cost
   selectedGiftUser.value = user;
+  recipientTouched.value = false;
+  recipientSearchError.value = '';
   
   // Ocultar resultados y limpiar búsqueda ANTES de actualizar el query
   // Esto previene que el watch vuelva a disparar la búsqueda
@@ -581,6 +614,8 @@ const selectUser = (user) => {
 watch(usernameSearchQuery, (newQuery) => {
   // Sync with shippingForm.username
   shippingForm.value.username = newQuery;
+  recipientTouched.value = false;
+  recipientSearchError.value = '';
 
   // Clear previous timeout
   if (usernameSearchTimeout) {
@@ -592,6 +627,7 @@ watch(usernameSearchQuery, (newQuery) => {
     crushStore.clearSearch();
     showUserSearchResults.value = false;
     selectedGiftUser.value = null; // Limpiar usuario seleccionado
+    recipientTouched.value = false;
     return;
   }
 
@@ -614,6 +650,8 @@ watch(shippingType, (newType) => {
     usernameSearchQuery.value = '';
     showUserSearchResults.value = false;
     selectedGiftUser.value = null; // Limpiar usuario seleccionado
+    recipientTouched.value = false;
+    recipientSearchError.value = '';
     crushStore.clearSearch();
   }
 });
@@ -695,7 +733,8 @@ const isFormValid = computed(() => {
   if (shippingType.value === 'gift') {
     return !!(
       shippingForm.value.email &&
-      shippingForm.value.username
+      shippingForm.value.username &&
+      selectedGiftUser.value
     );
   }
   
@@ -949,13 +988,13 @@ const prepareWompiPayment = async () => {
         shipping_address: shippingForm.value.address1,
         shipping_city: shippingForm.value.city,
         shipping_state: shippingForm.value.state,
-        shipping_postal_code: shippingForm.value.postalCode,
+        shipping_postal_code: shippingForm.value.zipCode,
         shipping_country: countryName,
         phone_number: `${shippingForm.value.phoneCode}${shippingForm.value.phone}`,
         shipping: baseShipping.value,
         subtotal: subtotal.value,
         total: total.value,
-        notes: shippingForm.value.note || '',
+        notes: shippingForm.value.additionalDetails || '',
         discount_code: discountData.value ? discountData.value.code : null
       };
     }
@@ -994,59 +1033,46 @@ const prepareWompiPayment = async () => {
  * ⭐ Cargar SDK de PayPal (USD)
  */
 const loadPayPalScript = async () => {
-  return new Promise(async (resolve, reject) => {
-    if (window.paypal) {
-      console.log('💳 [PAYPAL] SDK ya está cargado');
-      paypalScriptLoaded.value = true;
-      resolve();
-      return;
-    }
+  if (window.paypal) {
+    console.log('💳 [PAYPAL] SDK ya está cargado');
+    paypalScriptLoaded.value = true;
+    return;
+  }
 
-    const existingScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
-    if (existingScript) {
-      existingScript.addEventListener('load', () => {
-        console.log('💳 [PAYPAL] SDK cargado desde script existente');
-        paypalScriptLoaded.value = true;
-        resolve();
-      });
-      return;
-    }
+  const existingScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
+  if (existingScript) {
+    existingScript.remove();
+  }
 
-    console.log('💳 [PAYPAL] Cargando SDK...');
-    
-    if (!paymentStore.hasPayPalConfig) {
-      const configResult = await paymentStore.fetchPayPalConfig();
-      if (!configResult.success) {
-        throw new Error(configResult.error || 'PayPal configuration is unavailable');
-      }
-    }
+  console.log('💳 [PAYPAL] Cargando SDK...');
 
-    const clientId = paymentStore.paypalClientId;
-    if (!clientId) {
-      throw new Error('PayPal client ID is unavailable');
+  if (!paymentStore.hasPayPalConfig) {
+    const configResult = await paymentStore.fetchPayPalConfig();
+    if (!configResult.success) {
+      throw new Error(configResult.error || 'PayPal configuration is unavailable');
     }
+  }
 
-    const currency = currencyStore.currentCurrency; // USD
-    console.log('💳 [PAYPAL] Currency:', currency);
-    
-    const script = document.createElement('script');
-    // SDK v6 - Parámetros simplificados (buyer-country y enable-funding causan error 400)
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&components=buttons`;
-    script.setAttribute('data-sdk-integration-source', 'developer-studio');
-    
-    script.onload = () => {
-      console.log('✅ [PAYPAL] SDK cargado exitosamente');
-      paypalScriptLoaded.value = true;
-      resolve();
-    };
-    
-    script.onerror = (error) => {
-      console.error('❌ [PAYPAL] Error al cargar SDK:', error);
-      reject(error);
-    };
-    
+  const clientId = paymentStore.paypalClientId;
+  if (!clientId) {
+    throw new Error('PayPal client ID is unavailable');
+  }
+
+  const currency = currencyStore.currentCurrency;
+  console.log('💳 [PAYPAL] Currency:', currency);
+
+  const script = document.createElement('script');
+  script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&components=buttons`;
+  script.setAttribute('data-sdk-integration-source', 'developer-studio');
+
+  await new Promise((resolve, reject) => {
+    script.onload = resolve;
+    script.onerror = reject;
     document.head.appendChild(script);
   });
+
+  console.log('✅ [PAYPAL] SDK cargado exitosamente');
+  paypalScriptLoaded.value = true;
 };
 
 /**
@@ -1196,6 +1222,14 @@ const validateDiscountCode = async () => {
       );
       
       console.log('✅ [DISCOUNT] Descuento aplicado:', discountData.value);
+    } else if (!result.success && result.status >= 500) {
+      discountData.value = null;
+      discountError.value = 'Error al validar el código';
+
+      await showError(
+        'Hubo un error al validar el código. Por favor intenta de nuevo.',
+        '❌ Error'
+      );
     } else {
       // Código no válido
       discountData.value = null;
@@ -1411,9 +1445,8 @@ watch(showPayPalButtons, async (newValue) => {
   if (newValue && currencyStore.currentCurrency === 'USD') {
     try {
       await loadPayPalScript();
-      setTimeout(() => {
-        initPayPalButtons();
-      }, 100);
+      await nextTick();
+      initPayPalButtons();
     } catch (error) {
       console.error('❌ [PAYPAL] Error al inicializar:', error);
       await showError('No se pudo cargar PayPal.', '❌ Error');

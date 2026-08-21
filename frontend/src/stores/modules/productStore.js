@@ -1120,6 +1120,13 @@ export const useProductStore = defineStore('product', () => {
         page: 1 
       });
 
+      if (!productsResult.success) {
+        return {
+          success: false,
+          error: productsResult.error || 'Failed to fetch products'
+        };
+      }
+
       // 4. ⭐ Cargar estadísticas EN BACKGROUND después de mostrar productos
       fetchWooStats();
 

@@ -40,6 +40,7 @@ if TRANSLATION_ENGINE not in {'argos', 'ctranslate2_cpu'}:
     raise ImproperlyConfigured(
         'TRANSLATION_ENGINE must be argos or ctranslate2_cpu'
     )
+TRANSLATION_RUNTIME_ENABLED = True
 TRANSLATION_SOCKET_PATH = config(
     'TRANSLATION_SOCKET_PATH',
     default='/run/crushme-translation/translation.sock',

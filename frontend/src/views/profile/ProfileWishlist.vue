@@ -20,7 +20,7 @@
             <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             <span class="hidden sm:inline">{{ $t('profile.wishlist.goToShop') }}</span>
           </button>
-          <button v-if="!searchedUser" @click="showCreateModal = true" :disabled="wishlistStore.isUpdating" class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">
+          <button v-if="!searchedUser" @click="showCreateModal = true" :aria-label="$t('profile.wishlist.createWishlist')" :disabled="wishlistStore.isUpdating" class="flex items-center gap-2 px-3 md:px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-xs md:text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">
             <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             {{ $t('profile.wishlist.create') }}
           </button>
@@ -35,6 +35,7 @@
           </div>
           <input 
             v-model="searchQuery" 
+            data-testid="wishlist-user-search"
             type="text" 
             :placeholder="$t('profile.wishlist.searchPlaceholder')" 
             class="block w-full pl-10 pr-20 py-2.5 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:ring-2 focus:ring-brand-pink-medium focus:border-transparent text-sm" 
@@ -42,12 +43,18 @@
           <button 
             type="submit" 
             class="absolute inset-y-0 right-0 flex items-center pr-3 text-brand-pink-medium hover:text-brand-pink-dark font-medium text-sm"
-            :disabled="!searchQuery.trim()"
           >
             {{ $t('profile.wishlist.search') }}
           </button>
         </form>
       </div>
+
+      <p v-if="actionError" role="alert" data-testid="wishlist-action-error" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        {{ actionError }}
+      </p>
+      <p v-if="actionStatus" role="status" data-testid="wishlist-action-status" class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        {{ actionStatus }}
+      </p>
 
       <!-- Loading -->
       <div v-if="wishlistStore.isLoading" class="flex justify-center py-12">
@@ -55,13 +62,13 @@
       </div>
 
       <!-- Error -->
-      <div v-else-if="wishlistStore.error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div v-else-if="wishlistStore.error" role="alert" data-testid="wishlist-store-error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
         <p class="text-sm text-red-800">{{ wishlistStore.error }}</p>
       </div>
 
       <!-- Wishlists -->
       <div v-else-if="filteredWishlists.length > 0" class="space-y-3 md:space-y-4">
-        <div v-for="wishlist in filteredWishlists" :key="wishlist.id" class="wishlist-card border-2 border-gray-900 rounded-xl md:rounded-2xl overflow-hidden">
+        <div v-for="wishlist in filteredWishlists" :key="wishlist.id" :data-testid="`wishlist-card-${wishlist.id}`" class="wishlist-card border-2 border-gray-900 rounded-xl md:rounded-2xl overflow-hidden">
           <div class="p-4 md:p-6">
             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
               <div class="flex-1">
@@ -74,12 +81,12 @@
                 </p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
-                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :disabled="copyingId === wishlist.id" class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap disabled:opacity-50">
+                <button v-if="wishlist.is_public" @click="copyWishlistLink(wishlist)" :data-testid="`wishlist-copy-${wishlist.id}`" :disabled="copyingId === wishlist.id" class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap disabled:opacity-50">
                   <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                   <span class="hidden sm:inline">{{ copyingId === wishlist.id ? $t('profile.wishlist.copied') : $t('profile.wishlist.copyWishlistLink') }}</span>
                 </button>
-                <button @click="buyWishlist(wishlist)" class="px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
-                <button @click="toggleWishlist(wishlist.id)" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <button @click="buyWishlist(wishlist)" :data-testid="`wishlist-buy-${wishlist.id}`" class="px-3 md:px-4 py-1.5 md:py-2 bg-brand-purple-light text-white rounded-full text-xs font-medium hover:opacity-90 transition-opacity whitespace-nowrap">{{ searchedUser ? $t('profile.wishlist.buyWishlist') : $t('profile.wishlist.buyMyWishlist') }}</button>
+                <button @click="toggleWishlist(wishlist.id)" :data-testid="`wishlist-expand-${wishlist.id}`" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <svg class="w-5 h-5 text-gray-600 transition-transform" :class="{ 'rotate-180': expandedWishlists.includes(wishlist.id) }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
               </div>
@@ -100,6 +107,7 @@
                 <button 
                   v-if="!searchedUser"
                   @click="removeProduct(wishlist.id, item.woocommerce_product_id)"
+                  :data-testid="`wishlist-remove-${wishlist.id}-${item.woocommerce_product_id}`"
                   class="absolute top-2 right-2 z-10 bg-white hover:bg-red-600 text-gray-600 hover:text-white rounded-full p-1.5 shadow-md transition-colors"
                   :title="$t('profile.wishlist.removeFromWishlist')"
                 >
@@ -143,9 +151,12 @@
       <!-- Empty -->
       <div v-else class="text-center py-12">
         <ClipboardDocumentListIcon class="mx-auto h-16 w-16 text-gray-400" />
-        <h3 class="mt-4 text-lg font-medium text-gray-900">{{ $t('profile.wishlist.noWishlistsYet') }}</h3>
-        <p class="mt-2 text-sm text-gray-500">{{ $t('profile.wishlist.createFirstWishlist') }}</p>
-        <button @click="showCreateModal = true" class="mt-4 inline-flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
+        <h3 v-if="searchedUser" data-testid="wishlist-search-empty" class="mt-4 text-lg font-medium text-gray-900">
+          {{ $t('profile.wishlist.noPublicWishlists', { username: searchedUser.username }) }}
+        </h3>
+        <h3 v-else class="mt-4 text-lg font-medium text-gray-900">{{ $t('profile.wishlist.noWishlistsYet') }}</h3>
+        <p v-if="!searchedUser" class="mt-2 text-sm text-gray-500">{{ $t('profile.wishlist.createFirstWishlist') }}</p>
+        <button v-if="!searchedUser" @click="showCreateModal = true" class="mt-4 inline-flex items-center gap-2 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-full text-sm font-medium hover:bg-brand-pink-medium hover:text-white transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
           {{ $t('profile.wishlist.createWishlist') }}
         </button>
@@ -172,7 +183,7 @@
         </div>
         <div class="flex gap-3 mt-6">
           <button @click="showCreateModal = false" class="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-100 transition-colors">{{ $t('profile.wishlist.cancel') }}</button>
-          <button @click="createWishlist" :disabled="!newWishlist.name || wishlistStore.isUpdating" class="flex-1 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-lg hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">{{ wishlistStore.isUpdating ? $t('profile.wishlist.creating') : $t('profile.wishlist.create') }}</button>
+          <button @click="createWishlist" :disabled="wishlistStore.isUpdating" class="flex-1 px-4 py-2 border-2 border-brand-pink-medium text-brand-pink-medium bg-white rounded-lg hover:bg-brand-pink-medium hover:text-white transition-colors disabled:opacity-50">{{ wishlistStore.isUpdating ? $t('profile.wishlist.creating') : $t('profile.wishlist.create') }}</button>
         </div>
       </div>
     </div>
@@ -202,6 +213,8 @@ const loadedWishlistDetails = ref({}) // Cache de wishlists con detalles cargado
 const newWishlist = ref({ name: '', description: '', is_public: false })
 const searchedUser = ref(null) // Info del usuario buscado
 const searchedWishlists = ref([]) // Wishlists del usuario buscado
+const actionError = ref(null)
+const actionStatus = ref(null)
 
 const filteredWishlists = computed(() => {
   // Si estamos viendo wishlists de otro usuario, mostrar esas
@@ -213,6 +226,7 @@ const filteredWishlists = computed(() => {
 })
 
 const toggleWishlist = async (id) => {
+  actionError.value = null
   const index = expandedWishlists.value.indexOf(id)
   
   if (index > -1) {
@@ -244,6 +258,8 @@ const toggleWishlist = async (id) => {
             first_item_example: result.data.items?.[0]
           })
           loadedWishlistDetails.value[id] = result.data
+        } else {
+          actionError.value = result.error
         }
       } catch (err) {
         console.error('Error loading wishlist details:', err)
@@ -309,7 +325,15 @@ const handleAddToCart = (product) => {
 }
 
 const createWishlist = async () => {
-  const result = await wishlistStore.createWishlist(newWishlist.value)
+  actionError.value = null
+  actionStatus.value = null
+  const name = newWishlist.value.name.trim()
+  if (!name) {
+    actionError.value = t('profile.wishlist.nameRequired')
+    return
+  }
+
+  const result = await wishlistStore.createWishlist({ ...newWishlist.value, name })
   if (result.success) {
     showCreateModal.value = false
     newWishlist.value = { name: '', description: '', is_public: false }
@@ -317,13 +341,20 @@ const createWishlist = async () => {
 }
 
 const copyWishlistLink = async (wishlist) => {
-  if (!wishlist.public_url) return
+  actionError.value = null
+  actionStatus.value = null
+  if (!wishlist.public_url) {
+    actionError.value = t('profile.wishlist.copyFailed')
+    return
+  }
   try {
     await navigator.clipboard.writeText(wishlist.public_url)
     copyingId.value = wishlist.id
+    actionStatus.value = t('profile.wishlist.copied')
     setTimeout(() => copyingId.value = null, 2000)
   } catch (err) {
     console.error('Failed to copy:', err)
+    actionError.value = t('profile.wishlist.copyFailed')
   }
 }
 
@@ -359,6 +390,7 @@ const buyWishlist = (wishlist) => {
 
 const removeProduct = async (wishlistId, woocommerceProductId) => {
   if (!confirm(t('profile.wishlist.confirmRemove'))) return
+  actionError.value = null
   
   const result = await wishlistStore.removeWooCommerceProductFromWishlist(wishlistId, woocommerceProductId)
   
@@ -368,6 +400,8 @@ const removeProduct = async (wishlistId, woocommerceProductId) => {
     if (detailsResult.success) {
       loadedWishlistDetails.value[wishlistId] = detailsResult.data
     }
+  } else {
+    actionError.value = result.error
   }
 }
 
@@ -376,7 +410,12 @@ const goToShop = () => {
 }
 
 const searchByUsername = async () => {
-  if (!searchQuery.value.trim()) return
+  actionError.value = null
+  actionStatus.value = null
+  if (!searchQuery.value.trim()) {
+    actionError.value = t('profile.wishlist.usernameRequired')
+    return
+  }
   
   // Limpiar el @ si lo escribió
   let username = searchQuery.value.trim()
@@ -404,10 +443,14 @@ const searchByUsername = async () => {
       created_at: wishlist.created_at,
       user_username: username
     }))
+  } else {
+    actionError.value = result.error
   }
 }
 
 const clearSearch = async () => {
+  actionError.value = null
+  actionStatus.value = null
   searchQuery.value = ''
   searchedUser.value = null
   searchedWishlists.value = []

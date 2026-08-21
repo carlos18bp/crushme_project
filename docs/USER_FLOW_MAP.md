@@ -1,11 +1,13 @@
 # Mapa de flujos de usuario de CrushMe
 
-**Fecha de corte:** 2026-08-20
+**Fecha de corte:** 2026-08-21
 **Registro ejecutable:** `frontend/e2e/flow-definitions.json`
 **Fuente de verdad:** rutas Vue, componentes, stores consumidos por UI,
 URLs/vistas Django y Django Admin en `2dec475`.
 **Alcance:** 64 flujos, 176 outcomes, 26 P1 y 27 P2.
-**Cobertura E2E:** no auditada en esta Fase 1; no inferir cobertura desde la existencia de specs.
+**Cobertura E2E:** 64/64 flujos cubiertos por 178 tests calificables en 23
+specs; 0 parciales, junk-only, no validados o faltantes. Auditoría estricta:
+99/100, 0 errores y 0 advertencias.
 
 ## Roles
 

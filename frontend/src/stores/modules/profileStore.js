@@ -17,6 +17,7 @@ export const useProfileStore = defineStore('profile', () => {
   const profile = ref(null);
   const isLoading = ref(false);
   const error = ref(null);
+  const profileError = ref(null);
 
   // Getters
   const hasProfile = computed(() => !!profile.value);
@@ -95,6 +96,7 @@ export const useProfileStore = defineStore('profile', () => {
 
     isLoading.value = true;
     error.value = null;
+    profileError.value = null;
 
     try {
       const response = await get_request('auth/profile/');
@@ -105,6 +107,7 @@ export const useProfileStore = defineStore('profile', () => {
       return { success: true, data: response.data };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al obtener el perfil';
+      profileError.value = error.value;
       return { success: false, error: error.value };
     } finally {
       isLoading.value = false;
@@ -637,6 +640,7 @@ export const useProfileStore = defineStore('profile', () => {
   function clearProfile() {
     profile.value = null;
     error.value = null;
+    profileError.value = null;
   }
 
   /**
@@ -644,6 +648,7 @@ export const useProfileStore = defineStore('profile', () => {
    */
   function clearError() {
     error.value = null;
+    profileError.value = null;
   }
 
   // ============================================
@@ -899,6 +904,7 @@ export const useProfileStore = defineStore('profile', () => {
   // State for feed
   const feedItems = ref([]);
   const isLoadingFeed = ref(false);
+  const feedError = ref(null);
   const feedPagination = ref({
     count: 0,
     next: null,
@@ -916,7 +922,7 @@ export const useProfileStore = defineStore('profile', () => {
     }
 
     isLoadingFeed.value = true;
-    error.value = null;
+    feedError.value = null;
 
     try {
       const response = await get_request('feeds/my-feeds/');
@@ -935,6 +941,7 @@ export const useProfileStore = defineStore('profile', () => {
       };
     } catch (err) {
       error.value = err.response?.data?.error || 'Error al obtener el feed';
+      feedError.value = error.value;
       return { success: false, error: error.value };
     } finally {
       isLoadingFeed.value = false;
@@ -950,6 +957,7 @@ export const useProfileStore = defineStore('profile', () => {
     profile,
     isLoading,
     error,
+    profileError,
     
     // Favorites state
     favoriteProducts,
@@ -1021,6 +1029,7 @@ export const useProfileStore = defineStore('profile', () => {
     // Feed state
     feedItems,
     isLoadingFeed,
+    feedError,
     feedPagination,
     
     // Feed getters
@@ -1031,4 +1040,3 @@ export const useProfileStore = defineStore('profile', () => {
     fetchMyFeed
   };
 });
-

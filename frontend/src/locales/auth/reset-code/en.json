@@ -2,6 +2,7 @@
   "title": "Enter verification code.",
   "subtitle": "Enter the code we sent to your email to continue. 🔐",
   "codePlaceholder": "0",
+  "codeDigitLabel": "Verification code digit {number}",
   "verifyButton": "Verify code",
   "verifyingButton": "Verifying...",
   "didntReceive": "Didn't receive the code?",
@@ -19,6 +20,5 @@
   },
   "resendSuccess": "Verification code sent successfully!"
 }
-
 
 

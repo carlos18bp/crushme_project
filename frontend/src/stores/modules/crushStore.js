@@ -23,6 +23,7 @@ export const useCrushStore = defineStore('crush', () => {
   const isLoading = ref(false);
   const isSearching = ref(false);
   const error = ref(null);
+  const searchError = ref(null);
 
   // Getters
   const hasCrushProfile = computed(() => !!crushProfile.value);
@@ -64,7 +65,7 @@ export const useCrushStore = defineStore('crush', () => {
       const errorMessage = err.response?.data?.error || err.message || 'Error fetching profile';
       error.value = errorMessage;
       console.error('❌ Error fetching public profile:', errorMessage);
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       isLoading.value = false;
     }
@@ -95,7 +96,7 @@ export const useCrushStore = defineStore('crush', () => {
       const errorMessage = err.response?.data?.error || err.message || 'Error fetching random Crush';
       error.value = errorMessage;
       console.error('❌ Error fetching random Crush:', errorMessage);
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       isLoading.value = false;
     }
@@ -212,7 +213,7 @@ export const useCrushStore = defineStore('crush', () => {
     }
 
     isSearching.value = true;
-    error.value = null;
+    searchError.value = null;
 
     try {
       console.log(`🔍 [SEARCH] Buscando usuarios: "${query}" (limit: ${limit})...`);
@@ -235,7 +236,7 @@ export const useCrushStore = defineStore('crush', () => {
       }
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'Error searching users';
-      error.value = errorMessage;
+      searchError.value = errorMessage;
       console.error('❌ [SEARCH] Error buscando usuarios:', errorMessage);
       searchResults.value = [];
       throw err;
@@ -297,7 +298,7 @@ export const useCrushStore = defineStore('crush', () => {
    */
   function clearSearch() {
     searchResults.value = [];
-    error.value = null;
+    searchError.value = null;
     console.log('🧹 Search results cleared');
   }
 
@@ -317,6 +318,7 @@ export const useCrushStore = defineStore('crush', () => {
       count: 0
     };
     error.value = null;
+    searchError.value = null;
     console.log('🧹 All Crush data cleared');
   }
 
@@ -348,6 +350,7 @@ export const useCrushStore = defineStore('crush', () => {
     isLoading,
     isSearching,
     error,
+    searchError,
 
     // Getters
     hasCrushProfile,
@@ -375,6 +378,4 @@ export const useCrushStore = defineStore('crush', () => {
     getProfilePicture
   };
 });
-
-
 

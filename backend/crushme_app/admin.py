@@ -5,8 +5,7 @@ Provides comprehensive admin interface for all models with optimized views and i
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
-from django.urls import reverse
-from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from django_attachments.admin import AttachmentsAdminMixin
 from .forms.product import ProductForm
 
@@ -408,7 +407,10 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ('subtotal_display', 'created_at')
-    fields = ('product', 'product_name', 'quantity', 'unit_price', 'subtotal_display')
+    fields = (
+        'woocommerce_product_id', 'woocommerce_variation_id', 'product_name',
+        'quantity', 'unit_price', 'subtotal_display'
+    )
     
     def subtotal_display(self, obj):
         """Display calculated subtotal"""
@@ -429,7 +431,9 @@ class OrderAdmin(admin.ModelAdmin):
         'total_display', 'total_items_display', 'created_at'
     )
     list_filter = ('status', 'created_at', 'shipped_at', 'delivered_at')
-    search_fields = ('order_number', 'user__email', 'shipping_address')
+    search_fields = (
+        'order_number', 'user__email', 'email', 'name', 'address_line_1', 'city'
+    )
     readonly_fields = (
         'order_number', 'created_at', 'updated_at', 
         'total_items_display', 'full_shipping_address'
@@ -442,8 +446,8 @@ class OrderAdmin(admin.ModelAdmin):
         }),
         ('Shipping Information', {
             'fields': (
-                'shipping_address', 'shipping_city', 'shipping_state',
-                'shipping_postal_code', 'shipping_country', 'phone_number',
+                'address_line_1', 'address_line_2', 'city', 'state',
+                'zipcode', 'country', 'phone',
                 'full_shipping_address'
             )
         }),
@@ -1266,8 +1270,6 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 
 # Customize admin site header and title
 # Custom AdminSite to organize models by functional sections
-from django.utils.translation import gettext_lazy as _
-
 class CrushMeAdminSite(admin.AdminSite):
     """
     Custom AdminSite to organize models by functional sections.

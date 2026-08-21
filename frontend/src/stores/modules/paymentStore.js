@@ -376,7 +376,8 @@ export const usePaymentStore = defineStore('payment', () => {
       return {
         success: false,
         error: error.value,
-        data: err.response?.data
+        data: err.response?.data,
+        status: err.response?.status
       };
     } finally {
       isLoading.value = false;
@@ -433,4 +434,3 @@ export const usePaymentStore = defineStore('payment', () => {
     getPaymentState
   };
 });
-

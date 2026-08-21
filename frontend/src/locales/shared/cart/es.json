@@ -130,6 +130,10 @@
         "emailGift": "Enviaremos la factura de compra a este correo (privado)",
         "recipientUsername": "¿Quién recibirá este regalo?"
       },
+      "errors": {
+        "selectRecipient": "Selecciona un destinatario válido de los resultados.",
+        "recipientSearch": "No pudimos buscar destinatarios para el regalo."
+      },
       "buttons": {
         "payWithWompi": "Pagar con Wompi →",
         "continueToPay": "Continuar al pago →",

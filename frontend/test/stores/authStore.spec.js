@@ -72,4 +72,46 @@ describe('authStore', () => {
     expect(localStorage.getItem('refresh_token')).toBeNull();
     expect(localStorage.getItem('user')).toBeNull();
   });
+
+  test('persists the verified account session', async () => {
+    // Fails if email verification succeeds without creating an authenticated browser session.
+    const responseData = {
+      access: 'verified-access',
+      refresh: 'verified-refresh',
+      user: { id: 9, username: 'verified-user' },
+    };
+    mock.onPost('/api/auth/verify-email/').reply(200, responseData);
+    const store = useAuthStore();
+
+    const result = await store.verifyEmail({ email: 'verified@example.test', verification_code: '1234' });
+
+    expect(result).toEqual({ success: true, data: responseData });
+    expect(store.user).toEqual(responseData.user);
+    expect(localStorage.getItem('access_token')).toBe('verified-access');
+  });
+
+  test('returns the exact rejected verification message', async () => {
+    // Fails if a rejected code is hidden behind a generic verification error.
+    mock.onPost('/api/auth/verify-email/').reply(400, {
+      verification_code: ['Code expired'],
+    });
+    const store = useAuthStore();
+
+    const result = await store.verifyEmail({ email: 'verified@example.test', verification_code: '0000' });
+
+    expect(result).toEqual({ success: false, error: 'Code expired' });
+    expect(store.error).toBe('Code expired');
+    expect(store.user).toBeNull();
+  });
+
+  test('exposes the password-reset delivery result', async () => {
+    // Fails if password recovery reports success without preserving the server confirmation.
+    mock.onPost('/api/auth/forgot-password/').reply(200, { message: 'Reset code sent' });
+    const store = useAuthStore();
+
+    const result = await store.forgotPassword('buyer@example.test');
+
+    expect(result).toEqual({ success: true, message: 'Reset code sent' });
+    expect(store.isLoading).toBe(false);
+  });
 });

@@ -1,5 +1,5 @@
 <template>
-  <section class="product-reviews-section">
+  <section data-testid="product-reviews" class="product-reviews-section">
     <div class="reviews-container">
       
       <!-- Rating & Reviews Section -->
@@ -33,13 +33,13 @@
           </div>
           
           <!-- Error State -->
-          <div v-else-if="reviewStore.reviewsError" class="error-state">
+          <div v-else-if="reviewStore.reviewsError" role="alert" data-testid="reviews-error" class="error-state">
             <p class="error-text">{{ reviewStore.reviewsError }}</p>
-            <button @click="loadReviews" class="retry-button">{{ $t('productReviews.retry') }}</button>
+            <button data-testid="reviews-retry" @click="loadReviews" class="retry-button">{{ $t('productReviews.retry') }}</button>
           </div>
           
           <!-- No Reviews State -->
-          <div v-else-if="reviewStore.getTotalReviews === 0" class="empty-state">
+          <div v-else-if="reviewStore.getTotalReviews === 0" data-testid="reviews-empty" class="empty-state">
             <p class="empty-text">{{ $t('productReviews.noReviews') }}</p>
           </div>
           
@@ -50,6 +50,7 @@
             <div 
               v-for="review in reviewStore.getProductReviews" 
               :key="review.id"
+              :data-testid="`review-card-${review.id}`"
               class="review-card"
               :class="{ 'highlighted': review.is_user_review }"
             >
@@ -518,4 +519,3 @@ watch(() => props.productId, (newId) => {
   }
 }
 </style>
-

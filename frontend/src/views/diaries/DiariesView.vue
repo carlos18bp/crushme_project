@@ -13,9 +13,9 @@
         </div>
 
         <!-- Error State -->
-        <div v-else-if="crushStore.error" class="error-container">
-          <p class="error-text">{{ crushStore.error }}</p>
-          <button @click="loadRandomCrush" class="retry-button">{{ $t('diaries.publicProfile.retry') }}</button>
+        <div v-else-if="viewError" role="alert" data-testid="diaries-view-error" class="error-container">
+          <p class="error-text">{{ viewError }}</p>
+          <button data-testid="diaries-view-retry" @click="loadRandomCrush" class="retry-button">{{ $t('diaries.publicProfile.retry') }}</button>
         </div>
 
         <!-- Content -->
@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed, watch } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useCrushStore } from '@/stores'
@@ -69,6 +69,7 @@ const crushStore = useCrushStore()
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const viewError = ref(null)
 
 // Mapear los datos del API al formato que espera PublicProfile
 // Usa crushProfile si está disponible (cuando se selecciona un usuario específico)
@@ -97,6 +98,7 @@ const profileData = computed(() => {
 
 // Cargar perfil de usuario específico o crush aleatorio
 async function loadProfile() {
+  viewError.value = null
   // Obtener username de props o de la ruta
   const username = props.username || route.params.username
   
@@ -107,6 +109,7 @@ async function loadProfile() {
       console.log(`✅ Perfil de @${username} cargado en DiariesView`)
     } catch (error) {
       console.error(`❌ Error cargando perfil de @${username}:`, error)
+      viewError.value = crushStore.error || error.message || t('diaries.publicProfile.error')
     }
   } else {
     // Si no hay username, cargar un crush aleatorio
@@ -122,17 +125,20 @@ async function loadProfile() {
       }
     } catch (error) {
       console.error('❌ Error cargando crush aleatorio:', error)
+      viewError.value = crushStore.error || error.message || t('diaries.publicProfile.error')
     }
   }
 }
 
 // Cargar perfil aleatorio cuando se inicializa
 async function loadRandomCrush() {
+  viewError.value = null
   try {
     await crushStore.fetchRandomCrush()
     console.log('✅ Crush aleatorio cargado en DiariesView')
   } catch (error) {
     console.error('❌ Error cargando crush aleatorio:', error)
+    viewError.value = crushStore.error || error.message || t('diaries.publicProfile.error')
   }
 }
 
@@ -338,4 +344,3 @@ onMounted(() => {
   }
 }
 </style>
-
