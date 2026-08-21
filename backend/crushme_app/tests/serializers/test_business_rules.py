@@ -67,7 +67,7 @@ def test_wishlist_rejects_one_character_name():
 def test_wishlist_rejects_unknown_shipping_keys():
     """Fails if arbitrary nested shipping data bypasses the documented contract."""
     serializer = WishListCreateUpdateSerializer(
-        data={"name": "Birthday", "shipping_data": {"secret_note": "unsafe"}},
+        data={"name": "Birthday", "shipping_data": {"secret_note": "unsafe"}},  # pragma: allowlist secret
     )
 
     assert serializer.is_valid() is False

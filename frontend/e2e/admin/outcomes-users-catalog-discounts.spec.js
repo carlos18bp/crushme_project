@@ -1,7 +1,7 @@
 import { test, expect } from '../helpers/test.js';
 
 const adminUrl = 'http://127.0.0.1:8001/admin/';
-const adminPassword = 'E2E-admin-password-123!';
+const adminPassword = 'E2E-admin-password-123!'; // pragma: allowlist secret
 
 async function loginAsAdmin(page) {
   await page.goto(adminUrl);

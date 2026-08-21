@@ -16,7 +16,7 @@ async function loginAsE2EUser(page) {
   await expect(page).toHaveURL('/en/profile');
 }
 
-async function fillResetPasswordForm(page, password = 'Replacement-password-456!') {
+async function fillResetPasswordForm(page, password = 'Replacement-password-456!') { // pragma: allowlist secret
   await page.getByRole('textbox', { name: 'New password', exact: true }).fill(password);
   await page.getByRole('textbox', { name: 'Confirm new password', exact: true }).fill(password);
 }

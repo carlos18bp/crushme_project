@@ -14,7 +14,7 @@ def test_order_change_view_renders_shipping_and_item_fields(client):
     admin = User.objects.create_superuser(
         username="admin-view",
         email="admin-view@example.test",
-        password="Admin-password-123!",
+        password="Admin-password-123!",  # pragma: allowlist secret
     )
     order = Order.objects.create(
         user=admin,

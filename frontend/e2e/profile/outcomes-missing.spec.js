@@ -12,7 +12,7 @@ const profileResponse = {
   crush_verification_status: 'none',
 };
 
-async function loginAndOpenProfile(page, username = 'e2e_user', password = 'E2E-password-123!') {
+async function loginAndOpenProfile(page, username = 'e2e_user', password = 'E2E-password-123!') { // pragma: allowlist secret
   await page.goto('/en/login');
   await page.getByTestId('login-username').fill(username);
   await page.getByTestId('login-password').fill(password);
