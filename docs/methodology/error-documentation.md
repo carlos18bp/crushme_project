@@ -30,6 +30,19 @@ This file records reusable failures, risks, and resolutions.
 
 ## Resolved Issues
 
+### [ERR-004] Translation cold start breached the capacity headroom gate
+
+- **Date**: 2026-08-21
+- **Context**: The first production restart after model pages left the host
+  cache charged 200.5 MiB to the translation cgroup, leaving 21.7% against the
+  original 256 MiB hard limit even though process RSS remained about 160 MiB.
+- **Root Cause**: Authoring measurements captured hot-cache RSS but not the
+  reclaimable model file cache charged during a production cold start.
+- **Resolution**: Raised only the isolated daemon limits to
+  `MemoryHigh=240M` and `MemoryMax=320M`. CPU, thread count, package allowlist,
+  and runtime behavior are unchanged; the observed cold peak retains about
+  37% hard-limit headroom.
+
 ### [ERR-003] Product cards exposed an absent stock translation key
 
 - **Date**: 2026-08-20
