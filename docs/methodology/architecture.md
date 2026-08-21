@@ -108,7 +108,7 @@ server-priced currency responses remain unchanged business contracts.
 |---|---:|---:|---:|---:|---:|
 | `crushme_project.service` | 500M | 650M | 60% | 80 | 200 |
 | `crushme-huey.service` | 350M | 450M | 30% | 50 | 400 |
-| `crushme-translation.service` | 240M | 320M | 40% | 32 | 300 |
+| `crushme-translation.service` | 200M | 320M | 40% | 32 | 300 |
 
 ### Periodic Work
 

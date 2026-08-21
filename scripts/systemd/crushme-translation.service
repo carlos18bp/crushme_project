@@ -19,7 +19,7 @@ StandardError=journal
 Restart=on-failure
 RestartSec=5
 
-MemoryHigh=240M
+MemoryHigh=200M
 MemoryMax=320M
 CPUQuota=40%
 TasksMax=32

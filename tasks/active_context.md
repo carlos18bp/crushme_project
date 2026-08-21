@@ -34,9 +34,9 @@ stage-1 observation without changing CrushMe business behavior.
 - A cold restart charged 71.4 MiB of model file cache to the daemon cgroup and
   produced a 200.5 MiB peak. Process RSS stayed near 160 MiB, but the original
   256 MiB hard limit left only 21.7% headroom.
-- The cold-start correction raises only the isolated daemon capacity to
-  `MemoryHigh=240M` and `MemoryMax=320M`; it does not change runtime allocation,
-  CPU quota, threads, packages, models, or application behavior.
+- The cold-start correction preserves `MemoryHigh=200M` for early file-cache
+  reclaim and raises only `MemoryMax` to 320M. It does not change runtime
+  allocation, CPU quota, threads, packages, models, or application behavior.
 
 ## Active Decisions
 

@@ -94,7 +94,8 @@ Only after the stage-1 observation passes:
 
 Measured authoring baseline on 2026-08-20: 158 MB for both static-int8 models,
 233 MB for the isolated runtime, and 156 MiB hot daemon RSS with two threads.
-A production cold start on 2026-08-21 peaked at 200.5 MiB after charging 71.4
-MiB of model file cache to the cgroup. The limits are therefore
-`MemoryHigh=240M`, `MemoryMax=320M`, and `CPUQuota=40%`: runtime consumption is
-unchanged while the measured cold-start peak retains 37% hard-limit headroom.
+Production cold starts on 2026-08-21 confirmed that reclaimable model file
+cache grows to the configured soft threshold. The limits therefore keep
+`MemoryHigh=200M` for early reclaim and use `MemoryMax=320M` as the hard safety
+cap, with `CPUQuota=40%`. Runtime consumption is unchanged while the measured
+200.5 MiB cold-start peak retains 37% hard-limit headroom.
