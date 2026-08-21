@@ -38,10 +38,11 @@ This file records reusable failures, risks, and resolutions.
   original 256 MiB hard limit even though process RSS remained about 160 MiB.
 - **Root Cause**: Authoring measurements captured hot-cache RSS but not the
   reclaimable model file cache charged during a production cold start.
-- **Resolution**: Raised only the isolated daemon limits to
-  `MemoryHigh=240M` and `MemoryMax=320M`. CPU, thread count, package allowlist,
-  and runtime behavior are unchanged; the observed cold peak retains about
-  37% hard-limit headroom.
+- **Resolution**: Preserved `MemoryHigh=200M` so reclaim starts early and
+  raised only `MemoryMax` to 320M. A validation attempt with a 240M soft limit
+  proved that file cache grows to that threshold. CPU, threads, package
+  allowlist, and runtime behavior are unchanged; the bounded 200.5 MiB peak
+  retains about 37% hard-limit headroom.
 
 ### [ERR-003] Product cards exposed an absent stock translation key
 
