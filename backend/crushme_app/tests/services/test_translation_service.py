@@ -41,6 +41,18 @@ def test_same_language_bypasses_translation_engine(translate_offline):
     translate_offline.assert_not_called()
 
 
+@patch("crushme_app.services.translation_service._translate_offline")
+@override_settings(TRANSLATION_RUNTIME_ENABLED=False)
+def test_disabled_runtime_returns_original_text(translate_offline):
+    """Hermetic environments must not load an offline inference engine."""
+    translator = TranslationService(target_language="en")
+
+    result = translator.translate_if_needed("Un regalo", content_language="es")
+
+    assert result == "Un regalo"
+    translate_offline.assert_not_called()
+
+
 @patch(
     "crushme_app.services.translation_service._translate_with_cpu_service",
     return_value="A gift",

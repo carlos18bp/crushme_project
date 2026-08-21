@@ -31,6 +31,7 @@
               inputmode="numeric"
               pattern="[0-9]"
               :placeholder="$t('resetCode.codePlaceholder')"
+              :aria-label="$t('resetCode.codeDigitLabel', { number: index + 1 })"
               class="code-input"
               @input="handleInput($event, index)"
               @keydown="handleKeyDown($event, index)"
@@ -456,4 +457,3 @@ const resendCode = async () => {
   }
 }
 </style>
-

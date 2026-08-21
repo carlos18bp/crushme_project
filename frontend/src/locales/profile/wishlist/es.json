@@ -31,7 +31,9 @@
   "creating": "Creando...",
   "noDescription": "Sin descripción",
   "removeFromWishlist": "Eliminar de la lista",
-  "confirmRemove": "¿Estás seguro de que quieres eliminar este producto?"
+  "confirmRemove": "¿Estás seguro de que quieres eliminar este producto?",
+  "nameRequired": "Ingresa un nombre para la lista.",
+  "usernameRequired": "Ingresa un usuario para buscar.",
+  "copyFailed": "No se pudo copiar el enlace de la lista.",
+  "noPublicWishlists": "No se encontraron listas públicas para {'@'}{username}."
 }
-
-

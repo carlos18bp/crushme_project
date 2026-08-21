@@ -2,6 +2,7 @@
   "title": "Ingresa el código de verificación.",
   "subtitle": "Ingresa el código que enviamos a tu correo para continuar. 🔐",
   "codePlaceholder": "0",
+  "codeDigitLabel": "Dígito {number} del código de verificación",
   "verifyButton": "Verificar código",
   "verifyingButton": "Verificando...",
   "didntReceive": "¿No recibiste el código?",
@@ -19,6 +20,5 @@
   },
   "resendSuccess": "¡Código de verificación enviado exitosamente!"
 }
-
 
 

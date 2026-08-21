@@ -32,4 +32,4 @@ cd "$BACKEND_DIR"
 "$PYTHON" manage.py migrate --noinput
 "$PYTHON" manage.py flush --noinput
 "$PYTHON" manage.py seed_e2e_data
-exec "$PYTHON" manage.py runserver "127.0.0.1:$E2E_BACKEND_PORT" --noreload
+exec "$PYTHON" manage.py runserver "127.0.0.1:$E2E_BACKEND_PORT" --noreload --insecure

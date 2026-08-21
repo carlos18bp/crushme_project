@@ -2,19 +2,21 @@
 
 ## Current Focus
 
-Keep the merged Base Vue and three-layer QA baseline stable while Wave 7 waits
-for a separately authorized production deployment and observation window. The
-product-card i18n regression found by hermetic E2E is fixed.
+Integrate the complete three-layer behavior coverage, then perform the
+authorized Wave 7 stage-1 production rollout with fresh recovery artifacts.
+The product behavior remains unchanged apart from defects exposed by QA.
 
 ## Current Coordinate
 
-- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on clean `main`;
-  deployed application release `1d476d8`.
-- Authoring isolation: fresh temporary Git worktrees only; no database, domain,
-  environment file, socket, service, or permanent staging coordinate.
+- Runtime checkout: `/home/ryzepeck/webapps/crushme_project` on
+  `qa/21082026-total-coverage`; running processes still have deployed release
+  `1d476d8` loaded until the controlled restart.
+- Authoring is in-place on the authorized production checkout. QA uses only
+  `settings_test`/`settings_e2e` with isolated SQLite; production MySQL, Redis,
+  media, domain, and environment values are not mutated by tests.
 - Domain: `crushme.com.co` and `www.crushme.com.co`.
 - Data: MySQL `crushme`, Redis cache DB 1, Huey DB 2.
-- Runtime services: `gunicorn.service`, `gunicorn.socket`, and
+- Runtime services: `crushme_project.service`, `crushme_project.socket`, and
   `crushme-huey.service`.
 - Candidate service: `crushme-translation.service`; it is not installed in
   production until Wave 7 stage 1 deploys.
@@ -33,12 +35,18 @@ product-card i18n regression found by hermetic E2E is fixed.
 - Three-layer QA PR #20 merged as `8f173b3` after seven green PR checks and a
   green post-merge run covering backend, frontend unit/build, hermetic E2E, and
   MySQL compatibility.
-- The refreshed registry records 64 real browser flows and 176 outcomes. The
-  QA wave added five live E2E behaviors; all ten tests in the touched specs pass
-  against isolated SQLite with zero junk-only or unvalidated flows.
-- The deterministic audit remains yellow by design: 40 flows are still missing
-  complete browser coverage and one negative outcome class remains open. No
-  gap was converted into an exemption or draft credit.
+- The refreshed registry records 64 real browser flows and 176 expected outcome
+  classes. The suite now contains 178 E2E tests across 23 specs.
+- The deterministic audit is green: 64 covered, 0 partial, 0 junk-only,
+  0 unvalidated, 0 missing, and 64/64 flows with outcomes. Navigation is the
+  only module without an error/failure class because its interactions are
+  local display/success transitions.
+- The focused backend expansion passed 68 tests across nine touched files;
+  frontend unit passed 47 tests across 13 touched files. Both official touched-
+  file gates report zero errors and warnings.
+- All 13 new or modified E2E specs have local runtime evidence. The final E2E
+  semantic gate scores 99/100 with zero errors/warnings; lint, production build,
+  Django checks, migration drift, and the global QA conductor are green.
 - Wave 5 PR #13 is deployed. Health, daily backup, journald observability,
   restore, and capacity gates passed; web-memory headroom improved from 25.2%
   to 81.1% without raising the 650 MiB limit.
@@ -81,7 +89,9 @@ product-card i18n regression found by hermetic E2E is fixed.
 
 ## Next Gate
 
-Obtain separate maintenance authorization for the Wave 7 stage-1 production
-deployment, create fresh recovery artifacts, validate the Torch-free daemon,
-run one representative WooCommerce sync, and complete the 48-hour observation.
-Lifecycle remains `modernizing` until all observation gates close.
+Merge the QA branch through green CI, create and restore-test fresh database
+and media backups, install and validate the Torch-free daemon, deploy `main`,
+activate `ctranslate2_cpu`, run public/capacity probes, and start the 48-hour
+observation window. Lifecycle remains `modernizing` until that window and a
+representative WooCommerce sync close; Argos/Torch remain rollback-only until
+then.

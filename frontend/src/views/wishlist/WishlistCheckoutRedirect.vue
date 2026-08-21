@@ -2,14 +2,14 @@
   <div class="min-h-screen bg-brand-pink-lighter flex items-center justify-center p-4">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
       <!-- Loading State -->
-      <div v-if="isLoading">
+      <div v-if="isLoading" data-testid="wishlist-redirect-loading">
         <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-pink mx-auto mb-4"></div>
         <h2 class="text-xl font-semibold text-gray-900 mb-2">Loading wishlist...</h2>
         <p class="text-gray-600">Preparing your gift checkout</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error">
+      <div v-else-if="error" role="alert" data-testid="wishlist-redirect-error">
         <div class="text-red-500 mb-4">
           <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -73,9 +73,13 @@ onMounted(async () => {
     }
 
     // Limpiar el carrito antes de agregar los nuevos productos
-    cartStore.clearCart()
+    const clearResult = cartStore.clearCart()
+    if (!clearResult.success) {
+      throw new Error(clearResult.error || 'Unable to prepare the gift cart')
+    }
 
     // Agregar cada producto de la wishlist al carrito con los precios del backend
+    let addedItems = 0
     for (const item of wishlist.items) {
       if (item.is_available) {
         // Asegurar que el precio sea un número válido
@@ -104,18 +108,23 @@ onMounted(async () => {
           currency: item.currency || wishlist.currency
         })
         
-        const result = cartStore.addToCart(item.woocommerce_product_id, 1, productData)
-        console.log('✅ [WISHLIST REDIRECT] Add to cart result:', result)
+        const addResult = cartStore.addToCart(item.woocommerce_product_id, 1, productData)
+        if (!addResult.success) {
+          throw new Error(addResult.error || `Unable to add ${item.product_name} to the gift cart`)
+        }
+        addedItems += 1
+        console.log('✅ [WISHLIST REDIRECT] Add to cart result:', addResult)
       } else {
         console.warn('⚠️ [WISHLIST REDIRECT] Skipping unavailable item:', item.product_name)
       }
     }
 
+    if (addedItems === 0) {
+      throw new Error('This wishlist has no available items')
+    }
+
     console.log('🛒 [WISHLIST REDIRECT] Cart updated with', cartStore.items.length, 'items')
     console.log('💰 [WISHLIST REDIRECT] Total value:', wishlist.total_value, wishlist.currency)
-
-    // Pequeño delay para que el usuario vea el loading
-    await new Promise(resolve => setTimeout(resolve, 500))
 
     // Redirigir al checkout con modo gift y username prellenado
     console.log('🔄 [WISHLIST REDIRECT] Redirecting to checkout...')

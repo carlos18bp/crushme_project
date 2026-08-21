@@ -49,8 +49,9 @@ export const useCartStore = defineStore('cart', () => {
   function saveCart() {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items.value));
+      return true;
     } catch (err) {
-      // Silent error handling
+      return false;
     }
   }
 
@@ -72,8 +73,13 @@ export const useCartStore = defineStore('cart', () => {
    */
   function addToCart(productId, quantity = 1, productData = {}) {
     isUpdating.value = true;
+    const previousItems = items.value.map(item => ({ ...item }));
 
     try {
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
+        return { success: false, error: 'La cantidad debe estar entre 1 y 99' };
+      }
+
       // ⭐ Crear una clave única para el producto basada en variation_id (si existe) y atributos
       const attributesKey = JSON.stringify({
         variation_id: productData.variation_id || null,
@@ -93,6 +99,9 @@ export const useCartStore = defineStore('cart', () => {
       });
       
       if (existingItem) {
+        if (existingItem.quantity + quantity > 99) {
+          return { success: false, error: 'La cantidad debe estar entre 1 y 99' };
+        }
         // Si el producto ya existe con los mismos atributos, aumentar la cantidad
         existingItem.quantity = existingItem.quantity + quantity;
         // Actualizar la información del producto por si cambió
@@ -121,7 +130,10 @@ export const useCartStore = defineStore('cart', () => {
         items.value.push(newItem);
       }
       
-      saveCart();
+      if (!saveCart()) {
+        items.value = previousItems;
+        return { success: false, error: 'Error al agregar al carrito' };
+      }
       return { success: true, data: { items: items.value } };
     } catch (err) {
       return { success: false, error: 'Error al agregar al carrito' };
@@ -137,20 +149,30 @@ export const useCartStore = defineStore('cart', () => {
    */
   function updateCartItem(itemId, quantity) {
     isUpdating.value = true;
+    const previousItems = items.value.map(item => ({ ...item }));
 
     try {
       const item = items.value.find(item => item.id === itemId);
-      
-      if (item) {
-        if (quantity <= 0) {
-          // Si la cantidad es 0 o menos, eliminar el item
-          removeFromCart(itemId);
-        } else {
-          item.quantity = quantity;
-          saveCart();
-        }
+
+      if (!item) {
+        return { success: false, error: 'Item del carrito no encontrado' };
       }
-      
+
+      if (!Number.isInteger(quantity) || quantity < 0 || quantity > 99) {
+        return { success: false, error: 'La cantidad debe estar entre 1 y 99' };
+      }
+
+      if (quantity <= 0) {
+        items.value = items.value.filter(cartItem => cartItem.id !== itemId);
+      } else {
+        item.quantity = quantity;
+      }
+
+      if (!saveCart()) {
+        items.value = previousItems;
+        return { success: false, error: 'Error al actualizar item' };
+      }
+
       return { success: true, data: { items: items.value } };
     } catch (err) {
       return { success: false, error: 'Error al actualizar item' };
@@ -165,15 +187,21 @@ export const useCartStore = defineStore('cart', () => {
    */
   function removeFromCart(itemId) {
     isUpdating.value = true;
+    const previousItems = items.value.map(item => ({ ...item }));
 
     try {
       const index = items.value.findIndex(item => item.id === itemId);
-      
-      if (index !== -1) {
-        items.value.splice(index, 1);
-        saveCart();
+
+      if (index === -1) {
+        return { success: false, error: 'Item del carrito no encontrado' };
       }
-      
+
+      items.value.splice(index, 1);
+      if (!saveCart()) {
+        items.value = previousItems;
+        return { success: false, error: 'Error al eliminar del carrito' };
+      }
+
       return { success: true, data: { items: items.value } };
     } catch (err) {
       return { success: false, error: 'Error al eliminar del carrito' };
@@ -187,6 +215,7 @@ export const useCartStore = defineStore('cart', () => {
    */
   function clearCart() {
     isUpdating.value = true;
+    const previousItems = items.value.map(item => ({ ...item }));
 
     try {
       items.value = [];
@@ -194,6 +223,7 @@ export const useCartStore = defineStore('cart', () => {
       
       return { success: true, data: { items: [] } };
     } catch (err) {
+      items.value = previousItems;
       return { success: false, error: 'Error al vaciar el carrito' };
     } finally {
       isUpdating.value = false;

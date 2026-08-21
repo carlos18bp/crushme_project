@@ -77,8 +77,10 @@ def add_woocommerce_product_to_wishlist(request, wishlist_id):
                 'error': 'Product is already in this wishlist'
             }, status=status.HTTP_400_BAD_REQUEST)
     
+    first_messages = next(iter(serializer.errors.values()), [])
+    first_message = first_messages[0] if first_messages else 'Invalid data'
     return Response({
-        'error': 'Invalid data',
+        'error': str(first_message),
         'details': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -236,10 +238,8 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
     Get public wishlist by username and ID
     Format: /@username/{id}
     
-    Query Parameters:
-    - refresh: 'true' to fetch fresh data from WooCommerce (slower)
-    
-    By default uses cached product data for fast response
+    The legacy ``refresh`` query parameter remains accepted as a no-op. Product
+    data always comes from the synchronized local catalog.
     """
     try:
         # Find wishlist by ID and check if it belongs to the user with that username
@@ -259,10 +259,8 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
         # Get currency from request (set by CurrencyMiddleware)
         currency = getattr(request, 'currency', 'COP')
         
-        # Only enrich with fresh WooCommerce data if explicitly requested
-        refresh = request.GET.get('refresh', 'false').lower() == 'true'
-        if refresh:
-            wishlist = enrich_wishlist_with_woocommerce_data(wishlist)
+        # Product data is always read from the synchronized local catalog.
+        # Keep accepting the legacy refresh query parameter as a no-op.
         
         detail_serializer = WishListDetailSerializer(wishlist, context={'request': request})
         
@@ -277,4 +275,3 @@ def get_public_wishlist_by_username(request, username, wishlist_id):
         return Response({
             'error': 'Wishlist not found or is not public'
         }, status=status.HTTP_404_NOT_FOUND)
-

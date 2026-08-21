@@ -52,13 +52,16 @@ const positionClass = computed(() => {
 
 const changeLanguage = (locale) => {
   i18nStore.setLocale(locale)
-  
-  // Get current route without language prefix
-  const currentPath = router.currentRoute.value.path
-  const pathWithoutLang = currentPath.substring(3) // Remove /en or /es
-  
-  // Navigate to the same route but with new language
-  router.push(`/${locale}${pathWithoutLang}`)
+
+  const currentRoute = router.currentRoute.value
+  const pathSegments = currentRoute.path.split('/')
+  pathSegments[1] = locale
+
+  router.push({
+    path: pathSegments.join('/'),
+    query: currentRoute.query,
+    hash: currentRoute.hash
+  })
 }
 </script>
 

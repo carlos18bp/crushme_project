@@ -7,6 +7,7 @@
       </svg>
       <input 
         v-model="searchQuery"
+        data-testid="diaries-user-search"
         type="text" 
         :placeholder="$t('diaries.userSearch.placeholder')"
         class="search-input"
@@ -28,8 +29,13 @@
       <p class="empty-text">{{ $t('diaries.userSearch.startTyping') }}</p>
     </div>
     
+    <!-- Search Error -->
+    <div v-else-if="crushStore.searchError" role="alert" data-testid="diaries-search-error" class="empty-state">
+      <p class="empty-text">{{ crushStore.searchError }}</p>
+    </div>
+
     <!-- No Results -->
-    <div v-else-if="crushStore.searchResults.length === 0" class="empty-state">
+    <div v-else-if="crushStore.searchResults.length === 0" data-testid="diaries-search-empty" class="empty-state">
       <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -40,9 +46,11 @@
     
     <!-- Users List -->
     <div v-else class="users-list">
-      <div 
+      <button
         v-for="user in crushStore.searchResults" 
         :key="user.id"
+        type="button"
+        :data-testid="`diaries-search-result-${user.username}`"
         class="user-item"
         @click="navigateToProfile(user.username)"
       >
@@ -65,7 +73,7 @@
             </span>
           </div>
         </div>
-      </div>
+      </button>
     </div>
   </div>
 </template>
@@ -561,7 +569,6 @@ const navigateToProfile = (username) => {
   }
 }
 </style>
-
 
 
 

@@ -102,6 +102,15 @@
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-pink"></div>
       </div>
 
+      <div
+        v-else-if="loadError"
+        role="alert"
+        data-testid="profile-gifts-error"
+        class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      >
+        {{ loadError }}
+      </div>
+
       <!-- Gifts List -->
       <div v-else class="gifts-list space-y-4 md:space-y-6">
         <!-- Gift Card -->
@@ -242,6 +251,7 @@ const gifts = ref([])
 
 // Loading state
 const isLoading = ref(false)
+const loadError = ref(null)
 
 // Computed: Filter gifts based on active tab and search
 const filteredGifts = computed(() => {
@@ -345,6 +355,7 @@ const formatDate = (dateString) => {
 
 const loadGifts = async () => {
   isLoading.value = true
+  loadError.value = null
 
   try {
     console.log('🎁 [MyGifts] Loading gifts for tab:', activeTab.value)
@@ -370,12 +381,12 @@ const loadGifts = async () => {
       console.error('🎁 [MyGifts] No data in response')
       gifts.value = []
     }
-  } catch (error) {
-    console.error('🎁 [MyGifts] Error loading gifts:', error)
-    console.error('🎁 [MyGifts] Error details:', error.response?.data || error.message)
+  } catch (requestError) {
+    console.error('🎁 [MyGifts] Error loading gifts:', requestError)
+    console.error('🎁 [MyGifts] Error details:', requestError.response?.data || requestError.message)
 
     // If unauthorized, redirect to login
-    if (error.response?.status === 401) {
+    if (requestError.response?.status === 401) {
       console.log('🎁 [MyGifts] Unauthorized - token may be invalid or expired')
       // Clear invalid tokens
       localStorage.removeItem('access_token')
@@ -384,6 +395,10 @@ const loadGifts = async () => {
       return
     }
 
+    loadError.value = requestError.response?.data?.error
+      || requestError.response?.data?.detail
+      || requestError.message
+      || 'Unable to load gifts'
     gifts.value = []
   } finally {
     isLoading.value = false
@@ -537,4 +552,3 @@ select {
   }
 }
 </style>
-

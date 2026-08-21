@@ -17,6 +17,15 @@
     <div v-if="profileStore.isLoadingFeed" class="px-3 sm:px-4 md:px-6 py-6 text-center">
       <p class="text-sm text-gray-600 font-comfortaa">{{ $t('profileDashboard.feed.loading') }}</p>
     </div>
+
+    <div
+      v-else-if="profileStore.feedError"
+      role="alert"
+      data-testid="profile-feed-error"
+      class="px-3 sm:px-4 md:px-6 py-6 text-center text-sm text-red-700"
+    >
+      {{ profileStore.feedError }}
+    </div>
     
     <!-- Empty State -->
     <div v-else-if="!profileStore.hasFeedItems" class="px-3 sm:px-4 md:px-6 py-6 text-center">
@@ -206,4 +215,3 @@ onMounted(async () => {
   background-color: #11181E;
 }
 </style>
-

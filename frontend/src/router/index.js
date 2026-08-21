@@ -310,38 +310,8 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   
-  // Detectar idioma preferido del navegador
-  const browserLanguage = navigator.language || navigator.userLanguage;
-  const browserLangCode = browserLanguage.split('-')[0].toLowerCase();
-  const browserPreferredLang = browserLangCode === 'es' ? 'es' : 'en';
-  
-  console.log('🌐 [Router] Idioma del navegador:', {
-    browserLanguage,
-    browserLangCode,
-    browserPreferredLang,
-    urlLang
-  });
-  
-  // Si la URL tiene un idioma diferente al preferido del navegador, redirigir
-  if (urlLang !== browserPreferredLang) {
-    const newPath = to.path.replace(`/${urlLang}`, `/${browserPreferredLang}`);
-    console.log('🔀 [Router] Redirigiendo de', urlLang, 'a', browserPreferredLang);
-    console.log('   Ruta original:', to.path);
-    console.log('   Nueva ruta:', newPath);
-    
-    // Actualizar el store antes de redirigir
-    i18nStore.setLocale(browserPreferredLang);
-    
-    next({
-      path: newPath,
-      query: to.query,
-      hash: to.hash,
-      replace: true // No agregar al historial
-    });
-    return;
-  }
-  
-  // Si el idioma de la URL coincide con el navegador, actualizar el store
+  // A valid localized URL is authoritative. Browser detection is used only by
+  // the root redirect; otherwise it would undo a user's manual language choice.
   if (urlLang !== i18nStore.locale) {
     console.log('🌐 [Router] Actualizando idioma del store a:', urlLang);
     i18nStore.setLocale(urlLang);

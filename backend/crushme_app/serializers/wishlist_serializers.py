@@ -546,7 +546,7 @@ class AddWooCommerceProductToWishListSerializer(serializers.Serializer):
         
         if wishlist and wishlist.items.filter(woocommerce_product_id=wc_product_id).exists():
             raise serializers.ValidationError({
-                'woocommerce_product_id': "Product is already in this wishlist."
+                'woocommerce_product_id': "Product is already in this wishlist"
             })
         
         return attrs

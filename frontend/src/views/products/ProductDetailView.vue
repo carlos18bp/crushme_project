@@ -27,7 +27,7 @@
         <div v-else-if="error" class="error-container">
           <h2>{{ $t('productDetail.error.title') }}</h2>
           <p>{{ error }}</p>
-          <button @click="loadProduct" class="retry-btn">
+          <button data-testid="product-detail-retry" @click="loadProduct" class="retry-btn">
             {{ $t('productDetail.error.retry') }}
           </button>
         </div>
@@ -93,6 +93,7 @@
                   <!-- Wishlist Button -->
                   <button 
                     @click="handleAddToWishlist" 
+                    aria-label="Add to my wishlist"
                     class="action-icon-btn"
                     :title="$t('productDetail.addToWishlist') || 'Add to wishlist'"
                   >
@@ -118,6 +119,9 @@
                   </button>
                 </div>
               </div>
+              <p v-if="favoriteError" role="alert" data-testid="favorite-action-error" class="cart-error-message">
+                {{ favoriteError }}
+              </p>
               
               <!-- Reviews (Real data or hardcoded fallback) -->
               <div class="product-reviews">
@@ -169,6 +173,7 @@
                     <button 
                       v-for="option in attr.options" 
                       :key="option"
+                      :data-testid="`variation-${attr.name}-${option}`"
                       class="attribute-option"
                       :class="{ active: selectedAttributes[attr.name] === option }"
                       @click="selectAttribute(attr.name, option)"
@@ -237,7 +242,7 @@
               />
               
               <!-- Error Message -->
-              <div v-if="addToCartError" class="cart-error-message">
+              <div v-if="addToCartError" role="alert" data-testid="cart-action-error" class="cart-error-message">
                 {{ addToCartError }}
               </div>
               
@@ -328,6 +333,7 @@ const quantity = ref(1)
 const isAddingToCart = ref(false)
 const addToCartSuccess = ref(false)
 const addToCartError = ref(null)
+const favoriteError = ref(null)
 const thumbnailScrollPosition = ref(0)
 const maxVisibleThumbnails = ref(5)
 const thumbnailList = ref(null)
@@ -1026,6 +1032,7 @@ const handleToggleFavorite = async () => {
   }
   
   isTogglingFavorite.value = true
+  favoriteError.value = null
   
   try {
     if (isFavorited.value) {
@@ -1033,16 +1040,20 @@ const handleToggleFavorite = async () => {
       const result = await profileStore.removeProductFromFavorites(product.value.id)
       if (result.success) {
         isFavorited.value = false
+      } else {
+        favoriteError.value = result.error
       }
     } else {
       // Add to favorites
       const result = await profileStore.addProductToFavorites(product.value.id)
       if (result.success) {
         isFavorited.value = true
+      } else {
+        favoriteError.value = result.error
       }
     }
   } catch (error) {
-    console.error('Error toggling favorite:', error)
+    favoriteError.value = 'Error al actualizar producto favorito'
   } finally {
     isTogglingFavorite.value = false
   }

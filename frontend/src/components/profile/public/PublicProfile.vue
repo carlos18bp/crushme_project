@@ -1,5 +1,5 @@
 <template>
-  <div class="public-profile">
+  <div data-testid="public-profile" class="public-profile">
     <!-- Header with cover image or gradient background -->
     <div class="profile-header">
       <div 
@@ -29,13 +29,13 @@
       </button>
       
       <!-- Avatar -->
-      <div class="avatar-container cursor-pointer" @click="openImageModal(profile.avatar)">
+      <button type="button" data-testid="public-profile-avatar" class="avatar-container cursor-pointer" @click="openImageModal(profile.avatar)">
         <img 
           :src="profile.avatar" 
           :alt="profile.name"
           class="avatar-image"
         />
-      </div>
+      </button>
     </div>
 
     <!-- Profile Content -->
@@ -206,6 +206,9 @@
     <Teleport to="body">
       <div 
         v-if="showImageModal" 
+        role="dialog"
+        aria-label="Profile image"
+        data-testid="profile-image-modal"
         class="image-modal-overlay"
         @click="closeImageModal"
       >
@@ -223,6 +226,7 @@
           <img 
             :src="selectedImage" 
             alt="Full size image"
+            data-testid="profile-image-modal-content"
             class="image-modal-img"
           />
         </div>
@@ -979,4 +983,3 @@ const closeImageModal = () => {
   opacity: 0.95;
 }
 </style>
-

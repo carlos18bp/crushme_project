@@ -130,6 +130,10 @@
         "emailGift": "We'll send the purchase invoice to this email (private)",
         "recipientUsername": "Who will receive this gift?"
       },
+      "errors": {
+        "selectRecipient": "Select a valid recipient from the search results.",
+        "recipientSearch": "We could not search for gift recipients."
+      },
       "buttons": {
         "payWithWompi": "Pay with Wompi →",
         "continueToPay": "Continue to payment →",

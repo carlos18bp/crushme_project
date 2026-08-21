@@ -81,6 +81,7 @@
                       <div v-for="category in theme.categories" :key="category.id">
                         <button
                           @click.stop="selectCategory(category.id)"
+                          :data-testid="`catalog-category-${category.id}`"
                           :class="['w-full flex items-center justify-between py-1.5 md:py-2 px-2.5 md:px-3 text-left transition-colors rounded-lg text-xs md:text-sm',
                                    selectedCategory === category.id ? 'bg-purple-100 text-purple-700' : 'hover:bg-gray-100']">
                           <div class="flex items-center">
@@ -132,6 +133,7 @@
             <div class="search-bar mb-4 md:mb-6">
               <div class="relative">
                 <input
+                  data-testid="catalog-search"
                   v-model="searchQuery"
                   @input="handleSearchInput"
                   @keyup.enter="performSearch"
@@ -175,6 +177,7 @@
               <div class="sort-section flex items-center w-full md:w-auto">
                 <span class="text-gray-600 mr-2 md:mr-3 text-sm md:text-base">{{ $t('products.header.sortBy') }}</span>
                 <select 
+                  data-testid="catalog-sort"
                   v-model="sortBy"
                   @change="handleSortChange"
                   class="sort-select bg-white border border-gray-300 rounded px-2.5 md:px-3 py-1.5 md:py-2 text-sm md:text-base text-gray-700 focus:outline-none focus:border-brand-pink-medium flex-1 md:flex-initial">
@@ -204,7 +207,7 @@
                   </svg>
                 </div>
                 <p class="text-gray-600 text-base md:text-lg mb-3 md:mb-4">{{ error }}</p>
-                <button @click="loadProducts" class="bg-brand-blue-medium text-white px-4 md:px-6 py-1.5 md:py-2 rounded-lg hover:bg-opacity-90 transition-colors text-sm md:text-base">
+                <button data-testid="catalog-retry" @click="loadProducts" class="bg-brand-blue-medium text-white px-4 md:px-6 py-1.5 md:py-2 rounded-lg hover:bg-opacity-90 transition-colors text-sm md:text-base">
                   {{ $t('products.retry') }}
                 </button>
               </div>
@@ -1155,4 +1158,3 @@ onMounted(async () => {
   }
 }
 </style>
-

@@ -218,7 +218,7 @@
           <!-- Crush Verification Section -->
           <div v-if="!profileStore.isCrushVerified" class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl md:rounded-2xl p-4 md:p-6 border border-pink-200">
             <!-- Pending Status -->
-            <div v-if="profileStore.hasPendingCrushRequest" class="text-center">
+            <div v-if="profileStore.hasPendingCrushRequest" data-testid="crush-verification-pending" class="text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
                 <svg class="w-8 h-8 text-yellow-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -349,8 +349,11 @@
               
               <!-- Hidden file input for cover image -->
               <input
+                id="cover-image-input"
                 ref="coverImageInput"
                 type="file"
+                aria-label="Cover photo"
+                data-testid="cover-image-input"
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 class="hidden"
                 @change="handleCoverImageSelect"
@@ -403,8 +406,11 @@
                 
                 <!-- Hidden file input for profile picture -->
                 <input
+                  id="profile-picture-input"
                   ref="profilePictureInput"
                   type="file"
+                  aria-label="Profile photo"
+                  data-testid="profile-picture-input"
                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   class="hidden"
                   @change="handleProfilePictureSelect"
@@ -476,8 +482,11 @@
                 <p class="text-xs text-gray-400 mt-2">{{ $t('profile.form.gallery.requirements') }}</p>
               </div>
               <input
+                id="gallery-image-input"
                 ref="fileInput"
                 type="file"
+                aria-label="Gallery photos"
+                data-testid="gallery-image-input"
                 accept="image/jpeg,image/jpg,image/png,image/gif"
                 multiple
                 class="hidden"
@@ -1215,6 +1224,8 @@ async function handleSubmit() {
         console.log('✅ [UPLOAD] Imagen de cover subida correctamente')
       } else {
         console.error('❌ [UPLOAD] Error al subir imagen de cover:', coverResult.error)
+        showError(coverResult.error, 'Error al subir foto de portada')
+        return
       }
     }
     
@@ -1237,6 +1248,8 @@ async function handleSubmit() {
         console.log('✅ [UPLOAD] Imagen de perfil subida correctamente')
       } else {
         console.error('❌ [UPLOAD] Error al subir imagen de perfil:', profileResult.error)
+        showError(profileResult.error, 'Error al subir foto de perfil')
+        return
       }
     }
     
@@ -1270,6 +1283,8 @@ async function handleSubmit() {
           }
         } else {
           console.error(`❌ [UPLOAD] Error al subir imagen ${i + 1}/${uploadedFiles.value.length}:`, result.error)
+          showError(result.error, 'Error al subir imagen de galería')
+          return
         }
       }
       

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
+from . import settings_test
 from .settings_test import *  # noqa: F401, F403
 
 DJANGO_ENV = 'e2e'
@@ -31,6 +32,17 @@ CORS_ALLOWED_ORIGINS = ['http://127.0.0.1:5174', 'http://localhost:5174']
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 FRONTEND_URL = 'http://127.0.0.1:5174'
 FAKE_DATA_ALLOWED = True
+TRANSLATION_RUNTIME_ENABLED = False
+
+# The browser corpus reuses one isolated IP and account across serial specs.
+# Keep throttles active but high enough that test order cannot exhaust a scope.
+REST_FRAMEWORK = {
+    **settings_test.REST_FRAMEWORK,
+    'DEFAULT_THROTTLE_RATES': {
+        scope: '10000/min'
+        for scope in settings_test.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']
+    },
+}
 
 # E2E never contacts live gateways, WooCommerce, SMTP, Redis, or translation APIs.
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

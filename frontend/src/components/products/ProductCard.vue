@@ -99,6 +99,15 @@
       </div>
     </div>
 
+    <p
+      v-if="favoriteError"
+      role="alert"
+      data-testid="favorite-action-error"
+      class="px-4 pb-3 text-sm text-red-700"
+    >
+      {{ favoriteError }}
+    </p>
+
     <!-- Wishlist Selector Modal -->
     <WishlistSelector
       :show="showWishlistSelector"
@@ -178,6 +187,7 @@ const currencyStore = useCurrencyStore()
 const showWishlistSelector = ref(false)
 const isFavorited = ref(props.isInFavorites)
 const isTogglingFavorite = ref(false)
+const favoriteError = ref(null)
 
 // ⭐ NUEVO: Stock verification state
 const isCheckingStock = ref(false)
@@ -260,6 +270,7 @@ const handleToggleWishlist = async () => {
   
   // Toggle favorite
   isTogglingFavorite.value = true
+  favoriteError.value = null
   
   try {
     if (isFavorited.value) {
@@ -268,6 +279,8 @@ const handleToggleWishlist = async () => {
       if (result.success) {
         isFavorited.value = false
         emit('favorite-updated', { productId: props.product.id, isFavorited: false })
+      } else {
+        favoriteError.value = result.error
       }
     } else {
       // Add to favorites
@@ -275,10 +288,12 @@ const handleToggleWishlist = async () => {
       if (result.success) {
         isFavorited.value = true
         emit('favorite-updated', { productId: props.product.id, isFavorited: true })
+      } else {
+        favoriteError.value = result.error
       }
     }
   } catch (error) {
-    console.error('Error toggling favorite:', error)
+    favoriteError.value = 'Error al actualizar producto favorito'
   } finally {
     isTogglingFavorite.value = false
   }

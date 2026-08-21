@@ -47,6 +47,15 @@
         <p class="text-sm text-red-800">{{ profileStore.error }}</p>
       </div>
 
+      <p
+        v-if="removeError"
+        role="alert"
+        data-testid="favorite-removal-error"
+        class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+      >
+        {{ removeError }}
+      </p>
+
       <!-- Products Grid -->
       <div v-else-if="hasFavorites" class="space-y-4 md:space-y-6">
         <!-- Grid: 2 cards por fila -->
@@ -109,6 +118,7 @@ const router = useRouter()
 const profileStore = useProfileStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
+const removeError = ref(null)
 
 // Computed
 const favoriteProducts = computed(() => profileStore.favoriteProducts)
@@ -145,12 +155,16 @@ const removeFavorite = async (woocommerceProductId) => {
   if (!confirm(t('profile.favorites.confirmRemove') || '¿Estás seguro de que deseas eliminar este producto de favoritos?')) {
     return
   }
+
+  removeError.value = null
   
   const result = await profileStore.removeProductFromFavorites(woocommerceProductId)
   
   if (result.success) {
     // The store already updates the local state
     console.log('Producto eliminado de favoritos')
+  } else {
+    removeError.value = result.error
   }
 }
 
@@ -173,5 +187,4 @@ onMounted(async () => {
 <style scoped>
 /* Estilos adicionales si son necesarios */
 </style>
-
 

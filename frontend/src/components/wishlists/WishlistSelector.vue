@@ -1,6 +1,6 @@
 <template>
   <div v-if="show" class="fixed inset-0 bg-white/40 backdrop-blur-md flex items-center justify-center z-50" @click.self="$emit('close')">
-    <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+    <div data-testid="wishlist-selector" class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Add to Wishlist</h2>
       
       <!-- Loading -->
@@ -13,6 +13,7 @@
         <button
           v-for="wishlist in wishlistStore.wishlists"
           :key="wishlist.id"
+          :data-testid="`wishlist-option-${wishlist.id}`"
           @click="selectWishlist(wishlist.id)"
           :disabled="isAdding"
           class="w-full text-left p-3 border-2 border-gray-200 rounded-lg hover:border-brand-pink-medium hover:bg-brand-pink-medium/5 transition-all disabled:opacity-50"
@@ -42,7 +43,7 @@
       </div>
       
       <!-- Success Message -->
-      <div v-if="successMessage" class="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl animate-fade-in">
+      <div v-if="successMessage" role="status" data-testid="wishlist-selector-success" class="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl animate-fade-in">
         <div class="flex items-start gap-3">
           <div class="flex-shrink-0">
             <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -56,7 +57,7 @@
       </div>
       
       <!-- Error -->
-      <div v-if="error" class="mt-4 p-4 bg-pink-50 border-2 border-pink-200 rounded-xl animate-fade-in">
+      <div v-if="error" role="alert" data-testid="wishlist-selector-error" class="mt-4 p-4 bg-pink-50 border-2 border-pink-200 rounded-xl animate-fade-in">
         <div class="flex items-start gap-3">
           <div class="flex-shrink-0">
             <svg class="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20">

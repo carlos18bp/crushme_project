@@ -88,6 +88,9 @@ class TranslationService:
         if not text or not text.strip():
             return text
 
+        if not settings.TRANSLATION_RUNTIME_ENABLED:
+            return text
+
         # Si el texto es muy corto (< 2 caracteres), no traducir
         if len(text.strip()) < 2:
             return text
