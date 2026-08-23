@@ -412,7 +412,8 @@ def _fingerprint_normalize(body: str) -> str:
             # of bodies without pathological comments do not move.
             content = body[i + 1:j]
             digest = hashlib.md5(
-                content.encode("utf-8"), usedforsecurity=False
+                content.encode("utf-8"),
+                usedforsecurity=False,
             ).hexdigest()[:8]
             pieces.append("S" + digest)
             i = j + 1
